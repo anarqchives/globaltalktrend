@@ -1,4 +1,12 @@
+import { RotateCcw } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
+
+const defaultFilters: FilterState = {
+  country: "global",
+  period: "Hoje",
+  category: "Todas",
+  type: "Todas mídias",
+};
 
 export interface FilterState {
   country: string;
@@ -57,6 +65,11 @@ const FilterBar = ({ filters, onChange }: FilterBarProps) => {
     onChange({ ...filters, [key]: value });
   };
 
+  const isFiltered = filters.country !== defaultFilters.country ||
+    filters.period !== defaultFilters.period ||
+    filters.category !== defaultFilters.category ||
+    filters.type !== defaultFilters.type;
+
   const periodOptions = [
     { value: "Última hora", label: t("lastHour") },
     { value: "Hoje", label: t("today") },
@@ -100,6 +113,16 @@ const FilterBar = ({ filters, onChange }: FilterBarProps) => {
       <select className="filter-pill-inline" value={filters.type} onChange={(e) => update("type", e.target.value)}>
         {typeOptions.map((t) => <option key={t.value} value={t.value}>{t.label}</option>)}
       </select>
+      {isFiltered && (
+        <button
+          onClick={() => onChange(defaultFilters)}
+          className="flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-medium text-primary hover:bg-primary/10 transition-colors flex-shrink-0"
+          title="Limpar filtros"
+        >
+          <RotateCcw className="w-3 h-3" />
+          Reset
+        </button>
+      )}
       <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground ml-auto whitespace-nowrap">
         <span className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ background: "hsl(142, 72%, 45%)" }} />
         {t("live")}
