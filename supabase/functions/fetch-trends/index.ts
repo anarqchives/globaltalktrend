@@ -60,56 +60,14 @@ async function fetchYouTubeTrends(): Promise<TrendItem[]> {
   }
 }
 
-async function fetchRedditTrends(): Promise<TrendItem[]> {
-  try {
-    const res = await fetch("https://old.reddit.com/r/all/hot.json?limit=5&raw_json=1", {
-      headers: {
-        "User-Agent": "Mozilla/5.0 (compatible; TrendSphere/1.0; +https://trendsphere.app)",
-        Accept: "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
-      },
-    });
-    if (!res.ok) {
-      console.error("Reddit API error:", res.status, await res.text());
-      return [];
-    }
-    const data = await res.json();
-
-    return (data.data?.children || []).map((child: any) => {
-      const post = child.data;
-      const ups = post.ups || 0;
-      return {
-        icon: "💬",
-        platform: "Reddit",
-        title: post.title?.slice(0, 100) || "Sem título",
-        category: `r/${post.subreddit}`,
-        time: "agora",
-        volume: ups >= 1000
-          ? `${(ups / 1000).toFixed(1)}K upvotes`
-          : `${ups} upvotes`,
-        change: `+${post.upvote_ratio ? Math.round(post.upvote_ratio * 100) : 0}%`,
-        changePositive: true,
-        sparkData: Array.from({ length: 10 }, () => Math.floor(Math.random() * 90 + 10)),
-        details: post.selftext?.slice(0, 200) || `${post.num_comments} comentários · ${post.subreddit_name_prefixed}`,
-      };
-    });
-  } catch (e) {
-    console.error("Reddit fetch error:", e);
-    return [];
-  }
-}
-
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    const [youtube, reddit] = await Promise.all([
-      fetchYouTubeTrends(),
-      fetchRedditTrends(),
-    ]);
-
-    const trends = [...youtube, ...reddit];
+    const youtube = await fetchYouTubeTrends();
+    const trends = [...youtube];
 
     return new Response(JSON.stringify({ trends }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
