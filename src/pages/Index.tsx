@@ -102,7 +102,7 @@ const Index = () => {
 
   return (
     <div className="h-screen flex flex-col bg-background overflow-hidden">
-      <TrendHeader />
+      <TrendHeader totalTrends={filteredTrends.length} />
       <FilterBar filters={filters} onChange={setFilters} />
 
       {/* Main layout */}

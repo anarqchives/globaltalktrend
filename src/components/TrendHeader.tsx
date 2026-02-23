@@ -11,7 +11,11 @@ import {
   DialogOverlay,
 } from "@/components/ui/dialog";
 
-const TrendHeader = () => {
+interface TrendHeaderProps {
+  totalTrends?: number;
+}
+
+const TrendHeader = ({ totalTrends = 0 }: TrendHeaderProps) => {
   const { lang, setLang, t } = useLanguage();
   const [aboutOpen, setAboutOpen] = useState(false);
   const [dark, setDark] = useState(() => {
@@ -32,9 +36,19 @@ const TrendHeader = () => {
     <>
       <header className="glass-header sticky top-0 z-50 px-4 md:px-6 py-2 h-12 flex items-center">
         <div className="w-full flex items-center justify-between gap-3">
-          <h1 className="text-base font-light tracking-tight whitespace-nowrap select-none">
+          <h1 className="text-base font-light tracking-tight whitespace-nowrap select-none flex items-center gap-2">
             <span className="font-semibold text-foreground">Global-Talk-Trending</span>
             <span className="text-muted-foreground hidden sm:inline">: real time monitor</span>
+            {totalTrends > 0 && (
+              <motion.span
+                key={totalTrends}
+                initial={{ scale: 0.8, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                className="inline-flex items-center px-2 py-0.5 rounded-full bg-primary/10 text-primary text-[11px] font-bold tabular-nums"
+              >
+                {totalTrends}
+              </motion.span>
+            )}
           </h1>
 
           <div className="flex items-center gap-1.5 flex-shrink-0">
