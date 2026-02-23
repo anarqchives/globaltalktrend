@@ -66,6 +66,91 @@ async function fetchRedditClientSide(): Promise<TrendCardProps[]> {
   }
 }
 
+async function fetchBlueskyClientSide(): Promise<TrendCardProps[]> {
+  try {
+    const res = await fetch("https://public.api.bsky.app/xrpc/app.bsky.feed.getPopularFeedGenerators?limit=8");
+    if (!res.ok) {
+      // Fallback: fetch from discover feed
+      const res2 = await fetch("https://public.api.bsky.app/xrpc/app.bsky.unspecced.getPopularFeedGenerators?limit=8");
+      if (!res2.ok) return [];
+      const data2 = await res2.json();
+      return (data2.feeds || []).slice(0, 5).map((feed: any) => {
+        const likes = feed.likeCount || 0;
+        const { historicalData, metricLabel } = generateHistorical(likes / 24, "likes/hora");
+        return {
+          icon: "🦋",
+          platform: "Bluesky",
+          title: feed.displayName || "Feed popular",
+          category: "Social",
+          time: "agora",
+          volume: likes >= 1000 ? `${(likes / 1000).toFixed(1)}K likes` : `${likes} likes`,
+          change: "+trending",
+          changePositive: true,
+          sparkData: Array.from({ length: 10 }, () => Math.floor(Math.random() * 80 + 20)),
+          details: feed.description?.slice(0, 200) || "",
+          countryCode: "US",
+          historicalData,
+          metricLabel,
+        };
+      });
+    }
+    const data = await res.json();
+    return (data.feeds || []).slice(0, 5).map((feed: any) => {
+      const likes = feed.likeCount || 0;
+      const { historicalData, metricLabel } = generateHistorical(likes / 24, "likes/hora");
+      return {
+        icon: "🦋",
+        platform: "Bluesky",
+        title: feed.displayName || "Feed popular",
+        category: "Social",
+        time: "agora",
+        volume: likes >= 1000 ? `${(likes / 1000).toFixed(1)}K likes` : `${likes} likes`,
+        change: "+trending",
+        changePositive: true,
+        sparkData: Array.from({ length: 10 }, () => Math.floor(Math.random() * 80 + 20)),
+        details: feed.description?.slice(0, 200) || "",
+        countryCode: "US",
+        historicalData,
+        metricLabel,
+      };
+    });
+  } catch {
+    return [];
+  }
+}
+
+async function fetchMastodonClientSide(): Promise<TrendCardProps[]> {
+  try {
+    const res = await fetch("https://mastodon.social/api/v1/trends/statuses?limit=5");
+    if (!res.ok) return [];
+    const data = await res.json();
+    return (data || []).map((status: any) => {
+      const reblogs = status.reblogs_count || 0;
+      const favs = status.favourites_count || 0;
+      const { historicalData, metricLabel } = generateHistorical((reblogs + favs) / 24, "interações/hora");
+      // Strip HTML tags
+      const content = (status.content || "").replace(/<[^>]*>/g, "").slice(0, 100);
+      return {
+        icon: "🐘",
+        platform: "Mastodon",
+        title: content || "Post em alta",
+        category: "Fediverso",
+        time: "agora",
+        volume: `${reblogs + favs >= 1000 ? `${((reblogs + favs) / 1000).toFixed(1)}K` : reblogs + favs} interações`,
+        change: `+${reblogs} boosts`,
+        changePositive: true,
+        sparkData: Array.from({ length: 10 }, () => Math.floor(Math.random() * 80 + 20)),
+        details: content,
+        countryCode: "US",
+        historicalData,
+        metricLabel,
+      };
+    });
+  } catch {
+    return [];
+  }
+}
+
 export function useTrends(filters: FilterState, onTrendCountsChange: (counts: Record<string, number>) => void) {
   const [trends, setTrends] = useState<TrendCardProps[]>(fallbackData);
   const [loading, setLoading] = useState(true);
@@ -74,16 +159,18 @@ export function useTrends(filters: FilterState, onTrendCountsChange: (counts: Re
   const fetchTrends = useCallback(async () => {
     try {
       setLoading(true);
-      const [edgeResult, redditItems] = await Promise.all([
+      const [edgeResult, redditItems, blueskyItems, mastodonItems] = await Promise.all([
         supabase.functions.invoke("fetch-trends"),
         fetchRedditClientSide(),
+        fetchBlueskyClientSide(),
+        fetchMastodonClientSide(),
       ]);
       const edgeTrends: TrendCardProps[] = edgeResult.data?.trends || [];
-      const allTrends = [...edgeTrends, ...redditItems];
+      const allTrends = [...edgeTrends, ...redditItems, ...blueskyItems, ...mastodonItems];
       if (allTrends.length > 0) {
         setTrends(allTrends);
         if (!isFirstLoad) {
-          toast({ title: "✅ Atualizado", description: `${allTrends.length} trends` });
+          toast({ title: "✅ Atualizado", description: `${allTrends.length} trends de ${new Set(allTrends.map(t => t.platform)).size} fontes` });
         }
         setIsFirstLoad(false);
       }
@@ -102,11 +189,10 @@ export function useTrends(filters: FilterState, onTrendCountsChange: (counts: Re
 
   const filteredTrends = useMemo(() => {
     let result = trends;
-    // Filter by country
     if (filters.country !== "global") {
       result = result.filter((t) => t.countryCode === filters.country);
     }
-    if (filters.type === "Redes sociais") result = result.filter((t) => t.platform === "Reddit");
+    if (filters.type === "Redes sociais") result = result.filter((t) => ["Reddit", "Bluesky", "Mastodon"].includes(t.platform));
     else if (filters.type === "Imprensa") result = result.filter((t) => t.platform === "NewsAPI");
     else if (filters.type === "Buscas (Google)") result = result.filter((t) => t.platform === "Google Trends");
     if (filters.category !== "Todas") {
@@ -117,22 +203,24 @@ export function useTrends(filters: FilterState, onTrendCountsChange: (counts: Re
 
   const leftTrends = useMemo(() => filteredTrends.filter((_, i) => i % 2 === 0), [filteredTrends]);
   const rightTrends = useMemo(() => filteredTrends.filter((_, i) => i % 2 === 1), [filteredTrends]);
+
+  // Count countries
+  const countriesCount = useMemo(() => {
+    const codes = new Set(trends.map(t => t.countryCode).filter(Boolean));
+    return codes.size;
+  }, [trends]);
+
   useEffect(() => {
     const counts: Record<string, number> = {};
     if (filters.country !== "global") {
       counts[filters.country] = filteredTrends.length;
     } else {
-      // Count real trends per country using countryCode from API
       for (const trend of filteredTrends) {
         const code = trend.countryCode || "BR";
         counts[code] = (counts[code] || 0) + 1;
       }
-      // Also count Reddit as US trends
       const redditCount = filteredTrends.filter((t) => t.platform === "Reddit").length;
       counts["US"] = (counts["US"] || 0) + redditCount;
-
-      // For countries without Google Trends data, add small baseline counts
-      // so they still appear on the map with minimal markers
       const baselineCountries = [
         "CN", "NL", "SE", "NO", "UA", "CL", "PE", "VE", "PT",
         "KE", "MA", "ET", "AE", "NZ", "VN", "PK",
@@ -146,5 +234,5 @@ export function useTrends(filters: FilterState, onTrendCountsChange: (counts: Re
     onTrendCountsChange(counts);
   }, [filteredTrends, filters.country, onTrendCountsChange]);
 
-  return { leftTrends, rightTrends, loading, isFirstLoad, filteredTrends, allTrends: trends };
+  return { leftTrends, rightTrends, loading, isFirstLoad, filteredTrends, allTrends: trends, fetchTrends, countriesCount };
 }

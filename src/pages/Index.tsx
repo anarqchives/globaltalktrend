@@ -2,7 +2,6 @@ import { useState, useRef, useCallback, useEffect } from "react";
 import TrendHeader from "@/components/TrendHeader";
 import FilterBar, { FilterState } from "@/components/FilterBar";
 import GoogleMapView from "@/components/GoogleMapView";
-import WorldMapPlaceholder from "@/components/WorldMapPlaceholder";
 import TimelineCard from "@/components/TimelineCard";
 import TrendCardSkeleton from "@/components/TrendCardSkeleton";
 import { TrendCardProps } from "@/components/TrendCard";
@@ -25,9 +24,21 @@ const defaultFilters: FilterState = {
 const INITIAL_COUNT = 10;
 const LOAD_MORE_COUNT = 5;
 
+// Read filters from URL params on load
+function getInitialFilters(): FilterState {
+  if (typeof window === "undefined") return defaultFilters;
+  const params = new URLSearchParams(window.location.search);
+  return {
+    country: params.get("country") || defaultFilters.country,
+    period: params.get("period") || defaultFilters.period,
+    category: params.get("category") || defaultFilters.category,
+    type: params.get("type") || defaultFilters.type,
+  };
+}
+
 const Index = () => {
   const { t } = useLanguage();
-  const [filters, setFilters] = useState<FilterState>(defaultFilters);
+  const [filters, setFilters] = useState<FilterState>(getInitialFilters);
   const [trendCounts, setTrendCounts] = useState<Record<string, number>>({});
   const [activeTrend, setActiveTrend] = useState<TrendCardProps | null>(null);
   const [mobileTab, setMobileTab] = useState<"timeline" | "map">("timeline");
@@ -36,9 +47,20 @@ const Index = () => {
   const scrollRef = useRef<HTMLDivElement>(null);
   const sentinelRef = useRef<HTMLDivElement>(null);
 
-  const { filteredTrends, allTrends, loading, isFirstLoad } = useTrends(filters, setTrendCounts);
+  const { filteredTrends, allTrends, loading, isFirstLoad, fetchTrends, countriesCount } = useTrends(filters, setTrendCounts);
 
-  // Reset visible count when filters change
+  // Sync filters to URL
+  useEffect(() => {
+    const params = new URLSearchParams();
+    if (filters.country !== defaultFilters.country) params.set("country", filters.country);
+    if (filters.period !== defaultFilters.period) params.set("period", filters.period);
+    if (filters.category !== defaultFilters.category) params.set("category", filters.category);
+    if (filters.type !== defaultFilters.type) params.set("type", filters.type);
+    const search = params.toString();
+    const newUrl = search ? `${window.location.pathname}?${search}` : window.location.pathname;
+    window.history.replaceState(null, "", newUrl);
+  }, [filters]);
+
   useEffect(() => {
     setVisibleCount(INITIAL_COUNT);
   }, [filters]);
@@ -46,11 +68,9 @@ const Index = () => {
   const visibleTrends = filteredTrends.slice(0, visibleCount);
   const hasMore = visibleCount < filteredTrends.length;
 
-  // Infinite scroll via IntersectionObserver
   useEffect(() => {
     const sentinel = sentinelRef.current;
     if (!sentinel) return;
-
     const observer = new IntersectionObserver(
       (entries) => {
         if (entries[0].isIntersecting && hasMore && !loading) {
@@ -59,7 +79,6 @@ const Index = () => {
       },
       { root: scrollRef.current, threshold: 0.1 }
     );
-
     observer.observe(sentinel);
     return () => observer.disconnect();
   }, [hasMore, loading, filteredTrends.length]);
@@ -67,6 +86,13 @@ const Index = () => {
   const handleMapClick = (code: string) => {
     setFilters((f) => ({ ...f, country: code }));
   };
+
+  const [refreshing, setRefreshing] = useState(false);
+  const handleRefresh = useCallback(async () => {
+    setRefreshing(true);
+    await fetchTrends();
+    setRefreshing(false);
+  }, [fetchTrends]);
 
   const renderTimeline = () => (
     <div ref={scrollRef} className="flex flex-col gap-1 p-2 h-full overflow-y-auto scrollbar-thin">
@@ -88,6 +114,8 @@ const Index = () => {
               onFilterPlatform={(p) => {
                 const map: Record<string, string> = {
                   "Reddit": "Redes sociais",
+                  "Bluesky": "Redes sociais",
+                  "Mastodon": "Redes sociais",
                   "NewsAPI": "Imprensa",
                   "Google Trends": "Buscas (Google)",
                   "YouTube": "Todas mídias",
@@ -96,7 +124,6 @@ const Index = () => {
               }}
             />
           ))}
-      {/* Sentinel for infinite scroll */}
       {hasMore && (
         <div ref={sentinelRef} className="flex items-center justify-center py-3">
           <div className="flex gap-1">
@@ -111,10 +138,14 @@ const Index = () => {
 
   return (
     <div className="h-screen flex flex-col bg-background overflow-hidden">
-      <TrendHeader totalTrends={filteredTrends.length} />
+      <TrendHeader
+        totalTrends={filteredTrends.length}
+        countriesCount={countriesCount}
+        onRefresh={handleRefresh}
+        refreshing={refreshing}
+      />
       <FilterBar filters={filters} onChange={setFilters} />
 
-      {/* Main layout */}
       <div className="flex-1 overflow-hidden">
         {isMobile ? (
           <div className="h-full flex flex-col">

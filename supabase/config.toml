@@ -1,1 +1,10 @@
 project_id = "mshoqtftbtbqrfjlupoy"
+
+[functions.fetch-trends]
+verify_jwt = false
+
+[functions.get-maps-key]
+verify_jwt = false
+
+[functions.summarize-trend]
+verify_jwt = false
