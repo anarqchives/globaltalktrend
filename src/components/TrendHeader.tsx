@@ -54,14 +54,16 @@ const TrendHeader = () => {
       </header>
 
       <Dialog open={aboutOpen} onOpenChange={setAboutOpen}>
-        <DialogContent className="max-w-md">
+        <DialogContent className="max-w-md bg-card/95 backdrop-blur-xl border-border/50 shadow-2xl rounded-2xl">
           <DialogHeader>
-            <DialogTitle className="text-lg font-semibold">{t("aboutTitle")}</DialogTitle>
+            <DialogTitle className="text-lg font-semibold tracking-tight">
+              Sobre o Global-Talk-Trending
+            </DialogTitle>
             <DialogDescription className="text-sm text-muted-foreground leading-relaxed mt-2">
-              {t("aboutDesc")}
+              Ferramenta gratuita e transparente de monitoramento global de trends. Mantida com dados públicos e APIs abertas.
             </DialogDescription>
           </DialogHeader>
-          <div className="mt-4 space-y-3">
+          <div className="mt-4 space-y-4">
             <div className="grid grid-cols-2 gap-2 text-xs">
               {[
                 { name: "YouTube", color: "hsl(0, 72%, 51%)" },
@@ -75,6 +77,14 @@ const TrendHeader = () => {
                 </div>
               ))}
             </div>
+            <a
+              href="LINK_DOACAO_AQUI"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center justify-center w-full py-2.5 px-4 rounded-full bg-[hsl(211,100%,50%)] hover:bg-[hsl(211,100%,45%)] text-white text-sm font-semibold tracking-tight transition-all duration-200 shadow-lg shadow-[hsl(211,100%,50%)/0.3] hover:shadow-xl hover:shadow-[hsl(211,100%,50%)/0.4] active:scale-[0.98]"
+            >
+              Apoie este projeto com doação
+            </a>
           </div>
         </DialogContent>
       </Dialog>
