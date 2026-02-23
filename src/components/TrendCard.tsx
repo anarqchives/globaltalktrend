@@ -18,6 +18,7 @@ export interface TrendCardProps {
   likeRatio?: number;
   commentCount?: number;
   region?: string;
+  countryCode?: string;
   sources?: string[];
   historicalData?: { hour: string; value: number }[];
   metricLabel?: string;
