@@ -10,28 +10,52 @@ interface MapPoint {
 }
 
 const mapPoints: MapPoint[] = [
+  // Americas
   { id: "BR", name: "Brasil", cx: 280, cy: 275 },
   { id: "US", name: "EUA", cx: 170, cy: 145 },
   { id: "CA", name: "Canadá", cx: 175, cy: 100 },
   { id: "MX", name: "México", cx: 145, cy: 190 },
   { id: "AR", name: "Argentina", cx: 268, cy: 340 },
+  { id: "CO", name: "Colômbia", cx: 232, cy: 228 },
+  { id: "CL", name: "Chile", cx: 252, cy: 345 },
+  { id: "PE", name: "Peru", cx: 240, cy: 250 },
+  { id: "VE", name: "Venezuela", cx: 250, cy: 218 },
+  // Europe
   { id: "GB", name: "Reino Unido", cx: 432, cy: 108 },
   { id: "FR", name: "França", cx: 440, cy: 138 },
   { id: "DE", name: "Alemanha", cx: 462, cy: 120 },
   { id: "ES", name: "Espanha", cx: 425, cy: 155 },
   { id: "IT", name: "Itália", cx: 468, cy: 148 },
   { id: "PT", name: "Portugal", cx: 410, cy: 155 },
+  { id: "NL", name: "Holanda", cx: 450, cy: 115 },
+  { id: "PL", name: "Polônia", cx: 480, cy: 115 },
+  { id: "SE", name: "Suécia", cx: 465, cy: 88 },
+  { id: "NO", name: "Noruega", cx: 450, cy: 82 },
+  { id: "UA", name: "Ucrânia", cx: 505, cy: 120 },
+  { id: "RU", name: "Rússia", cx: 570, cy: 90 },
+  { id: "TR", name: "Turquia", cx: 510, cy: 155 },
+  // Africa
   { id: "ZA", name: "África do Sul", cx: 490, cy: 320 },
   { id: "NG", name: "Nigéria", cx: 448, cy: 232 },
   { id: "EG", name: "Egito", cx: 500, cy: 190 },
+  { id: "KE", name: "Quênia", cx: 515, cy: 258 },
+  { id: "MA", name: "Marrocos", cx: 420, cy: 175 },
+  { id: "ET", name: "Etiópia", cx: 525, cy: 240 },
+  // Asia
   { id: "JP", name: "Japão", cx: 702, cy: 152 },
   { id: "KR", name: "Coreia do Sul", cx: 682, cy: 152 },
   { id: "IN", name: "Índia", cx: 612, cy: 212 },
   { id: "CN", name: "China", cx: 650, cy: 155 },
+  { id: "ID", name: "Indonésia", cx: 665, cy: 265 },
+  { id: "PH", name: "Filipinas", cx: 690, cy: 215 },
+  { id: "TH", name: "Tailândia", cx: 650, cy: 210 },
+  { id: "VN", name: "Vietnã", cx: 665, cy: 205 },
+  { id: "SA", name: "Arábia Saudita", cx: 540, cy: 195 },
+  { id: "AE", name: "Emirados Árabes", cx: 555, cy: 205 },
+  { id: "PK", name: "Paquistão", cx: 585, cy: 188 },
+  // Oceania
   { id: "AU", name: "Austrália", cx: 695, cy: 318 },
   { id: "NZ", name: "Nova Zelândia", cx: 752, cy: 348 },
-  { id: "CO", name: "Colômbia", cx: 232, cy: 228 },
-  { id: "CL", name: "Chile", cx: 252, cy: 345 },
 ];
 
 const continentPaths = [

@@ -13,28 +13,52 @@ interface CountryPoint {
 }
 
 const countryPoints: CountryPoint[] = [
+  // Americas
   { id: "BR", name: "Brasil", lat: -14.24, lng: -51.93 },
   { id: "US", name: "EUA", lat: 37.09, lng: -95.71 },
   { id: "CA", name: "Canadá", lat: 56.13, lng: -106.35 },
   { id: "MX", name: "México", lat: 23.63, lng: -102.55 },
   { id: "AR", name: "Argentina", lat: -38.42, lng: -63.62 },
+  { id: "CO", name: "Colômbia", lat: 4.57, lng: -74.3 },
+  { id: "CL", name: "Chile", lat: -35.68, lng: -71.54 },
+  { id: "PE", name: "Peru", lat: -9.19, lng: -75.02 },
+  { id: "VE", name: "Venezuela", lat: 6.42, lng: -66.59 },
+  // Europe
   { id: "GB", name: "Reino Unido", lat: 55.38, lng: -3.44 },
   { id: "FR", name: "França", lat: 46.23, lng: 2.21 },
   { id: "DE", name: "Alemanha", lat: 51.17, lng: 10.45 },
   { id: "ES", name: "Espanha", lat: 40.46, lng: -3.75 },
   { id: "IT", name: "Itália", lat: 41.87, lng: 12.57 },
   { id: "PT", name: "Portugal", lat: 39.4, lng: -8.22 },
+  { id: "NL", name: "Holanda", lat: 52.13, lng: 5.29 },
+  { id: "PL", name: "Polônia", lat: 51.92, lng: 19.15 },
+  { id: "SE", name: "Suécia", lat: 60.13, lng: 18.64 },
+  { id: "NO", name: "Noruega", lat: 60.47, lng: 8.47 },
+  { id: "UA", name: "Ucrânia", lat: 48.38, lng: 31.17 },
+  { id: "RU", name: "Rússia", lat: 61.52, lng: 105.32 },
+  { id: "TR", name: "Turquia", lat: 38.96, lng: 35.24 },
+  // Africa
   { id: "ZA", name: "África do Sul", lat: -30.56, lng: 22.94 },
   { id: "NG", name: "Nigéria", lat: 9.08, lng: 8.68 },
   { id: "EG", name: "Egito", lat: 26.82, lng: 30.8 },
+  { id: "KE", name: "Quênia", lat: -0.02, lng: 37.91 },
+  { id: "MA", name: "Marrocos", lat: 31.79, lng: -7.09 },
+  { id: "ET", name: "Etiópia", lat: 9.15, lng: 40.49 },
+  // Asia
   { id: "JP", name: "Japão", lat: 36.2, lng: 138.25 },
   { id: "KR", name: "Coreia do Sul", lat: 35.91, lng: 127.77 },
   { id: "IN", name: "Índia", lat: 20.59, lng: 78.96 },
   { id: "CN", name: "China", lat: 35.86, lng: 104.2 },
+  { id: "ID", name: "Indonésia", lat: -0.79, lng: 113.92 },
+  { id: "PH", name: "Filipinas", lat: 12.88, lng: 121.77 },
+  { id: "TH", name: "Tailândia", lat: 15.87, lng: 100.99 },
+  { id: "VN", name: "Vietnã", lat: 14.06, lng: 108.28 },
+  { id: "SA", name: "Arábia Saudita", lat: 23.89, lng: 45.08 },
+  { id: "AE", name: "Emirados Árabes", lat: 23.42, lng: 53.85 },
+  { id: "PK", name: "Paquistão", lat: 30.38, lng: 69.35 },
+  // Oceania
   { id: "AU", name: "Austrália", lat: -25.27, lng: 133.78 },
   { id: "NZ", name: "Nova Zelândia", lat: -40.9, lng: 174.89 },
-  { id: "CO", name: "Colômbia", lat: 4.57, lng: -74.3 },
-  { id: "CL", name: "Chile", lat: -35.68, lng: -71.54 },
 ];
 
 type MapViewType = "roadmap" | "satellite" | "terrain";

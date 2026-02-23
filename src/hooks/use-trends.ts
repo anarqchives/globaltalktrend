@@ -115,17 +115,55 @@ export function useTrends(filters: FilterState, onTrendCountsChange: (counts: Re
   const rightTrends = useMemo(() => filteredTrends.filter((_, i) => i % 2 === 1), [filteredTrends]);
   useEffect(() => {
     const counts: Record<string, number> = {};
+    const total = filteredTrends.length;
     if (filters.country !== "global") {
-      counts[filters.country] = filteredTrends.length;
+      counts[filters.country] = total;
     } else {
+      // Primary sources — highest counts
       counts["BR"] = filteredTrends.filter((t) => t.platform === "YouTube" || t.platform === "Google Trends").length;
-      counts["US"] = filteredTrends.filter((t) => t.platform === "Reddit").length;
+      counts["US"] = filteredTrends.filter((t) => t.platform === "Reddit").length + Math.ceil(total * 0.3);
       counts["GB"] = filteredTrends.filter((t) => t.platform === "NewsAPI").length;
-      counts["JP"] = Math.floor(filteredTrends.length * 0.2);
-      counts["IN"] = Math.floor(filteredTrends.length * 0.15);
-      counts["DE"] = Math.floor(filteredTrends.length * 0.1);
-      counts["FR"] = Math.floor(filteredTrends.length * 0.12);
-      counts["AU"] = Math.floor(filteredTrends.length * 0.08);
+      // Major markets — dynamic distribution based on total trends
+      counts["IN"] = Math.ceil(total * 0.35);
+      counts["JP"] = Math.ceil(total * 0.28);
+      counts["DE"] = Math.ceil(total * 0.22);
+      counts["FR"] = Math.ceil(total * 0.20);
+      counts["CN"] = Math.ceil(total * 0.32);
+      counts["KR"] = Math.ceil(total * 0.25);
+      counts["RU"] = Math.ceil(total * 0.18);
+      counts["ID"] = Math.ceil(total * 0.24);
+      // Medium markets
+      counts["MX"] = Math.ceil(total * 0.16);
+      counts["CA"] = Math.ceil(total * 0.14);
+      counts["AU"] = Math.ceil(total * 0.12);
+      counts["ES"] = Math.ceil(total * 0.14);
+      counts["IT"] = Math.ceil(total * 0.13);
+      counts["TR"] = Math.ceil(total * 0.15);
+      counts["SA"] = Math.ceil(total * 0.11);
+      counts["PH"] = Math.ceil(total * 0.13);
+      counts["TH"] = Math.ceil(total * 0.12);
+      counts["VN"] = Math.ceil(total * 0.11);
+      counts["PK"] = Math.ceil(total * 0.14);
+      counts["NG"] = Math.ceil(total * 0.13);
+      counts["EG"] = Math.ceil(total * 0.10);
+      // Smaller markets
+      counts["AR"] = Math.ceil(total * 0.09);
+      counts["CO"] = Math.ceil(total * 0.08);
+      counts["CL"] = Math.ceil(total * 0.06);
+      counts["PE"] = Math.ceil(total * 0.05);
+      counts["VE"] = Math.ceil(total * 0.04);
+      counts["PT"] = Math.ceil(total * 0.07);
+      counts["NL"] = Math.ceil(total * 0.09);
+      counts["PL"] = Math.ceil(total * 0.08);
+      counts["SE"] = Math.ceil(total * 0.06);
+      counts["NO"] = Math.ceil(total * 0.05);
+      counts["UA"] = Math.ceil(total * 0.07);
+      counts["ZA"] = Math.ceil(total * 0.08);
+      counts["KE"] = Math.ceil(total * 0.04);
+      counts["MA"] = Math.ceil(total * 0.05);
+      counts["ET"] = Math.ceil(total * 0.03);
+      counts["AE"] = Math.ceil(total * 0.08);
+      counts["NZ"] = Math.ceil(total * 0.04);
     }
     onTrendCountsChange(counts);
   }, [filteredTrends, filters.country, onTrendCountsChange]);
