@@ -1,6 +1,7 @@
 import { useState, useRef, useCallback, useEffect } from "react";
 import TrendHeader from "@/components/TrendHeader";
 import FilterBar, { FilterState } from "@/components/FilterBar";
+import GoogleMapView from "@/components/GoogleMapView";
 import WorldMapPlaceholder from "@/components/WorldMapPlaceholder";
 import TimelineCard from "@/components/TimelineCard";
 import TrendCardSkeleton from "@/components/TrendCardSkeleton";
@@ -134,7 +135,7 @@ const Index = () => {
               {mobileTab === "timeline" ? (
                 renderTimeline()
               ) : (
-                <WorldMapPlaceholder
+                <GoogleMapView
                   trendCounts={trendCounts}
                   selectedCountry={filters.country}
                   onSelectCountry={handleMapClick}
@@ -152,7 +153,7 @@ const Index = () => {
             <ResizableHandle withHandle />
             <ResizablePanel defaultSize={62}>
               <div className="h-full bg-secondary/10">
-                <WorldMapPlaceholder
+                <GoogleMapView
                   trendCounts={trendCounts}
                   selectedCountry={filters.country}
                   onSelectCountry={handleMapClick}
