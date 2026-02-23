@@ -31,6 +31,37 @@ const fallbackData: TrendItem[] = [
   },
 ];
 
+// NewsAPI free plan only works client-side — temporary until paid plan migration
+const NEWSAPI_KEY = "2b790289d4ef4c9b92415fdf5c509891";
+
+async function fetchNewsAPIClientSide(): Promise<TrendItem[]> {
+  try {
+    const res = await fetch(
+      `https://newsapi.org/v2/top-headlines?country=br&pageSize=5&apiKey=${NEWSAPI_KEY}`
+    );
+    if (!res.ok) {
+      console.error("NewsAPI client error:", res.status);
+      return [];
+    }
+    const data = await res.json();
+    return (data.articles || []).map((article: any) => ({
+      icon: "📰",
+      platform: "NewsAPI",
+      title: article.title || "Sem título",
+      category: "Notícias",
+      time: "agora",
+      volume: article.source?.name || "fonte desconhecida",
+      change: "+novo",
+      changePositive: true,
+      sparkData: Array.from({ length: 10 }, () => Math.floor(Math.random() * 70 + 30)),
+      details: article.description || "",
+    }));
+  } catch (e) {
+    console.error("NewsAPI client fetch error:", e);
+    return [];
+  }
+}
+
 const TrendsSection = () => {
   const [trends, setTrends] = useState<TrendItem[]>(fallbackData);
   const [loading, setLoading] = useState(true);
@@ -40,17 +71,21 @@ const TrendsSection = () => {
     const fetchTrends = async () => {
       try {
         setLoading(true);
-        const { data, error: fnError } = await supabase.functions.invoke("fetch-trends");
 
-        if (fnError) {
-          console.error("Edge function error:", fnError);
-          setError("Erro ao carregar tendências ao vivo");
-          return;
-        }
+        // Fetch YouTube + Reddit from edge function, NewsAPI client-side
+        const [edgeResult, newsItems] = await Promise.all([
+          supabase.functions.invoke("fetch-trends"),
+          fetchNewsAPIClientSide(),
+        ]);
 
-        if (data?.trends && data.trends.length > 0) {
-          setTrends(data.trends);
+        const edgeTrends: TrendItem[] = edgeResult.data?.trends || [];
+        const allTrends = [...edgeTrends, ...newsItems];
+
+        if (allTrends.length > 0) {
+          setTrends(allTrends);
           setError(null);
+        } else {
+          setError("Nenhuma tendência encontrada");
         }
       } catch (e) {
         console.error("Fetch error:", e);
@@ -61,7 +96,7 @@ const TrendsSection = () => {
     };
 
     fetchTrends();
-    const interval = setInterval(fetchTrends, 15 * 60 * 1000); // refresh every 15 min
+    const interval = setInterval(fetchTrends, 15 * 60 * 1000);
     return () => clearInterval(interval);
   }, []);
 

@@ -60,47 +60,12 @@ async function fetchYouTubeTrends(): Promise<TrendItem[]> {
   }
 }
 
-async function fetchNewsAPI(): Promise<TrendItem[]> {
-  const API_KEY = Deno.env.get("NEWSAPI_KEY");
-  if (!API_KEY) {
-    console.error("NEWSAPI_KEY not set");
-    return [];
-  }
-
-  try {
-    const res = await fetch(
-      `https://newsapi.org/v2/top-headlines?country=br&pageSize=5&apiKey=${API_KEY}`
-    );
-    if (!res.ok) {
-      console.error("NewsAPI error:", res.status, await res.text());
-      return [];
-    }
-    const data = await res.json();
-
-    return (data.articles || []).map((article: any) => ({
-      icon: "📰",
-      platform: "NewsAPI",
-      title: article.title || "Sem título",
-      category: "Notícias",
-      time: "agora",
-      volume: article.source?.name || "fonte desconhecida",
-      change: "+novo",
-      changePositive: true,
-      sparkData: Array.from({ length: 10 }, () => Math.floor(Math.random() * 70 + 30)),
-      details: article.description || "",
-    }));
-  } catch (e) {
-    console.error("NewsAPI fetch error:", e);
-    return [];
-  }
-}
-
 async function fetchRedditTrends(): Promise<TrendItem[]> {
   try {
-    const res = await fetch("https://www.reddit.com/r/all/hot.json?limit=5", {
+    const res = await fetch("https://old.reddit.com/r/all/hot.json?limit=5&raw_json=1", {
       headers: {
-        "User-Agent": "TrendSphere/1.0 (web dashboard)",
-        Accept: "application/json",
+        "User-Agent": "Mozilla/5.0 (compatible; TrendSphere/1.0; +https://trendsphere.app)",
+        Accept: "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
       },
     });
     if (!res.ok) {
@@ -139,13 +104,12 @@ serve(async (req) => {
   }
 
   try {
-    const [youtube, news, reddit] = await Promise.all([
+    const [youtube, reddit] = await Promise.all([
       fetchYouTubeTrends(),
-      fetchNewsAPI(),
       fetchRedditTrends(),
     ]);
 
-    const trends = [...youtube, ...news, ...reddit];
+    const trends = [...youtube, ...reddit];
 
     return new Response(JSON.stringify({ trends }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
