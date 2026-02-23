@@ -48,8 +48,8 @@
     /* Custom tokens */
     --glass-bg: 0 0% 100% / 0.8;
     --glass-border: 0 0% 0% / 0.1;
-    --card-shadow: 0 8px 24px rgba(0,0,0,0.04);
-    --card-hover-shadow: 0 12px 24px rgba(0,0,0,0.06);
+    --card-shadow: 0 2px 8px rgba(0,0,0,0.03);
+    --card-hover-shadow: 0 4px 12px rgba(0,0,0,0.06);
     --gradient-brand: linear-gradient(135deg, hsl(210 100% 40%), hsl(210 100% 33%));
     --warning-bg: 40 100% 90%;
     --warning-fg: 30 100% 35%;
@@ -100,6 +100,7 @@
     -webkit-backdrop-filter: blur(20px);
     border-bottom: 1px solid hsl(var(--glass-border));
   }
+
   .filter-pill {
     @apply bg-secondary border border-input rounded-full px-4 py-2 text-sm font-medium text-foreground cursor-pointer outline-none transition-colors;
     appearance: none;
@@ -113,6 +114,29 @@
   .filter-pill:hover {
     @apply bg-muted;
   }
+
+  .filter-pill-compact {
+    @apply bg-secondary/80 border border-input rounded-full px-3 py-1.5 text-xs font-medium text-foreground cursor-pointer outline-none transition-colors;
+    appearance: none;
+    background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2386868b' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+    background-repeat: no-repeat;
+    background-position: right 0.5rem center;
+    background-size: 0.8em;
+    padding-right: 2rem;
+    min-width: 110px;
+  }
+  .filter-pill-compact:hover {
+    @apply bg-muted;
+  }
+
+  .timeline-card {
+    @apply bg-card rounded-xl px-3 py-2.5 border border-transparent transition-all duration-150 cursor-pointer;
+  }
+  .timeline-card:hover {
+    @apply border-border;
+    box-shadow: var(--card-hover-shadow);
+  }
+
   .trend-card-base {
     @apply bg-card rounded-[20px] p-5 border border-border transition-all duration-200 cursor-pointer;
     box-shadow: var(--card-shadow);
@@ -122,13 +146,20 @@
     box-shadow: var(--card-hover-shadow);
     border-color: hsl(var(--primary) / 0.3);
   }
+
+  .peak-badge {
+    @apply px-1.5 py-0.5 rounded-full text-[10px] font-bold;
+    background: hsl(var(--warning-bg));
+    color: hsl(var(--warning-fg));
+  }
+
   .source-tag {
     background: hsl(var(--source-bg));
     color: hsl(var(--source-fg));
     @apply px-3 py-1 rounded-full text-sm font-medium;
   }
   .volume-badge {
-    @apply bg-secondary px-2.5 py-0.5 rounded-full text-sm font-medium;
+    @apply bg-secondary px-2 py-0.5 rounded-full text-xs font-medium;
   }
   .warning-badge {
     background: hsl(var(--warning-bg));
@@ -140,5 +171,21 @@
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
+  }
+
+  /* Scrollbar */
+  .scrollbar-thin {
+    scrollbar-width: thin;
+    scrollbar-color: hsl(var(--muted)) transparent;
+  }
+  .scrollbar-thin::-webkit-scrollbar {
+    width: 4px;
+  }
+  .scrollbar-thin::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  .scrollbar-thin::-webkit-scrollbar-thumb {
+    background: hsl(var(--muted));
+    border-radius: 4px;
   }
 }

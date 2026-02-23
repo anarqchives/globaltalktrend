@@ -1,5 +1,3 @@
-import { useState } from "react";
-
 export interface FilterState {
   country: string;
   period: string;
@@ -26,7 +24,7 @@ const countries = [
     { value: "MX", label: "🇲🇽 México" },
   ]},
   { group: "Europa", items: [
-    { value: "GB", label: "🇬🇧 Reino Unido" },
+    { value: "GB", label: "🇬🇧 UK" },
     { value: "FR", label: "🇫🇷 França" },
     { value: "DE", label: "🇩🇪 Alemanha" },
     { value: "ES", label: "🇪🇸 Espanha" },
@@ -35,7 +33,7 @@ const countries = [
   ]},
   { group: "Ásia", items: [
     { value: "JP", label: "🇯🇵 Japão" },
-    { value: "KR", label: "🇰🇷 Coreia do Sul" },
+    { value: "KR", label: "🇰🇷 Coreia" },
     { value: "IN", label: "🇮🇳 Índia" },
     { value: "CN", label: "🇨🇳 China" },
   ]},
@@ -52,7 +50,7 @@ const countries = [
 
 const categories = [
   "Todas", "Política", "Entretenimento", "Tecnologia",
-  "Esportes", "Cultura", "Negócios/Finanças", "Ciência", "Notícias",
+  "Esportes", "Cultura", "Negócios/Finanças", "Ciência",
 ];
 
 const periods = ["Última hora", "Hoje", "Esta semana", "Este mês"];
@@ -64,61 +62,26 @@ const FilterBar = ({ filters, onChange }: FilterBarProps) => {
   };
 
   return (
-    <div className="bg-card rounded-[20px] p-4 md:p-5 border border-border flex flex-col sm:flex-row flex-wrap gap-3 md:gap-5 items-stretch sm:items-center" style={{ boxShadow: "0 4px 12px rgba(0,0,0,0.02)" }}>
-      <div className="flex items-center gap-2">
-        <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider whitespace-nowrap">País</span>
-        <select
-          className="filter-pill"
-          value={filters.country}
-          onChange={(e) => update("country", e.target.value)}
-        >
-          {countries.map((group) => (
-            <optgroup key={group.group} label={group.group}>
-              {group.items.map((c) => (
-                <option key={c.value} value={c.value}>{c.label}</option>
-              ))}
-            </optgroup>
-          ))}
-        </select>
-      </div>
-
-      <div className="flex items-center gap-2">
-        <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider whitespace-nowrap">Período</span>
-        <select
-          className="filter-pill"
-          value={filters.period}
-          onChange={(e) => update("period", e.target.value)}
-        >
-          {periods.map((p) => (
-            <option key={p} value={p}>{p}</option>
-          ))}
-        </select>
-      </div>
-
-      <div className="flex items-center gap-2">
-        <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider whitespace-nowrap">Categoria</span>
-        <select
-          className="filter-pill"
-          value={filters.category}
-          onChange={(e) => update("category", e.target.value)}
-        >
-          {categories.map((c) => (
-            <option key={c} value={c}>{c}</option>
-          ))}
-        </select>
-      </div>
-
-      <div className="flex items-center gap-2">
-        <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider whitespace-nowrap">Tipo</span>
-        <select
-          className="filter-pill"
-          value={filters.type}
-          onChange={(e) => update("type", e.target.value)}
-        >
-          {types.map((t) => (
-            <option key={t} value={t}>{t}</option>
-          ))}
-        </select>
+    <div className="flex flex-wrap gap-2 items-center px-4 md:px-6 py-2 bg-card/80 backdrop-blur-sm border-b border-border">
+      <select className="filter-pill-compact" value={filters.country} onChange={(e) => update("country", e.target.value)}>
+        {countries.map((group) => (
+          <optgroup key={group.group} label={group.group}>
+            {group.items.map((c) => <option key={c.value} value={c.value}>{c.label}</option>)}
+          </optgroup>
+        ))}
+      </select>
+      <select className="filter-pill-compact" value={filters.period} onChange={(e) => update("period", e.target.value)}>
+        {periods.map((p) => <option key={p} value={p}>{p}</option>)}
+      </select>
+      <select className="filter-pill-compact" value={filters.category} onChange={(e) => update("category", e.target.value)}>
+        {categories.map((c) => <option key={c} value={c}>{c}</option>)}
+      </select>
+      <select className="filter-pill-compact" value={filters.type} onChange={(e) => update("type", e.target.value)}>
+        {types.map((t) => <option key={t} value={t}>{t}</option>)}
+      </select>
+      <div className="ml-auto flex items-center gap-1.5 text-[10px] text-muted-foreground">
+        <span className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ background: "hsl(142, 72%, 45%)" }} />
+        ao vivo
       </div>
     </div>
   );
