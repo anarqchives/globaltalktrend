@@ -1,7 +1,9 @@
-import { AreaChart, Area, ResponsiveContainer } from "recharts";
-import { useState } from "react";
+import { AreaChart, Area, ResponsiveContainer, XAxis, YAxis, Tooltip, CartesianGrid } from "recharts";
+import { useState, lazy, Suspense } from "react";
+import { Share2, MessageCircle, ThumbsUp, MapPin, Newspaper } from "lucide-react";
+import { toast } from "@/hooks/use-toast";
 
-interface TrendCardProps {
+export interface TrendCardProps {
   icon: string;
   platform: string;
   title: string;
@@ -13,7 +15,20 @@ interface TrendCardProps {
   sparkData: number[];
   limited?: boolean;
   details?: string;
+  likeRatio?: number;
+  commentCount?: number;
+  region?: string;
+  sources?: string[];
+  historicalData?: { hour: string; value: number }[];
+  metricLabel?: string;
 }
+
+const platformColors: Record<string, { stroke: string; fill: string }> = {
+  YouTube: { stroke: "hsl(0, 72%, 51%)", fill: "hsl(0, 72%, 51%)" },
+  Reddit: { stroke: "hsl(16, 100%, 50%)", fill: "hsl(16, 100%, 50%)" },
+  "Google Trends": { stroke: "hsl(210, 100%, 40%)", fill: "hsl(210, 100%, 40%)" },
+  NewsAPI: { stroke: "hsl(142, 60%, 40%)", fill: "hsl(142, 60%, 40%)" },
+};
 
 const TrendCard = ({
   icon,
@@ -27,62 +42,174 @@ const TrendCard = ({
   sparkData,
   limited,
   details,
+  likeRatio,
+  commentCount,
+  region,
+  sources,
+  historicalData,
+  metricLabel,
 }: TrendCardProps) => {
   const [expanded, setExpanded] = useState(false);
 
   const chartData = sparkData.map((v, i) => ({ x: i, y: v }));
+  const colors = platformColors[platform] || platformColors["Google Trends"];
+  const gradientId = `grad-${title.replace(/[^a-zA-Z0-9]/g, "").slice(0, 10)}-${Math.random().toString(36).slice(2, 6)}`;
+  const histGradientId = `hist-${gradientId}`;
+
+  const handleShare = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    const text = `${title} — ${volume} (${platform})`;
+    navigator.clipboard.writeText(text);
+    toast({ title: "Link copiado!", description: text.slice(0, 80) });
+  };
 
   return (
     <div className="trend-card-base" onClick={() => setExpanded(!expanded)}>
-      <div className="flex items-center gap-2.5 mb-3">
-        <div
-          className={`w-7 h-7 rounded-lg flex items-center justify-center bg-secondary text-base ${
-            limited ? "opacity-50 grayscale-[50%]" : ""
-          }`}
-        >
-          {icon}
+      {/* Header */}
+      <div className="flex items-center justify-between mb-3">
+        <div className="flex items-center gap-2.5">
+          <div
+            className={`w-7 h-7 rounded-lg flex items-center justify-center bg-secondary text-base ${
+              limited ? "opacity-50 grayscale-[50%]" : ""
+            }`}
+          >
+            {icon}
+          </div>
+          <span className="text-sm font-medium text-muted-foreground">{platform}</span>
+          {limited && <span className="warning-badge">⚠ acesso limitado</span>}
         </div>
-        <span className="text-sm font-medium text-muted-foreground">{platform}</span>
-        {limited && <span className="warning-badge">⚠ acesso limitado</span>}
+        <button
+          onClick={handleShare}
+          className="p-1.5 rounded-full hover:bg-secondary transition-colors text-muted-foreground hover:text-foreground"
+          title="Compartilhar"
+        >
+          <Share2 className="w-3.5 h-3.5" />
+        </button>
       </div>
 
-      <h3 className="text-base font-semibold mb-1">{title}</h3>
+      <h3 className="text-base font-semibold mb-1 line-clamp-2">{title}</h3>
 
       <div className="flex gap-3 text-xs text-muted-foreground mb-3">
         <span>{category}</span>
         <span>{time}</span>
       </div>
 
-      <div className="flex items-center gap-3 text-sm font-medium">
+      {/* Volume + Change + Platform Metrics */}
+      <div className="flex items-center gap-2 text-sm font-medium flex-wrap">
         <span className="volume-badge">{volume}</span>
         <span className={changePositive ? "text-green-600" : "text-red-500"}>
           {change}
         </span>
+        {/* Platform-specific inline metrics */}
+        {platform === "YouTube" && likeRatio !== undefined && likeRatio > 0 && (
+          <span className="inline-flex items-center gap-1 text-xs text-muted-foreground">
+            <ThumbsUp className="w-3 h-3" /> {likeRatio}%
+          </span>
+        )}
+        {platform === "Reddit" && commentCount !== undefined && (
+          <span className="inline-flex items-center gap-1 text-xs text-muted-foreground">
+            <MessageCircle className="w-3 h-3" /> {commentCount >= 1000 ? `${(commentCount / 1000).toFixed(1)}K` : commentCount}
+          </span>
+        )}
+        {platform === "Google Trends" && region && (
+          <span className="inline-flex items-center gap-1 text-xs text-muted-foreground">
+            <MapPin className="w-3 h-3" /> {region}
+          </span>
+        )}
+        {platform === "NewsAPI" && sources && sources.length > 0 && (
+          <span className="inline-flex items-center gap-1 text-xs text-muted-foreground">
+            <Newspaper className="w-3 h-3" /> {sources[0]}
+          </span>
+        )}
       </div>
 
+      {/* Mini sparkline */}
       <div className="h-10 mt-3">
         <ResponsiveContainer width="100%" height="100%">
           <AreaChart data={chartData}>
             <defs>
-              <linearGradient id={`grad-${title.slice(0, 5)}`} x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stopColor="hsl(210, 100%, 40%)" stopOpacity={0.3} />
-                <stop offset="100%" stopColor="hsl(210, 100%, 40%)" stopOpacity={0} />
+              <linearGradient id={gradientId} x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stopColor={colors.stroke} stopOpacity={0.3} />
+                <stop offset="100%" stopColor={colors.stroke} stopOpacity={0} />
               </linearGradient>
             </defs>
             <Area
               type="monotone"
               dataKey="y"
-              stroke="hsl(210, 100%, 40%)"
+              stroke={colors.stroke}
               strokeWidth={1.5}
-              fill={`url(#grad-${title.slice(0, 5)})`}
+              fill={`url(#${gradientId})`}
             />
           </AreaChart>
         </ResponsiveContainer>
       </div>
 
-      {expanded && details && (
-        <div className="mt-4 pt-4 border-t border-border text-sm text-muted-foreground animate-in fade-in duration-200">
-          {details}
+      {/* Expanded details with historical chart */}
+      {expanded && (
+        <div className="mt-4 pt-4 border-t border-border animate-in fade-in slide-in-from-top-2 duration-300">
+          {details && (
+            <p className="text-sm text-muted-foreground mb-4">{details}</p>
+          )}
+
+          {/* Historical 24h chart */}
+          {historicalData && historicalData.length > 0 && (
+            <div>
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                  Evolução 24h
+                </span>
+                <span className="text-xs text-muted-foreground">{metricLabel}</span>
+              </div>
+              <div className="h-36 -mx-1">
+                <ResponsiveContainer width="100%" height="100%">
+                  <AreaChart data={historicalData}>
+                    <defs>
+                      <linearGradient id={histGradientId} x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0%" stopColor={colors.stroke} stopOpacity={0.2} />
+                        <stop offset="100%" stopColor={colors.stroke} stopOpacity={0} />
+                      </linearGradient>
+                    </defs>
+                    <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                    <XAxis
+                      dataKey="hour"
+                      tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }}
+                      tickLine={false}
+                      axisLine={false}
+                      interval={5}
+                    />
+                    <YAxis
+                      tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }}
+                      tickLine={false}
+                      axisLine={false}
+                      width={35}
+                      tickFormatter={(v) => v >= 1000 ? `${(v / 1000).toFixed(0)}K` : v}
+                    />
+                    <Tooltip
+                      contentStyle={{
+                        background: "hsl(var(--card))",
+                        border: "1px solid hsl(var(--border))",
+                        borderRadius: "12px",
+                        fontSize: 12,
+                        boxShadow: "0 4px 12px rgba(0,0,0,0.08)",
+                      }}
+                      labelStyle={{ color: "hsl(var(--foreground))", fontWeight: 600 }}
+                      formatter={(value: number) => [
+                        value >= 1000 ? `${(value / 1000).toFixed(1)}K` : value,
+                        metricLabel || "valor",
+                      ]}
+                    />
+                    <Area
+                      type="monotone"
+                      dataKey="value"
+                      stroke={colors.stroke}
+                      strokeWidth={2}
+                      fill={`url(#${histGradientId})`}
+                    />
+                  </AreaChart>
+                </ResponsiveContainer>
+              </div>
+            </div>
+          )}
         </div>
       )}
     </div>
