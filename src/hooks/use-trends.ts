@@ -102,6 +102,10 @@ export function useTrends(filters: FilterState, onTrendCountsChange: (counts: Re
 
   const filteredTrends = useMemo(() => {
     let result = trends;
+    // Filter by country
+    if (filters.country !== "global") {
+      result = result.filter((t) => t.countryCode === filters.country);
+    }
     if (filters.type === "Redes sociais") result = result.filter((t) => t.platform === "Reddit");
     else if (filters.type === "Imprensa") result = result.filter((t) => t.platform === "NewsAPI");
     else if (filters.type === "Buscas (Google)") result = result.filter((t) => t.platform === "Google Trends");
