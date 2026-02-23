@@ -1,12 +1,21 @@
-// Update this page (the content is just a fallback if you fail to update the page)
+import TrendHeader from "@/components/TrendHeader";
+import FilterBar from "@/components/FilterBar";
+import WorldMapPlaceholder from "@/components/WorldMapPlaceholder";
+import TrendsSection from "@/components/TrendsSection";
+import TrendFooter from "@/components/TrendFooter";
 
 const Index = () => {
   return (
-    <div className="flex min-h-screen items-center justify-center bg-background">
-      <div className="text-center">
-        <h1 className="mb-4 text-4xl font-bold">Welcome to Your Blank App</h1>
-        <p className="text-xl text-muted-foreground">Start building your amazing project here!</p>
-      </div>
+    <div className="min-h-screen bg-background">
+      <TrendHeader />
+      <main className="max-w-[1440px] mx-auto px-4 md:px-8 py-6">
+        <FilterBar />
+        <div className="mt-6">
+          <WorldMapPlaceholder />
+        </div>
+        <TrendsSection />
+      </main>
+      <TrendFooter />
     </div>
   );
 };
