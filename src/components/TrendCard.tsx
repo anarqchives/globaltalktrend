@@ -31,6 +31,11 @@ const platformColors: Record<string, { stroke: string; fill: string }> = {
   NewsAPI: { stroke: "hsl(142, 60%, 40%)", fill: "hsl(142, 60%, 40%)" },
 };
 
+const countryCodeToFlag = (code?: string) => {
+  if (!code || code.length !== 2) return null;
+  return String.fromCodePoint(...[...code.toUpperCase()].map(c => 0x1F1E6 + c.charCodeAt(0) - 65));
+};
+
 const TrendCard = ({
   icon,
   platform,
@@ -46,11 +51,13 @@ const TrendCard = ({
   likeRatio,
   commentCount,
   region,
+  countryCode,
   sources,
   historicalData,
   metricLabel,
 }: TrendCardProps) => {
   const [expanded, setExpanded] = useState(false);
+  const flag = countryCodeToFlag(countryCode);
 
   const chartData = sparkData.map((v, i) => ({ x: i, y: v }));
   const colors = platformColors[platform] || platformColors["Google Trends"];
@@ -77,6 +84,7 @@ const TrendCard = ({
             {icon}
           </div>
           <span className="text-sm font-medium text-muted-foreground">{platform}</span>
+          {flag && <span className="text-sm" title={countryCode}>{flag}</span>}
           {limited && <span className="warning-badge">⚠ acesso limitado</span>}
         </div>
         <button
