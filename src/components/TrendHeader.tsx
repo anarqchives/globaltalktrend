@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { Info } from "lucide-react";
+import { useState, useEffect } from "react";
+import { Info, Sun, Moon } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useLanguage, languages } from "@/contexts/LanguageContext";
 import {
@@ -14,6 +14,19 @@ import {
 const TrendHeader = () => {
   const { lang, setLang, t } = useLanguage();
   const [aboutOpen, setAboutOpen] = useState(false);
+  const [dark, setDark] = useState(() => {
+    if (typeof window !== "undefined") {
+      const saved = localStorage.getItem("theme");
+      if (saved) return saved === "dark";
+      return window.matchMedia("(prefers-color-scheme: dark)").matches;
+    }
+    return false;
+  });
+
+  useEffect(() => {
+    document.documentElement.classList.toggle("dark", dark);
+    localStorage.setItem("theme", dark ? "dark" : "light");
+  }, [dark]);
 
   return (
     <>
@@ -41,6 +54,25 @@ const TrendHeader = () => {
                 </button>
               ))}
             </div>
+
+            <button
+              onClick={() => setDark(!dark)}
+              className="p-1.5 rounded-full text-muted-foreground hover:bg-secondary transition-colors"
+              title={dark ? "Modo claro" : "Modo escuro"}
+            >
+              <AnimatePresence mode="wait" initial={false}>
+                <motion.span
+                  key={dark ? "moon" : "sun"}
+                  initial={{ rotate: -90, opacity: 0 }}
+                  animate={{ rotate: 0, opacity: 1 }}
+                  exit={{ rotate: 90, opacity: 0 }}
+                  transition={{ duration: 0.2 }}
+                  className="block"
+                >
+                  {dark ? <Sun className="w-3.5 h-3.5" /> : <Moon className="w-3.5 h-3.5" />}
+                </motion.span>
+              </AnimatePresence>
+            </button>
 
             <div className="w-px h-5 bg-border mx-1" />
 
