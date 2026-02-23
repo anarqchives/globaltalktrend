@@ -114,7 +114,7 @@ const TrendsSection = () => {
           {error && (
             <span className="text-xs text-destructive">{error}</span>
           )}
-          <span className="source-tag">fontes: YouTube · NewsAPI · Reddit</span>
+          <span className="source-tag">fontes: YouTube · NewsAPI · Reddit · Google Trends</span>
         </div>
       </div>
 
@@ -133,7 +133,7 @@ const TrendsSection = () => {
         </p>
         <p>
           <span className="font-medium text-foreground">
-            ✅ YouTube · Reddit · NewsAPI
+            ✅ YouTube · Reddit · NewsAPI · Google Trends
           </span>{" "}
           <span className="ml-2">⚠️ Demais redes: acesso limitado</span>
         </p>

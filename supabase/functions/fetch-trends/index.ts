@@ -60,6 +60,62 @@ async function fetchYouTubeTrends(): Promise<TrendItem[]> {
   }
 }
 
+async function fetchGoogleTrends(): Promise<TrendItem[]> {
+  try {
+    // Use RSS feed — more permissive from server IPs
+    const res = await fetch(
+      "https://trends.google.com/trending/rss?geo=BR",
+      {
+        headers: {
+          "User-Agent": "Mozilla/5.0 (compatible; TrendSphere/1.0)",
+          "Accept": "application/xml, text/xml, */*",
+        },
+      }
+    );
+    if (!res.ok) {
+      console.error("Google Trends RSS error:", res.status, await res.text());
+      return [];
+    }
+    const xml = await res.text();
+    
+    // Parse XML items manually (no XML parser in Deno edge)
+    const items: TrendItem[] = [];
+    const itemRegex = /<item>([\s\S]*?)<\/item>/g;
+    let match;
+    let count = 0;
+    while ((match = itemRegex.exec(xml)) !== null && count < 5) {
+      const block = match[1];
+      const title = block.match(/<title><!\[CDATA\[(.*?)\]\]><\/title>/)?.[1] 
+        || block.match(/<title>(.*?)<\/title>/)?.[1] 
+        || "Sem título";
+      const traffic = block.match(/<ht:approx_traffic>(.*?)<\/ht:approx_traffic>/)?.[1] || "N/A";
+      const newsTitle = block.match(/<ht:news_item_title><!\[CDATA\[(.*?)\]\]>/)?.[1] 
+        || block.match(/<ht:news_item_title>(.*?)<\/ht:news_item_title>/)?.[1] || "";
+      const newsSource = block.match(/<ht:news_item_source>(.*?)<\/ht:news_item_source>/)?.[1] || "Tendência";
+      
+      items.push({
+        icon: "🔍",
+        platform: "Google Trends",
+        title,
+        category: newsSource,
+        time: "agora",
+        volume: `${traffic} buscas`,
+        change: "+trending",
+        changePositive: true,
+        sparkData: Array.from({ length: 10 }, () => Math.floor(Math.random() * 80 + 20)),
+        details: newsTitle,
+      });
+      count++;
+    }
+    
+    console.log(`Google Trends: found ${items.length} items`);
+    return items;
+  } catch (e) {
+    console.error("Google Trends fetch error:", e);
+    return [];
+  }
+}
+
 async function fetchNewsAPI(): Promise<TrendItem[]> {
   const API_KEY = Deno.env.get("NEWSAPI_KEY");
   
@@ -111,11 +167,12 @@ serve(async (req) => {
   }
 
   try {
-    const [youtube, news] = await Promise.all([
+    const [youtube, news, googleTrends] = await Promise.all([
       fetchYouTubeTrends(),
       fetchNewsAPI(),
+      fetchGoogleTrends(),
     ]);
-    const trends = [...youtube, ...news];
+    const trends = [...youtube, ...news, ...googleTrends];
 
     return new Response(JSON.stringify({ trends }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
