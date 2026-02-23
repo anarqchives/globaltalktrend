@@ -12,6 +12,11 @@ const platformIcons: Record<string, { emoji: string; color: string }> = {
   NewsAPI: { emoji: "◈", color: "hsl(142, 60%, 40%)" },
 };
 
+const countryCodeToFlag = (code?: string) => {
+  if (!code || code.length !== 2) return null;
+  return String.fromCodePoint(...[...code.toUpperCase()].map(c => 0x1F1E6 + c.charCodeAt(0) - 65));
+};
+
 interface TimelineCardProps extends TrendCardProps {
   onClick?: () => void;
 }
@@ -30,6 +35,7 @@ const TimelineCard = ({
   likeRatio,
   commentCount,
   region,
+  countryCode,
   sources,
   onClick,
 }: TimelineCardProps) => {
@@ -37,6 +43,7 @@ const TimelineCard = ({
   const [expanded, setExpanded] = useState(false);
   const pf = platformIcons[platform] || platformIcons["Google Trends"];
   const isPeak = change && parseInt(change.replace(/[^0-9]/g, "")) > 100;
+  const flag = countryCodeToFlag(countryCode);
   const gradientId = `tl-${title.replace(/[^a-zA-Z0-9]/g, "").slice(0, 8)}-${Math.random().toString(36).slice(2, 5)}`;
 
   const handleShare = (e: React.MouseEvent) => {
@@ -67,6 +74,7 @@ const TimelineCard = ({
             <span className="text-[11px] font-semibold" style={{ color: pf.color }}>
               {platform}
             </span>
+            {flag && <span className="text-xs" title={countryCode}>{flag}</span>}
             <span className="text-[11px] text-muted-foreground">{time}</span>
             {isPeak && <span className="peak-badge">🔥 {t("peak")}</span>}
           </div>
