@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Info, Sun, Moon } from "lucide-react";
+import { Info, Sun, Moon, RefreshCw } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useLanguage, languages } from "@/contexts/LanguageContext";
 import {
@@ -8,14 +8,16 @@ import {
   DialogHeader,
   DialogTitle,
   DialogDescription,
-  DialogOverlay,
 } from "@/components/ui/dialog";
 
 interface TrendHeaderProps {
   totalTrends?: number;
+  countriesCount?: number;
+  onRefresh?: () => void;
+  refreshing?: boolean;
 }
 
-const TrendHeader = ({ totalTrends = 0 }: TrendHeaderProps) => {
+const TrendHeader = ({ totalTrends = 0, countriesCount = 0, onRefresh, refreshing }: TrendHeaderProps) => {
   const { lang, setLang, t } = useLanguage();
   const [aboutOpen, setAboutOpen] = useState(false);
   const [dark, setDark] = useState(() => {
@@ -36,22 +38,36 @@ const TrendHeader = ({ totalTrends = 0 }: TrendHeaderProps) => {
     <>
       <header className="glass-header sticky top-0 z-50 px-4 md:px-6 py-2 h-12 flex items-center">
         <div className="w-full flex items-center justify-between gap-3">
-          <h1 className="text-base font-light tracking-tight whitespace-nowrap select-none flex items-center gap-2">
-            <span className="font-semibold text-foreground">Global-Talk-Trending</span>
-            <span className="text-muted-foreground hidden sm:inline">: real time monitor</span>
+          <div className="flex items-center gap-2 min-w-0">
+            <h1 className="text-base font-light tracking-tight whitespace-nowrap select-none flex items-center gap-2">
+              <span className="font-semibold text-foreground">Global-Talk-Trending</span>
+              <span className="text-muted-foreground hidden sm:inline">: real time monitor</span>
+            </h1>
             {totalTrends > 0 && (
               <motion.span
                 key={totalTrends}
                 initial={{ scale: 0.8, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
-                className="inline-flex items-center px-2 py-0.5 rounded-full bg-primary/10 text-primary text-[11px] font-bold tabular-nums"
+                className="inline-flex items-center px-2 py-0.5 rounded-full bg-primary/10 text-primary text-[11px] font-bold tabular-nums flex-shrink-0"
               >
-                {totalTrends}
+                {totalTrends} {t("trends")} · {countriesCount} {t("country")}
               </motion.span>
             )}
-          </h1>
+          </div>
 
           <div className="flex items-center gap-1.5 flex-shrink-0">
+            {/* Refresh button */}
+            {onRefresh && (
+              <button
+                onClick={onRefresh}
+                disabled={refreshing}
+                className="p-1.5 rounded-full text-muted-foreground hover:bg-secondary transition-colors disabled:opacity-50"
+                title={t("updated")}
+              >
+                <RefreshCw className={`w-3.5 h-3.5 ${refreshing ? "animate-spin" : ""}`} />
+              </button>
+            )}
+
             <div className="flex gap-0.5 overflow-x-auto scrollbar-thin">
               {languages.map((l) => (
                 <button
@@ -114,10 +130,10 @@ const TrendHeader = ({ totalTrends = 0 }: TrendHeaderProps) => {
               >
                 <DialogHeader>
                   <DialogTitle className="text-lg font-semibold tracking-tight">
-                    Sobre o Global-Talk-Trending
+                    {t("aboutTitle")}
                   </DialogTitle>
                   <DialogDescription className="text-sm text-muted-foreground leading-relaxed mt-2">
-                    Ferramenta gratuita e transparente de monitoramento global de trends. Mantida com dados públicos e APIs abertas.
+                    {t("aboutDesc")}
                   </DialogDescription>
                 </DialogHeader>
                 <motion.div
@@ -132,6 +148,8 @@ const TrendHeader = ({ totalTrends = 0 }: TrendHeaderProps) => {
                       { name: "Reddit", color: "hsl(16, 100%, 50%)" },
                       { name: "Google Trends", color: "hsl(210, 100%, 40%)" },
                       { name: "NewsAPI", color: "hsl(142, 60%, 40%)" },
+                      { name: "Bluesky", color: "hsl(200, 100%, 50%)" },
+                      { name: "Mastodon", color: "hsl(270, 60%, 55%)" },
                     ].map((src, i) => (
                       <motion.div
                         key={src.name}
@@ -140,13 +158,18 @@ const TrendHeader = ({ totalTrends = 0 }: TrendHeaderProps) => {
                         transition={{ delay: 0.15 + i * 0.05 }}
                         className="flex items-center gap-2 p-2 rounded-lg bg-secondary/50"
                       >
-                        <span className="w-2 h-2 rounded-full" style={{ background: src.color }} />
+                        <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: src.color }} />
                         <span className="font-medium text-foreground">{src.name}</span>
                       </motion.div>
                     ))}
                   </div>
+
+                  <div className="text-xs text-muted-foreground text-center">
+                    ✨ Resumos com IA · Sentimento · Multi-fonte
+                  </div>
+
                   <motion.a
-                    href="LINK_DOACAO_AQUI"
+                    href="https://buymeacoffee.com/globaltalktrending"
                     target="_blank"
                     rel="noopener noreferrer"
                     initial={{ opacity: 0, y: 8 }}
@@ -154,9 +177,9 @@ const TrendHeader = ({ totalTrends = 0 }: TrendHeaderProps) => {
                     transition={{ delay: 0.35 }}
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
-                    className="flex items-center justify-center w-full py-2.5 px-4 rounded-full bg-[hsl(211,100%,50%)] hover:bg-[hsl(211,100%,45%)] text-white text-sm font-semibold tracking-tight transition-colors duration-200 shadow-lg shadow-[hsl(211,100%,50%)/0.3]"
+                    className="flex items-center justify-center w-full py-2.5 px-4 rounded-full bg-primary hover:bg-primary/90 text-primary-foreground text-sm font-semibold tracking-tight transition-colors duration-200 shadow-lg"
                   >
-                    Apoie este projeto com doação
+                    ☕ Apoie este projeto com doação
                   </motion.a>
                 </motion.div>
               </motion.div>

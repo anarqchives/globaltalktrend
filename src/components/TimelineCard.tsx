@@ -1,15 +1,24 @@
 import { useState } from "react";
-import { Share2, ChevronDown, ChevronUp } from "lucide-react";
+import { Share2, ChevronDown, ChevronUp, Sparkles, Link2 } from "lucide-react";
 import { AreaChart, Area, ResponsiveContainer, XAxis, YAxis, Tooltip, CartesianGrid } from "recharts";
 import { toast } from "@/hooks/use-toast";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { TrendCardProps } from "./TrendCard";
+import { supabase } from "@/integrations/supabase/client";
 
 const platformIcons: Record<string, { emoji: string; color: string }> = {
   YouTube: { emoji: "▶", color: "hsl(0, 72%, 51%)" },
   Reddit: { emoji: "◉", color: "hsl(16, 100%, 50%)" },
   "Google Trends": { emoji: "◎", color: "hsl(210, 100%, 40%)" },
   NewsAPI: { emoji: "◈", color: "hsl(142, 60%, 40%)" },
+  Bluesky: { emoji: "🦋", color: "hsl(200, 100%, 50%)" },
+  Mastodon: { emoji: "🐘", color: "hsl(270, 60%, 55%)" },
+};
+
+const sentimentConfig = {
+  positive: { icon: "😊", color: "text-green-600", label: "Positivo" },
+  negative: { icon: "😟", color: "text-red-500", label: "Negativo" },
+  neutral: { icon: "😐", color: "text-muted-foreground", label: "Neutro" },
 };
 
 const countryCodeToFlag = (code?: string) => {
@@ -43,6 +52,8 @@ const TimelineCard = ({
 }: TimelineCardProps) => {
   const { t } = useLanguage();
   const [expanded, setExpanded] = useState(false);
+  const [aiSummary, setAiSummary] = useState<{ summary: string; sentiment: string; impact: string } | null>(null);
+  const [summarizing, setSummarizing] = useState(false);
   const pf = platformIcons[platform] || platformIcons["Google Trends"];
   const isPeak = change && parseInt(change.replace(/[^0-9]/g, "")) > 100;
   const flag = countryCodeToFlag(countryCode);
@@ -59,15 +70,41 @@ const TimelineCard = ({
     toast({ title: t("copied"), description: title.slice(0, 60) });
   };
 
+  const handleShareLink = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    const url = window.location.href;
+    navigator.clipboard.writeText(url);
+    toast({ title: "🔗 Link copiado!", description: "Link com filtros atuais copiado." });
+  };
+
   const handleExpand = (e: React.MouseEvent) => {
     e.stopPropagation();
     setExpanded(!expanded);
   };
 
+  const handleSummarize = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (aiSummary || summarizing) return;
+    setSummarizing(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("summarize-trend", {
+        body: { title, details, platform, volume },
+      });
+      if (error) throw error;
+      setAiSummary(data);
+    } catch (err: any) {
+      console.error("Summarize error:", err);
+      toast({ title: "Erro ao resumir", description: "Tente novamente.", variant: "destructive" });
+    } finally {
+      setSummarizing(false);
+    }
+  };
+
+  const sentiment = aiSummary ? sentimentConfig[aiSummary.sentiment as keyof typeof sentimentConfig] || sentimentConfig.neutral : null;
+
   return (
     <div className="timeline-card group">
       <div className="flex items-start gap-3" onClick={onClick}>
-        {/* Platform avatar */}
         <div
           className="w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold flex-shrink-0 mt-0.5 cursor-pointer hover:scale-110 transition-transform"
           style={{ background: `${pf.color}15`, color: pf.color }}
@@ -78,27 +115,28 @@ const TimelineCard = ({
         </div>
 
         <div className="flex-1 min-w-0">
-          {/* Platform + time */}
           <div className="flex items-center gap-2 mb-0.5">
             <span
               className="text-[11px] font-semibold cursor-pointer hover:underline"
               style={{ color: pf.color }}
               onClick={handlePlatformClick}
-              title={`Filtrar por ${platform}`}
             >
               {platform}
             </span>
             {flag && <span className="text-xs" title={countryCode}>{flag}</span>}
             <span className="text-[11px] text-muted-foreground">{time}</span>
             {isPeak && <span className="peak-badge">🔥 {t("peak")}</span>}
+            {sentiment && (
+              <span className={`text-xs ${sentiment.color}`} title={sentiment.label}>
+                {sentiment.icon}
+              </span>
+            )}
           </div>
 
-          {/* Title */}
           <p className="text-sm font-semibold text-foreground line-clamp-2 leading-snug mb-1">
             {title}
           </p>
 
-          {/* Meta row */}
           <div className="flex items-center gap-2 text-[11px] flex-wrap">
             <span className="text-muted-foreground">{category}</span>
             <span className="volume-badge text-[10px] py-0">{volume}</span>
@@ -108,28 +146,58 @@ const TimelineCard = ({
           </div>
         </div>
 
-        {/* Actions */}
         <div className="flex flex-col items-center gap-1">
-          <button
-            onClick={handleShare}
-            className="p-1 rounded-full opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-foreground"
-          >
+          <button onClick={handleShare} className="p-1 rounded-full opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-foreground" title={t("share")}>
             <Share2 className="w-3 h-3" />
           </button>
-          <button
-            onClick={handleExpand}
-            className="p-1 rounded-full text-muted-foreground hover:text-foreground transition-colors"
-          >
+          <button onClick={handleShareLink} className="p-1 rounded-full opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-foreground" title="Copiar link com filtros">
+            <Link2 className="w-3 h-3" />
+          </button>
+          <button onClick={handleExpand} className="p-1 rounded-full text-muted-foreground hover:text-foreground transition-colors">
             {expanded ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
           </button>
         </div>
       </div>
 
-      {/* Expanded details */}
       {expanded && (
         <div className="mt-3 pt-3 border-t border-border animate-in fade-in slide-in-from-top-2 duration-200">
-          {details && (
-            <p className="text-xs text-muted-foreground mb-3">{details}</p>
+          {details && <p className="text-xs text-muted-foreground mb-3">{details}</p>}
+
+          {/* AI Summary button */}
+          {!aiSummary && (
+            <button
+              onClick={handleSummarize}
+              disabled={summarizing}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-medium bg-primary/10 text-primary hover:bg-primary/20 transition-colors mb-3 disabled:opacity-50"
+            >
+              <Sparkles className={`w-3 h-3 ${summarizing ? "animate-spin" : ""}`} />
+              {summarizing ? "Analisando..." : "✨ Resumir com IA"}
+            </button>
+          )}
+
+          {/* AI Summary result */}
+          {aiSummary && (
+            <div className="mb-3 p-2.5 rounded-lg bg-primary/5 border border-primary/10">
+              <div className="flex items-center gap-2 mb-1.5">
+                <Sparkles className="w-3 h-3 text-primary" />
+                <span className="text-[10px] font-semibold text-primary uppercase tracking-wider">Resumo IA</span>
+                {sentiment && (
+                  <span className={`text-xs ${sentiment.color} ml-auto`}>
+                    {sentiment.icon} {sentiment.label}
+                  </span>
+                )}
+              </div>
+              <p className="text-xs text-foreground leading-relaxed">{aiSummary.summary}</p>
+              {aiSummary.impact && (
+                <span className={`inline-block mt-1.5 text-[10px] font-medium px-2 py-0.5 rounded-full ${
+                  aiSummary.impact === "high" ? "bg-red-500/10 text-red-500" :
+                  aiSummary.impact === "medium" ? "bg-yellow-500/10 text-yellow-600" :
+                  "bg-green-500/10 text-green-600"
+                }`}>
+                  Impacto: {aiSummary.impact === "high" ? "Alto" : aiSummary.impact === "medium" ? "Médio" : "Baixo"}
+                </span>
+              )}
+            </div>
           )}
 
           {/* Platform-specific metrics */}
@@ -152,7 +220,6 @@ const TimelineCard = ({
             )}
           </div>
 
-          {/* Historical chart */}
           {historicalData && historicalData.length > 0 && (
             <div>
               <div className="flex items-center justify-between mb-1.5">
@@ -171,39 +238,13 @@ const TimelineCard = ({
                       </linearGradient>
                     </defs>
                     <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                    <XAxis
-                      dataKey="hour"
-                      tick={{ fontSize: 9, fill: "hsl(var(--muted-foreground))" }}
-                      tickLine={false}
-                      axisLine={false}
-                      interval={5}
-                    />
-                    <YAxis
-                      tick={{ fontSize: 9, fill: "hsl(var(--muted-foreground))" }}
-                      tickLine={false}
-                      axisLine={false}
-                      width={30}
-                      tickFormatter={(v) => v >= 1000 ? `${(v / 1000).toFixed(0)}K` : v}
-                    />
+                    <XAxis dataKey="hour" tick={{ fontSize: 9, fill: "hsl(var(--muted-foreground))" }} tickLine={false} axisLine={false} interval={5} />
+                    <YAxis tick={{ fontSize: 9, fill: "hsl(var(--muted-foreground))" }} tickLine={false} axisLine={false} width={30} tickFormatter={(v) => v >= 1000 ? `${(v / 1000).toFixed(0)}K` : v} />
                     <Tooltip
-                      contentStyle={{
-                        background: "hsl(var(--card))",
-                        border: "1px solid hsl(var(--border))",
-                        borderRadius: "8px",
-                        fontSize: 11,
-                      }}
-                      formatter={(value: number) => [
-                        value >= 1000 ? `${(value / 1000).toFixed(1)}K` : value,
-                        metricLabel || "valor",
-                      ]}
+                      contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: "8px", fontSize: 11 }}
+                      formatter={(value: number) => [value >= 1000 ? `${(value / 1000).toFixed(1)}K` : value, metricLabel || "valor"]}
                     />
-                    <Area
-                      type="monotone"
-                      dataKey="value"
-                      stroke={pf.color}
-                      strokeWidth={1.5}
-                      fill={`url(#${gradientId})`}
-                    />
+                    <Area type="monotone" dataKey="value" stroke={pf.color} strokeWidth={1.5} fill={`url(#${gradientId})`} />
                   </AreaChart>
                 </ResponsiveContainer>
               </div>
