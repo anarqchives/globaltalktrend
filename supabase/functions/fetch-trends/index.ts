@@ -18,7 +18,33 @@ interface TrendItem {
   sparkData: number[];
   limited?: boolean;
   details?: string;
+  // Enriched metrics
+  likeRatio?: number;
+  commentCount?: number;
+  region?: string;
+  sources?: string[];
+  historicalData?: { hour: string; value: number }[];
+  metricLabel?: string;
 }
+
+// Generate simulated 24h historical data with a realistic curve
+function generateHistorical(baseValue: number, label: string): { historicalData: { hour: string; value: number }[]; metricLabel: string } {
+  const now = new Date();
+  const data = [];
+  for (let i = 23; i >= 0; i--) {
+    const h = new Date(now.getTime() - i * 3600000);
+    const hourStr = `${h.getHours().toString().padStart(2, "0")}:00`;
+    // Create a rising curve with some noise
+    const progress = (24 - i) / 24;
+    const noise = 0.7 + Math.random() * 0.6;
+    const value = Math.round(baseValue * progress * noise);
+    data.push({ hour: hourStr, value });
+  }
+  return { historicalData: data, metricLabel: label };
+}
+
+let cachedResponse: { data: string; timestamp: number } | null = null;
+const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
 
 async function fetchYouTubeTrends(): Promise<TrendItem[]> {
   const API_KEY = Deno.env.get("YOUTUBE_API_KEY");
@@ -39,6 +65,11 @@ async function fetchYouTubeTrends(): Promise<TrendItem[]> {
 
     return (data.items || []).map((item: any) => {
       const views = parseInt(item.statistics?.viewCount || "0", 10);
+      const likes = parseInt(item.statistics?.likeCount || "0", 10);
+      const comments = parseInt(item.statistics?.commentCount || "0", 10);
+      const likeRatio = views > 0 ? Math.round((likes / views) * 1000) / 10 : 0;
+      const { historicalData, metricLabel } = generateHistorical(views / 24, "views/hora");
+
       return {
         icon: "▶",
         platform: "YouTube",
@@ -52,6 +83,10 @@ async function fetchYouTubeTrends(): Promise<TrendItem[]> {
         changePositive: true,
         sparkData: Array.from({ length: 10 }, () => Math.floor(Math.random() * 80 + 20)),
         details: item.snippet?.description?.slice(0, 200) || "",
+        likeRatio,
+        commentCount: comments,
+        historicalData,
+        metricLabel,
       };
     });
   } catch (e) {
@@ -62,7 +97,6 @@ async function fetchYouTubeTrends(): Promise<TrendItem[]> {
 
 async function fetchGoogleTrends(): Promise<TrendItem[]> {
   try {
-    // Use RSS feed — more permissive from server IPs
     const res = await fetch(
       "https://trends.google.com/trending/rss?geo=BR",
       {
@@ -78,7 +112,6 @@ async function fetchGoogleTrends(): Promise<TrendItem[]> {
     }
     const xml = await res.text();
     
-    // Parse XML items manually (no XML parser in Deno edge)
     const items: TrendItem[] = [];
     const itemRegex = /<item>([\s\S]*?)<\/item>/g;
     let match;
@@ -93,6 +126,10 @@ async function fetchGoogleTrends(): Promise<TrendItem[]> {
         || block.match(/<ht:news_item_title>(.*?)<\/ht:news_item_title>/)?.[1] || "";
       const newsSource = block.match(/<ht:news_item_source>(.*?)<\/ht:news_item_source>/)?.[1] || "Tendência";
       
+      // Parse traffic number for historical generation
+      const trafficNum = parseInt(traffic.replace(/[^0-9]/g, "")) || 500;
+      const { historicalData, metricLabel } = generateHistorical(trafficNum, "índice de busca");
+
       items.push({
         icon: "🔍",
         platform: "Google Trends",
@@ -104,6 +141,9 @@ async function fetchGoogleTrends(): Promise<TrendItem[]> {
         changePositive: true,
         sparkData: Array.from({ length: 10 }, () => Math.floor(Math.random() * 80 + 20)),
         details: newsTitle,
+        region: "Brasil",
+        historicalData,
+        metricLabel,
       });
       count++;
     }
@@ -125,36 +165,41 @@ async function fetchNewsAPI(): Promise<TrendItem[]> {
   }
 
   try {
-    // Try top-headlines for BR first, fallback to general top-headlines
     let url = `https://newsapi.org/v2/top-headlines?country=br&pageSize=5&apiKey=${API_KEY}`;
     
     let res = await fetch(url);
     let data = await res.json();
     if (!res.ok || !data.articles?.length) {
-      // Fallback: top headlines globally
       url = `https://newsapi.org/v2/top-headlines?language=pt&pageSize=5&apiKey=${API_KEY}`;
       res = await fetch(url);
       data = await res.json();
     }
     if (!res.ok || !data.articles?.length) {
-      // Last fallback: English top headlines
       url = `https://newsapi.org/v2/top-headlines?language=en&pageSize=5&apiKey=${API_KEY}`;
       res = await fetch(url);
       data = await res.json();
     }
     
-    return (data.articles || []).map((article: any) => ({
-      icon: "📰",
-      platform: "NewsAPI",
-      title: article.title || "Sem título",
-      category: "Notícias",
-      time: "agora",
-      volume: article.source?.name || "fonte desconhecida",
-      change: "+novo",
-      changePositive: true,
-      sparkData: Array.from({ length: 10 }, () => Math.floor(Math.random() * 70 + 30)),
-      details: article.description || "",
-    }));
+    return (data.articles || []).map((article: any) => {
+      const sourceName = article.source?.name || "fonte desconhecida";
+      const { historicalData, metricLabel } = generateHistorical(Math.floor(Math.random() * 20 + 5), "artigos publicados");
+      
+      return {
+        icon: "📰",
+        platform: "NewsAPI",
+        title: article.title || "Sem título",
+        category: "Notícias",
+        time: "agora",
+        volume: sourceName,
+        change: "+novo",
+        changePositive: true,
+        sparkData: Array.from({ length: 10 }, () => Math.floor(Math.random() * 70 + 30)),
+        details: article.description || "",
+        sources: [sourceName],
+        historicalData,
+        metricLabel,
+      };
+    });
   } catch (e) {
     console.error("NewsAPI fetch error:", e);
     return [];
@@ -167,14 +212,26 @@ serve(async (req) => {
   }
 
   try {
+    // Cache check
+    if (cachedResponse && Date.now() - cachedResponse.timestamp < CACHE_TTL) {
+      console.log("Serving cached response");
+      return new Response(cachedResponse.data, {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
     const [youtube, news, googleTrends] = await Promise.all([
       fetchYouTubeTrends(),
       fetchNewsAPI(),
       fetchGoogleTrends(),
     ]);
     const trends = [...youtube, ...news, ...googleTrends];
+    const responseData = JSON.stringify({ trends });
 
-    return new Response(JSON.stringify({ trends }), {
+    // Update cache
+    cachedResponse = { data: responseData, timestamp: Date.now() };
+
+    return new Response(responseData, {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (error) {
