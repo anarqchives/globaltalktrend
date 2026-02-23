@@ -1,5 +1,6 @@
+/// <reference types="google.maps" />
 import { useEffect, useRef, useState, useMemo, useCallback } from "react";
-import { Loader } from "@googlemaps/js-api-loader";
+import { setOptions, importLibrary } from "@googlemaps/js-api-loader";
 import { supabase } from "@/integrations/supabase/client";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { TrendCardProps } from "./TrendCard";
@@ -81,20 +82,33 @@ const GoogleMapView = ({
           return;
         }
 
-        const loader = new Loader({
-          apiKey: data.key,
-          version: "weekly",
-        });
+        setOptions({ key: data.key, v: "weekly" });
 
-        await (loader as any).load();
-        const g = (window as any).google;
-        if (cancelled || !mapRef.current || !g) {
+        const [mapsLib, markerLib] = await Promise.all([
+          importLibrary("maps"),
+          importLibrary("marker"),
+        ]);
+
+        if (cancelled || !mapRef.current) {
           setMapError("Google Maps failed to initialize");
           return;
         }
-        googleRef.current = g;
 
-        const map = new g.maps.Map(mapRef.current, {
+        const { Map: GMap, InfoWindow } = mapsLib;
+        const { Marker } = markerLib;
+
+        // Store references for markers/infowindow
+        googleRef.current = {
+          maps: {
+            Map: GMap,
+            Marker,
+            InfoWindow,
+            SymbolPath: google.maps.SymbolPath,
+            Animation: google.maps.Animation,
+          },
+        };
+
+        const map = new GMap(mapRef.current, {
           center: { lat: 20, lng: 0 },
           zoom: 2.5,
           minZoom: 2,
@@ -118,7 +132,7 @@ const GoogleMapView = ({
         });
 
         googleMapRef.current = map;
-        infoWindowRef.current = new g.maps.InfoWindow();
+        infoWindowRef.current = new InfoWindow();
         setMapLoaded(true);
       } catch (err) {
         console.error("Google Maps load error:", err);
