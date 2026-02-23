@@ -96,7 +96,7 @@ export function useTrends(filters: FilterState, onTrendCountsChange: (counts: Re
 
   useEffect(() => {
     fetchTrends();
-    const interval = setInterval(fetchTrends, 15 * 60 * 1000);
+    const interval = setInterval(fetchTrends, 5 * 60 * 1000);
     return () => clearInterval(interval);
   }, []);
 
@@ -113,7 +113,6 @@ export function useTrends(filters: FilterState, onTrendCountsChange: (counts: Re
 
   const leftTrends = useMemo(() => filteredTrends.filter((_, i) => i % 2 === 0), [filteredTrends]);
   const rightTrends = useMemo(() => filteredTrends.filter((_, i) => i % 2 === 1), [filteredTrends]);
-
   useEffect(() => {
     const counts: Record<string, number> = {};
     if (filters.country !== "global") {
