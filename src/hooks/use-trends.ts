@@ -146,5 +146,5 @@ export function useTrends(filters: FilterState, onTrendCountsChange: (counts: Re
     onTrendCountsChange(counts);
   }, [filteredTrends, filters.country, onTrendCountsChange]);
 
-  return { leftTrends, rightTrends, loading, isFirstLoad, filteredTrends };
+  return { leftTrends, rightTrends, loading, isFirstLoad, filteredTrends, allTrends: trends };
 }
