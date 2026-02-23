@@ -63,6 +63,33 @@ const countryPoints: CountryPoint[] = [
 
 type MapViewType = "roadmap" | "satellite" | "terrain";
 
+const lightStyles: google.maps.MapTypeStyle[] = [
+  { elementType: "geometry", stylers: [{ color: "#f5f5f5" }] },
+  { elementType: "labels.icon", stylers: [{ visibility: "off" }] },
+  { elementType: "labels.text.fill", stylers: [{ color: "#616161" }] },
+  { elementType: "labels.text.stroke", stylers: [{ color: "#f5f5f5" }] },
+  { featureType: "administrative.land_parcel", elementType: "labels.text.fill", stylers: [{ color: "#bdbdbd" }] },
+  { featureType: "poi", elementType: "geometry", stylers: [{ color: "#eeeeee" }] },
+  { featureType: "road", elementType: "geometry", stylers: [{ color: "#ffffff" }] },
+  { featureType: "water", elementType: "geometry", stylers: [{ color: "#c9c9c9" }] },
+  { featureType: "water", elementType: "labels.text.fill", stylers: [{ color: "#9e9e9e" }] },
+];
+
+const darkStyles: google.maps.MapTypeStyle[] = [
+  { elementType: "geometry", stylers: [{ color: "#1a1a2e" }] },
+  { elementType: "labels.icon", stylers: [{ visibility: "off" }] },
+  { elementType: "labels.text.fill", stylers: [{ color: "#8a8a9a" }] },
+  { elementType: "labels.text.stroke", stylers: [{ color: "#1a1a2e" }] },
+  { featureType: "administrative", elementType: "geometry.stroke", stylers: [{ color: "#2a2a3e" }] },
+  { featureType: "administrative.land_parcel", elementType: "labels.text.fill", stylers: [{ color: "#555566" }] },
+  { featureType: "poi", elementType: "geometry", stylers: [{ color: "#22223a" }] },
+  { featureType: "road", elementType: "geometry", stylers: [{ color: "#2a2a3e" }] },
+  { featureType: "road", elementType: "geometry.stroke", stylers: [{ color: "#1a1a2e" }] },
+  { featureType: "transit", elementType: "geometry", stylers: [{ color: "#22223a" }] },
+  { featureType: "water", elementType: "geometry", stylers: [{ color: "#0f0f1e" }] },
+  { featureType: "water", elementType: "labels.text.fill", stylers: [{ color: "#4a4a5a" }] },
+];
+
 interface GoogleMapViewProps {
   trendCounts: Record<string, number>;
   selectedCountry: string;
@@ -87,6 +114,23 @@ const GoogleMapView = ({
   const [mapLoaded, setMapLoaded] = useState(false);
   const [mapError, setMapError] = useState<string | null>(null);
   const [mapViewType, setMapViewType] = useState<MapViewType>("roadmap");
+  const [isDark, setIsDark] = useState(() => document.documentElement.classList.contains("dark"));
+
+  // Listen for dark mode changes
+  useEffect(() => {
+    const observer = new MutationObserver(() => {
+      setIsDark(document.documentElement.classList.contains("dark"));
+    });
+    observer.observe(document.documentElement, { attributes: true, attributeFilter: ["class"] });
+    return () => observer.disconnect();
+  }, []);
+
+  // Apply map styles when dark mode changes
+  useEffect(() => {
+    if (googleMapRef.current && mapLoaded && mapViewType === "roadmap") {
+      googleMapRef.current.setOptions({ styles: isDark ? darkStyles : lightStyles });
+    }
+  }, [isDark, mapLoaded, mapViewType]);
 
   const maxCount = useMemo(() => Math.max(...Object.values(trendCounts), 1), [trendCounts]);
   const avgCount = useMemo(() => {
@@ -141,17 +185,7 @@ const GoogleMapView = ({
           zoomControl: true,
           zoomControlOptions: { position: 3 },
           mapTypeId: "roadmap",
-          styles: [
-            { elementType: "geometry", stylers: [{ color: "#f5f5f5" }] },
-            { elementType: "labels.icon", stylers: [{ visibility: "off" }] },
-            { elementType: "labels.text.fill", stylers: [{ color: "#616161" }] },
-            { elementType: "labels.text.stroke", stylers: [{ color: "#f5f5f5" }] },
-            { featureType: "administrative.land_parcel", elementType: "labels.text.fill", stylers: [{ color: "#bdbdbd" }] },
-            { featureType: "poi", elementType: "geometry", stylers: [{ color: "#eeeeee" }] },
-            { featureType: "road", elementType: "geometry", stylers: [{ color: "#ffffff" }] },
-            { featureType: "water", elementType: "geometry", stylers: [{ color: "#c9c9c9" }] },
-            { featureType: "water", elementType: "labels.text.fill", stylers: [{ color: "#9e9e9e" }] },
-          ],
+          styles: isDark ? darkStyles : lightStyles,
           gestureHandling: "greedy",
         });
 
