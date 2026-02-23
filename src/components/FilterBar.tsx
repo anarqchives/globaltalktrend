@@ -83,24 +83,24 @@ const FilterBar = ({ filters, onChange }: FilterBarProps) => {
   ];
 
   return (
-    <div className="flex flex-wrap gap-2 items-center justify-center px-4 md:px-6 py-1.5 bg-card/60 backdrop-blur-md border-b border-border">
-      <select className="filter-pill-compact" value={filters.country} onChange={(e) => update("country", e.target.value)}>
+    <div className="flex items-center gap-2 px-4 md:px-6 py-1.5 bg-card/60 backdrop-blur-md border-b border-border overflow-x-auto scrollbar-thin">
+      <select className="filter-pill-inline" value={filters.country} onChange={(e) => update("country", e.target.value)}>
         {countries.map((group) => (
           <optgroup key={group.group} label={group.group}>
             {group.items.map((c) => <option key={c.value} value={c.value}>{c.label}</option>)}
           </optgroup>
         ))}
       </select>
-      <select className="filter-pill-compact" value={filters.period} onChange={(e) => update("period", e.target.value)}>
+      <select className="filter-pill-inline" value={filters.period} onChange={(e) => update("period", e.target.value)}>
         {periodOptions.map((p) => <option key={p.value} value={p.value}>{p.label}</option>)}
       </select>
-      <select className="filter-pill-compact" value={filters.category} onChange={(e) => update("category", e.target.value)}>
+      <select className="filter-pill-inline" value={filters.category} onChange={(e) => update("category", e.target.value)}>
         {categoryOptions.map((c) => <option key={c.value} value={c.value}>{c.label}</option>)}
       </select>
-      <select className="filter-pill-compact" value={filters.type} onChange={(e) => update("type", e.target.value)}>
+      <select className="filter-pill-inline" value={filters.type} onChange={(e) => update("type", e.target.value)}>
         {typeOptions.map((t) => <option key={t.value} value={t.value}>{t.label}</option>)}
       </select>
-      <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground ml-2">
+      <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground ml-auto whitespace-nowrap">
         <span className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ background: "hsl(142, 72%, 45%)" }} />
         {t("live")}
       </div>
