@@ -19,6 +19,7 @@ const countryCodeToFlag = (code?: string) => {
 
 interface TimelineCardProps extends TrendCardProps {
   onClick?: () => void;
+  onFilterPlatform?: (platform: string) => void;
 }
 
 const TimelineCard = ({
@@ -38,6 +39,7 @@ const TimelineCard = ({
   countryCode,
   sources,
   onClick,
+  onFilterPlatform,
 }: TimelineCardProps) => {
   const { t } = useLanguage();
   const [expanded, setExpanded] = useState(false);
@@ -45,6 +47,11 @@ const TimelineCard = ({
   const isPeak = change && parseInt(change.replace(/[^0-9]/g, "")) > 100;
   const flag = countryCodeToFlag(countryCode);
   const gradientId = `tl-${title.replace(/[^a-zA-Z0-9]/g, "").slice(0, 8)}-${Math.random().toString(36).slice(2, 5)}`;
+
+  const handlePlatformClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    onFilterPlatform?.(platform);
+  };
 
   const handleShare = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -62,8 +69,10 @@ const TimelineCard = ({
       <div className="flex items-start gap-3" onClick={onClick}>
         {/* Platform avatar */}
         <div
-          className="w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold flex-shrink-0 mt-0.5"
+          className="w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold flex-shrink-0 mt-0.5 cursor-pointer hover:scale-110 transition-transform"
           style={{ background: `${pf.color}15`, color: pf.color }}
+          onClick={handlePlatformClick}
+          title={`Filtrar por ${platform}`}
         >
           {pf.emoji}
         </div>
@@ -71,7 +80,12 @@ const TimelineCard = ({
         <div className="flex-1 min-w-0">
           {/* Platform + time */}
           <div className="flex items-center gap-2 mb-0.5">
-            <span className="text-[11px] font-semibold" style={{ color: pf.color }}>
+            <span
+              className="text-[11px] font-semibold cursor-pointer hover:underline"
+              style={{ color: pf.color }}
+              onClick={handlePlatformClick}
+              title={`Filtrar por ${platform}`}
+            >
               {platform}
             </span>
             {flag && <span className="text-xs" title={countryCode}>{flag}</span>}
