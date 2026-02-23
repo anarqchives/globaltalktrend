@@ -81,10 +81,10 @@ const WorldMapPlaceholder = ({
     return { r, color, glow: isPeak };
   };
 
-  const viewStyles: Record<MapView, { bg: string; continent: string; border: string }> = {
-    map: { bg: "hsl(var(--secondary))", continent: "hsl(var(--muted))", border: "hsl(var(--border))" },
-    satellite: { bg: "hsl(220, 30%, 12%)", continent: "hsl(140, 25%, 28%)", border: "hsl(140, 20%, 20%)" },
-    terrain: { bg: "hsl(40, 30%, 92%)", continent: "hsl(100, 25%, 72%)", border: "hsl(80, 15%, 60%)" },
+  const viewStyles: Record<MapView, { bg: string; continent: string; continentOpacity: number; border: string }> = {
+    map: { bg: "hsl(210, 30%, 96%)", continent: "hsl(210, 15%, 88%)", continentOpacity: 0.9, border: "hsl(210, 10%, 82%)" },
+    satellite: { bg: "hsl(220, 30%, 12%)", continent: "hsl(140, 25%, 28%)", continentOpacity: 0.85, border: "hsl(140, 20%, 20%)" },
+    terrain: { bg: "hsl(40, 30%, 92%)", continent: "hsl(100, 25%, 72%)", continentOpacity: 0.85, border: "hsl(80, 15%, 60%)" },
   };
   const vs = viewStyles[mapView];
 
@@ -132,8 +132,8 @@ const WorldMapPlaceholder = ({
             d={d}
             fill={vs.continent}
             stroke={vs.border}
-            strokeWidth={0.5}
-            opacity={mapView === "satellite" ? 0.8 : 0.5}
+            strokeWidth={0.8}
+            opacity={vs.continentOpacity}
             style={{ transition: "fill 0.3s, opacity 0.3s" }}
           />
         ))}
