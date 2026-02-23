@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Info } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
 import { useLanguage, languages } from "@/contexts/LanguageContext";
 import {
   Dialog,
@@ -7,6 +8,7 @@ import {
   DialogHeader,
   DialogTitle,
   DialogDescription,
+  DialogOverlay,
 } from "@/components/ui/dialog";
 
 const TrendHeader = () => {
@@ -53,41 +55,69 @@ const TrendHeader = () => {
         </div>
       </header>
 
-      <Dialog open={aboutOpen} onOpenChange={setAboutOpen}>
-        <DialogContent className="max-w-md bg-card/95 backdrop-blur-xl border-border/50 shadow-2xl rounded-2xl">
-          <DialogHeader>
-            <DialogTitle className="text-lg font-semibold tracking-tight">
-              Sobre o Global-Talk-Trending
-            </DialogTitle>
-            <DialogDescription className="text-sm text-muted-foreground leading-relaxed mt-2">
-              Ferramenta gratuita e transparente de monitoramento global de trends. Mantida com dados públicos e APIs abertas.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="mt-4 space-y-4">
-            <div className="grid grid-cols-2 gap-2 text-xs">
-              {[
-                { name: "YouTube", color: "hsl(0, 72%, 51%)" },
-                { name: "Reddit", color: "hsl(16, 100%, 50%)" },
-                { name: "Google Trends", color: "hsl(210, 100%, 40%)" },
-                { name: "NewsAPI", color: "hsl(142, 60%, 40%)" },
-              ].map((src) => (
-                <div key={src.name} className="flex items-center gap-2 p-2 rounded-lg bg-secondary/50">
-                  <span className="w-2 h-2 rounded-full" style={{ background: src.color }} />
-                  <span className="font-medium text-foreground">{src.name}</span>
-                </div>
-              ))}
-            </div>
-            <a
-              href="LINK_DOACAO_AQUI"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center justify-center w-full py-2.5 px-4 rounded-full bg-[hsl(211,100%,50%)] hover:bg-[hsl(211,100%,45%)] text-white text-sm font-semibold tracking-tight transition-all duration-200 shadow-lg shadow-[hsl(211,100%,50%)/0.3] hover:shadow-xl hover:shadow-[hsl(211,100%,50%)/0.4] active:scale-[0.98]"
-            >
-              Apoie este projeto com doação
-            </a>
-          </div>
-        </DialogContent>
-      </Dialog>
+      <AnimatePresence>
+        {aboutOpen && (
+          <Dialog open={aboutOpen} onOpenChange={setAboutOpen}>
+            <DialogContent className="max-w-md bg-card/95 backdrop-blur-xl border-border/50 shadow-2xl rounded-2xl p-0 overflow-hidden" asChild forceMount>
+              <motion.div
+                initial={{ opacity: 0, scale: 0.92, y: 20 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.95, y: 10 }}
+                transition={{ type: "spring", damping: 25, stiffness: 350 }}
+                className="p-6"
+              >
+                <DialogHeader>
+                  <DialogTitle className="text-lg font-semibold tracking-tight">
+                    Sobre o Global-Talk-Trending
+                  </DialogTitle>
+                  <DialogDescription className="text-sm text-muted-foreground leading-relaxed mt-2">
+                    Ferramenta gratuita e transparente de monitoramento global de trends. Mantida com dados públicos e APIs abertas.
+                  </DialogDescription>
+                </DialogHeader>
+                <motion.div
+                  className="mt-4 space-y-4"
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.1, duration: 0.3 }}
+                >
+                  <div className="grid grid-cols-2 gap-2 text-xs">
+                    {[
+                      { name: "YouTube", color: "hsl(0, 72%, 51%)" },
+                      { name: "Reddit", color: "hsl(16, 100%, 50%)" },
+                      { name: "Google Trends", color: "hsl(210, 100%, 40%)" },
+                      { name: "NewsAPI", color: "hsl(142, 60%, 40%)" },
+                    ].map((src, i) => (
+                      <motion.div
+                        key={src.name}
+                        initial={{ opacity: 0, x: -10 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ delay: 0.15 + i * 0.05 }}
+                        className="flex items-center gap-2 p-2 rounded-lg bg-secondary/50"
+                      >
+                        <span className="w-2 h-2 rounded-full" style={{ background: src.color }} />
+                        <span className="font-medium text-foreground">{src.name}</span>
+                      </motion.div>
+                    ))}
+                  </div>
+                  <motion.a
+                    href="LINK_DOACAO_AQUI"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    initial={{ opacity: 0, y: 8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.35 }}
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    className="flex items-center justify-center w-full py-2.5 px-4 rounded-full bg-[hsl(211,100%,50%)] hover:bg-[hsl(211,100%,45%)] text-white text-sm font-semibold tracking-tight transition-colors duration-200 shadow-lg shadow-[hsl(211,100%,50%)/0.3]"
+                  >
+                    Apoie este projeto com doação
+                  </motion.a>
+                </motion.div>
+              </motion.div>
+            </DialogContent>
+          </Dialog>
+        )}
+      </AnimatePresence>
     </>
   );
 };
