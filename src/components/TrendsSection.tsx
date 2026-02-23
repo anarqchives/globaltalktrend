@@ -62,6 +62,38 @@ async function fetchNewsAPIClientSide(): Promise<TrendItem[]> {
   }
 }
 
+async function fetchRedditClientSide(): Promise<TrendItem[]> {
+  try {
+    const res = await fetch("https://www.reddit.com/r/all/hot.json?limit=5", {
+      headers: { "User-Agent": "TrendSphere/1.0" },
+    });
+    if (!res.ok) {
+      console.error("Reddit client error:", res.status);
+      return [];
+    }
+    const data = await res.json();
+    return (data.data?.children || []).map((child: any) => {
+      const post = child.data;
+      const ups = post.ups || 0;
+      return {
+        icon: "💬",
+        platform: "Reddit",
+        title: post.title?.slice(0, 100) || "Sem título",
+        category: `r/${post.subreddit}`,
+        time: "agora",
+        volume: ups >= 1000 ? `${(ups / 1000).toFixed(1)}K upvotes` : `${ups} upvotes`,
+        change: `+${post.upvote_ratio ? Math.round(post.upvote_ratio * 100) : 0}%`,
+        changePositive: true,
+        sparkData: Array.from({ length: 10 }, () => Math.floor(Math.random() * 90 + 10)),
+        details: post.selftext?.slice(0, 200) || `${post.num_comments} comentários · ${post.subreddit_name_prefixed}`,
+      };
+    });
+  } catch (e) {
+    console.error("Reddit client fetch error:", e);
+    return [];
+  }
+}
+
 const TrendsSection = () => {
   const [trends, setTrends] = useState<TrendItem[]>(fallbackData);
   const [loading, setLoading] = useState(true);
@@ -72,14 +104,14 @@ const TrendsSection = () => {
       try {
         setLoading(true);
 
-        // Fetch YouTube + Reddit from edge function, NewsAPI client-side
-        const [edgeResult, newsItems] = await Promise.all([
+        const [edgeResult, newsItems, redditItems] = await Promise.all([
           supabase.functions.invoke("fetch-trends"),
           fetchNewsAPIClientSide(),
+          fetchRedditClientSide(),
         ]);
 
         const edgeTrends: TrendItem[] = edgeResult.data?.trends || [];
-        const allTrends = [...edgeTrends, ...newsItems];
+        const allTrends = [...edgeTrends, ...newsItems, ...redditItems];
 
         if (allTrends.length > 0) {
           setTrends(allTrends);
