@@ -31,36 +31,6 @@ const fallbackData: TrendItem[] = [
   },
 ];
 
-// NewsAPI free plan only works client-side — temporary until paid plan migration
-const NEWSAPI_KEY = "2b790289d4ef4c9b92415fdf5c509891";
-
-async function fetchNewsAPIClientSide(): Promise<TrendItem[]> {
-  try {
-    const res = await fetch(
-      `https://newsapi.org/v2/top-headlines?country=br&pageSize=5&apiKey=${NEWSAPI_KEY}`
-    );
-    if (!res.ok) {
-      console.error("NewsAPI client error:", res.status);
-      return [];
-    }
-    const data = await res.json();
-    return (data.articles || []).map((article: any) => ({
-      icon: "📰",
-      platform: "NewsAPI",
-      title: article.title || "Sem título",
-      category: "Notícias",
-      time: "agora",
-      volume: article.source?.name || "fonte desconhecida",
-      change: "+novo",
-      changePositive: true,
-      sparkData: Array.from({ length: 10 }, () => Math.floor(Math.random() * 70 + 30)),
-      details: article.description || "",
-    }));
-  } catch (e) {
-    console.error("NewsAPI client fetch error:", e);
-    return [];
-  }
-}
 
 async function fetchRedditClientSide(): Promise<TrendItem[]> {
   try {
@@ -104,14 +74,13 @@ const TrendsSection = () => {
       try {
         setLoading(true);
 
-        const [edgeResult, newsItems, redditItems] = await Promise.all([
+        const [edgeResult, redditItems] = await Promise.all([
           supabase.functions.invoke("fetch-trends"),
-          fetchNewsAPIClientSide(),
           fetchRedditClientSide(),
         ]);
 
         const edgeTrends: TrendItem[] = edgeResult.data?.trends || [];
-        const allTrends = [...edgeTrends, ...newsItems, ...redditItems];
+        const allTrends = [...edgeTrends, ...redditItems];
 
         if (allTrends.length > 0) {
           setTrends(allTrends);
