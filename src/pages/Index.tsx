@@ -21,8 +21,8 @@ const defaultFilters: FilterState = {
   type: "Todas mídias",
 };
 
-const INITIAL_COUNT = 10;
-const LOAD_MORE_COUNT = 5;
+const INITIAL_COUNT = 20;
+const LOAD_MORE_COUNT = 10;
 
 // Read filters from URL params on load
 function getInitialFilters(): FilterState {
@@ -77,7 +77,7 @@ const Index = () => {
           setVisibleCount((prev) => Math.min(prev + LOAD_MORE_COUNT, filteredTrends.length));
         }
       },
-      { root: scrollRef.current, threshold: 0.1 }
+      { root: scrollRef.current, rootMargin: "200px", threshold: 0 }
     );
     observer.observe(sentinel);
     return () => observer.disconnect();
@@ -99,9 +99,6 @@ const Index = () => {
       <div className="px-2 py-1.5 flex items-center justify-between sticky top-0 bg-background/90 backdrop-blur-sm z-10">
         <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-widest">
           {t("timeline")}
-        </span>
-        <span className="text-[10px] text-muted-foreground">
-          {visibleTrends.length}/{filteredTrends.length}
         </span>
       </div>
       {loading && isFirstLoad
@@ -125,12 +122,11 @@ const Index = () => {
             />
           ))}
       {hasMore && (
-        <div ref={sentinelRef} className="flex items-center justify-center py-3">
-          <div className="flex gap-1">
-            <div className="w-1.5 h-1.5 rounded-full bg-muted-foreground/30 animate-pulse" />
-            <div className="w-1.5 h-1.5 rounded-full bg-muted-foreground/30 animate-pulse" style={{ animationDelay: "0.2s" }} />
-            <div className="w-1.5 h-1.5 rounded-full bg-muted-foreground/30 animate-pulse" style={{ animationDelay: "0.4s" }} />
-          </div>
+        <div ref={sentinelRef} className="h-10" />
+      )}
+      {!hasMore && filteredTrends.length > 0 && (
+        <div className="flex items-center justify-center py-4 text-[11px] text-muted-foreground/50">
+          — {t("noTrends")} —
         </div>
       )}
     </div>
