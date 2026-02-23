@@ -24,7 +24,7 @@ type TranslationKey =
   | "allMedia" | "socialMedia" | "press" | "searches"
   | "live" | "peak" | "copied" | "updated" | "about" | "aboutTitle" | "aboutDesc"
   | "map" | "satellite" | "terrain" | "timeline" | "clickToClose"
-  | "trendCount" | "loading" | "expandDetails" | "evolution24h" | "share";
+  | "trendCount" | "loading" | "expandDetails" | "evolution24h" | "share" | "noTrends";
 
 const translations: Record<LangCode, Record<TranslationKey, string>> = {
   pt: {
@@ -39,7 +39,7 @@ const translations: Record<LangCode, Record<TranslationKey, string>> = {
     aboutDesc: "Monitor de tendências globais em tempo real. Agregamos dados do YouTube, Reddit, Google Trends e NewsAPI para oferecer uma visão completa do que está em alta no mundo.",
     map: "Mapa", satellite: "Satélite", terrain: "Terreno", timeline: "Timeline",
     clickToClose: "Clique para fechar", trendCount: "trends", loading: "Carregando...",
-    expandDetails: "Ver detalhes", evolution24h: "Evolução 24h", share: "Compartilhar",
+    expandDetails: "Ver detalhes", evolution24h: "Evolução 24h", share: "Compartilhar", noTrends: "Sem tendências",
   },
   en: {
     trends: "Trends", moreTrends: "More trends", filters: "Filters",
@@ -53,7 +53,7 @@ const translations: Record<LangCode, Record<TranslationKey, string>> = {
     aboutDesc: "Real-time global trends monitor. We aggregate data from YouTube, Reddit, Google Trends, and NewsAPI to provide a complete view of what's trending worldwide.",
     map: "Map", satellite: "Satellite", terrain: "Terrain", timeline: "Timeline",
     clickToClose: "Click to close", trendCount: "trends", loading: "Loading...",
-    expandDetails: "View details", evolution24h: "24h Evolution", share: "Share",
+    expandDetails: "View details", evolution24h: "24h Evolution", share: "Share", noTrends: "No trends",
   },
   es: {
     trends: "Tendencias", moreTrends: "Más trends", filters: "Filtros",
@@ -67,7 +67,7 @@ const translations: Record<LangCode, Record<TranslationKey, string>> = {
     aboutDesc: "Monitor de tendencias globales en tiempo real. Agregamos datos de YouTube, Reddit, Google Trends y NewsAPI.",
     map: "Mapa", satellite: "Satélite", terrain: "Terreno", timeline: "Timeline",
     clickToClose: "Clic para cerrar", trendCount: "tendencias", loading: "Cargando...",
-    expandDetails: "Ver detalles", evolution24h: "Evolución 24h", share: "Compartir",
+    expandDetails: "Ver detalles", evolution24h: "Evolución 24h", share: "Compartir", noTrends: "Sin tendencias",
   },
   fr: {
     trends: "Tendances", moreTrends: "Plus de tendances", filters: "Filtres",
@@ -81,7 +81,7 @@ const translations: Record<LangCode, Record<TranslationKey, string>> = {
     aboutDesc: "Moniteur de tendances mondiales en temps réel. Nous agrégeons des données de YouTube, Reddit, Google Trends et NewsAPI.",
     map: "Carte", satellite: "Satellite", terrain: "Terrain", timeline: "Timeline",
     clickToClose: "Cliquer pour fermer", trendCount: "tendances", loading: "Chargement...",
-    expandDetails: "Voir les détails", evolution24h: "Évolution 24h", share: "Partager",
+    expandDetails: "Voir les détails", evolution24h: "Évolution 24h", share: "Partager", noTrends: "Aucune tendance",
   },
   de: {
     trends: "Trends", moreTrends: "Mehr Trends", filters: "Filter",
@@ -95,7 +95,7 @@ const translations: Record<LangCode, Record<TranslationKey, string>> = {
     aboutDesc: "Echtzeit-Monitor für globale Trends. Wir aggregieren Daten von YouTube, Reddit, Google Trends und NewsAPI.",
     map: "Karte", satellite: "Satellit", terrain: "Gelände", timeline: "Timeline",
     clickToClose: "Klicken zum Schließen", trendCount: "Trends", loading: "Laden...",
-    expandDetails: "Details anzeigen", evolution24h: "24h-Entwicklung", share: "Teilen",
+    expandDetails: "Details anzeigen", evolution24h: "24h-Entwicklung", share: "Teilen", noTrends: "Keine Trends",
   },
   it: {
     trends: "Tendenze", moreTrends: "Più tendenze", filters: "Filtri",
@@ -109,7 +109,7 @@ const translations: Record<LangCode, Record<TranslationKey, string>> = {
     aboutDesc: "Monitor di tendenze globali in tempo reale. Aggreghiamo dati da YouTube, Reddit, Google Trends e NewsAPI.",
     map: "Mappa", satellite: "Satellite", terrain: "Terreno", timeline: "Timeline",
     clickToClose: "Clicca per chiudere", trendCount: "tendenze", loading: "Caricamento...",
-    expandDetails: "Vedi dettagli", evolution24h: "Evoluzione 24h", share: "Condividi",
+    expandDetails: "Vedi dettagli", evolution24h: "Evoluzione 24h", share: "Condividi", noTrends: "Nessuna tendenza",
   },
   zh: {
     trends: "趋势", moreTrends: "更多趋势", filters: "筛选",
@@ -123,7 +123,7 @@ const translations: Record<LangCode, Record<TranslationKey, string>> = {
     aboutDesc: "实时全球趋势监控器。我们汇总来自YouTube、Reddit、Google Trends和NewsAPI的数据。",
     map: "地图", satellite: "卫星", terrain: "地形", timeline: "时间线",
     clickToClose: "点击关闭", trendCount: "趋势", loading: "加载中...",
-    expandDetails: "查看详情", evolution24h: "24小时演变", share: "分享",
+    expandDetails: "查看详情", evolution24h: "24小时演变", share: "分享", noTrends: "无趋势",
   },
   ja: {
     trends: "トレンド", moreTrends: "もっと見る", filters: "フィルター",
@@ -137,7 +137,7 @@ const translations: Record<LangCode, Record<TranslationKey, string>> = {
     aboutDesc: "リアルタイムのグローバルトレンドモニター。YouTube、Reddit、Google Trends、NewsAPIからのデータを集約しています。",
     map: "マップ", satellite: "衛星", terrain: "地形", timeline: "タイムライン",
     clickToClose: "クリックして閉じる", trendCount: "トレンド", loading: "読み込み中...",
-    expandDetails: "詳細を見る", evolution24h: "24時間の推移", share: "共有",
+    expandDetails: "詳細を見る", evolution24h: "24時間の推移", share: "共有", noTrends: "トレンドなし",
   },
   ko: {
     trends: "트렌드", moreTrends: "더 많은 트렌드", filters: "필터",
@@ -151,7 +151,7 @@ const translations: Record<LangCode, Record<TranslationKey, string>> = {
     aboutDesc: "실시간 글로벌 트렌드 모니터. YouTube, Reddit, Google Trends, NewsAPI의 데이터를 집계합니다.",
     map: "지도", satellite: "위성", terrain: "지형", timeline: "타임라인",
     clickToClose: "닫으려면 클릭", trendCount: "트렌드", loading: "로딩 중...",
-    expandDetails: "상세 보기", evolution24h: "24시간 추이", share: "공유",
+    expandDetails: "상세 보기", evolution24h: "24시간 추이", share: "공유", noTrends: "트렌드 없음",
   },
   ar: {
     trends: "الاتجاهات", moreTrends: "المزيد", filters: "التصفية",
@@ -165,7 +165,7 @@ const translations: Record<LangCode, Record<TranslationKey, string>> = {
     aboutDesc: "مراقب الاتجاهات العالمية في الوقت الفعلي.",
     map: "خريطة", satellite: "قمر صناعي", terrain: "تضاريس", timeline: "الجدول الزمني",
     clickToClose: "اضغط للإغلاق", trendCount: "اتجاهات", loading: "جار التحميل...",
-    expandDetails: "عرض التفاصيل", evolution24h: "التطور 24 ساعة", share: "مشاركة",
+    expandDetails: "عرض التفاصيل", evolution24h: "التطور 24 ساعة", share: "مشاركة", noTrends: "لا توجد اتجاهات",
   },
   hi: {
     trends: "रुझान", moreTrends: "और रुझान", filters: "फ़िल्टर",
@@ -179,7 +179,7 @@ const translations: Record<LangCode, Record<TranslationKey, string>> = {
     aboutDesc: "रियल-टाइम ग्लोबल ट्रेंड मॉनिटर।",
     map: "मानचित्र", satellite: "उपग्रह", terrain: "भूभाग", timeline: "टाइमलाइन",
     clickToClose: "बंद करने के लिए क्लिक करें", trendCount: "रुझान", loading: "लोड हो रहा है...",
-    expandDetails: "विवरण देखें", evolution24h: "24 घंटे का विकास", share: "शेयर",
+    expandDetails: "विवरण देखें", evolution24h: "24 घंटे का विकास", share: "शेयर", noTrends: "कोई रुझान नहीं",
   },
   ru: {
     trends: "Тренды", moreTrends: "Больше трендов", filters: "Фильтры",
@@ -193,7 +193,7 @@ const translations: Record<LangCode, Record<TranslationKey, string>> = {
     aboutDesc: "Монитор глобальных трендов в реальном времени. Мы агрегируем данные из YouTube, Reddit, Google Trends и NewsAPI.",
     map: "Карта", satellite: "Спутник", terrain: "Рельеф", timeline: "Таймлайн",
     clickToClose: "Нажмите, чтобы закрыть", trendCount: "тренды", loading: "Загрузка...",
-    expandDetails: "Подробнее", evolution24h: "Динамика 24ч", share: "Поделиться",
+    expandDetails: "Подробнее", evolution24h: "Динамика 24ч", share: "Поделиться", noTrends: "Нет трендов",
   },
 };
 

@@ -96,6 +96,7 @@ interface GoogleMapViewProps {
   onSelectCountry: (code: string) => void;
   activeTrend?: TrendCardProps | null;
   onDismissTrend?: () => void;
+  trends?: TrendCardProps[];
 }
 
 const GoogleMapView = ({
@@ -104,12 +105,14 @@ const GoogleMapView = ({
   onSelectCountry,
   activeTrend,
   onDismissTrend,
+  trends = [],
 }: GoogleMapViewProps) => {
   const { t } = useLanguage();
   const mapRef = useRef<HTMLDivElement>(null);
   const googleMapRef = useRef<any>(null);
   const markersRef = useRef<any[]>([]);
   const infoWindowRef = useRef<any>(null);
+  const hoverInfoRef = useRef<any>(null);
   const googleRef = useRef<any>(null);
   const [mapLoaded, setMapLoaded] = useState(false);
   const [mapError, setMapError] = useState<string | null>(null);
@@ -191,6 +194,7 @@ const GoogleMapView = ({
 
         googleMapRef.current = map;
         infoWindowRef.current = new InfoWindow();
+        hoverInfoRef.current = new InfoWindow({ disableAutoPan: true });
         setMapLoaded(true);
       } catch (err) {
         console.error("Google Maps load error:", err);
@@ -248,7 +252,37 @@ const GoogleMapView = ({
         setTimeout(() => marker.setAnimation(null), 2000);
       }
 
+      // Hover tooltip with top 3 trends
+      marker.addListener("mouseover", () => {
+        if (hoverInfoRef.current) {
+          const countryTrends = trends
+            .filter((tr) => tr.countryCode === cp.id)
+            .slice(0, 3);
+          const trendsList = countryTrends.length > 0
+            ? countryTrends.map((tr) =>
+                `<div style="font-size:11px;color:#999;margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:200px;">• ${tr.title.slice(0, 40)}${tr.title.length > 40 ? '…' : ''}</div>`
+              ).join('')
+            : `<div style="font-size:11px;color:#999;margin-top:3px;">${t("noTrends")}</div>`;
+
+          hoverInfoRef.current.setContent(`
+            <div style="font-family:Inter,sans-serif;padding:4px 0;min-width:140px;">
+              <strong style="font-size:13px;">${cp.name}</strong>
+              <div style="font-size:11px;color:#888;margin-top:1px;">${count} ${t("trendCount")}</div>
+              <div style="margin-top:4px;border-top:1px solid #eee;padding-top:4px;">
+                ${trendsList}
+              </div>
+            </div>
+          `);
+          hoverInfoRef.current.open({ anchor: marker, map });
+        }
+      });
+
+      marker.addListener("mouseout", () => {
+        hoverInfoRef.current?.close();
+      });
+
       marker.addListener("click", () => {
+        hoverInfoRef.current?.close();
         onSelectCountry(cp.id === selectedCountry ? "global" : cp.id);
 
         if (infoWindowRef.current) {
@@ -266,7 +300,7 @@ const GoogleMapView = ({
 
       markersRef.current.push(marker);
     });
-  }, [trendCounts, maxCount, avgCount, selectedCountry, mapLoaded, onSelectCountry, t]);
+  }, [trendCounts, maxCount, avgCount, selectedCountry, mapLoaded, onSelectCountry, t, trends]);
 
   // Pan to selected country
   useEffect(() => {

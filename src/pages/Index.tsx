@@ -36,7 +36,7 @@ const Index = () => {
   const scrollRef = useRef<HTMLDivElement>(null);
   const sentinelRef = useRef<HTMLDivElement>(null);
 
-  const { filteredTrends, loading, isFirstLoad } = useTrends(filters, setTrendCounts);
+  const { filteredTrends, allTrends, loading, isFirstLoad } = useTrends(filters, setTrendCounts);
 
   // Reset visible count when filters change
   useEffect(() => {
@@ -150,6 +150,7 @@ const Index = () => {
                   onSelectCountry={handleMapClick}
                   activeTrend={activeTrend}
                   onDismissTrend={() => setActiveTrend(null)}
+                  trends={allTrends}
                 />
               )}
             </div>
@@ -168,6 +169,7 @@ const Index = () => {
                   onSelectCountry={handleMapClick}
                   activeTrend={activeTrend}
                   onDismissTrend={() => setActiveTrend(null)}
+                  trends={allTrends}
                 />
               </div>
             </ResizablePanel>
