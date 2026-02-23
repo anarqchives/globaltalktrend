@@ -85,6 +85,15 @@ const Index = () => {
               key={`${trend.platform}-${trend.title.slice(0, 20)}-${i}`}
               {...trend}
               onClick={() => setActiveTrend(trend)}
+              onFilterPlatform={(p) => {
+                const map: Record<string, string> = {
+                  "Reddit": "Redes sociais",
+                  "NewsAPI": "Imprensa",
+                  "Google Trends": "Buscas (Google)",
+                  "YouTube": "Todas mídias",
+                };
+                setFilters((f) => ({ ...f, type: map[p] || "Todas mídias" }));
+              }}
             />
           ))}
       {/* Sentinel for infinite scroll */}
