@@ -68,20 +68,22 @@ type MapViewType = "roadmap" | "satellite" | "terrain";
 
 // Apple Maps–inspired light style
 const lightStyles: google.maps.MapTypeStyle[] = [
-  { elementType: "geometry", stylers: [{ color: "#f0f0f0" }] },
+  { elementType: "geometry", stylers: [{ color: "#f8f9fa" }] },
   { elementType: "labels.icon", stylers: [{ visibility: "off" }] },
   { elementType: "labels.text.fill", stylers: [{ color: "#9ca3af" }] },
-  { elementType: "labels.text.stroke", stylers: [{ color: "#f0f0f0" }, { weight: 2 }] },
-  { featureType: "administrative.country", elementType: "geometry.stroke", stylers: [{ color: "#c0c0c0" }, { weight: 0.6 }] },
-  { featureType: "administrative.country", elementType: "labels.text.fill", stylers: [{ color: "#6b7280" }] },
+  { elementType: "labels.text.stroke", stylers: [{ color: "#f8f9fa" }, { weight: 2 }] },
+  { featureType: "administrative.country", elementType: "geometry.stroke", stylers: [{ color: "#c0c4cc" }, { weight: 0.8 }] },
+  { featureType: "administrative.country", elementType: "labels.text.fill", stylers: [{ color: "#4a5568" }] },
   { featureType: "administrative.province", elementType: "geometry.stroke", stylers: [{ visibility: "off" }] },
+  { featureType: "administrative.locality", elementType: "labels", stylers: [{ visibility: "off" }] },
   { featureType: "administrative.land_parcel", stylers: [{ visibility: "off" }] },
   { featureType: "poi", stylers: [{ visibility: "off" }] },
   { featureType: "road", stylers: [{ visibility: "off" }] },
   { featureType: "transit", stylers: [{ visibility: "off" }] },
-  { featureType: "water", elementType: "geometry", stylers: [{ color: "#dbeafe" }] },
+  { featureType: "water", elementType: "geometry", stylers: [{ color: "#e3f0ff" }] },
   { featureType: "water", elementType: "labels", stylers: [{ visibility: "off" }] },
-  { featureType: "landscape.natural", elementType: "geometry", stylers: [{ color: "#f0f0f0" }] },
+  { featureType: "landscape", elementType: "geometry", stylers: [{ color: "#f8f9fa" }] },
+  { featureType: "landscape.natural", elementType: "geometry", stylers: [{ color: "#f0f2f5" }] },
   { featureType: "landscape.man_made", stylers: [{ visibility: "off" }] },
 ];
 
