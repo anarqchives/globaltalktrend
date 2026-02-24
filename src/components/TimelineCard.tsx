@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { Share2, ChevronDown, ChevronUp, Sparkles, Link2, Bell, ExternalLink, Shield, CheckCircle2, FlaskConical, Globe, Newspaper } from "lucide-react";
 import { AreaChart, Area, ResponsiveContainer, XAxis, YAxis, Tooltip, CartesianGrid } from "recharts";
 import { toast } from "@/hooks/use-toast";
@@ -47,6 +47,7 @@ interface TimelineCardProps extends TrendCardProps {
   onExpand?: (title: string, platform: string, metadata?: any) => void;
   userId?: string | null;
   onTrackAction?: (action: string, points: number, metadata?: Record<string, any>) => void;
+  forceExpanded?: boolean;
 }
 
 const TimelineCard = ({
@@ -75,10 +76,16 @@ const TimelineCard = ({
   onExpand,
   userId,
   onTrackAction,
+  forceExpanded,
 }: TimelineCardProps) => {
   const { t, lang } = useLanguage();
-  const [expanded, setExpanded] = useState(false);
+  const [expanded, setExpanded] = useState(forceExpanded || false);
   const [alertOpen, setAlertOpen] = useState(false);
+
+  // Sync with external forceExpanded prop
+  useEffect(() => {
+    if (forceExpanded) setExpanded(true);
+  }, [forceExpanded]);
   const [aiSummary, setAiSummary] = useState<{ summary: string; sentiment: string; impact: string } | null>(null);
   const [summarizing, setSummarizing] = useState(false);
   const pf = platformIcons[platform] || platformIcons["Google Trends"];
