@@ -170,9 +170,13 @@ const TrendHeader = ({ totalTrends = 0, countriesCount = 0, onRefresh, refreshin
               <span className="font-semibold text-foreground sm:hidden">GTT</span>
               <span className="text-muted-foreground hidden md:inline">| Monitor Imparcial em Tempo Real</span>
             </h1>
-            {totalTrends > 0 && (
+            {totalTrends > 1 && countriesCount > 0 ? (
               <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-primary/10 text-primary text-[11px] font-bold tabular-nums flex-shrink-0 hidden sm:inline-flex">
                 {totalTrends} {t("trends")} · {countriesCount} {countriesCount > 1 ? "Países" : t("country")}
+              </span>
+            ) : (
+              <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-muted text-muted-foreground text-[11px] font-medium flex-shrink-0 hidden sm:inline-flex animate-pulse">
+                Carregando tendências…
               </span>
             )}
           </div>
