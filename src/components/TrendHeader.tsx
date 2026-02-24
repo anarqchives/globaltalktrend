@@ -191,85 +191,60 @@ const TrendHeader = ({ totalTrends = 0, countriesCount = 0, onRefresh, refreshin
         </div>
       </header>
 
-      <AnimatePresence>
-        {aboutOpen && (
-          <Dialog open={aboutOpen} onOpenChange={setAboutOpen}>
-            <DialogContent className="max-w-md bg-card/95 backdrop-blur-xl border-border/50 shadow-2xl rounded-2xl p-0 overflow-hidden" asChild forceMount>
-              <motion.div
-                initial={{ opacity: 0, scale: 0.92, y: 20 }}
-                animate={{ opacity: 1, scale: 1, y: 0 }}
-                exit={{ opacity: 0, scale: 0.95, y: 10 }}
-                transition={{ type: "spring", damping: 25, stiffness: 350 }}
-                className="p-6"
-              >
-                <DialogHeader>
-                  <DialogTitle className="text-lg font-semibold tracking-tight">
-                    {t("aboutTitle")}
-                  </DialogTitle>
-                  <DialogDescription className="text-sm text-muted-foreground leading-relaxed mt-2">
-                    {t("aboutDesc")}
-                  </DialogDescription>
-                </DialogHeader>
-                <motion.div
-                  className="mt-4 space-y-4"
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.1, duration: 0.3 }}
+      <Dialog open={aboutOpen} onOpenChange={setAboutOpen}>
+        <DialogContent className="max-w-md bg-card/95 backdrop-blur-xl border-border/50 shadow-2xl rounded-2xl p-6 overflow-hidden">
+          <DialogHeader>
+            <DialogTitle className="text-lg font-semibold tracking-tight">
+              {t("aboutTitle")}
+            </DialogTitle>
+            <DialogDescription className="text-sm text-muted-foreground leading-relaxed mt-2">
+              {t("aboutDesc")}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="mt-4 space-y-4">
+            <div className="grid grid-cols-3 gap-2 text-xs">
+              {[
+                { name: "YouTube", color: "hsl(0, 72%, 51%)" },
+                { name: "Reddit", color: "hsl(16, 100%, 50%)" },
+                { name: "Google Trends", color: "hsl(210, 100%, 40%)" },
+                { name: "NewsAPI", color: "hsl(142, 60%, 40%)" },
+                { name: "Bluesky", color: "hsl(200, 100%, 50%)" },
+                { name: "Mastodon", color: "hsl(270, 60%, 55%)" },
+                { name: "NewsData", color: "hsl(35, 90%, 50%)" },
+                { name: "GNews", color: "hsl(160, 60%, 45%)" },
+                { name: "The Guardian", color: "hsl(210, 70%, 35%)" },
+                { name: "World Bank", color: "hsl(200, 80%, 45%)" },
+                { name: "IBGE", color: "hsl(130, 60%, 35%)" },
+                { name: "OpenAlex", color: "hsl(270, 60%, 50%)" },
+              ].map((src) => (
+                <div
+                  key={src.name}
+                  className="flex items-center gap-2 p-2 rounded-lg bg-secondary/50"
                 >
-                  <div className="grid grid-cols-3 gap-2 text-xs">
-                    {[
-                      { name: "YouTube", color: "hsl(0, 72%, 51%)" },
-                      { name: "Reddit", color: "hsl(16, 100%, 50%)" },
-                      { name: "Google Trends", color: "hsl(210, 100%, 40%)" },
-                      { name: "NewsAPI", color: "hsl(142, 60%, 40%)" },
-                      { name: "Bluesky", color: "hsl(200, 100%, 50%)" },
-                      { name: "Mastodon", color: "hsl(270, 60%, 55%)" },
-                      { name: "NewsData", color: "hsl(35, 90%, 50%)" },
-                      { name: "GNews", color: "hsl(160, 60%, 45%)" },
-                      { name: "The Guardian", color: "hsl(210, 70%, 35%)" },
-                      { name: "World Bank", color: "hsl(200, 80%, 45%)" },
-                      { name: "IBGE", color: "hsl(130, 60%, 35%)" },
-                      { name: "OpenAlex", color: "hsl(270, 60%, 50%)" },
-                    ].map((src, i) => (
-                      <motion.div
-                        key={src.name}
-                        initial={{ opacity: 0, x: -10 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        transition={{ delay: 0.15 + i * 0.05 }}
-                        className="flex items-center gap-2 p-2 rounded-lg bg-secondary/50"
-                      >
-                        <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: src.color }} />
-                        <span className="font-medium text-foreground text-[10px]">{src.name}</span>
-                      </motion.div>
-                    ))}
-                  </div>
+                  <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: src.color }} />
+                  <span className="font-medium text-foreground text-[10px]">{src.name}</span>
+                </div>
+              ))}
+            </div>
 
-                  <div className="flex items-center justify-center gap-3 text-xs text-muted-foreground">
-                    <span>✨ Resumos com IA · Sentimento · Multi-fonte</span>
-                    <Link to="/metodologia" onClick={() => setAboutOpen(false)} className="inline-flex items-center gap-1 text-primary hover:underline font-medium">
-                      <BookOpen className="w-3 h-3" /> Metodologia
-                    </Link>
-                  </div>
+            <div className="flex items-center justify-center gap-3 text-xs text-muted-foreground">
+              <span>✨ Resumos com IA · Sentimento · Multi-fonte</span>
+              <Link to="/metodologia" onClick={() => setAboutOpen(false)} className="inline-flex items-center gap-1 text-primary hover:underline font-medium">
+                <BookOpen className="w-3 h-3" /> Metodologia
+              </Link>
+            </div>
 
-                  <motion.a
-                    href="https://buymeacoffee.com/globaltalktrending"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    initial={{ opacity: 0, y: 8 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.35 }}
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
-                    className="flex items-center justify-center w-full py-2.5 px-4 rounded-full bg-primary hover:bg-primary/90 text-primary-foreground text-sm font-semibold tracking-tight transition-colors duration-200 shadow-lg"
-                  >
-                    ☕ Apoie este projeto com doação
-                  </motion.a>
-                </motion.div>
-              </motion.div>
-            </DialogContent>
-          </Dialog>
-        )}
-      </AnimatePresence>
+            <a
+              href="https://buymeacoffee.com/globaltalktrending"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center justify-center w-full py-2.5 px-4 rounded-full bg-primary hover:bg-primary/90 text-primary-foreground text-sm font-semibold tracking-tight transition-colors duration-200 shadow-lg"
+            >
+              ☕ Apoie este projeto com doação
+            </a>
+          </div>
+        </DialogContent>
+      </Dialog>
     </>
   );
 };
