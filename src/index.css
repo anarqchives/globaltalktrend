@@ -236,3 +236,72 @@
     border-radius: 4px;
   }
 }
+
+/* ===== Mobile Responsiveness ===== */
+@media (max-width: 768px) {
+  /* Header compacto */
+  .glass-header {
+    padding: 6px 8px;
+    gap: 4px;
+  }
+  .glass-header h1 {
+    font-size: 15px;
+  }
+
+  /* Filter bar */
+  .filter-pill,
+  .filter-pill-active {
+    font-size: 11px;
+    padding: 4px 8px;
+    min-height: 36px;
+  }
+
+  /* Timeline cards */
+  .timeline-card {
+    padding: 10px 12px;
+    border-radius: 10px;
+  }
+  .timeline-card .badge,
+  .timeline-card [class*="badge"] {
+    font-size: 9px;
+    padding: 1px 5px;
+  }
+
+  /* Trend card titles */
+  .trend-card-base h3,
+  .timeline-card h3 {
+    font-size: 13px;
+    line-height: 1.3;
+  }
+
+  /* Ensure touch targets are at least 44px */
+  button,
+  select,
+  a[role="button"] {
+    min-height: 44px;
+  }
+
+  /* Floating coffee button */
+  [data-mobile-coffee] {
+    bottom: 16px;
+    right: 16px;
+  }
+  [data-mobile-coffee] button {
+    width: 48px;
+    height: 48px;
+  }
+}
+
+/* Small phones (iPhone SE, 360px devices) */
+@media (max-width: 375px) {
+  .glass-header h1 {
+    font-size: 13px;
+  }
+  .timeline-card {
+    padding: 8px 10px;
+  }
+  .trend-card-base h3,
+  .timeline-card h3 {
+    font-size: 12px;
+  }
+}
