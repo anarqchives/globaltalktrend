@@ -1,6 +1,6 @@
 import { AreaChart, Area, ResponsiveContainer, XAxis, YAxis, Tooltip, CartesianGrid } from "recharts";
 import { useState } from "react";
-import { Share2, MessageCircle, ThumbsUp, MapPin, Newspaper, ExternalLink, Shield, CheckCircle2, FlaskConical } from "lucide-react";
+import { Share2, MessageCircle, ThumbsUp, MapPin, Newspaper, ExternalLink, Shield, CheckCircle2, FlaskConical, Globe } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 
 export interface TrendCardProps {
@@ -46,6 +46,7 @@ const trustBadgeMap: Record<string, { label: string; icon: React.ReactNode; clas
   official: { label: "Fonte Oficial", icon: <Shield className="w-2.5 h-2.5" />, className: "bg-blue-500/10 text-blue-500 border-blue-500/20" },
   verified: { label: "Verificado", icon: <CheckCircle2 className="w-2.5 h-2.5" />, className: "bg-green-500/10 text-green-500 border-green-500/20" },
   scientific: { label: "Científico", icon: <FlaskConical className="w-2.5 h-2.5" />, className: "bg-purple-500/10 text-purple-500 border-purple-500/20" },
+  international: { label: "Fonte Internacional", icon: <Globe className="w-2.5 h-2.5" />, className: "bg-amber-500/10 text-amber-600 border-amber-500/20" },
 };
 
 const TrendCard = ({

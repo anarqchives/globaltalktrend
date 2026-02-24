@@ -64,6 +64,7 @@ async function fetchNewsData(): Promise<TrendItem[]> {
         countryCode: (a.country || ["US"])[0]?.toUpperCase() || "US",
         historicalData,
         metricLabel,
+        trustBadge: "international",
       };
     });
   } catch (e) { console.error("NewsData fetch error:", e); return []; }
@@ -105,6 +106,7 @@ function mapGNewsArticles(articles: any[]): TrendItem[] {
       countryCode: "BR",
       historicalData,
       metricLabel,
+      trustBadge: "international",
     };
   });
 }
@@ -140,6 +142,7 @@ async function fetchBingNews(): Promise<TrendItem[]> {
           countryCode: "US",
           historicalData,
           metricLabel,
+          trustBadge: "international",
         };
       });
     }
@@ -161,6 +164,7 @@ async function fetchBingNews(): Promise<TrendItem[]> {
         countryCode: "BR",
         historicalData,
         metricLabel,
+        trustBadge: "international",
       };
     });
   } catch (e) { console.error("Bing News fetch error:", e); return []; }

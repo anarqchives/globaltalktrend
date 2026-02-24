@@ -1,4 +1,4 @@
-import { ArrowLeft, ExternalLink, CheckCircle2, Shield, FlaskConical, Clock, AlertTriangle } from "lucide-react";
+import { ArrowLeft, ExternalLink, CheckCircle2, Shield, FlaskConical, Globe, Clock, AlertTriangle } from "lucide-react";
 import { Link } from "react-router-dom";
 
 const sources = [
@@ -51,7 +51,7 @@ const sources = [
     name: "NewsAPI",
     icon: "📰",
     type: "Imprensa",
-    badge: "verified",
+    badge: "international",
     description: "Notícias de mais de 150.000 fontes jornalísticas globais.",
     limits: "100 req/dia no plano gratuito. Headlines apenas.",
     url: "https://newsapi.org",
@@ -60,7 +60,7 @@ const sources = [
     name: "NewsData.io",
     icon: "📰",
     type: "Imprensa",
-    badge: "verified",
+    badge: "international",
     description: "Notícias em tempo real de fontes confiáveis em múltiplos idiomas.",
     limits: "200 créditos/dia no plano gratuito.",
     url: "https://newsdata.io",
@@ -69,7 +69,7 @@ const sources = [
     name: "GNews",
     icon: "🗞️",
     type: "Imprensa",
-    badge: "verified",
+    badge: "international",
     description: "Headlines agregadas do Google News com acesso via API.",
     limits: "100 req/dia no plano gratuito.",
     url: "https://gnews.io",
@@ -78,7 +78,7 @@ const sources = [
     name: "The Guardian",
     icon: "🏛️",
     type: "Imprensa",
-    badge: "verified",
+    badge: "international",
     description: "Artigos do The Guardian via Open Platform — jornalismo de qualidade.",
     limits: "12 req/seg, 5.000/dia no plano gratuito.",
     url: "https://open-platform.theguardian.com",
@@ -116,6 +116,7 @@ const badgeMap: Record<string, { label: string; icon: React.ReactNode; className
   official: { label: "Fonte Oficial", icon: <Shield className="w-3 h-3" />, className: "bg-blue-500/10 text-blue-500 border-blue-500/20" },
   verified: { label: "Imprensa Verificada", icon: <CheckCircle2 className="w-3 h-3" />, className: "bg-green-500/10 text-green-500 border-green-500/20" },
   scientific: { label: "Dados Científicos", icon: <FlaskConical className="w-3 h-3" />, className: "bg-purple-500/10 text-purple-500 border-purple-500/20" },
+  international: { label: "Fonte Internacional", icon: <Globe className="w-3 h-3" />, className: "bg-amber-500/10 text-amber-600 border-amber-500/20" },
 };
 
 const Methodology = () => {

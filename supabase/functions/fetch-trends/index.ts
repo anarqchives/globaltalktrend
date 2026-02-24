@@ -242,6 +242,7 @@ async function fetchNewsAPI(): Promise<TrendItem[]> {
         countryCode: "US",
         historicalData,
         metricLabel,
+        trustBadge: "international",
       };
     });
   } catch (e) {
