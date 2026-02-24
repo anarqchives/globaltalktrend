@@ -151,6 +151,12 @@
   .timeline-card {
     @apply bg-card rounded-xl px-3 py-2.5 border border-transparent transition-all duration-150 cursor-pointer;
     min-height: 72px;
+    position: relative;
+    z-index: 1;
+  }
+  .timeline-card-expanded {
+    @apply border-border rounded-b-none border-b-0;
+    z-index: 2;
   }
   .timeline-card:hover {
     @apply border-border;
