@@ -34,7 +34,12 @@ const Profile = () => {
   const navigate = useNavigate();
   const { lang, setLang, t } = useLanguage();
   const [user, setUser] = useState<any>(null);
-  const [activeTab, setActiveTab] = useState<TabKey>("filters");
+  const [activeTab, setActiveTab] = useState<TabKey>(() => {
+    const params = new URLSearchParams(window.location.search);
+    const tab = params.get("tab");
+    if (tab && tabs.some(t => t.key === tab)) return tab as TabKey;
+    return "filters";
+  });
   const [dark, setDark] = useState(() => localStorage.getItem("theme") === "dark");
 
   useEffect(() => {

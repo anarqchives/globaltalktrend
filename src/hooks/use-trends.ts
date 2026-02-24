@@ -281,8 +281,12 @@ export function useTrends(filters: FilterState, onTrendCountsChange: (counts: Re
     let initialFetchTimer: number | undefined;
 
     const startPolling = () => {
-      intervalId = window.setInterval(fetchTrends, 5 * 60 * 1000);
+      intervalId = window.setInterval(fetchTrends, 15 * 60 * 1000);
     };
+
+    // Listen for manual/countdown-triggered refreshes
+    const handleTrendRefresh = () => fetchTrends();
+    window.addEventListener("trend-refresh", handleTrendRefresh);
 
     if (cacheAgeMs < CACHE_TTL) {
       const remainingMs = CACHE_TTL - cacheAgeMs;
@@ -296,6 +300,7 @@ export function useTrends(filters: FilterState, onTrendCountsChange: (counts: Re
     return () => {
       if (initialFetchTimer) window.clearTimeout(initialFetchTimer);
       if (intervalId) window.clearInterval(intervalId);
+      window.removeEventListener("trend-refresh", handleTrendRefresh);
     };
   }, [fetchTrends, cacheAgeMs]);
 
