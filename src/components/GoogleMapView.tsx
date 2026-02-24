@@ -377,7 +377,7 @@ const GoogleMapView = ({
   }, [mapViewType, mapLoaded]);
 
   return (
-    <div className="w-full h-full relative">
+    <div className="w-full h-full relative" style={{ isolation: "isolate" }}>
       {/* Map type toggle + heatmap toggle */}
       <div className="absolute top-3 right-3 z-10 flex gap-1.5">
         <div className="flex rounded-lg overflow-hidden border border-border shadow-sm">
@@ -412,32 +412,6 @@ const GoogleMapView = ({
         </button>
       </div>
 
-      {/* Heatmap legend */}
-      <AnimatePresence>
-        {heatmapEnabled && (
-          <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: 10 }}
-            transition={{ duration: 0.25, ease: "easeOut" }}
-            className="absolute bottom-4 right-3 z-10 bg-card/90 backdrop-blur-sm border border-border rounded-lg shadow-sm px-3 py-2"
-          >
-            <p className="text-[10px] font-semibold text-foreground mb-1.5">{t("heatmapDensity")}</p>
-            <div className="flex items-center gap-1.5">
-              <span className="text-[9px] text-muted-foreground">{t("low")}</span>
-              <div className="flex h-2.5 rounded-full overflow-hidden w-24">
-                <div className="flex-1" style={{ background: "#4285F4" }} />
-                <div className="flex-1" style={{ background: "#66BBFF" }} />
-                <div className="flex-1" style={{ background: "#FBBC04" }} />
-                <div className="flex-1" style={{ background: "#FFA000" }} />
-                <div className="flex-1" style={{ background: "#EA4335" }} />
-              </div>
-              <span className="text-[9px] text-muted-foreground">{t("high")}</span>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
       {/* Reset view button */}
       {selectedCountry !== "global" && (
         <button
@@ -453,7 +427,7 @@ const GoogleMapView = ({
       )}
 
       {/* Map container */}
-      <div ref={mapRef} className="w-full h-full" />
+      <div ref={mapRef} className="absolute inset-0 z-0" />
 
       {/* Loading state */}
       {!mapLoaded && !mapError && (
@@ -495,6 +469,32 @@ const GoogleMapView = ({
           <p className="text-[10px] text-muted-foreground mt-2">{t("clickToClose")}</p>
         </div>
       )}
+
+      {/* Heatmap legend */}
+      <AnimatePresence>
+        {heatmapEnabled && (
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 10 }}
+            transition={{ duration: 0.25, ease: "easeOut" }}
+            className="absolute bottom-4 right-3 z-20 bg-card/90 backdrop-blur-sm border border-border rounded-lg shadow-sm px-3 py-2"
+          >
+            <p className="text-[10px] font-semibold text-foreground mb-1.5">{t("heatmapDensity")}</p>
+            <div className="flex items-center gap-1.5">
+              <span className="text-[9px] text-muted-foreground">{t("low")}</span>
+              <div className="flex h-2.5 rounded-full overflow-hidden w-24">
+                <div className="flex-1" style={{ background: "#4285F4" }} />
+                <div className="flex-1" style={{ background: "#66BBFF" }} />
+                <div className="flex-1" style={{ background: "#FBBC04" }} />
+                <div className="flex-1" style={{ background: "#FFA000" }} />
+                <div className="flex-1" style={{ background: "#EA4335" }} />
+              </div>
+              <span className="text-[9px] text-muted-foreground">{t("high")}</span>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 };
