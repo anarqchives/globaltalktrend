@@ -134,36 +134,54 @@ const FilterBar = ({ filters, onChange }: FilterBarProps) => {
   ];
 
   return (
-    <div className="flex items-center gap-2 px-4 md:px-6 py-1.5 bg-card/60 backdrop-blur-md border-b border-border overflow-x-auto scrollbar-thin">
-      <select className="filter-pill-inline" value={filters.country} onChange={(e) => update("country", e.target.value)}>
-        {countries.map((group) => (
-          <optgroup key={group.group} label={group.group}>
-            {group.items.map((c) => <option key={c.value} value={c.value}>{c.label}</option>)}
-          </optgroup>
+    <div className="flex flex-col bg-card/60 backdrop-blur-md border-b border-border">
+      {/* Row 1: País, Período, Categoria */}
+      <div className="flex items-center gap-2 px-4 md:px-6 py-1.5 overflow-x-auto scrollbar-thin">
+        <select className="filter-pill-inline" value={filters.country} onChange={(e) => update("country", e.target.value)}>
+          {countries.map((group) => (
+            <optgroup key={group.group} label={group.group}>
+              {group.items.map((c) => <option key={c.value} value={c.value}>{c.label}</option>)}
+            </optgroup>
+          ))}
+        </select>
+        <select className="filter-pill-inline" value={filters.period} onChange={(e) => update("period", e.target.value)}>
+          {periodOptions.map((p) => <option key={p.value} value={p.value}>{p.label}</option>)}
+        </select>
+        <span className="text-[10px] text-muted-foreground font-medium uppercase tracking-wider flex-shrink-0">Categoria:</span>
+        <select className="filter-pill-inline" value={filters.category} onChange={(e) => update("category", e.target.value)}>
+          {categoryOptions.map((c) => <option key={c.value} value={c.value}>{c.label}</option>)}
+        </select>
+        {isFiltered && (
+          <button
+            onClick={() => onChange(defaultFilters)}
+            className="flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-medium text-primary hover:bg-primary/10 transition-colors flex-shrink-0"
+            title="Limpar filtros"
+          >
+            <RotateCcw className="w-3 h-3" />
+            Reset
+          </button>
+        )}
+        <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground ml-auto whitespace-nowrap">
+          <span className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ background: "hsl(142, 72%, 45%)" }} />
+          {t("live")}
+        </div>
+      </div>
+      {/* Row 2: Tipo de Mídia (fonte) */}
+      <div className="flex items-center gap-2 px-4 md:px-6 py-1 overflow-x-auto scrollbar-thin border-t border-border/50">
+        <span className="text-[10px] text-muted-foreground font-medium uppercase tracking-wider flex-shrink-0">Fonte:</span>
+        {typeOptions.map((opt) => (
+          <button
+            key={opt.value}
+            onClick={() => update("type", opt.value)}
+            className={`px-2.5 py-0.5 rounded-full text-[11px] font-medium transition-colors flex-shrink-0 ${
+              filters.type === opt.value
+                ? "bg-primary text-primary-foreground"
+                : "bg-muted/50 text-muted-foreground hover:bg-muted"
+            }`}
+          >
+            {opt.label}
+          </button>
         ))}
-      </select>
-      <select className="filter-pill-inline" value={filters.period} onChange={(e) => update("period", e.target.value)}>
-        {periodOptions.map((p) => <option key={p.value} value={p.value}>{p.label}</option>)}
-      </select>
-      <select className="filter-pill-inline" value={filters.category} onChange={(e) => update("category", e.target.value)}>
-        {categoryOptions.map((c) => <option key={c.value} value={c.value}>{c.label}</option>)}
-      </select>
-      <select className="filter-pill-inline" value={filters.type} onChange={(e) => update("type", e.target.value)}>
-        {typeOptions.map((t) => <option key={t.value} value={t.value}>{t.label}</option>)}
-      </select>
-      {isFiltered && (
-        <button
-          onClick={() => onChange(defaultFilters)}
-          className="flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-medium text-primary hover:bg-primary/10 transition-colors flex-shrink-0"
-          title="Limpar filtros"
-        >
-          <RotateCcw className="w-3 h-3" />
-          Reset
-        </button>
-      )}
-      <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground ml-auto whitespace-nowrap">
-        <span className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ background: "hsl(142, 72%, 45%)" }} />
-        {t("live")}
       </div>
     </div>
   );
