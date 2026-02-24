@@ -117,8 +117,12 @@ const Index = () => {
                   "NewsData": "Imprensa",
                   "GNews": "Imprensa",
                   "Bing News": "Imprensa",
+                  "The Guardian": "Imprensa",
                   "Google Trends": "Buscas (Google)",
                   "YouTube": "Todas mídias",
+                  "World Bank": "Dados oficiais",
+                  "IBGE": "Dados oficiais",
+                  "OpenAlex": "Ciência",
                 };
                 setFilters((f) => ({ ...f, type: map[p] || "Todas mídias" }));
               }}

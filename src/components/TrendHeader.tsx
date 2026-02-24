@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
-import { Info, Sun, Moon, RefreshCw, LogIn, LogOut } from "lucide-react";
+import { Info, Sun, Moon, RefreshCw, LogIn, LogOut, BookOpen } from "lucide-react";
+import { Link } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { useLanguage, languages } from "@/contexts/LanguageContext";
 import { lovable } from "@/integrations/lovable/index";
@@ -225,7 +226,10 @@ const TrendHeader = ({ totalTrends = 0, countriesCount = 0, onRefresh, refreshin
                       { name: "Mastodon", color: "hsl(270, 60%, 55%)" },
                       { name: "NewsData", color: "hsl(35, 90%, 50%)" },
                       { name: "GNews", color: "hsl(160, 60%, 45%)" },
-                      { name: "Bing News", color: "hsl(195, 80%, 45%)" },
+                      { name: "The Guardian", color: "hsl(210, 70%, 35%)" },
+                      { name: "World Bank", color: "hsl(200, 80%, 45%)" },
+                      { name: "IBGE", color: "hsl(130, 60%, 35%)" },
+                      { name: "OpenAlex", color: "hsl(270, 60%, 50%)" },
                     ].map((src, i) => (
                       <motion.div
                         key={src.name}
@@ -240,8 +244,11 @@ const TrendHeader = ({ totalTrends = 0, countriesCount = 0, onRefresh, refreshin
                     ))}
                   </div>
 
-                  <div className="text-xs text-muted-foreground text-center">
-                    ✨ Resumos com IA · Sentimento · Multi-fonte
+                  <div className="flex items-center justify-center gap-3 text-xs text-muted-foreground">
+                    <span>✨ Resumos com IA · Sentimento · Multi-fonte</span>
+                    <Link to="/metodologia" onClick={() => setAboutOpen(false)} className="inline-flex items-center gap-1 text-primary hover:underline font-medium">
+                      <BookOpen className="w-3 h-3" /> Metodologia
+                    </Link>
                   </div>
 
                   <motion.a

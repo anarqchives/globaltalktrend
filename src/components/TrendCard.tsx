@@ -1,6 +1,6 @@
 import { AreaChart, Area, ResponsiveContainer, XAxis, YAxis, Tooltip, CartesianGrid } from "recharts";
-import { useState, lazy, Suspense } from "react";
-import { Share2, MessageCircle, ThumbsUp, MapPin, Newspaper, ExternalLink } from "lucide-react";
+import { useState } from "react";
+import { Share2, MessageCircle, ThumbsUp, MapPin, Newspaper, ExternalLink, Shield, CheckCircle2, FlaskConical } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 
 export interface TrendCardProps {
@@ -21,6 +21,7 @@ export interface TrendCardProps {
   countryCode?: string;
   sources?: string[];
   sourceUrl?: string;
+  trustBadge?: string;
   historicalData?: { hour: string; value: number }[];
   metricLabel?: string;
 }
@@ -30,11 +31,21 @@ const platformColors: Record<string, { stroke: string; fill: string }> = {
   Reddit: { stroke: "hsl(16, 100%, 50%)", fill: "hsl(16, 100%, 50%)" },
   "Google Trends": { stroke: "hsl(210, 100%, 40%)", fill: "hsl(210, 100%, 40%)" },
   NewsAPI: { stroke: "hsl(142, 60%, 40%)", fill: "hsl(142, 60%, 40%)" },
+  "The Guardian": { stroke: "hsl(210, 70%, 35%)", fill: "hsl(210, 70%, 35%)" },
+  "World Bank": { stroke: "hsl(200, 80%, 45%)", fill: "hsl(200, 80%, 45%)" },
+  IBGE: { stroke: "hsl(130, 60%, 35%)", fill: "hsl(130, 60%, 35%)" },
+  OpenAlex: { stroke: "hsl(270, 60%, 50%)", fill: "hsl(270, 60%, 50%)" },
 };
 
 const countryCodeToFlag = (code?: string) => {
   if (!code || code.length !== 2) return null;
   return String.fromCodePoint(...[...code.toUpperCase()].map(c => 0x1F1E6 + c.charCodeAt(0) - 65));
+};
+
+const trustBadgeMap: Record<string, { label: string; icon: React.ReactNode; className: string }> = {
+  official: { label: "Fonte Oficial", icon: <Shield className="w-2.5 h-2.5" />, className: "bg-blue-500/10 text-blue-500 border-blue-500/20" },
+  verified: { label: "Verificado", icon: <CheckCircle2 className="w-2.5 h-2.5" />, className: "bg-green-500/10 text-green-500 border-green-500/20" },
+  scientific: { label: "Científico", icon: <FlaskConical className="w-2.5 h-2.5" />, className: "bg-purple-500/10 text-purple-500 border-purple-500/20" },
 };
 
 const TrendCard = ({
@@ -55,6 +66,7 @@ const TrendCard = ({
   countryCode,
   sources,
   sourceUrl,
+  trustBadge,
   historicalData,
   metricLabel,
 }: TrendCardProps) => {
@@ -88,6 +100,11 @@ const TrendCard = ({
           </div>
           <span className="text-sm font-medium text-muted-foreground">{platform}</span>
           {flag && <span className="text-sm" title={countryCode}>{flag}</span>}
+          {trustBadge && trustBadgeMap[trustBadge] && (
+            <span className={`inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full text-[9px] font-semibold border ${trustBadgeMap[trustBadge].className}`}>
+              {trustBadgeMap[trustBadge].icon} {trustBadgeMap[trustBadge].label}
+            </span>
+          )}
           {limited && <span className="warning-badge">⚠ acesso limitado</span>}
         </div>
         <button
