@@ -24,6 +24,9 @@ export interface TrendCardProps {
   trustBadge?: string;
   historicalData?: { hour: string; value: number }[];
   metricLabel?: string;
+  thumbnail?: string;
+  publishedAt?: string;
+  description?: string;
 }
 
 const platformColors: Record<string, { stroke: string; fill: string }> = {

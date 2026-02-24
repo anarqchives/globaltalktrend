@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { Share2, ChevronDown, ChevronUp, Sparkles, Link2, Bell, ExternalLink, Shield, CheckCircle2, FlaskConical, Globe, Image } from "lucide-react";
 import { AreaChart, Area, ResponsiveContainer, XAxis, YAxis, Tooltip, CartesianGrid } from "recharts";
 import { toast } from "@/hooks/use-toast";
@@ -61,6 +61,9 @@ const TimelineCard = ({
   sources,
   sourceUrl,
   trustBadge,
+  thumbnail,
+  publishedAt,
+  description,
   onClick,
   onFilterPlatform,
   onExpand,
@@ -76,6 +79,27 @@ const TimelineCard = ({
   const isPeak = change && parseInt(change.replace(/[^0-9]/g, "")) > 100;
   const flag = countryCodeToFlag(countryCode);
   const gradientId = `tl-${title.replace(/[^a-zA-Z0-9]/g, "").slice(0, 8)}-${Math.random().toString(36).slice(2, 5)}`;
+  const [imgError, setImgError] = useState(false);
+
+  const formattedDate = useMemo(() => {
+    if (!publishedAt) return null;
+    try {
+      const date = new Date(publishedAt);
+      if (isNaN(date.getTime())) return null;
+      const now = new Date();
+      const diffMs = now.getTime() - date.getTime();
+      const diffMin = Math.floor(diffMs / 60000);
+      if (diffMin < 1) return "agora";
+      if (diffMin < 60) return `há ${diffMin}min`;
+      const diffH = Math.floor(diffMin / 60);
+      if (diffH < 24) return `há ${diffH}h`;
+      const diffD = Math.floor(diffH / 24);
+      if (diffD < 7) return `há ${diffD}d`;
+      return date.toLocaleDateString("pt-BR", { day: "2-digit", month: "short" });
+    } catch { return null; }
+  }, [publishedAt]);
+
+  const displayDescription = description || details;
 
   const handlePlatformClick = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -182,7 +206,7 @@ const TimelineCard = ({
                 {platform}
               </span>
               {flag && <span className="text-xs" title={countryCode}>{flag}</span>}
-              <span className="text-[11px] text-muted-foreground">{time}</span>
+              <span className="text-[11px] text-muted-foreground">{formattedDate || time}</span>
                {isPeak && <span className="peak-badge">🔥 {t("peak")}</span>}
                {trustBadge && trustBadgeMap[trustBadge] && (
                  <span className={`inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full text-[9px] font-semibold border ${trustBadgeMap[trustBadge].className}`} title={trustBadgeMap[trustBadge].label}>
@@ -196,9 +220,28 @@ const TimelineCard = ({
               )}
             </div>
 
-            <p className="text-sm font-semibold text-foreground line-clamp-2 leading-snug mb-1">
-              {title}
-            </p>
+            {/* Title + Thumbnail row */}
+            <div className="flex gap-2.5 mb-1">
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-semibold text-foreground line-clamp-2 leading-snug">
+                  {title}
+                </p>
+                {displayDescription && (
+                  <p className="text-[11px] text-muted-foreground/80 line-clamp-2 leading-relaxed mt-0.5">
+                    {displayDescription}
+                  </p>
+                )}
+              </div>
+              {thumbnail && !imgError && (
+                <img
+                  src={thumbnail}
+                  alt=""
+                  className="w-16 h-12 rounded-lg object-cover flex-shrink-0 bg-secondary"
+                  loading="lazy"
+                  onError={() => setImgError(true)}
+                />
+              )}
+            </div>
 
             <div className="flex items-center gap-2 text-[11px] flex-wrap">
               <span className="text-muted-foreground">{category}</span>

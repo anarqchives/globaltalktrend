@@ -46,6 +46,9 @@ async function fetchRedditClientSide(): Promise<TrendCardProps[]> {
       const ups = post.ups || 0;
       const comments = post.num_comments || 0;
       const { historicalData, metricLabel } = generateHistorical(ups / 24, "upvotes/hora");
+      // Extract Reddit thumbnail
+      const rawThumb = post.thumbnail;
+      const thumbnail = rawThumb && rawThumb.startsWith("http") ? rawThumb : "";
       return {
         icon: "💬",
         platform: "Reddit",
@@ -57,8 +60,11 @@ async function fetchRedditClientSide(): Promise<TrendCardProps[]> {
         changePositive: true,
         sparkData: Array.from({ length: 10 }, () => Math.floor(Math.random() * 90 + 10)),
         details: post.selftext?.slice(0, 200) || `${comments} comentários`,
+        description: post.selftext?.slice(0, 150) || "",
         commentCount: comments,
         sourceUrl: `https://www.reddit.com${post.permalink}`,
+        thumbnail,
+        publishedAt: post.created_utc ? new Date(post.created_utc * 1000).toISOString() : "",
         historicalData,
         metricLabel,
       };
