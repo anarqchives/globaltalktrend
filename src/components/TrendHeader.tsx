@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { Info, Sun, Moon, RefreshCw, LogOut, LogIn, BookOpen, Star, Bell, Clock, ChevronDown, Trophy } from "lucide-react";
+import { Info, Sun, Moon, RefreshCw, LogOut, LogIn, BookOpen, Star, Bell, Clock, ChevronDown, Trophy, User } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useLanguage, languages } from "@/contexts/LanguageContext";
 import { lovable } from "@/integrations/lovable/index";
@@ -267,6 +267,14 @@ const TrendHeader = ({ totalTrends = 0, countriesCount = 0, onRefresh, refreshin
                         </span>
                       )}
                     </span>
+                  </DropdownMenuItem>
+
+                  {/* Profile */}
+                  <DropdownMenuItem className="text-xs gap-2" asChild>
+                    <Link to="/perfil" className="flex items-center gap-2">
+                      <User className="w-3.5 h-3.5" />
+                      Meu Perfil
+                    </Link>
                   </DropdownMenuItem>
 
                   {/* History */}
