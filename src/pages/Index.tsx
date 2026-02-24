@@ -148,6 +148,18 @@ const Index = () => {
   const visibleTrends = filteredTrends.slice(0, visibleCount);
   const hasMore = visibleCount < filteredTrends.length;
 
+  // Brief loading flash when filters change
+  const [filterTransitioning, setFilterTransitioning] = useState(false);
+  const prevFiltersRef = useRef(filters);
+  useEffect(() => {
+    if (JSON.stringify(prevFiltersRef.current) !== JSON.stringify(filters)) {
+      setFilterTransitioning(true);
+      const timer = setTimeout(() => setFilterTransitioning(false), 300);
+      prevFiltersRef.current = filters;
+      return () => clearTimeout(timer);
+    }
+  }, [filters]);
+
   useEffect(() => {
     const sentinel = sentinelRef.current;
     if (!sentinel) return;
@@ -229,7 +241,7 @@ const Index = () => {
   };
 
   const renderTimeline = () => (
-    <div ref={scrollRef} className="flex flex-col gap-1 p-2 h-full overflow-y-auto scrollbar-thin relative">
+    <div ref={scrollRef} className={`flex flex-col gap-1 p-2 h-full overflow-y-auto scrollbar-thin relative transition-opacity duration-200 ${filterTransitioning ? 'opacity-60' : 'opacity-100'}`}>
       <div className="px-2 py-1.5 flex items-center justify-between sticky top-0 bg-background/90 backdrop-blur-sm z-10">
         <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-widest">
           {t("timeline")}

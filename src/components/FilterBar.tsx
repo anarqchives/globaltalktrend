@@ -92,7 +92,7 @@ export const countries = [
   ]},
 ];
 
-const selectClass = "appearance-none bg-transparent text-foreground text-[13px] font-medium pl-3 pr-7 py-2 min-h-[44px] rounded-lg cursor-pointer min-w-0 hover:bg-muted/50 dark:hover:bg-white/5 transition-colors focus:outline-none focus:ring-0";
+const selectClass = "appearance-none bg-transparent text-foreground text-[13px] md:text-[13px] text-[12px] font-medium pl-3 pr-7 py-2 min-h-[44px] rounded-lg cursor-pointer min-w-0 hover:bg-muted/50 dark:hover:bg-white/5 transition-colors focus:outline-none focus:ring-0";
 
 const FilterBar = ({ filters, onChange }: FilterBarProps) => {
   const { t } = useLanguage();
@@ -132,8 +132,8 @@ const FilterBar = ({ filters, onChange }: FilterBarProps) => {
   ];
 
   return (
-    <div className="px-4 md:px-6 py-1.5 sticky top-12 z-40 bg-background/90 backdrop-blur-sm">
-      <div className="flex items-center gap-1 overflow-x-auto scrollbar-thin flex-nowrap">
+    <div className="px-3 md:px-6 py-1.5 sticky top-12 z-40 bg-background/90 backdrop-blur-sm">
+      <div className="flex items-center gap-0.5 md:gap-1 overflow-x-auto scrollbar-thin flex-nowrap -webkit-overflow-scrolling-touch pb-1 md:pb-0">
         <div className="relative flex-shrink-0">
           <select
             className={selectClass}
