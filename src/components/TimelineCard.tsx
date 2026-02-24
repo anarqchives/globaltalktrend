@@ -40,6 +40,7 @@ interface TimelineCardProps extends TrendCardProps {
   onFilterPlatform?: (platform: string) => void;
   onExpand?: (title: string, platform: string, metadata?: any) => void;
   userId?: string | null;
+  onTrackAction?: (action: string, points: number, metadata?: Record<string, any>) => void;
 }
 
 const TimelineCard = ({
@@ -64,6 +65,7 @@ const TimelineCard = ({
   onFilterPlatform,
   onExpand,
   userId,
+  onTrackAction,
 }: TimelineCardProps) => {
   const { t } = useLanguage();
   const [expanded, setExpanded] = useState(false);
@@ -84,6 +86,7 @@ const TimelineCard = ({
     e.stopPropagation();
     navigator.clipboard.writeText(`${title} — ${volume} (${platform})`);
     toast({ title: t("copied"), description: title.slice(0, 60) });
+    onTrackAction?.("share", 5, { title, platform, countryCode, category });
   };
 
   const handleShareLink = (e: React.MouseEvent) => {
@@ -104,8 +107,9 @@ const TimelineCard = ({
     e.stopPropagation();
     const newExpanded = !expanded;
     setExpanded(newExpanded);
-    if (newExpanded && onExpand) {
-      onExpand(title, platform, { volume, category, countryCode });
+    if (newExpanded) {
+      onExpand?.(title, platform, { volume, category, countryCode });
+      onTrackAction?.("expand", 2, { title, platform, countryCode, category });
     }
   };
 

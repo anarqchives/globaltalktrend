@@ -9,6 +9,7 @@ import { useTrends } from "@/hooks/use-trends";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useHistory } from "@/hooks/use-history";
+import { useGamification } from "@/hooks/use-gamification";
 import { supabase } from "@/integrations/supabase/client";
 import {
   ResizablePanelGroup,
@@ -50,6 +51,7 @@ const Index = () => {
   }, []);
 
   const { trackView } = useHistory(user?.id ?? null);
+  const { trackAction } = useGamification(user?.id ?? null);
   const [trendCounts, setTrendCounts] = useState<Record<string, number>>({});
   const [activeTrend, setActiveTrend] = useState<TrendCardProps | null>(null);
   const [mobileTab, setMobileTab] = useState<"timeline" | "map">("timeline");
@@ -141,7 +143,11 @@ const Index = () => {
               key={`${trend.platform}-${trend.title.slice(0, 20)}-${i}`}
               {...trend}
               userId={user?.id}
-              onClick={() => setActiveTrend(trend)}
+              onTrackAction={trackAction}
+              onClick={() => {
+                setActiveTrend(trend);
+                trackAction("view", 1, { title: trend.title, platform: trend.platform, countryCode: trend.countryCode, category: trend.category });
+              }}
               onExpand={(title, platform, metadata) => trackView(title, platform, metadata)}
               onFilterPlatform={(p) => {
                 const map: Record<string, string> = {
