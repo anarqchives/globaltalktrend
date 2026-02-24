@@ -7,6 +7,7 @@ import { TrendCardProps } from "./TrendCard";
 import { supabase } from "@/integrations/supabase/client";
 import AlertModal from "./AlertModal";
 import TrendContextTab from "./TrendContextTab";
+import TrendHistoryTab from "./TrendHistoryTab";
 
 const platformIcons: Record<string, { emoji: string; color: string }> = {
   YouTube: { emoji: "▶", color: "hsl(0, 72%, 51%)" },
@@ -116,7 +117,7 @@ const TimelineCard = ({
   const gradientId = `tl-${title.replace(/[^a-zA-Z0-9]/g, "").slice(0, 8)}-${Math.random().toString(36).slice(2, 5)}`;
   const [imgError, setImgError] = useState(false);
   const trigger = useMemo(() => detectTriggerFromTitle(title), [title]);
-  const [activeTab, setActiveTab] = useState<"details" | "context">("details");
+  const [activeTab, setActiveTab] = useState<"details" | "context" | "history">("details");
 
   const relativeTimeFormats: Record<string, { now: string; min: string; h: string; d: string }> = {
     pt: { now: "agora", min: "há {n}min", h: "há {n}h", d: "há {n}d" },
@@ -377,6 +378,16 @@ const TimelineCard = ({
               >
                 🔍 Contexto
               </button>
+              <button
+                onClick={(e) => { e.stopPropagation(); setActiveTab("history"); }}
+                className={`px-3 py-1 rounded-full text-[10px] font-semibold transition-colors ${
+                  activeTab === "history"
+                    ? "bg-primary text-primary-foreground"
+                    : "bg-muted text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                📊 Histórico
+              </button>
             </div>
 
             {activeTab === "details" ? (
@@ -491,7 +502,7 @@ const TimelineCard = ({
                   </div>
                 )}
               </>
-            ) : (
+            ) : activeTab === "context" ? (
               <TrendContextTab
                 title={title}
                 details={details}
@@ -500,6 +511,13 @@ const TimelineCard = ({
                 volume={volume}
                 category={category}
                 sources={sources}
+              />
+            ) : (
+              <TrendHistoryTab
+                title={title}
+                platform={platform}
+                category={category}
+                platformColor={pf.color}
               />
             )}
           </div>
