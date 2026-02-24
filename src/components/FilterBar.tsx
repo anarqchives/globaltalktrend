@@ -132,7 +132,7 @@ const FilterBar = ({ filters, onChange }: FilterBarProps) => {
   ];
 
   return (
-    <div className="px-4 md:px-6 py-1.5">
+    <div className="px-4 md:px-6 py-1.5 sticky top-12 z-40 bg-background/90 backdrop-blur-sm">
       <div className="flex items-center gap-1 overflow-x-auto scrollbar-thin flex-nowrap">
         <div className="relative flex-shrink-0">
           <select
