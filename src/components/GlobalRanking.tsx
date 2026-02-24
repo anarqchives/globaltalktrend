@@ -152,7 +152,7 @@ const GlobalRanking = ({ trends, onSelectTrend, onFilterCountry, collapsed: init
 
   return (
     <>
-      <div className="absolute top-14 right-3 z-20 w-72 max-w-[calc(100%-80px)]">
+      <div className="absolute top-3 right-3 z-10 w-72 max-w-[calc(100%-80px)]">
         <div className="bg-card/95 backdrop-blur-md border border-border rounded-xl shadow-lg overflow-hidden">
           {/* Header */}
           <button
