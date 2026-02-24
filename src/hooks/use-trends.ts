@@ -4,6 +4,22 @@ import { TrendCardProps } from "../components/TrendCard";
 import { toast } from "@/hooks/use-toast";
 import { FilterState } from "../components/FilterBar";
 import { categorizeTrend } from "@/lib/categorize-trend";
+const CACHE_KEY = "gtt_trends_cache";
+const CACHE_TTL = 3 * 60 * 1000; // 3 min
+
+function getCachedTrends(): TrendCardProps[] | null {
+  try {
+    const raw = sessionStorage.getItem(CACHE_KEY);
+    if (!raw) return null;
+    const { ts, data } = JSON.parse(raw);
+    if (Date.now() - ts > CACHE_TTL) { sessionStorage.removeItem(CACHE_KEY); return null; }
+    return data;
+  } catch { return null; }
+}
+
+function setCachedTrends(data: TrendCardProps[]) {
+  try { sessionStorage.setItem(CACHE_KEY, JSON.stringify({ ts: Date.now(), data: data.slice(0, 80) })); } catch {}
+}
 
 const fallbackData: TrendCardProps[] = [
   {
@@ -163,9 +179,10 @@ async function fetchMastodonClientSide(): Promise<TrendCardProps[]> {
 }
 
 export function useTrends(filters: FilterState, onTrendCountsChange: (counts: Record<string, number>) => void) {
-  const [trends, setTrends] = useState<TrendCardProps[]>(fallbackData);
-  const [loading, setLoading] = useState(true);
-  const [isFirstLoad, setIsFirstLoad] = useState(true);
+  const cached = getCachedTrends();
+  const [trends, setTrends] = useState<TrendCardProps[]>(cached || fallbackData);
+  const [loading, setLoading] = useState(!cached);
+  const [isFirstLoad, setIsFirstLoad] = useState(!cached);
 
   const fetchTrends = useCallback(async () => {
     try {
@@ -201,6 +218,7 @@ export function useTrends(filters: FilterState, onTrendCountsChange: (counts: Re
       });
       if (allTrends.length > 0) {
         setTrends(allTrends);
+        setCachedTrends(allTrends);
         // Save snapshots for critical moment detection (fire & forget)
         supabase.functions.invoke("save-trend-snapshots", {
           body: { trends: allTrends.slice(0, 50) },

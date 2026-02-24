@@ -171,19 +171,26 @@ const GoogleMapView = ({
   }, [trendCounts]);
 
   // Load Google Maps
+  const retryMap = useCallback(() => {
+    setMapError(null);
+    setMapLoaded(false);
+    setMapRetry((r) => r + 1);
+  }, []);
+
+  const [mapRetry, setMapRetry] = useState(0);
+
   useEffect(() => {
     let cancelled = false;
 
     const loadMap = async () => {
       try {
-        console.log("[GoogleMapView] Fetching API key...");
         const { data, error: fnError } = await supabase.functions.invoke("get-maps-key");
-        if (cancelled || !data?.key) {
+        if (cancelled) return; // StrictMode cleanup — exit silently
+        if (!data?.key) {
           console.error("[GoogleMapView] API key missing", fnError);
-          setMapError("API key not available");
+          setMapError("Chave do mapa não disponível");
           return;
         }
-        console.log("[GoogleMapView] API key received, loading libraries...");
 
         setOptions({ key: data.key, v: "weekly", libraries: ["visualization", "marker"] });
 
@@ -193,13 +200,7 @@ const GoogleMapView = ({
           importLibrary("visualization"),
         ]);
 
-        console.log("[GoogleMapView] Libraries loaded:", { mapsLib: !!mapsLib, markerLib: !!markerLib, vizLib: !!vizLib });
-
-        if (cancelled || !mapRef.current) {
-          console.warn("[GoogleMapView] Cancelled or no mapRef");
-          setMapError("Google Maps failed to initialize");
-          return;
-        }
+        if (cancelled || !mapRef.current) return; // StrictMode cleanup — exit silently
 
         const { Map: GMap, InfoWindow } = mapsLib;
         const { Marker } = markerLib;
@@ -234,14 +235,16 @@ const GoogleMapView = ({
         hoverInfoRef.current = new InfoWindow({ disableAutoPan: true });
         setMapLoaded(true);
       } catch (err) {
-        console.error("Google Maps load error:", err);
-        setMapError("Failed to load map");
+        if (!cancelled) {
+          console.error("Google Maps load error:", err);
+          setMapError("Falha ao carregar mapa");
+        }
       }
     };
 
     loadMap();
     return () => { cancelled = true; };
-  }, []);
+  }, [mapRetry]);
 
   // Heatmap
   useEffect(() => {
@@ -648,12 +651,19 @@ const GoogleMapView = ({
         </div>
       )}
 
-      {/* Error fallback */}
+      {/* Error fallback with retry */}
       {mapError && (
         <div className="absolute inset-0 flex items-center justify-center bg-background/30 backdrop-blur-sm">
-          <div className="text-center p-6 bg-card/80 backdrop-blur-xl rounded-2xl border border-border/30 shadow-lg">
-            <p className="text-sm text-muted-foreground mb-1">{mapError}</p>
-            <p className="text-xs text-muted-foreground/60">Using fallback map</p>
+          <div className="text-center p-6 bg-card/80 backdrop-blur-xl rounded-2xl border border-border/30 shadow-lg max-w-xs">
+            <div className="text-3xl mb-3">🗺️</div>
+            <p className="text-sm font-medium text-foreground mb-1">{mapError}</p>
+            <p className="text-xs text-muted-foreground/60 mb-4">O mapa será exibido assim que a conexão for restabelecida.</p>
+            <button
+              onClick={retryMap}
+              className="px-4 py-2 rounded-full bg-primary hover:bg-primary/90 text-primary-foreground text-xs font-semibold transition-colors shadow-sm"
+            >
+              🔄 Tentar novamente
+            </button>
           </div>
         </div>
       )}
