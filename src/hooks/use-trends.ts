@@ -151,6 +151,32 @@ const fallbackData: TrendCardProps[] = [
     details: "Interesse público cresce após anúncio de missão lunar.",
     countryCode: "US",
   },
+  {
+    icon: "📱",
+    platform: "Google Trends",
+    title: "iPhone 18 Pro: rumores de design dominam buscas",
+    category: "Tecnologia",
+    time: "há 40 min",
+    volume: "528K buscas",
+    change: "+220%",
+    changePositive: true,
+    sparkData: [12, 18, 25, 35, 48, 62, 74, 86, 92, 96],
+    details: "Crescimento acelerado de interesse por vazamentos do novo modelo.",
+    countryCode: "US",
+  },
+  {
+    icon: "⚽",
+    platform: "YouTube",
+    title: "Final Champions League: números e melhores momentos",
+    category: "Esportes",
+    time: "há 55 min",
+    volume: "3.2M views",
+    change: "+310%",
+    changePositive: true,
+    sparkData: [18, 26, 40, 58, 70, 82, 88, 93, 96, 99],
+    details: "Pico global de visualizações após a grande final.",
+    countryCode: "GB",
+  },
 ];
 
 function generateHistorical(baseValue: number, label: string) {

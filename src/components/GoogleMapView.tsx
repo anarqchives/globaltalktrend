@@ -197,13 +197,19 @@ const GoogleMapView = ({
           return;
         }
 
-        setOptions({ key: data.key, v: "weekly", libraries: ["visualization", "marker"] });
+        setOptions({ key: data.key, v: "weekly", libraries: ["marker"] });
 
-        const [mapsLib, markerLib, vizLib] = await Promise.all([
+        const [mapsLib, markerLib] = await Promise.all([
           importLibrary("maps"),
           importLibrary("marker"),
-          importLibrary("visualization"),
         ]);
+
+        let vizLib: any = null;
+        try {
+          vizLib = await importLibrary("visualization");
+        } catch (vizError) {
+          console.warn("Visualization library unavailable, continuing without heatmap", vizError);
+        }
 
         if (cancelled || !mapRef.current) return; // StrictMode cleanup — exit silently
 
@@ -251,11 +257,20 @@ const GoogleMapView = ({
     return () => { cancelled = true; };
   }, [mapRetry]);
 
+  // Fallback timeout: avoid infinite loading overlay on restricted domains/connections
+  useEffect(() => {
+    if (mapLoaded || mapError) return;
+    const timer = window.setTimeout(() => {
+      setMapError("Mapa indisponível no momento");
+    }, 12000);
+    return () => window.clearTimeout(timer);
+  }, [mapLoaded, mapError]);
+
   // Heatmap
   useEffect(() => {
     const map = googleMapRef.current;
-    if (!map || !mapLoaded) return;
-    if (!google?.maps?.visualization?.HeatmapLayer) return;
+    const viz = googleRef.current?.visualization as any;
+    if (!map || !mapLoaded || !viz?.HeatmapLayer) return;
 
     if (heatmapRef.current) {
       heatmapRef.current.setMap(null);
@@ -270,7 +285,7 @@ const GoogleMapView = ({
       }));
 
     if (heatmapData.length > 0) {
-      const heatmap = new google.maps.visualization.HeatmapLayer({
+      const heatmap = new viz.HeatmapLayer({
         data: heatmapData,
         map: heatmapEnabled ? map : null,
         radius: 90,
