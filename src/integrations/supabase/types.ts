@@ -152,6 +152,45 @@ export type Database = {
         }
         Relationships: []
       }
+      trend_snapshots: {
+        Row: {
+          category: string | null
+          change_percent: number | null
+          country_code: string | null
+          id: string
+          metadata: Json | null
+          platform: string
+          snapshot_at: string
+          source_count: number | null
+          title: string
+          volume_raw: number | null
+        }
+        Insert: {
+          category?: string | null
+          change_percent?: number | null
+          country_code?: string | null
+          id?: string
+          metadata?: Json | null
+          platform: string
+          snapshot_at?: string
+          source_count?: number | null
+          title: string
+          volume_raw?: number | null
+        }
+        Update: {
+          category?: string | null
+          change_percent?: number | null
+          country_code?: string | null
+          id?: string
+          metadata?: Json | null
+          platform?: string
+          snapshot_at?: string
+          source_count?: number | null
+          title?: string
+          volume_raw?: number | null
+        }
+        Relationships: []
+      }
       user_achievements: {
         Row: {
           achievement_id: string
@@ -213,7 +252,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      cleanup_old_snapshots: { Args: never; Returns: undefined }
     }
     Enums: {
       [_ in never]: never

@@ -201,6 +201,10 @@ export function useTrends(filters: FilterState, onTrendCountsChange: (counts: Re
       });
       if (allTrends.length > 0) {
         setTrends(allTrends);
+        // Save snapshots for critical moment detection (fire & forget)
+        supabase.functions.invoke("save-trend-snapshots", {
+          body: { trends: allTrends.slice(0, 50) },
+        }).catch(() => {});
         if (!isFirstLoad) {
           toast({ title: "✅ Atualizado", description: `${allTrends.length} trends de ${new Set(allTrends.map(t => t.platform)).size} fontes` });
         }
