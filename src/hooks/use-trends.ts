@@ -4,6 +4,7 @@ import { TrendCardProps } from "../components/TrendCard";
 import { toast } from "@/hooks/use-toast";
 import { FilterState } from "../components/FilterBar";
 import { categorizeTrend } from "@/lib/categorize-trend";
+import { useHistoricalTrends } from "./use-historical-trends";
 const CACHE_KEY = "gtt_trends_cache";
 const CACHE_TTL = 5 * 60 * 1000; // 5 min
 
@@ -329,6 +330,7 @@ export function useTrends(filters: FilterState, onTrendCountsChange: (counts: Re
   const [isFirstLoad, setIsFirstLoad] = useState(!cached);
   const [lastUpdated, setLastUpdated] = useState<Date | null>(cached ? new Date(cached.ts) : null);
   const [sourcesStatus, setSourcesStatus] = useState<Record<string, { ok: boolean; count: number; lastUpdate: Date }>>({});
+  const { fetchHistorical } = useHistoricalTrends();
 
   const fetchTrends = useCallback(async () => {
     try {
@@ -378,16 +380,33 @@ export function useTrends(filters: FilterState, onTrendCountsChange: (counts: Re
         }
         return { ...t, category, trustBadge };
       });
-      if (allTrends.length > 0) {
-        setTrends(allTrends);
-        setCachedTrends(allTrends);
+      // Merge with historical 24h trends from snapshots
+      const historicalTrends = await withTimeout(fetchHistorical(), 5000, []);
+      
+      // Deduplicate: live trends take priority over historical
+      const liveTitleSet = new Set(allTrends.map(t => `${t.title}||${t.platform}`));
+      const uniqueHistorical = historicalTrends.filter(h => !liveTitleSet.has(`${h.title}||${h.platform}`));
+      
+      // Add relevance scores to live trends (they get a boost for being current)
+      const scoredLive = allTrends.map(t => ({
+        ...t,
+        relevanceScore: t.relevanceScore ?? 80 + Math.random() * 20, // Live trends get high scores
+        firstSeenAt: t.firstSeenAt || new Date().toISOString(),
+      }));
+
+      // Combine: live first, then historical fill
+      const combinedTrends = [...scoredLive, ...uniqueHistorical];
+
+      if (combinedTrends.length > 0) {
+        setTrends(combinedTrends);
+        setCachedTrends(combinedTrends);
         const now = new Date();
         setLastUpdated(now);
 
         // Track source status for transparency panel
         const statusMap: Record<string, { ok: boolean; count: number; lastUpdate: Date }> = {};
         const platformCounts: Record<string, number> = {};
-        for (const t of allTrends) {
+        for (const t of combinedTrends) {
           platformCounts[t.platform] = (platformCounts[t.platform] || 0) + 1;
         }
         const allPlatforms = ["YouTube", "Google Trends", "Reddit", "Bluesky", "Mastodon", "The Guardian", "Hacker News", "Wikipedia", "Stack Overflow", "GitHub", "NewsAPI", "World Bank", "IBGE", "OpenAlex"];
@@ -399,8 +418,10 @@ export function useTrends(filters: FilterState, onTrendCountsChange: (counts: Re
         // Console monitoring log
         console.log('🔄 Atualização:', {
           timestamp: now.toLocaleTimeString(),
-          trends: allTrends.length,
-          fontes: [...new Set(allTrends.map(t => t.platform))],
+          live: allTrends.length,
+          historical: uniqueHistorical.length,
+          total: combinedTrends.length,
+          fontes: [...new Set(combinedTrends.map(t => t.platform))],
           porFonte: platformCounts,
         });
 
@@ -409,7 +430,7 @@ export function useTrends(filters: FilterState, onTrendCountsChange: (counts: Re
           body: { trends: allTrends.slice(0, 50) },
         }).catch(() => {});
         if (!isFirstLoad) {
-          toast({ title: "✅ Atualizado", description: `${allTrends.length} trends de ${new Set(allTrends.map(t => t.platform)).size} fontes` });
+          toast({ title: "✅ Atualizado", description: `${combinedTrends.length} trends (${allTrends.length} ao vivo + ${uniqueHistorical.length} históricas)` });
         }
         setIsFirstLoad(false);
       } else {
@@ -476,7 +497,8 @@ export function useTrends(filters: FilterState, onTrendCountsChange: (counts: Re
         return cat === filterCat || cat.includes(filterCat);
       });
     }
-    return result;
+    // Sort by relevance score (higher = more relevant/recent)
+    return [...result].sort((a, b) => (b.relevanceScore || 50) - (a.relevanceScore || 50));
   }, [trends, filters]);
 
   const leftTrends = useMemo(() => filteredTrends.filter((_, i) => i % 2 === 0), [filteredTrends]);
