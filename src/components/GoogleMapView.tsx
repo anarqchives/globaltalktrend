@@ -321,17 +321,62 @@ const GoogleMapView = ({
           const countryTrends = trends
             .filter((tr) => tr.countryCode === cp.id)
             .slice(0, 3);
+
+          const platformIcons: Record<string, string> = {
+            YouTube: "▶",
+            Reddit: "◉",
+            "Google Trends": "◎",
+            NewsAPI: "▣",
+            Bluesky: "🦋",
+          };
+          const platformColors: Record<string, string> = {
+            YouTube: "#FF0000",
+            Reddit: "#FF4500",
+            "Google Trends": "#4285F4",
+            NewsAPI: "#22C55E",
+            Bluesky: "#0085FF",
+          };
+
+          const bg = isDark ? "#1a1a2e" : "#ffffff";
+          const text = isDark ? "#e2e8f0" : "#1a1a2e";
+          const subtext = isDark ? "#94a3b8" : "#64748b";
+          const border = isDark ? "#334155" : "#e2e8f0";
+          const badgeBg = isDark ? "#1e293b" : "#f1f5f9";
+          const flag = cp.id.length === 2
+            ? String.fromCodePoint(...[...cp.id.toUpperCase()].map(c => 0x1F1E6 + c.charCodeAt(0) - 65))
+            : "";
+
           const trendsList = countryTrends.length > 0
-            ? countryTrends.map((tr) =>
-                `<div style="font-size:11px;color:#999;margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:200px;">• ${tr.title.slice(0, 40)}${tr.title.length > 40 ? '…' : ''}</div>`
-              ).join('')
-            : `<div style="font-size:11px;color:#999;margin-top:3px;">${t("noTrends")}</div>`;
+            ? countryTrends.map((tr) => {
+                const pIcon = platformIcons[tr.platform] || "●";
+                const pColor = platformColors[tr.platform] || "#888";
+                return `<div style="display:flex;align-items:center;gap:6px;margin-top:5px;">
+                  <span style="color:${pColor};font-size:12px;flex-shrink:0;">${pIcon}</span>
+                  <div style="flex:1;min-width:0;">
+                    <div style="font-size:11px;color:${text};white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:180px;font-weight:500;">${tr.title.slice(0, 45)}${tr.title.length > 45 ? '…' : ''}</div>
+                    <div style="display:flex;align-items:center;gap:4px;margin-top:1px;">
+                      <span style="font-size:9px;color:${pColor};font-weight:600;">${tr.platform}</span>
+                      <span style="font-size:9px;background:${badgeBg};color:${subtext};padding:1px 5px;border-radius:8px;font-weight:600;">${tr.volume}</span>
+                      <span style="font-size:9px;color:${tr.changePositive ? '#22c55e' : '#ef4444'};font-weight:600;">${tr.change}</span>
+                    </div>
+                  </div>
+                </div>`;
+              }).join('')
+            : `<div style="font-size:11px;color:${subtext};margin-top:5px;text-align:center;padding:4px 0;">${t("noTrends")}</div>`;
 
           hoverInfoRef.current.setContent(`
-            <div style="font-family:Inter,sans-serif;padding:4px 0;min-width:140px;">
-              <strong style="font-size:13px;">${cp.name}</strong>
-              <div style="font-size:11px;color:#888;margin-top:1px;">${count} ${t("trendCount")}</div>
-              <div style="margin-top:4px;border-top:1px solid #eee;padding-top:4px;">
+            <div style="font-family:Inter,system-ui,sans-serif;padding:6px 2px;min-width:200px;max-width:260px;background:${bg};color:${text};">
+              <div style="display:flex;align-items:center;gap:6px;margin-bottom:4px;">
+                <span style="font-size:18px;">${flag}</span>
+                <div>
+                  <strong style="font-size:13px;color:${text};">${cp.name}</strong>
+                  <div style="font-size:10px;color:${subtext};margin-top:1px;">
+                    <span style="display:inline-block;background:linear-gradient(135deg,${fillColor},${fillColor}88);color:#fff;padding:1px 7px;border-radius:10px;font-weight:700;font-size:10px;">${count}</span>
+                    <span style="margin-left:3px;">${t("trendCount")}</span>
+                  </div>
+                </div>
+              </div>
+              <div style="border-top:1px solid ${border};padding-top:5px;margin-top:2px;">
                 ${trendsList}
               </div>
             </div>
@@ -349,11 +394,24 @@ const GoogleMapView = ({
         onSelectCountry(cp.id === selectedCountry ? "global" : cp.id);
 
         if (infoWindowRef.current) {
+          const flag = cp.id.length === 2
+            ? String.fromCodePoint(...[...cp.id.toUpperCase()].map(c => 0x1F1E6 + c.charCodeAt(0) - 65))
+            : "";
+          const bg = isDark ? "#1a1a2e" : "#ffffff";
+          const text = isDark ? "#e2e8f0" : "#1a1a2e";
+          const subtext = isDark ? "#94a3b8" : "#64748b";
+
           infoWindowRef.current.setContent(`
-            <div style="font-family: Inter, sans-serif; padding: 4px 0;">
-              <strong style="font-size: 13px;">${cp.name}</strong>
-              <div style="font-size: 11px; color: #666; margin-top: 2px;">
-                ${count} ${t("trendCount")}
+            <div style="font-family:Inter,system-ui,sans-serif;padding:6px 2px;background:${bg};color:${text};">
+              <div style="display:flex;align-items:center;gap:6px;">
+                <span style="font-size:18px;">${flag}</span>
+                <div>
+                  <strong style="font-size:13px;">${cp.name}</strong>
+                  <div style="font-size:11px;color:${subtext};margin-top:2px;">
+                    <span style="display:inline-block;background:linear-gradient(135deg,${fillColor},${fillColor}88);color:#fff;padding:1px 7px;border-radius:10px;font-weight:700;font-size:10px;">${count}</span>
+                    <span style="margin-left:3px;">${t("trendCount")}</span>
+                  </div>
+                </div>
               </div>
             </div>
           `);
@@ -363,7 +421,7 @@ const GoogleMapView = ({
 
       markersRef.current.push(marker);
     });
-  }, [trendCounts, maxCount, avgCount, selectedCountry, mapLoaded, onSelectCountry, t, trends]);
+  }, [trendCounts, maxCount, avgCount, selectedCountry, mapLoaded, onSelectCountry, t, trends, isDark]);
 
   // Pan to selected country
   useEffect(() => {
