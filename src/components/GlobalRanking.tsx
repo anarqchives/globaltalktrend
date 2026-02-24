@@ -31,6 +31,11 @@ const platformIcons: Record<string, { emoji: string; color: string }> = {
   GNews: { emoji: "📰", color: "hsl(160, 60%, 45%)" },
   NewsData: { emoji: "📰", color: "hsl(35, 90%, 50%)" },
   "Bing News": { emoji: "📰", color: "hsl(190, 80%, 40%)" },
+  "Hacker News": { emoji: "🔶", color: "hsl(25, 100%, 50%)" },
+  Wikipedia: { emoji: "📖", color: "hsl(0, 0%, 40%)" },
+  "Stack Overflow": { emoji: "💻", color: "hsl(25, 90%, 50%)" },
+  GitHub: { emoji: "🐙", color: "hsl(0, 0%, 20%)" },
+  "X (Twitter)": { emoji: "𝕏", color: "hsl(0, 0%, 15%)" },
 };
 
 const countryNames: Record<string, string> = {

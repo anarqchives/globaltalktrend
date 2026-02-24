@@ -129,6 +129,8 @@ const FilterBar = ({ filters, onChange }: FilterBarProps) => {
     { value: "Buscas (Google)", label: t("searches") },
     { value: "Dados oficiais", label: "📊 Dados Oficiais" },
     { value: "Ciência", label: "🔬 Ciência" },
+    { value: "Tech", label: "💻 Tech" },
+    { value: "Enciclopédia", label: "📖 Enciclopédia" },
   ];
 
   return (

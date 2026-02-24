@@ -15,6 +15,11 @@ const platformIcons: Record<string, { emoji: string; color: string }> = {
   NewsAPI: { emoji: "◈", color: "hsl(142, 60%, 40%)" },
   Bluesky: { emoji: "🦋", color: "hsl(200, 100%, 50%)" },
   Mastodon: { emoji: "🐘", color: "hsl(270, 60%, 55%)" },
+  "Hacker News": { emoji: "🔶", color: "hsl(25, 100%, 50%)" },
+  Wikipedia: { emoji: "📖", color: "hsl(0, 0%, 40%)" },
+  "Stack Overflow": { emoji: "💻", color: "hsl(25, 90%, 50%)" },
+  GitHub: { emoji: "🐙", color: "hsl(0, 0%, 20%)" },
+  "X (Twitter)": { emoji: "𝕏", color: "hsl(0, 0%, 15%)" },
 };
 
 const sentimentConfig = {
