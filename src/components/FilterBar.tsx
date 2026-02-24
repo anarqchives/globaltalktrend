@@ -120,6 +120,8 @@ const FilterBar = ({ filters, onChange }: FilterBarProps) => {
     { value: "Cultura", label: t("culture") },
     { value: "Negócios/Finanças", label: t("business") },
     { value: "Ciência", label: t("science") },
+    { value: "Dados oficiais", label: "📊 Dados Oficiais" },
+    { value: "Enciclopédia", label: "📖 Enciclopédia" },
   ];
 
   const typeOptions = [
@@ -127,10 +129,6 @@ const FilterBar = ({ filters, onChange }: FilterBarProps) => {
     { value: "Redes sociais", label: t("socialMedia") },
     { value: "Imprensa", label: t("press") },
     { value: "Buscas (Google)", label: t("searches") },
-    { value: "Dados oficiais", label: "📊 Dados Oficiais" },
-    { value: "Ciência", label: "🔬 Ciência" },
-    { value: "Tech", label: "💻 Tech" },
-    { value: "Enciclopédia", label: "📖 Enciclopédia" },
   ];
 
   return (
