@@ -255,7 +255,7 @@ const Index = () => {
         </div>
       )}
 
-      {loading && isFirstLoad
+      {(loading && isFirstLoad) || (filteredTrends.length <= 1 && loading)
         ? Array.from({ length: 6 }).map((_, i) => <TrendCardSkeleton key={i} />)
         : visibleTrends.map((trend, i) => {
             const trendId = `${trend.platform}-${trend.title.slice(0, 20)}`;
@@ -363,8 +363,8 @@ const Index = () => {
       />
       <FilterBar filters={filters} onChange={setFilters} />
 
-      {/* Critical Moments Section */}
-      {criticalMoments.length > 0 && (
+      {/* Critical Moments Section - only after real data loaded */}
+      {!loading && criticalMoments.length > 0 && filteredTrends.length > 1 && (
         <CriticalMomentsSection
           moments={criticalMoments}
           onSelectTrend={handleSelectTrend}
