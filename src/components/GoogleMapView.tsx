@@ -122,6 +122,7 @@ interface GoogleMapViewProps {
   onDismissTrend?: () => void;
   trends?: TrendCardProps[];
   onSelectTrend?: (trend: TrendCardProps) => void;
+  highlightCountry?: string | null;
 }
 
 const GoogleMapView = ({
@@ -132,6 +133,7 @@ const GoogleMapView = ({
   onDismissTrend,
   trends = [],
   onSelectTrend,
+  highlightCountry,
 }: GoogleMapViewProps) => {
   const { t } = useLanguage();
   const mapRef = useRef<HTMLDivElement>(null);
@@ -517,6 +519,33 @@ const GoogleMapView = ({
     }
   }, [selectedCountry, mapLoaded]);
 
+  // Pan to highlighted country (from expanded card)
+  useEffect(() => {
+    const map = googleMapRef.current;
+    if (!map || !mapLoaded || !highlightCountry) return;
+    const cp = countryPoints.find((c) => c.id === highlightCountry);
+    if (cp) {
+      map.panTo({ lat: cp.lat, lng: cp.lng });
+      map.setZoom(5);
+    }
+  }, [highlightCountry, mapLoaded]);
+
+  // Listen for trend-expand-country events from timeline
+  useEffect(() => {
+    const handler = (e: Event) => {
+      const cc = (e as CustomEvent).detail;
+      const map = googleMapRef.current;
+      if (!map || !mapLoaded) return;
+      const cp = countryPoints.find((c) => c.id === cc);
+      if (cp) {
+        map.panTo({ lat: cp.lat, lng: cp.lng });
+        map.setZoom(5);
+      }
+    };
+    window.addEventListener('trend-expand-country', handler);
+    return () => window.removeEventListener('trend-expand-country', handler);
+  }, [mapLoaded]);
+
   // Change map type
   useEffect(() => {
     if (googleMapRef.current && mapLoaded) {
@@ -621,24 +650,14 @@ const GoogleMapView = ({
         </div>
       )}
 
-      {/* Active trend mini-card */}
+      {/* Active trend info - subtle indicator instead of overlay card */}
       {activeTrend && (
         <div
-          className="absolute bottom-4 left-1/2 -translate-x-1/2 bg-card/90 backdrop-blur-xl border border-border/30 rounded-2xl p-4 shadow-xl max-w-xs w-[90%] animate-in fade-in slide-in-from-bottom-4 duration-300 cursor-pointer z-10"
+          className="absolute bottom-4 left-1/2 -translate-x-1/2 bg-white/95 dark:bg-card/95 backdrop-blur-[12px] border border-white/50 dark:border-white/10 rounded-2xl shadow-[0_8px_24px_rgba(0,0,0,0.08)] dark:shadow-[0_8px_24px_rgba(0,0,0,0.3)] px-4 py-2 max-w-xs animate-in fade-in slide-in-from-bottom-4 duration-300 cursor-pointer z-10 outline-none ring-0"
           onClick={onDismissTrend}
         >
-          <div className="flex items-center gap-2 mb-1">
-            <span className="text-xs font-semibold text-primary">{activeTrend.platform}</span>
-            <span className="text-xs text-muted-foreground">{activeTrend.time}</span>
-          </div>
-          <p className="text-sm font-semibold text-foreground line-clamp-2">{activeTrend.title}</p>
-          <div className="flex items-center gap-2 mt-1.5 text-xs">
-            <span className="volume-badge py-0">{activeTrend.volume}</span>
-            <span className={activeTrend.changePositive ? "text-green-600 font-medium" : "text-red-500 font-medium"}>
-              {activeTrend.change}
-            </span>
-          </div>
-          <p className="text-[10px] text-muted-foreground/60 mt-2">{t("clickToClose")}</p>
+          <p className="text-[11px] font-medium text-foreground truncate">{activeTrend.title}</p>
+          <p className="text-[9px] text-muted-foreground mt-0.5">{activeTrend.platform} · {activeTrend.volume} · {t("clickToClose")}</p>
         </div>
       )}
 

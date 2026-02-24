@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback, useEffect } from "react";
+import { useState, useRef, useCallback, useEffect, useMemo } from "react";
 import TrendHeader from "@/components/TrendHeader";
 import FilterBar, { FilterState, countries } from "@/components/FilterBar";
 import GoogleMapView from "@/components/GoogleMapView";
@@ -11,6 +11,7 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { useHistory } from "@/hooks/use-history";
 import { useGamification } from "@/hooks/use-gamification";
 import { supabase } from "@/integrations/supabase/client";
+import { ChevronRight, X } from "lucide-react";
 import {
   ResizablePanelGroup,
   ResizablePanel,
@@ -27,7 +28,6 @@ const defaultFilters: FilterState = {
 const INITIAL_COUNT = 20;
 const LOAD_MORE_COUNT = 10;
 
-// Read filters from URL params on load
 function getInitialFilters(): FilterState {
   if (typeof window === "undefined") return defaultFilters;
   const params = new URLSearchParams(window.location.search);
@@ -53,7 +53,7 @@ const Index = () => {
   const { trackView } = useHistory(user?.id ?? null);
   const { trackAction } = useGamification(user?.id ?? null);
   const [trendCounts, setTrendCounts] = useState<Record<string, number>>({});
-  const [activeTrend, setActiveTrend] = useState<TrendCardProps | null>(null);
+  const [expandedTrendId, setExpandedTrendId] = useState<string | null>(null);
   const [mobileTab, setMobileTab] = useState<"timeline" | "map">("timeline");
   const [visibleCount, setVisibleCount] = useState(INITIAL_COUNT);
   const isMobile = useIsMobile();
@@ -109,7 +109,6 @@ const Index = () => {
 
   const [showScrollTop, setShowScrollTop] = useState(false);
 
-  // Track scroll position for back-to-top button
   useEffect(() => {
     const el = scrollRef.current;
     if (!el) return;
@@ -122,12 +121,51 @@ const Index = () => {
     scrollRef.current?.scrollTo({ top: 0, behavior: "smooth" });
   }, []);
 
+  // When a trend is selected from ranking, expand it in timeline and sync map
   const handleSelectTrend = useCallback((trend: TrendCardProps) => {
-    setActiveTrend(trend);
+    const trendId = `${trend.platform}-${trend.title.slice(0, 20)}`;
+    setExpandedTrendId(trendId);
     if (isMobile) setMobileTab("timeline");
-    // Scroll timeline to top to highlight selected trend
     scrollRef.current?.scrollTo({ top: 0, behavior: "smooth" });
   }, [isMobile]);
+
+  // When a card expands, sync map to its country
+  const handleCardExpand = useCallback((trend: TrendCardProps) => {
+    if (trend.countryCode) {
+      // Don't change filters, just let the map know which country to highlight
+      setExpandedTrendId(`${trend.platform}-${trend.title.slice(0, 20)}`);
+    }
+  }, []);
+
+  // Get the country of the currently expanded trend for map sync
+  const expandedTrendCountry = useMemo(() => {
+    if (!expandedTrendId) return null;
+    const trend = filteredTrends.find(t => `${t.platform}-${t.title.slice(0, 20)}` === expandedTrendId);
+    return trend?.countryCode?.slice(0, 2).toUpperCase() || null;
+  }, [expandedTrendId, filteredTrends]);
+
+  // Breadcrumb segments
+  const breadcrumbs = useMemo(() => {
+    const segments: { label: string; key: keyof FilterState }[] = [];
+    if (filters.country !== "global") {
+      const countryLabel = countries.flatMap(g => g.items).find(c => c.value === filters.country)?.label || filters.country;
+      segments.push({ label: countryLabel, key: "country" });
+    }
+    if (filters.category !== "Todas") {
+      segments.push({ label: filters.category, key: "category" });
+    }
+    if (filters.type !== "Todas mídias") {
+      segments.push({ label: filters.type, key: "type" });
+    }
+    if (filters.period !== "Hoje") {
+      segments.push({ label: filters.period, key: "period" });
+    }
+    return segments;
+  }, [filters]);
+
+  const clearBreadcrumb = (key: keyof FilterState) => {
+    setFilters(f => ({ ...f, [key]: defaultFilters[key] }));
+  };
 
   const renderTimeline = () => (
     <div ref={scrollRef} className="flex flex-col gap-1 p-2 h-full overflow-y-auto scrollbar-thin relative">
@@ -136,39 +174,74 @@ const Index = () => {
           {t("timeline")}
         </span>
       </div>
+
+      {/* Breadcrumb showing active filters */}
+      {breadcrumbs.length > 0 && (
+        <div className="px-2 py-1 flex items-center gap-1 flex-wrap text-[10px]">
+          <span className="text-muted-foreground/60">Mostrando:</span>
+          {breadcrumbs.map((seg, i) => (
+            <span key={seg.key} className="inline-flex items-center gap-0.5">
+              {i > 0 && <ChevronRight className="w-2.5 h-2.5 text-muted-foreground/40" />}
+              <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full bg-primary/10 text-primary font-medium">
+                {seg.label}
+                <button
+                  onClick={() => clearBreadcrumb(seg.key)}
+                  className="ml-0.5 hover:text-destructive transition-colors"
+                >
+                  <X className="w-2.5 h-2.5" />
+                </button>
+              </span>
+            </span>
+          ))}
+        </div>
+      )}
+
       {loading && isFirstLoad
         ? Array.from({ length: 6 }).map((_, i) => <TrendCardSkeleton key={i} />)
-        : visibleTrends.map((trend, i) => (
-            <TimelineCard
-              key={`${trend.platform}-${trend.title.slice(0, 20)}-${i}`}
-              {...trend}
-              userId={user?.id}
-              onTrackAction={trackAction}
-              onClick={() => {
-                setActiveTrend(trend);
-                trackAction("view", 1, { title: trend.title, platform: trend.platform, countryCode: trend.countryCode, category: trend.category });
-              }}
-              onExpand={(title, platform, metadata) => trackView(title, platform, metadata)}
-              onFilterPlatform={(p) => {
-                const map: Record<string, string> = {
-                  "Reddit": "Redes sociais",
-                  "Bluesky": "Redes sociais",
-                  "Mastodon": "Redes sociais",
-                  "NewsAPI": "Imprensa",
-                  "NewsData": "Imprensa",
-                  "GNews": "Imprensa",
-                  "Bing News": "Imprensa",
-                  "The Guardian": "Imprensa",
-                  "Google Trends": "Buscas (Google)",
-                  "YouTube": "Todas mídias",
-                  "World Bank": "Dados oficiais",
-                  "IBGE": "Dados oficiais",
-                  "OpenAlex": "Ciência",
-                };
-                setFilters((f) => ({ ...f, type: map[p] || "Todas mídias" }));
-              }}
-            />
-          ))}
+        : visibleTrends.map((trend, i) => {
+            const trendId = `${trend.platform}-${trend.title.slice(0, 20)}`;
+            return (
+              <TimelineCard
+                key={`${trendId}-${i}`}
+                {...trend}
+                userId={user?.id}
+                onTrackAction={trackAction}
+                forceExpanded={expandedTrendId === trendId}
+                onClick={() => {
+                  handleCardExpand(trend);
+                  trackAction("view", 1, { title: trend.title, platform: trend.platform, countryCode: trend.countryCode, category: trend.category });
+                }}
+                onExpand={(title, platform, metadata) => {
+                  trackView(title, platform, metadata);
+                  // Sync map to trend's country
+                  if (trend.countryCode) {
+                    const cc = trend.countryCode.slice(0, 2).toUpperCase();
+                    const map = document.querySelector('[data-map-sync]');
+                    // We pass the country through a custom event
+                    window.dispatchEvent(new CustomEvent('trend-expand-country', { detail: cc }));
+                  }
+                }}
+                onFilterPlatform={(p) => {
+                  const map: Record<string, string> = {
+                    "Reddit": "Redes sociais",
+                    "Bluesky": "Redes sociais",
+                    "Mastodon": "Redes sociais",
+                    "NewsAPI": "Imprensa",
+                    "NewsData": "Imprensa",
+                    "GNews": "Imprensa",
+                    "Bing News": "Imprensa",
+                    "The Guardian": "Imprensa",
+                    "Google Trends": "Buscas (Google)",
+                    "YouTube": "Todas mídias",
+                    "World Bank": "Dados oficiais",
+                    "IBGE": "Dados oficiais",
+                    "OpenAlex": "Ciência",
+                  };
+                  setFilters((f) => ({ ...f, type: map[p] || "Todas mídias" }));
+                }}
+              />
+            );
+          })}
       {hasMore && (
         <div ref={sentinelRef} className="h-10" />
       )}
@@ -193,7 +266,6 @@ const Index = () => {
         </div>
       )}
 
-      {/* Scroll to top button */}
       {showScrollTop && (
         <div className="sticky bottom-4 z-20 flex justify-center">
           <button
@@ -252,10 +324,9 @@ const Index = () => {
                   trendCounts={trendCounts}
                   selectedCountry={filters.country}
                   onSelectCountry={handleMapClick}
-                  activeTrend={activeTrend}
-                  onDismissTrend={() => setActiveTrend(null)}
                   trends={allTrends}
                   onSelectTrend={handleSelectTrend}
+                  highlightCountry={expandedTrendCountry}
                 />
               )}
             </div>
@@ -272,10 +343,9 @@ const Index = () => {
                   trendCounts={trendCounts}
                   selectedCountry={filters.country}
                   onSelectCountry={handleMapClick}
-                  activeTrend={activeTrend}
-                  onDismissTrend={() => setActiveTrend(null)}
                   trends={allTrends}
                   onSelectTrend={handleSelectTrend}
+                  highlightCountry={expandedTrendCountry}
                 />
               </div>
             </ResizablePanel>
