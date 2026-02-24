@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Share2, ChevronDown, ChevronUp, Sparkles, Link2, Bell } from "lucide-react";
+import { Share2, ChevronDown, ChevronUp, Sparkles, Link2, Bell, ExternalLink } from "lucide-react";
 import { AreaChart, Area, ResponsiveContainer, XAxis, YAxis, Tooltip, CartesianGrid } from "recharts";
 import { toast } from "@/hooks/use-toast";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -50,6 +50,7 @@ const TimelineCard = ({
   region,
   countryCode,
   sources,
+  sourceUrl,
   onClick,
   onFilterPlatform,
   onExpand,
@@ -202,6 +203,28 @@ const TimelineCard = ({
         {expanded && (
           <div className="mt-3 pt-3 border-t border-border animate-in fade-in slide-in-from-top-2 duration-200">
             {details && <p className="text-xs text-muted-foreground mb-3">{details}</p>}
+
+            {sourceUrl && (
+              <a
+                href={sourceUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={(e) => e.stopPropagation()}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-medium bg-primary/10 text-primary hover:bg-primary/20 transition-colors mb-3 group"
+              >
+                <ExternalLink className="w-3 h-3 group-hover:translate-x-0.5 transition-transform" />
+                {platform === "YouTube" ? "Assistir no YouTube" :
+                 platform === "Reddit" ? "Ver no Reddit" :
+                 platform === "Google Trends" ? "Ver no Google Trends" :
+                 platform === "Bluesky" ? "Ver no Bluesky" :
+                 platform === "Mastodon" ? "Ver no Mastodon" :
+                 platform === "The Guardian" ? "Ler no The Guardian" :
+                 platform === "World Bank" ? "Ver dados no World Bank" :
+                 platform === "IBGE" ? "Ver no IBGE" :
+                 platform === "OpenAlex" ? "Ver publicação" :
+                 "Ver fonte original"}
+              </a>
+            )}
 
             {!aiSummary && (
               <button
