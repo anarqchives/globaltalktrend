@@ -1,10 +1,11 @@
 import { useState } from "react";
-import { Share2, ChevronDown, ChevronUp, Sparkles, Link2 } from "lucide-react";
+import { Share2, ChevronDown, ChevronUp, Sparkles, Link2, Bell } from "lucide-react";
 import { AreaChart, Area, ResponsiveContainer, XAxis, YAxis, Tooltip, CartesianGrid } from "recharts";
 import { toast } from "@/hooks/use-toast";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { TrendCardProps } from "./TrendCard";
 import { supabase } from "@/integrations/supabase/client";
+import AlertModal from "./AlertModal";
 
 const platformIcons: Record<string, { emoji: string; color: string }> = {
   YouTube: { emoji: "▶", color: "hsl(0, 72%, 51%)" },
@@ -29,6 +30,8 @@ const countryCodeToFlag = (code?: string) => {
 interface TimelineCardProps extends TrendCardProps {
   onClick?: () => void;
   onFilterPlatform?: (platform: string) => void;
+  onExpand?: (title: string, platform: string, metadata?: any) => void;
+  userId?: string | null;
 }
 
 const TimelineCard = ({
@@ -49,9 +52,12 @@ const TimelineCard = ({
   sources,
   onClick,
   onFilterPlatform,
+  onExpand,
+  userId,
 }: TimelineCardProps) => {
   const { t } = useLanguage();
   const [expanded, setExpanded] = useState(false);
+  const [alertOpen, setAlertOpen] = useState(false);
   const [aiSummary, setAiSummary] = useState<{ summary: string; sentiment: string; impact: string } | null>(null);
   const [summarizing, setSummarizing] = useState(false);
   const pf = platformIcons[platform] || platformIcons["Google Trends"];
@@ -79,7 +85,37 @@ const TimelineCard = ({
 
   const handleExpand = (e: React.MouseEvent) => {
     e.stopPropagation();
-    setExpanded(!expanded);
+    const newExpanded = !expanded;
+    setExpanded(newExpanded);
+    if (newExpanded && onExpand) {
+      onExpand(title, platform, { volume, category, countryCode });
+    }
+  };
+
+  const handleAlertClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!userId) {
+      toast({ title: "Faça login", description: "Login necessário para criar alertas." });
+      return;
+    }
+    setAlertOpen(true);
+  };
+
+  const handleCreateAlert = async (input: any) => {
+    if (!userId) return;
+    const { error } = await supabase.from("alerts").insert({
+      user_id: userId,
+      keyword: title,
+      category: category || null,
+      threshold: input.threshold,
+      frequency: input.frequency,
+      notification_method: input.notification_method,
+    });
+    if (error) {
+      toast({ title: "Erro", description: error.message, variant: "destructive" });
+    } else {
+      toast({ title: "🔔 Alerta criado!", description: `Monitorando: ${title.slice(0, 40)}` });
+    }
   };
 
   const handleSummarize = async (e: React.MouseEvent) => {
@@ -103,156 +139,166 @@ const TimelineCard = ({
   const sentiment = aiSummary ? sentimentConfig[aiSummary.sentiment as keyof typeof sentimentConfig] || sentimentConfig.neutral : null;
 
   return (
-    <div className="timeline-card group">
-      <div className="flex items-start gap-3" onClick={onClick}>
-        <div
-          className="w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold flex-shrink-0 mt-0.5 cursor-pointer hover:scale-110 transition-transform"
-          style={{ background: `${pf.color}15`, color: pf.color }}
-          onClick={handlePlatformClick}
-          title={`Filtrar por ${platform}`}
-        >
-          {pf.emoji}
-        </div>
+    <>
+      <div className="timeline-card group">
+        <div className="flex items-start gap-3" onClick={onClick}>
+          <div
+            className="w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold flex-shrink-0 mt-0.5 cursor-pointer hover:scale-110 transition-transform"
+            style={{ background: `${pf.color}15`, color: pf.color }}
+            onClick={handlePlatformClick}
+            title={`Filtrar por ${platform}`}
+          >
+            {pf.emoji}
+          </div>
 
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2 mb-0.5">
-            <span
-              className="text-[11px] font-semibold cursor-pointer hover:underline"
-              style={{ color: pf.color }}
-              onClick={handlePlatformClick}
-            >
-              {platform}
-            </span>
-            {flag && <span className="text-xs" title={countryCode}>{flag}</span>}
-            <span className="text-[11px] text-muted-foreground">{time}</span>
-            {isPeak && <span className="peak-badge">🔥 {t("peak")}</span>}
-            {sentiment && (
-              <span className={`text-xs ${sentiment.color}`} title={sentiment.label}>
-                {sentiment.icon}
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-2 mb-0.5">
+              <span
+                className="text-[11px] font-semibold cursor-pointer hover:underline"
+                style={{ color: pf.color }}
+                onClick={handlePlatformClick}
+              >
+                {platform}
               </span>
-            )}
-          </div>
-
-          <p className="text-sm font-semibold text-foreground line-clamp-2 leading-snug mb-1">
-            {title}
-          </p>
-
-          <div className="flex items-center gap-2 text-[11px] flex-wrap">
-            <span className="text-muted-foreground">{category}</span>
-            <span className="volume-badge text-[10px] py-0">{volume}</span>
-            <span className={changePositive ? "text-green-600 font-medium" : "text-red-500 font-medium"}>
-              {change}
-            </span>
-          </div>
-        </div>
-
-        <div className="flex flex-col items-center gap-1">
-          <button onClick={handleShare} className="p-1 rounded-full opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-foreground" title={t("share")}>
-            <Share2 className="w-3 h-3" />
-          </button>
-          <button onClick={handleShareLink} className="p-1 rounded-full opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-foreground" title="Copiar link com filtros">
-            <Link2 className="w-3 h-3" />
-          </button>
-          <button onClick={handleExpand} className="p-1 rounded-full text-muted-foreground hover:text-foreground transition-colors">
-            {expanded ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
-          </button>
-        </div>
-      </div>
-
-      {expanded && (
-        <div className="mt-3 pt-3 border-t border-border animate-in fade-in slide-in-from-top-2 duration-200">
-          {details && <p className="text-xs text-muted-foreground mb-3">{details}</p>}
-
-          {/* AI Summary button */}
-          {!aiSummary && (
-            <button
-              onClick={handleSummarize}
-              disabled={summarizing}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-medium bg-primary/10 text-primary hover:bg-primary/20 transition-colors mb-3 disabled:opacity-50"
-            >
-              <Sparkles className={`w-3 h-3 ${summarizing ? "animate-spin" : ""}`} />
-              {summarizing ? "Analisando..." : "✨ Resumir com IA"}
-            </button>
-          )}
-
-          {/* AI Summary result */}
-          {aiSummary && (
-            <div className="mb-3 p-2.5 rounded-lg bg-primary/5 border border-primary/10">
-              <div className="flex items-center gap-2 mb-1.5">
-                <Sparkles className="w-3 h-3 text-primary" />
-                <span className="text-[10px] font-semibold text-primary uppercase tracking-wider">Resumo IA</span>
-                {sentiment && (
-                  <span className={`text-xs ${sentiment.color} ml-auto`}>
-                    {sentiment.icon} {sentiment.label}
-                  </span>
-                )}
-              </div>
-              <p className="text-xs text-foreground leading-relaxed">{aiSummary.summary}</p>
-              {aiSummary.impact && (
-                <span className={`inline-block mt-1.5 text-[10px] font-medium px-2 py-0.5 rounded-full ${
-                  aiSummary.impact === "high" ? "bg-red-500/10 text-red-500" :
-                  aiSummary.impact === "medium" ? "bg-yellow-500/10 text-yellow-600" :
-                  "bg-green-500/10 text-green-600"
-                }`}>
-                  Impacto: {aiSummary.impact === "high" ? "Alto" : aiSummary.impact === "medium" ? "Médio" : "Baixo"}
+              {flag && <span className="text-xs" title={countryCode}>{flag}</span>}
+              <span className="text-[11px] text-muted-foreground">{time}</span>
+              {isPeak && <span className="peak-badge">🔥 {t("peak")}</span>}
+              {sentiment && (
+                <span className={`text-xs ${sentiment.color}`} title={sentiment.label}>
+                  {sentiment.icon}
                 </span>
               )}
             </div>
-          )}
 
-          {/* Platform-specific metrics */}
-          <div className="flex flex-wrap gap-2 mb-3 text-[11px]">
-            {platform === "YouTube" && likeRatio !== undefined && likeRatio > 0 && (
-              <span className="source-tag text-[10px] py-0.5 px-2">👍 {likeRatio}% likes</span>
+            <p className="text-sm font-semibold text-foreground line-clamp-2 leading-snug mb-1">
+              {title}
+            </p>
+
+            <div className="flex items-center gap-2 text-[11px] flex-wrap">
+              <span className="text-muted-foreground">{category}</span>
+              <span className="volume-badge text-[10px] py-0">{volume}</span>
+              <span className={changePositive ? "text-green-600 font-medium" : "text-red-500 font-medium"}>
+                {change}
+              </span>
+            </div>
+          </div>
+
+          <div className="flex flex-col items-center gap-1">
+            <button onClick={handleShare} className="p-1 rounded-full opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-foreground" title={t("share")}>
+              <Share2 className="w-3 h-3" />
+            </button>
+            <button onClick={handleShareLink} className="p-1 rounded-full opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-foreground" title="Copiar link com filtros">
+              <Link2 className="w-3 h-3" />
+            </button>
+            <button onClick={handleAlertClick} className="p-1 rounded-full opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-primary" title="Criar alerta">
+              <Bell className="w-3 h-3" />
+            </button>
+            <button onClick={handleExpand} className="p-1 rounded-full text-muted-foreground hover:text-foreground transition-colors">
+              {expanded ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
+            </button>
+          </div>
+        </div>
+
+        {expanded && (
+          <div className="mt-3 pt-3 border-t border-border animate-in fade-in slide-in-from-top-2 duration-200">
+            {details && <p className="text-xs text-muted-foreground mb-3">{details}</p>}
+
+            {!aiSummary && (
+              <button
+                onClick={handleSummarize}
+                disabled={summarizing}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-medium bg-primary/10 text-primary hover:bg-primary/20 transition-colors mb-3 disabled:opacity-50"
+              >
+                <Sparkles className={`w-3 h-3 ${summarizing ? "animate-spin" : ""}`} />
+                {summarizing ? "Analisando..." : "✨ Resumir com IA"}
+              </button>
             )}
-            {platform === "Reddit" && commentCount !== undefined && (
-              <span className="source-tag text-[10px] py-0.5 px-2">💬 {commentCount >= 1000 ? `${(commentCount / 1000).toFixed(1)}K` : commentCount} comments</span>
+
+            {aiSummary && (
+              <div className="mb-3 p-2.5 rounded-lg bg-primary/5 border border-primary/10">
+                <div className="flex items-center gap-2 mb-1.5">
+                  <Sparkles className="w-3 h-3 text-primary" />
+                  <span className="text-[10px] font-semibold text-primary uppercase tracking-wider">Resumo IA</span>
+                  {sentiment && (
+                    <span className={`text-xs ${sentiment.color} ml-auto`}>
+                      {sentiment.icon} {sentiment.label}
+                    </span>
+                  )}
+                </div>
+                <p className="text-xs text-foreground leading-relaxed">{aiSummary.summary}</p>
+                {aiSummary.impact && (
+                  <span className={`inline-block mt-1.5 text-[10px] font-medium px-2 py-0.5 rounded-full ${
+                    aiSummary.impact === "high" ? "bg-red-500/10 text-red-500" :
+                    aiSummary.impact === "medium" ? "bg-yellow-500/10 text-yellow-600" :
+                    "bg-green-500/10 text-green-600"
+                  }`}>
+                    Impacto: {aiSummary.impact === "high" ? "Alto" : aiSummary.impact === "medium" ? "Médio" : "Baixo"}
+                  </span>
+                )}
+              </div>
             )}
-            {platform === "Google Trends" && region && (
-              <span className="source-tag text-[10px] py-0.5 px-2">📍 {region}</span>
-            )}
-            {platform === "NewsAPI" && sources && sources.length > 0 && (
-              <div className="flex flex-wrap gap-1">
-                {sources.slice(0, 3).map((s) => (
-                  <span key={s} className="source-tag text-[10px] py-0.5 px-2">📰 {s}</span>
-                ))}
+
+            <div className="flex flex-wrap gap-2 mb-3 text-[11px]">
+              {platform === "YouTube" && likeRatio !== undefined && likeRatio > 0 && (
+                <span className="source-tag text-[10px] py-0.5 px-2">👍 {likeRatio}% likes</span>
+              )}
+              {platform === "Reddit" && commentCount !== undefined && (
+                <span className="source-tag text-[10px] py-0.5 px-2">💬 {commentCount >= 1000 ? `${(commentCount / 1000).toFixed(1)}K` : commentCount} comments</span>
+              )}
+              {platform === "Google Trends" && region && (
+                <span className="source-tag text-[10px] py-0.5 px-2">📍 {region}</span>
+              )}
+              {platform === "NewsAPI" && sources && sources.length > 0 && (
+                <div className="flex flex-wrap gap-1">
+                  {sources.slice(0, 3).map((s) => (
+                    <span key={s} className="source-tag text-[10px] py-0.5 px-2">📰 {s}</span>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {historicalData && historicalData.length > 0 && (
+              <div>
+                <div className="flex items-center justify-between mb-1.5">
+                  <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">
+                    {t("evolution24h")}
+                  </span>
+                  <span className="text-[10px] text-muted-foreground">{metricLabel}</span>
+                </div>
+                <div className="h-28 -mx-1">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <AreaChart data={historicalData}>
+                      <defs>
+                        <linearGradient id={gradientId} x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="0%" stopColor={pf.color} stopOpacity={0.2} />
+                          <stop offset="100%" stopColor={pf.color} stopOpacity={0} />
+                        </linearGradient>
+                      </defs>
+                      <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                      <XAxis dataKey="hour" tick={{ fontSize: 9, fill: "hsl(var(--muted-foreground))" }} tickLine={false} axisLine={false} interval={5} />
+                      <YAxis tick={{ fontSize: 9, fill: "hsl(var(--muted-foreground))" }} tickLine={false} axisLine={false} width={30} tickFormatter={(v) => v >= 1000 ? `${(v / 1000).toFixed(0)}K` : v} />
+                      <Tooltip
+                        contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: "8px", fontSize: 11 }}
+                        formatter={(value: number) => [value >= 1000 ? `${(value / 1000).toFixed(1)}K` : value, metricLabel || "valor"]}
+                      />
+                      <Area type="monotone" dataKey="value" stroke={pf.color} strokeWidth={1.5} fill={`url(#${gradientId})`} />
+                    </AreaChart>
+                  </ResponsiveContainer>
+                </div>
               </div>
             )}
           </div>
+        )}
+      </div>
 
-          {historicalData && historicalData.length > 0 && (
-            <div>
-              <div className="flex items-center justify-between mb-1.5">
-                <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">
-                  {t("evolution24h")}
-                </span>
-                <span className="text-[10px] text-muted-foreground">{metricLabel}</span>
-              </div>
-              <div className="h-28 -mx-1">
-                <ResponsiveContainer width="100%" height="100%">
-                  <AreaChart data={historicalData}>
-                    <defs>
-                      <linearGradient id={gradientId} x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="0%" stopColor={pf.color} stopOpacity={0.2} />
-                        <stop offset="100%" stopColor={pf.color} stopOpacity={0} />
-                      </linearGradient>
-                    </defs>
-                    <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                    <XAxis dataKey="hour" tick={{ fontSize: 9, fill: "hsl(var(--muted-foreground))" }} tickLine={false} axisLine={false} interval={5} />
-                    <YAxis tick={{ fontSize: 9, fill: "hsl(var(--muted-foreground))" }} tickLine={false} axisLine={false} width={30} tickFormatter={(v) => v >= 1000 ? `${(v / 1000).toFixed(0)}K` : v} />
-                    <Tooltip
-                      contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: "8px", fontSize: 11 }}
-                      formatter={(value: number) => [value >= 1000 ? `${(value / 1000).toFixed(1)}K` : value, metricLabel || "valor"]}
-                    />
-                    <Area type="monotone" dataKey="value" stroke={pf.color} strokeWidth={1.5} fill={`url(#${gradientId})`} />
-                  </AreaChart>
-                </ResponsiveContainer>
-              </div>
-            </div>
-          )}
-        </div>
-      )}
-    </div>
+      <AlertModal
+        open={alertOpen}
+        onClose={() => setAlertOpen(false)}
+        onSubmit={handleCreateAlert}
+        defaultKeyword={title}
+        defaultCategory={category}
+      />
+    </>
   );
 };
 

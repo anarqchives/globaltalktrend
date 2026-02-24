@@ -14,7 +14,111 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      alerts: {
+        Row: {
+          category: string | null
+          country: string | null
+          created_at: string
+          frequency: string
+          id: string
+          is_active: boolean
+          keyword: string | null
+          last_triggered: string | null
+          notification_method: string
+          threshold: number
+          user_id: string
+        }
+        Insert: {
+          category?: string | null
+          country?: string | null
+          created_at?: string
+          frequency?: string
+          id?: string
+          is_active?: boolean
+          keyword?: string | null
+          last_triggered?: string | null
+          notification_method?: string
+          threshold?: number
+          user_id: string
+        }
+        Update: {
+          category?: string | null
+          country?: string | null
+          created_at?: string
+          frequency?: string
+          id?: string
+          is_active?: boolean
+          keyword?: string | null
+          last_triggered?: string | null
+          notification_method?: string
+          threshold?: number
+          user_id?: string
+        }
+        Relationships: []
+      }
+      history: {
+        Row: {
+          id: string
+          metadata: Json | null
+          platform: string
+          trend_id: string
+          trend_title: string
+          user_id: string
+          viewed_at: string
+        }
+        Insert: {
+          id?: string
+          metadata?: Json | null
+          platform: string
+          trend_id: string
+          trend_title: string
+          user_id: string
+          viewed_at?: string
+        }
+        Update: {
+          id?: string
+          metadata?: Json | null
+          platform?: string
+          trend_id?: string
+          trend_title?: string
+          user_id?: string
+          viewed_at?: string
+        }
+        Relationships: []
+      }
+      saved_filters: {
+        Row: {
+          category: string | null
+          country: string | null
+          created_at: string
+          id: string
+          media_type: string | null
+          name: string
+          period: string | null
+          user_id: string
+        }
+        Insert: {
+          category?: string | null
+          country?: string | null
+          created_at?: string
+          id?: string
+          media_type?: string | null
+          name: string
+          period?: string | null
+          user_id: string
+        }
+        Update: {
+          category?: string | null
+          country?: string | null
+          created_at?: string
+          id?: string
+          media_type?: string | null
+          name?: string
+          period?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

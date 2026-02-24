@@ -8,6 +8,8 @@ import { TrendCardProps } from "@/components/TrendCard";
 import { useTrends } from "@/hooks/use-trends";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { useHistory } from "@/hooks/use-history";
+import { supabase } from "@/integrations/supabase/client";
 import {
   ResizablePanelGroup,
   ResizablePanel,
@@ -39,6 +41,15 @@ function getInitialFilters(): FilterState {
 const Index = () => {
   const { t } = useLanguage();
   const [filters, setFilters] = useState<FilterState>(getInitialFilters);
+  const [user, setUser] = useState<any>(null);
+
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => setUser(session?.user ?? null));
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_e, s) => setUser(s?.user ?? null));
+    return () => subscription.unsubscribe();
+  }, []);
+
+  const { trackView } = useHistory(user?.id ?? null);
   const [trendCounts, setTrendCounts] = useState<Record<string, number>>({});
   const [activeTrend, setActiveTrend] = useState<TrendCardProps | null>(null);
   const [mobileTab, setMobileTab] = useState<"timeline" | "map">("timeline");
@@ -107,7 +118,9 @@ const Index = () => {
             <TimelineCard
               key={`${trend.platform}-${trend.title.slice(0, 20)}-${i}`}
               {...trend}
+              userId={user?.id}
               onClick={() => setActiveTrend(trend)}
+              onExpand={(title, platform, metadata) => trackView(title, platform, metadata)}
               onFilterPlatform={(p) => {
                 const map: Record<string, string> = {
                   "Reddit": "Redes sociais",
@@ -146,6 +159,8 @@ const Index = () => {
         countriesCount={countriesCount}
         onRefresh={handleRefresh}
         refreshing={refreshing}
+        filters={filters}
+        onApplyFilter={setFilters}
       />
       <FilterBar filters={filters} onChange={setFilters} />
 
