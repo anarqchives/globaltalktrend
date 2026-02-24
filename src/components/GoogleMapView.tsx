@@ -447,8 +447,8 @@ const GoogleMapView = ({
 
   return (
     <div className="w-full h-full relative" style={{ isolation: "isolate" }}>
-      {/* Map type toggle + heatmap toggle */}
-      <div className="absolute top-3 right-3 z-10 flex gap-1.5">
+      {/* Map type toggle + heatmap toggle — top LEFT to avoid ranking overlap */}
+      <div className="absolute top-3 left-3 z-[5] flex gap-1.5">
         <div className="flex rounded-lg overflow-hidden border border-border shadow-sm">
           {([
             { type: "roadmap" as MapViewType, label: t("map") },
@@ -479,21 +479,20 @@ const GoogleMapView = ({
         >
           🔥 Heatmap
         </button>
+        {/* Reset view button — next to controls */}
+        {selectedCountry !== "global" && (
+          <button
+            onClick={() => {
+              onSelectCountry("global");
+              googleMapRef.current?.panTo({ lat: 20, lng: 0 });
+              googleMapRef.current?.setZoom(2.5);
+            }}
+            className="px-2.5 py-1 text-[10px] font-medium bg-card/90 text-muted-foreground hover:bg-secondary rounded-lg border border-border shadow-sm transition-colors"
+          >
+            🌎 {t("global")}
+          </button>
+        )}
       </div>
-
-      {/* Reset view button */}
-      {selectedCountry !== "global" && (
-        <button
-          onClick={() => {
-            onSelectCountry("global");
-            googleMapRef.current?.panTo({ lat: 20, lng: 0 });
-            googleMapRef.current?.setZoom(2.5);
-          }}
-          className="absolute top-3 left-3 z-10 px-2.5 py-1 text-[10px] font-medium bg-card/90 text-muted-foreground hover:bg-secondary rounded-lg border border-border shadow-sm transition-colors"
-        >
-          🌎 {t("global")}
-        </button>
-      )}
 
       {/* Global Ranking panel */}
       {mapLoaded && trends.length > 0 && (
