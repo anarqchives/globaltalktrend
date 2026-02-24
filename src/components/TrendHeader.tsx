@@ -168,7 +168,7 @@ const TrendHeader = ({ totalTrends = 0, countriesCount = 0, onRefresh, refreshin
             <h1 className="text-base font-light tracking-tight whitespace-nowrap select-none flex items-center gap-2">
               <span className="font-semibold text-foreground hidden sm:inline">Global Talk Trends</span>
               <span className="font-semibold text-foreground sm:hidden">GTT</span>
-              <span className="text-muted-foreground hidden md:inline">| Monitor Imparcial em Tempo Real</span>
+              <span className="text-muted-foreground hidden md:inline">Monitor Imparcial em Tempo Real</span>
             </h1>
             {totalTrends > 1 && countriesCount > 0 ? (
               <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-primary/10 text-primary text-[11px] font-bold tabular-nums flex-shrink-0 hidden sm:inline-flex">
