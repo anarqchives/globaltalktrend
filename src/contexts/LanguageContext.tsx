@@ -25,7 +25,11 @@ type TranslationKey =
   | "live" | "peak" | "copied" | "updated" | "about" | "aboutTitle" | "aboutDesc"
   | "map" | "satellite" | "terrain" | "timeline" | "clickToClose"
   | "trendCount" | "loading" | "expandDetails" | "evolution24h" | "share" | "noTrends"
-  | "heatmapDensity" | "low" | "high";
+  | "heatmapDensity" | "low" | "high"
+  | "views" | "upvotes" | "comments" | "interactions" | "likes"
+  | "officialSource" | "scientific" | "international" | "localPress"
+  | "watchOn" | "viewOn" | "readOn" | "viewSource" | "summarizeAI" | "analyzing"
+  | "aiSummary" | "impactHigh" | "impactMedium" | "impactLow";
 
 const translations: Record<LangCode, Record<TranslationKey, string>> = {
   pt: {
@@ -42,6 +46,10 @@ const translations: Record<LangCode, Record<TranslationKey, string>> = {
     clickToClose: "Clique para fechar", trendCount: "trends", loading: "Carregando...",
     expandDetails: "Ver detalhes", evolution24h: "Evolução 24h", share: "Compartilhar", noTrends: "Sem tendências",
     heatmapDensity: "Densidade de Trends", low: "Baixo", high: "Alto",
+    views: "visualizações", upvotes: "upvotes", comments: "comentários", interactions: "interações", likes: "curtidas",
+    officialSource: "Fonte Oficial", scientific: "Acadêmico/Científico", international: "Internacional", localPress: "Imprensa",
+    watchOn: "Assistir no", viewOn: "Ver no", readOn: "Ler no", viewSource: "Ver fonte original", summarizeAI: "Resumir com IA", analyzing: "Analisando...",
+    aiSummary: "Resumo IA", impactHigh: "Alto", impactMedium: "Médio", impactLow: "Baixo",
   },
   en: {
     trends: "Trends", moreTrends: "More trends", filters: "Filters",
@@ -57,6 +65,10 @@ const translations: Record<LangCode, Record<TranslationKey, string>> = {
     clickToClose: "Click to close", trendCount: "trends", loading: "Loading...",
     expandDetails: "View details", evolution24h: "24h Evolution", share: "Share", noTrends: "No trends",
     heatmapDensity: "Trend Density", low: "Low", high: "High",
+    views: "views", upvotes: "upvotes", comments: "comments", interactions: "interactions", likes: "likes",
+    officialSource: "Official Source", scientific: "Academic/Scientific", international: "International", localPress: "Press",
+    watchOn: "Watch on", viewOn: "View on", readOn: "Read on", viewSource: "View original source", summarizeAI: "Summarize with AI", analyzing: "Analyzing...",
+    aiSummary: "AI Summary", impactHigh: "High", impactMedium: "Medium", impactLow: "Low",
   },
   es: {
     trends: "Tendencias", moreTrends: "Más trends", filters: "Filtros",
@@ -72,6 +84,10 @@ const translations: Record<LangCode, Record<TranslationKey, string>> = {
     clickToClose: "Clic para cerrar", trendCount: "tendencias", loading: "Cargando...",
     expandDetails: "Ver detalles", evolution24h: "Evolución 24h", share: "Compartir", noTrends: "Sin tendencias",
     heatmapDensity: "Densidad de Trends", low: "Bajo", high: "Alto",
+    views: "visualizaciones", upvotes: "upvotes", comments: "comentarios", interactions: "interacciones", likes: "me gusta",
+    officialSource: "Fuente Oficial", scientific: "Académico/Científico", international: "Internacional", localPress: "Prensa",
+    watchOn: "Ver en", viewOn: "Ver en", readOn: "Leer en", viewSource: "Ver fuente original", summarizeAI: "Resumir con IA", analyzing: "Analizando...",
+    aiSummary: "Resumen IA", impactHigh: "Alto", impactMedium: "Medio", impactLow: "Bajo",
   },
   fr: {
     trends: "Tendances", moreTrends: "Plus de tendances", filters: "Filtres",
@@ -87,6 +103,10 @@ const translations: Record<LangCode, Record<TranslationKey, string>> = {
     clickToClose: "Cliquer pour fermer", trendCount: "tendances", loading: "Chargement...",
     expandDetails: "Voir les détails", evolution24h: "Évolution 24h", share: "Partager", noTrends: "Aucune tendance",
     heatmapDensity: "Densité des Trends", low: "Faible", high: "Élevé",
+    views: "vues", upvotes: "upvotes", comments: "commentaires", interactions: "interactions", likes: "j'aime",
+    officialSource: "Source Officielle", scientific: "Académique/Scientifique", international: "International", localPress: "Presse",
+    watchOn: "Regarder sur", viewOn: "Voir sur", readOn: "Lire sur", viewSource: "Voir source originale", summarizeAI: "Résumer avec IA", analyzing: "Analyse...",
+    aiSummary: "Résumé IA", impactHigh: "Élevé", impactMedium: "Moyen", impactLow: "Faible",
   },
   de: {
     trends: "Trends", moreTrends: "Mehr Trends", filters: "Filter",
@@ -102,6 +122,10 @@ const translations: Record<LangCode, Record<TranslationKey, string>> = {
     clickToClose: "Klicken zum Schließen", trendCount: "Trends", loading: "Laden...",
     expandDetails: "Details anzeigen", evolution24h: "24h-Entwicklung", share: "Teilen", noTrends: "Keine Trends",
     heatmapDensity: "Trend-Dichte", low: "Niedrig", high: "Hoch",
+    views: "Aufrufe", upvotes: "Upvotes", comments: "Kommentare", interactions: "Interaktionen", likes: "Likes",
+    officialSource: "Offizielle Quelle", scientific: "Akademisch/Wissenschaftlich", international: "International", localPress: "Presse",
+    watchOn: "Ansehen auf", viewOn: "Ansehen auf", readOn: "Lesen auf", viewSource: "Originalquelle ansehen", summarizeAI: "Mit KI zusammenfassen", analyzing: "Analyse...",
+    aiSummary: "KI-Zusammenfassung", impactHigh: "Hoch", impactMedium: "Mittel", impactLow: "Niedrig",
   },
   it: {
     trends: "Tendenze", moreTrends: "Più tendenze", filters: "Filtri",
@@ -117,6 +141,10 @@ const translations: Record<LangCode, Record<TranslationKey, string>> = {
     clickToClose: "Clicca per chiudere", trendCount: "tendenze", loading: "Caricamento...",
     expandDetails: "Vedi dettagli", evolution24h: "Evoluzione 24h", share: "Condividi", noTrends: "Nessuna tendenza",
     heatmapDensity: "Densità dei Trend", low: "Basso", high: "Alto",
+    views: "visualizzazioni", upvotes: "upvotes", comments: "commenti", interactions: "interazioni", likes: "mi piace",
+    officialSource: "Fonte Ufficiale", scientific: "Accademico/Scientifico", international: "Internazionale", localPress: "Stampa",
+    watchOn: "Guarda su", viewOn: "Vedi su", readOn: "Leggi su", viewSource: "Vedi fonte originale", summarizeAI: "Riassumi con IA", analyzing: "Analisi...",
+    aiSummary: "Riassunto IA", impactHigh: "Alto", impactMedium: "Medio", impactLow: "Basso",
   },
   zh: {
     trends: "趋势", moreTrends: "更多趋势", filters: "筛选",
@@ -132,6 +160,10 @@ const translations: Record<LangCode, Record<TranslationKey, string>> = {
     clickToClose: "点击关闭", trendCount: "趋势", loading: "加载中...",
     expandDetails: "查看详情", evolution24h: "24小时演变", share: "分享", noTrends: "无趋势",
     heatmapDensity: "趋势密度", low: "低", high: "高",
+    views: "浏览量", upvotes: "点赞", comments: "评论", interactions: "互动", likes: "喜欢",
+    officialSource: "官方来源", scientific: "学术/科学", international: "国际", localPress: "新闻媒体",
+    watchOn: "观看于", viewOn: "查看于", readOn: "阅读于", viewSource: "查看原始来源", summarizeAI: "AI总结", analyzing: "分析中...",
+    aiSummary: "AI摘要", impactHigh: "高", impactMedium: "中", impactLow: "低",
   },
   ja: {
     trends: "トレンド", moreTrends: "もっと見る", filters: "フィルター",
@@ -147,6 +179,10 @@ const translations: Record<LangCode, Record<TranslationKey, string>> = {
     clickToClose: "クリックして閉じる", trendCount: "トレンド", loading: "読み込み中...",
     expandDetails: "詳細を見る", evolution24h: "24時間の推移", share: "共有", noTrends: "トレンドなし",
     heatmapDensity: "トレンド密度", low: "低", high: "高",
+    views: "再生回数", upvotes: "アップボート", comments: "コメント", interactions: "インタラクション", likes: "いいね",
+    officialSource: "公式情報", scientific: "学術/科学", international: "国際", localPress: "報道",
+    watchOn: "で視聴", viewOn: "で見る", readOn: "で読む", viewSource: "元の情報源を見る", summarizeAI: "AIで要約", analyzing: "分析中...",
+    aiSummary: "AI要約", impactHigh: "高", impactMedium: "中", impactLow: "低",
   },
   ko: {
     trends: "트렌드", moreTrends: "더 많은 트렌드", filters: "필터",
@@ -162,6 +198,10 @@ const translations: Record<LangCode, Record<TranslationKey, string>> = {
     clickToClose: "닫으려면 클릭", trendCount: "트렌드", loading: "로딩 중...",
     expandDetails: "상세 보기", evolution24h: "24시간 추이", share: "공유", noTrends: "트렌드 없음",
     heatmapDensity: "트렌드 밀도", low: "낮음", high: "높음",
+    views: "조회수", upvotes: "추천", comments: "댓글", interactions: "상호작용", likes: "좋아요",
+    officialSource: "공식 출처", scientific: "학술/과학", international: "국제", localPress: "언론",
+    watchOn: "에서 시청", viewOn: "에서 보기", readOn: "에서 읽기", viewSource: "원본 소스 보기", summarizeAI: "AI로 요약", analyzing: "분석 중...",
+    aiSummary: "AI 요약", impactHigh: "높음", impactMedium: "중간", impactLow: "낮음",
   },
   ar: {
     trends: "الاتجاهات", moreTrends: "المزيد", filters: "التصفية",
@@ -177,6 +217,10 @@ const translations: Record<LangCode, Record<TranslationKey, string>> = {
     clickToClose: "اضغط للإغلاق", trendCount: "اتجاهات", loading: "جار التحميل...",
     expandDetails: "عرض التفاصيل", evolution24h: "التطور 24 ساعة", share: "مشاركة", noTrends: "لا توجد اتجاهات",
     heatmapDensity: "كثافة الاتجاهات", low: "منخفض", high: "مرتفع",
+    views: "مشاهدات", upvotes: "تصويت", comments: "تعليقات", interactions: "تفاعلات", likes: "إعجابات",
+    officialSource: "مصدر رسمي", scientific: "أكاديمي/علمي", international: "دولي", localPress: "صحافة",
+    watchOn: "شاهد على", viewOn: "عرض على", readOn: "اقرأ على", viewSource: "عرض المصدر الأصلي", summarizeAI: "تلخيص بالذكاء", analyzing: "جاري التحليل...",
+    aiSummary: "ملخص ذكي", impactHigh: "مرتفع", impactMedium: "متوسط", impactLow: "منخفض",
   },
   hi: {
     trends: "रुझान", moreTrends: "और रुझान", filters: "फ़िल्टर",
@@ -192,6 +236,10 @@ const translations: Record<LangCode, Record<TranslationKey, string>> = {
     clickToClose: "बंद करने के लिए क्लिक करें", trendCount: "रुझान", loading: "लोड हो रहा है...",
     expandDetails: "विवरण देखें", evolution24h: "24 घंटे का विकास", share: "शेयर", noTrends: "कोई रुझान नहीं",
     heatmapDensity: "रुझान घनत्व", low: "कम", high: "अधिक",
+    views: "दृश्य", upvotes: "अपवोट", comments: "टिप्पणियाँ", interactions: "इंटरैक्शन", likes: "पसंद",
+    officialSource: "आधिकारिक स्रोत", scientific: "अकादमिक/वैज्ञानिक", international: "अंतर्राष्ट्रीय", localPress: "प्रेस",
+    watchOn: "पर देखें", viewOn: "पर देखें", readOn: "पर पढ़ें", viewSource: "मूल स्रोत देखें", summarizeAI: "AI से सारांश", analyzing: "विश्लेषण...",
+    aiSummary: "AI सारांश", impactHigh: "उच्च", impactMedium: "मध्यम", impactLow: "कम",
   },
   ru: {
     trends: "Тренды", moreTrends: "Больше трендов", filters: "Фильтры",
@@ -207,6 +255,10 @@ const translations: Record<LangCode, Record<TranslationKey, string>> = {
     clickToClose: "Нажмите, чтобы закрыть", trendCount: "тренды", loading: "Загрузка...",
     expandDetails: "Подробнее", evolution24h: "Динамика 24ч", share: "Поделиться", noTrends: "Нет трендов",
     heatmapDensity: "Плотность трендов", low: "Низкий", high: "Высокий",
+    views: "просмотры", upvotes: "голоса", comments: "комментарии", interactions: "взаимодействия", likes: "лайки",
+    officialSource: "Официальный источник", scientific: "Академический/Научный", international: "Международный", localPress: "Пресса",
+    watchOn: "Смотреть на", viewOn: "Смотреть на", readOn: "Читать на", viewSource: "Оригинальный источник", summarizeAI: "Резюме с ИИ", analyzing: "Анализ...",
+    aiSummary: "Резюме ИИ", impactHigh: "Высокий", impactMedium: "Средний", impactLow: "Низкий",
   },
 };
 

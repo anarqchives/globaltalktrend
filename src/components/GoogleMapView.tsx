@@ -537,7 +537,7 @@ const GoogleMapView = ({
   return (
     <div className="w-full h-full relative" style={{ isolation: "isolate" }}>
       {/* Map controls — top left, glassmorphism pill */}
-      <div className="absolute top-3 left-3 z-[5] flex items-center gap-1 p-1 rounded-2xl bg-card/80 backdrop-blur-xl border border-transparent shadow-lg outline-none ring-0">
+      <div className="absolute top-3 left-3 z-[5] flex items-center gap-1 p-1 rounded-2xl bg-white/95 dark:bg-card/95 backdrop-blur-[12px] border border-white/50 dark:border-white/10 shadow-[0_8px_24px_rgba(0,0,0,0.08)] dark:shadow-[0_8px_24px_rgba(0,0,0,0.3)] outline-none ring-0">
         <button
           onClick={() => setMapViewType("roadmap")}
           className={controlBtnClass(mapViewType === "roadmap")}
@@ -650,7 +650,7 @@ const GoogleMapView = ({
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 10 }}
             transition={{ duration: 0.25, ease: "easeOut" }}
-            className="absolute bottom-4 right-3 z-20 bg-card/80 backdrop-blur-xl border border-border/30 rounded-xl shadow-lg px-3 py-2"
+            className="absolute bottom-4 right-5 z-20 bg-white/95 dark:bg-card/95 backdrop-blur-[12px] border border-white/50 dark:border-white/10 rounded-2xl shadow-[0_8px_24px_rgba(0,0,0,0.08)] dark:shadow-[0_8px_24px_rgba(0,0,0,0.3)] px-4 py-2.5 outline-none ring-0"
           >
             <p className="text-[10px] font-semibold text-foreground mb-1.5 tracking-wide">{t("heatmapDensity")}</p>
             <div className="flex items-center gap-1.5">
