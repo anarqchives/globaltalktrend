@@ -163,16 +163,18 @@ export function useTrends(filters: FilterState, onTrendCountsChange: (counts: Re
   const fetchTrends = useCallback(async () => {
     try {
       setLoading(true);
-      const [edgeResult, extraResult, redditItems, blueskyItems, mastodonItems] = await Promise.all([
+      const [edgeResult, extraResult, extraSourcesResult, redditItems, blueskyItems, mastodonItems] = await Promise.all([
         supabase.functions.invoke("fetch-trends"),
         supabase.functions.invoke("fetch-news-extra").catch(() => ({ data: { trends: [] } })),
+        supabase.functions.invoke("fetch-extra-sources").catch(() => ({ data: { trends: [] } })),
         fetchRedditClientSide(),
         fetchBlueskyClientSide(),
         fetchMastodonClientSide(),
       ]);
       const edgeTrends: TrendCardProps[] = edgeResult.data?.trends || [];
       const extraTrends: TrendCardProps[] = extraResult.data?.trends || [];
-      const allTrends = [...edgeTrends, ...extraTrends, ...redditItems, ...blueskyItems, ...mastodonItems];
+      const extraSourcesTrends: TrendCardProps[] = extraSourcesResult.data?.trends || [];
+      const allTrends = [...edgeTrends, ...extraTrends, ...extraSourcesTrends, ...redditItems, ...blueskyItems, ...mastodonItems];
       if (allTrends.length > 0) {
         setTrends(allTrends);
         if (!isFirstLoad) {
@@ -199,8 +201,10 @@ export function useTrends(filters: FilterState, onTrendCountsChange: (counts: Re
       result = result.filter((t) => t.countryCode === filters.country);
     }
     if (filters.type === "Redes sociais") result = result.filter((t) => ["Reddit", "Bluesky", "Mastodon"].includes(t.platform));
-    else if (filters.type === "Imprensa") result = result.filter((t) => ["NewsAPI", "NewsData", "GNews", "Bing News"].includes(t.platform));
+    else if (filters.type === "Imprensa") result = result.filter((t) => ["NewsAPI", "NewsData", "GNews", "Bing News", "The Guardian"].includes(t.platform));
     else if (filters.type === "Buscas (Google)") result = result.filter((t) => t.platform === "Google Trends");
+    else if (filters.type === "Dados oficiais") result = result.filter((t) => ["World Bank", "IBGE"].includes(t.platform));
+    else if (filters.type === "Ciência") result = result.filter((t) => t.platform === "OpenAlex");
     if (filters.category !== "Todas") {
       result = result.filter((t) => t.category.toLowerCase().includes(filters.category.toLowerCase()));
     }
