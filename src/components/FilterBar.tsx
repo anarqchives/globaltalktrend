@@ -1,6 +1,6 @@
+import { useState, useEffect, useCallback } from "react";
 import { RotateCcw, ChevronDown } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
-
 const defaultFilters: FilterState = {
   country: "global",
   period: "Hoje",
@@ -202,8 +202,57 @@ const FilterBar = ({ filters, onChange }: FilterBarProps) => {
             Reset
           </button>
         )}
+
+        <div className="flex items-center gap-1.5 ml-auto flex-shrink-0 whitespace-nowrap">
+          <span className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ background: "hsl(142, 72%, 45%)" }} />
+          <span className="text-[11px] font-medium text-foreground">{t("live")}</span>
+          <CountdownTimer />
+        </div>
       </div>
     </div>
+  );
+};
+
+// Countdown Timer Component
+const CountdownTimer = () => {
+  const [seconds, setSeconds] = useState(() => {
+    const now = Date.now();
+    const interval = 15 * 60 * 1000;
+    const remaining = interval - (now % interval);
+    return Math.floor(remaining / 1000);
+  });
+  const [fading, setFading] = useState(false);
+
+  const onRefresh = useCallback(() => {
+    window.dispatchEvent(new Event("trend-refresh"));
+  }, []);
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setSeconds((prev) => {
+        if (prev <= 1) {
+          setFading(true);
+          setTimeout(() => {
+            setFading(false);
+            onRefresh();
+          }, 300);
+          return 15 * 60;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+    return () => clearInterval(timer);
+  }, [onRefresh]);
+
+  const mins = Math.floor(seconds / 60);
+  const secs = seconds % 60;
+
+  return (
+    <span
+      className={`text-[11px] font-mono text-muted-foreground tabular-nums transition-opacity duration-300 ${fading ? 'opacity-0' : 'opacity-100'}`}
+    >
+      ⏱️ {String(mins).padStart(2, '0')}:{String(secs).padStart(2, '0')}
+    </span>
   );
 };
 

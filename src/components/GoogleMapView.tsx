@@ -698,14 +698,6 @@ const GoogleMapView = ({
         )}
       </AnimatePresence>
 
-      {/* Countdown timer next to live indicator */}
-      <div className="absolute top-3 right-3 z-[5] flex items-center gap-2">
-        <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-2xl bg-white/95 dark:bg-card/95 backdrop-blur-[12px] border border-white/50 dark:border-white/10 shadow-[0_8px_24px_rgba(0,0,0,0.08)]">
-          <span className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ background: "hsl(142, 72%, 45%)" }} />
-          <span className="text-[11px] font-medium text-foreground">{t("live")}</span>
-          <CountdownTimer onRefresh={() => window.dispatchEvent(new Event("trend-refresh"))} />
-        </div>
-      </div>
     </div>
   );
 };
@@ -759,45 +751,6 @@ const CoffeeDonationButton = () => {
         ☕
       </button>
     </div>
-  );
-};
-
-// Countdown Timer Component
-const CountdownTimer = ({ onRefresh }: { onRefresh: () => void }) => {
-  const [seconds, setSeconds] = useState(() => {
-    const now = Date.now();
-    const interval = 15 * 60 * 1000;
-    const remaining = interval - (now % interval);
-    return Math.floor(remaining / 1000);
-  });
-  const [fading, setFading] = useState(false);
-
-  useEffect(() => {
-    const timer = setInterval(() => {
-      setSeconds((prev) => {
-        if (prev <= 1) {
-          setFading(true);
-          setTimeout(() => {
-            setFading(false);
-            onRefresh();
-          }, 300);
-          return 15 * 60;
-        }
-        return prev - 1;
-      });
-    }, 1000);
-    return () => clearInterval(timer);
-  }, [onRefresh]);
-
-  const mins = Math.floor(seconds / 60);
-  const secs = seconds % 60;
-
-  return (
-    <span
-      className={`text-[11px] font-mono text-muted-foreground tabular-nums transition-opacity duration-300 ${fading ? 'opacity-0' : 'opacity-100'}`}
-    >
-      ⏱️ {String(mins).padStart(2, '0')}:{String(secs).padStart(2, '0')}
-    </span>
   );
 };
 
