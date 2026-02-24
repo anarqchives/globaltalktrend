@@ -248,40 +248,40 @@ const TimelineCard = ({
           </div>
 
           <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-2 mb-0.5">
+            <div className="flex items-center gap-1.5 mb-0.5 flex-wrap overflow-hidden">
               <span
-                className="text-[11px] font-semibold cursor-pointer hover:underline"
+                className="text-[11px] font-semibold cursor-pointer active:underline hover:underline flex-shrink-0"
                 style={{ color: pf.color }}
                 onClick={handlePlatformClick}
               >
                 {platform}
               </span>
-              {flag && <span className="text-xs" title={countryCode}>{flag}</span>}
-              <span className="text-[11px] text-muted-foreground">{formattedDate || time}</span>
-               {isPeak && <span className="peak-badge">🔥 {t("peak")}</span>}
+              {flag && <span className="text-xs flex-shrink-0" title={countryCode}>{flag}</span>}
+              <span className="text-[11px] text-muted-foreground flex-shrink-0">{formattedDate || time}</span>
+               {isPeak && <span className="peak-badge flex-shrink-0 whitespace-nowrap">🔥 {t("peak")}</span>}
                {trustBadge && trustBadgeMap[trustBadge] && (
-                 <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-medium ${trustBadgeMap[trustBadge].className}`}>
+                 <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium whitespace-nowrap overflow-hidden text-ellipsis max-w-[120px] flex-shrink-0 ${trustBadgeMap[trustBadge].className}`}>
                    {trustBadgeMap[trustBadge].icon}
                    {trustBadgeMap[trustBadge].label}
                  </span>
                )}
                {isPeak && !trustBadge && trustBadgeMap.hot && (
-                 <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-medium ${trustBadgeMap.hot.className}`}>
+                 <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium whitespace-nowrap flex-shrink-0 ${trustBadgeMap.hot.className}`}>
                    🔥 PAUTA QUENTE
                  </span>
                 )}
                {trigger && (
-                 <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium bg-accent text-accent-foreground border border-border">
+                 <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium bg-accent text-accent-foreground border border-border whitespace-nowrap flex-shrink-0">
                    {trigger.emoji} {trigger.label}
                  </span>
                )}
                {modeConfig.extraBadge && modeConfig.sortWeight({ title, category, change, trustBadge, sources, commentCount, likeRatio, platform }) > 20 && (
-                 <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium bg-primary/10 text-primary border border-primary/20">
+                 <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium bg-primary/10 text-primary border border-primary/20 whitespace-nowrap flex-shrink-0">
                    {modeConfig.extraBadge.emoji} {modeConfig.extraBadge.label}
                  </span>
                )}
                {sentiment && (
-                <span className={`text-xs ${sentiment.color}`} title={sentiment.label}>
+                <span className={`text-xs flex-shrink-0 ${sentiment.color}`} title={sentiment.label}>
                   {sentiment.icon}
                 </span>
               )}
@@ -336,10 +336,10 @@ const TimelineCard = ({
               )}
             </div>
 
-            <div className="flex items-center gap-2 text-[11px] flex-wrap">
-              <span className="text-muted-foreground">{category}</span>
-              <span className="volume-badge text-[10px] py-0">{volume}</span>
-              <span className={changePositive ? "text-green-600 font-medium" : "text-red-500 font-medium"}>
+            <div className="flex items-center gap-2 text-[11px] flex-wrap min-h-[18px]">
+              <span className="text-muted-foreground whitespace-nowrap">{category}</span>
+              <span className="volume-badge text-[10px] py-0 whitespace-nowrap">{volume}</span>
+              <span className={`whitespace-nowrap ${changePositive ? "text-green-600 font-medium" : "text-red-500 font-medium"}`}>
                 {change}
               </span>
             </div>
