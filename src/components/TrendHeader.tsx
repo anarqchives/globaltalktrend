@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Info, Sun, Moon, RefreshCw, LogOut, LogIn, BookOpen, Star, Bell, Clock, ChevronDown, Trophy, User, AlertTriangle, X } from "lucide-react";
+import { Info, Sun, Moon, RefreshCw, LogOut, LogIn, BookOpen, Star, Bell, Clock, ChevronDown, User, AlertTriangle, X, FileText, Users } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useLanguage, languages } from "@/contexts/LanguageContext";
 import { lovable } from "@/integrations/lovable/index";
@@ -23,8 +23,8 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { useSavedFilters } from "@/hooks/use-saved-filters";
 import { useAlerts } from "@/hooks/use-alerts";
-import { useGamification } from "@/hooks/use-gamification";
-import AchievementsPanel from "@/components/AchievementsPanel";
+// useGamification removed from header
+// AchievementsPanel removed
 import { useUserMode, userModes } from "@/contexts/UserModeContext";
 import type { AnomalyAlert } from "@/hooks/use-anomaly-alerts";
 import type { FilterState } from "@/components/FilterBar";
@@ -74,45 +74,55 @@ const TrendHeader = ({ totalTrends = 0, countriesCount = 0, onRefresh, refreshin
 
   const { savedFilters, saveFilter, deleteFilter } = useSavedFilters(user?.id ?? null);
   const { alerts } = useAlerts(user?.id ?? null);
-  const { totalPoints, achievements, unlocked } = useGamification(user?.id ?? null);
-  const [achievementsOpen, setAchievementsOpen] = useState(false);
+  // Gamification removed from header menu
   const [anomalyPanelOpen, setAnomalyPanelOpen] = useState(false);
   const { mode, setMode } = useUserMode();
 
-  const resolveOAuthRedirectUri = () => {
+  const isCustomDomain = () => {
     const host = window.location.hostname;
-    const isLovableDomain = host.endsWith("lovable.app") || host.endsWith("lovableproject.com");
-    return isLovableDomain ? window.location.origin : `${window.location.origin}/auth/callback`;
+    return !host.endsWith("lovable.app") && !host.endsWith("lovableproject.com");
   };
 
   const handleOAuthLogin = async (provider: "google" | "apple") => {
     try {
-      const redirectUri = resolveOAuthRedirectUri();
-      console.info("[Auth] OAuth start", { provider, redirectUri });
-      const result = await lovable.auth.signInWithOAuth(provider, {
-        redirect_uri: redirectUri,
-      });
+      const redirectUri = isCustomDomain()
+        ? `${window.location.origin}/auth/callback`
+        : window.location.origin;
 
-      if (result?.error) {
-        console.error("[Auth] OAuth failed", { provider, error: result.error });
-        toast({
-          title: "Falha no login",
-          description: "Não foi possível concluir o login. Tente novamente.",
-          variant: "destructive",
+      console.info("[Auth] OAuth start", { provider, redirectUri, hostname: window.location.hostname });
+
+      if (provider === "google" && isCustomDomain()) {
+        // Bypass auth-bridge for Google on custom domains
+        const { data, error } = await supabase.auth.signInWithOAuth({
+          provider: "google",
+          options: {
+            redirectTo: redirectUri,
+            skipBrowserRedirect: true,
+          },
         });
-        return;
-      }
-
-      if (!result?.redirected) {
-        setLoginOpen(false);
+        if (error) throw error;
+        if (data?.url) {
+          console.info("[Auth] Google custom domain redirect", { url: data.url });
+          window.location.href = data.url;
+          return;
+        }
+      } else {
+        // Lovable domains or Apple: use managed OAuth
+        const result = await lovable.auth.signInWithOAuth(provider, {
+          redirect_uri: redirectUri,
+        });
+        if (result?.error) {
+          console.error("[Auth] OAuth failed", { provider, error: result.error });
+          toast({ title: "Falha no login", description: "Não foi possível concluir o login. Tente novamente.", variant: "destructive" });
+          return;
+        }
+        if (!result?.redirected) {
+          setLoginOpen(false);
+        }
       }
     } catch (error) {
       console.error("[Auth] Unexpected login error", { provider, error });
-      toast({
-        title: "Erro inesperado",
-        description: "Houve um problema ao iniciar o login.",
-        variant: "destructive",
-      });
+      toast({ title: "Erro inesperado", description: "Houve um problema ao iniciar o login.", variant: "destructive" });
     }
   };
 
@@ -156,13 +166,13 @@ const TrendHeader = ({ totalTrends = 0, countriesCount = 0, onRefresh, refreshin
         <div className="w-full flex items-center justify-between gap-3">
           <div className="flex items-center gap-2 min-w-0">
             <h1 className="text-base font-light tracking-tight whitespace-nowrap select-none flex items-center gap-2">
-              <span className="font-semibold text-foreground hidden sm:inline">GLOBAL TALK TRENDS</span>
+              <span className="font-semibold text-foreground hidden sm:inline">Global Talk Trends</span>
               <span className="font-semibold text-foreground sm:hidden">GTT</span>
-              <span className="text-muted-foreground hidden md:inline">- REAL TIME MONITOR</span>
+              <span className="text-muted-foreground hidden md:inline">| Monitor Imparcial em Tempo Real</span>
             </h1>
             {totalTrends > 0 && (
               <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-primary/10 text-primary text-[11px] font-bold tabular-nums flex-shrink-0 hidden sm:inline-flex">
-                {totalTrends} {t("trends")} · {countriesCount} {t("country")}
+                {totalTrends} {t("trends")} · {countriesCount} {countriesCount > 1 ? "Países" : t("country")}
               </span>
             )}
           </div>
@@ -343,13 +353,12 @@ const TrendHeader = ({ totalTrends = 0, countriesCount = 0, onRefresh, refreshin
 
                   <DropdownMenuSeparator />
 
-                  {/* Achievements */}
-                  <DropdownMenuItem className="text-xs gap-2" onClick={() => setAchievementsOpen(true)}>
-                    <Trophy className="w-3.5 h-3.5 text-yellow-500" />
-                    Conquistas
-                    <span className="ml-auto text-[10px] bg-primary/10 text-primary px-1.5 py-0.5 rounded-full font-bold tabular-nums">
-                      {totalPoints} pts
-                    </span>
+                  {/* Reports */}
+                  <DropdownMenuItem className="text-xs gap-2" asChild>
+                    <Link to="/perfil?tab=reports" className="flex items-center gap-2">
+                      <FileText className="w-3.5 h-3.5 text-primary" />
+                      Gerar Relatório
+                    </Link>
                   </DropdownMenuItem>
 
                   {/* Alerts */}
@@ -410,13 +419,7 @@ const TrendHeader = ({ totalTrends = 0, countriesCount = 0, onRefresh, refreshin
         </div>
       </header>
 
-      <AchievementsPanel
-        open={achievementsOpen}
-        onClose={() => setAchievementsOpen(false)}
-        totalPoints={totalPoints}
-        achievements={achievements}
-        unlocked={unlocked}
-      />
+      {/* AchievementsPanel removed */}
 
       <Dialog open={aboutOpen} onOpenChange={setAboutOpen}>
         <DialogContent className="max-w-lg w-[92vw] bg-background dark:bg-card border-border/50 shadow-2xl rounded-2xl p-0 overflow-hidden max-h-[85vh]">

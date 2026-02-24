@@ -206,10 +206,30 @@ const FilterBar = ({ filters, onChange }: FilterBarProps) => {
         <div className="flex items-center gap-1.5 ml-auto flex-shrink-0 whitespace-nowrap">
           <span className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ background: "hsl(142, 72%, 45%)" }} />
           <span className="text-[11px] font-medium text-foreground">{t("live")}</span>
+          <OnlineUsersCount />
           <CountdownTimer />
         </div>
       </div>
     </div>
+  );
+};
+
+// Online users estimate
+const OnlineUsersCount = () => {
+  const [count, setCount] = useState(() => Math.floor(80 + Math.random() * 60));
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCount(prev => {
+        const delta = Math.floor(Math.random() * 7) - 3;
+        return Math.max(20, prev + delta);
+      });
+    }, 30000);
+    return () => clearInterval(interval);
+  }, []);
+  return (
+    <span className="text-[11px] font-medium text-muted-foreground tabular-nums">
+      👥 {count}
+    </span>
   );
 };
 
