@@ -133,6 +133,7 @@ const GoogleMapView = ({
   const mapRef = useRef<HTMLDivElement>(null);
   const googleMapRef = useRef<any>(null);
   const markersRef = useRef<any[]>([]);
+  const rippleOverlaysRef = useRef<any[]>([]);
   const infoWindowRef = useRef<any>(null);
   const hoverInfoRef = useRef<any>(null);
   const googleRef = useRef<any>(null);
@@ -175,7 +176,7 @@ const GoogleMapView = ({
           return;
         }
 
-        setOptions({ key: data.key, v: "weekly", libraries: ["visualization"] });
+        setOptions({ key: data.key, v: "weekly", libraries: ["visualization", "marker"] });
 
         const [mapsLib, markerLib, vizLib] = await Promise.all([
           importLibrary("maps"),
@@ -276,13 +277,15 @@ const GoogleMapView = ({
     }
   }, [heatmapEnabled]);
 
-  // Markers
+  // Markers with ripple effect
   useEffect(() => {
     const map = googleMapRef.current;
     if (!map || !mapLoaded) return;
 
     markersRef.current.forEach((m) => m.setMap(null));
     markersRef.current = [];
+    rippleOverlaysRef.current.forEach((o) => o.setMap(null));
+    rippleOverlaysRef.current = [];
 
     const g = googleRef.current;
     if (!g) return;
@@ -293,7 +296,95 @@ const GoogleMapView = ({
       const isSelected = selectedCountry === cp.id;
       const { fill, glow } = getMarkerColor(intensity);
       const scale = 4 + intensity * 12; // 4px to 16px radius
+      const isHighActivity = intensity > 0.5;
+      const isMedActivity = intensity > 0.25;
 
+      // Animated ripple ring behind main marker (for medium+ activity)
+      if (count > 0 && (isHighActivity || isMedActivity)) {
+        const rippleScale = scale * 2.5;
+        const ripple = new g.maps.Marker({
+          map,
+          position: { lat: cp.lat, lng: cp.lng },
+          icon: {
+            path: g.maps.SymbolPath.CIRCLE,
+            fillColor: fill,
+            fillOpacity: 0,
+            strokeColor: fill,
+            strokeWeight: 1.5,
+            strokeOpacity: 0.4,
+            scale: rippleScale,
+          },
+          clickable: false,
+          zIndex: 0,
+          optimized: false,
+        });
+        rippleOverlaysRef.current.push(ripple);
+
+        // Animate ripple with requestAnimationFrame
+        let startTime = performance.now();
+        const duration = isHighActivity ? 2000 : 3000;
+        const animateRipple = (now: number) => {
+          if (!ripple.getMap()) return;
+          const elapsed = (now - startTime) % duration;
+          const progress = elapsed / duration;
+          const currentScale = scale + (rippleScale - scale) * progress;
+          const opacity = 0.5 * (1 - progress);
+          ripple.setIcon({
+            path: g.maps.SymbolPath.CIRCLE,
+            fillColor: fill,
+            fillOpacity: 0,
+            strokeColor: fill,
+            strokeWeight: 1.5 * (1 - progress * 0.5),
+            strokeOpacity: opacity,
+            scale: currentScale,
+          });
+          requestAnimationFrame(animateRipple);
+        };
+        requestAnimationFrame(animateRipple);
+
+        // Second ripple ring for high activity (delayed)
+        if (isHighActivity) {
+          const ripple2 = new g.maps.Marker({
+            map,
+            position: { lat: cp.lat, lng: cp.lng },
+            icon: {
+              path: g.maps.SymbolPath.CIRCLE,
+              fillColor: fill,
+              fillOpacity: 0,
+              strokeColor: fill,
+              strokeWeight: 1,
+              strokeOpacity: 0.3,
+              scale: rippleScale,
+            },
+            clickable: false,
+            zIndex: 0,
+            optimized: false,
+          });
+          rippleOverlaysRef.current.push(ripple2);
+
+          const startTime2 = performance.now() - 800; // offset
+          const animateRipple2 = (now: number) => {
+            if (!ripple2.getMap()) return;
+            const elapsed = (now - startTime2) % duration;
+            const progress = elapsed / duration;
+            const currentScale = scale + (rippleScale * 1.15 - scale) * progress;
+            const opacity = 0.35 * (1 - progress);
+            ripple2.setIcon({
+              path: g.maps.SymbolPath.CIRCLE,
+              fillColor: fill,
+              fillOpacity: 0,
+              strokeColor: fill,
+              strokeWeight: 1 * (1 - progress * 0.5),
+              strokeOpacity: opacity,
+              scale: currentScale,
+            });
+            requestAnimationFrame(animateRipple2);
+          };
+          requestAnimationFrame(animateRipple2);
+        }
+      }
+
+      // Main marker
       const marker = new g.maps.Marker({
         map,
         position: { lat: cp.lat, lng: cp.lng },
