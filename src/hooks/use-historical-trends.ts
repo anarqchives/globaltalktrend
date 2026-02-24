@@ -1,6 +1,7 @@
 import { useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { TrendCardProps } from "@/components/TrendCard";
+import { categorizeTrend } from "@/lib/categorize-trend";
 
 interface SnapshotRow {
   title: string;
@@ -118,11 +119,14 @@ export function useHistoricalTrends() {
 
         const meta = (latest.metadata || {}) as Record<string, string>;
 
+        // Re-categorize using the unified categorizer (snapshots may have raw categories)
+        const normalizedCategory = categorizeTrend(latest.title, latest.platform, latest.category || undefined);
+
         historicalTrends.push({
           icon: getPlatformIcon(latest.platform),
           platform: latest.platform,
           title: latest.title,
-          category: latest.category || "Geral",
+          category: normalizedCategory,
           time: formatRelativeTime(latestDate, now),
           volume: volumeStr,
           change: latest.change_percent ? `${latest.change_percent > 0 ? "+" : ""}${latest.change_percent.toFixed(0)}%` : "+0%",

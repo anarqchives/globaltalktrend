@@ -492,9 +492,9 @@ export function useTrends(filters: FilterState, onTrendCountsChange: (counts: Re
     else if (filters.type === "Enciclopédia") result = result.filter((t) => t.platform === "Wikipedia");
     if (filters.category !== "Todas") {
       result = result.filter((t) => {
-        const cat = t.category?.toLowerCase() || "";
-        const filterCat = filters.category.toLowerCase();
-        return cat === filterCat || cat.includes(filterCat);
+        const cat = (t.category || "").normalize("NFC").toLowerCase();
+        const filterCat = filters.category.normalize("NFC").toLowerCase();
+        return cat === filterCat || cat.startsWith(filterCat);
       });
     }
     // Sort by relevance score (higher = more relevant/recent)
