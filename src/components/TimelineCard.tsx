@@ -212,6 +212,7 @@ const TimelineCard = ({
                 onClick={(e) => e.stopPropagation()}
                 className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-medium bg-primary/10 text-primary hover:bg-primary/20 transition-colors mb-3 group"
               >
+                <span className="text-sm flex-shrink-0" style={{ color: pf.color }}>{pf.emoji}</span>
                 <ExternalLink className="w-3 h-3 group-hover:translate-x-0.5 transition-transform" />
                 {platform === "YouTube" ? "Assistir no YouTube" :
                  platform === "Reddit" ? "Ver no Reddit" :
