@@ -153,18 +153,22 @@ const GlobalRanking = ({ trends, onSelectTrend, onFilterCountry, collapsed: init
   return (
     <>
       <div className="absolute top-3 right-3 z-10 w-72 max-w-[calc(100%-80px)]">
-        <div className="bg-card/95 backdrop-blur-md border border-border rounded-xl shadow-lg overflow-hidden">
+        <div className="bg-card/70 backdrop-blur-2xl border border-border/20 rounded-2xl shadow-[0_8px_32px_-8px_rgba(0,0,0,0.12)] dark:shadow-[0_8px_32px_-8px_rgba(0,0,0,0.4)] overflow-hidden ring-1 ring-white/10 dark:ring-white/5">
           {/* Header */}
           <button
             onClick={() => setCollapsed(!collapsed)}
-            className="w-full flex items-center justify-between px-3 py-2 hover:bg-secondary/40 transition-colors"
+            className="w-full flex items-center justify-between px-3.5 py-2.5 hover:bg-white/10 dark:hover:bg-white/5 transition-all duration-200"
           >
-            <div className="flex items-center gap-1.5">
-              <Trophy className="w-3.5 h-3.5 text-amber-500" />
-              <span className="text-[11px] font-bold text-foreground">🔥 Top Trends</span>
-              <span className="text-[9px] text-muted-foreground">· 15min</span>
+            <div className="flex items-center gap-2">
+              <div className="w-5 h-5 rounded-lg bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center shadow-sm">
+                <Trophy className="w-3 h-3 text-white" />
+              </div>
+              <span className="text-xs font-semibold text-foreground tracking-tight">Top Trends</span>
+              <span className="text-[9px] text-muted-foreground/70 font-medium">15min</span>
             </div>
-            {collapsed ? <ChevronDown className="w-3 h-3 text-muted-foreground" /> : <ChevronUp className="w-3 h-3 text-muted-foreground" />}
+            <div className="w-5 h-5 rounded-lg flex items-center justify-center hover:bg-white/20 dark:hover:bg-white/10 transition-colors">
+              {collapsed ? <ChevronDown className="w-3 h-3 text-muted-foreground" /> : <ChevronUp className="w-3 h-3 text-muted-foreground" />}
+            </div>
           </button>
 
           <AnimatePresence>
@@ -173,10 +177,10 @@ const GlobalRanking = ({ trends, onSelectTrend, onFilterCountry, collapsed: init
                 initial={{ height: 0, opacity: 0 }}
                 animate={{ height: "auto", opacity: 1 }}
                 exit={{ height: 0, opacity: 0 }}
-                transition={{ duration: 0.2 }}
+                transition={{ duration: 0.25, ease: [0.4, 0, 0.2, 1] }}
                 className="overflow-hidden"
               >
-                <div className="px-1 pb-1">
+                <div className="px-1.5 pb-1.5 max-h-[320px] overflow-y-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
                   {top.map((trend, i) => (
                     <RankItem key={`${trend.platform}-${trend.title.slice(0, 20)}-${i}`} trend={trend} index={i} compact />
                   ))}
@@ -184,7 +188,7 @@ const GlobalRanking = ({ trends, onSelectTrend, onFilterCountry, collapsed: init
                 {ranked.length > 10 && (
                   <button
                     onClick={() => setModalOpen(true)}
-                    className="w-full py-1.5 text-[10px] font-semibold text-primary hover:bg-primary/5 transition-colors border-t border-border"
+                    className="w-full py-2 text-[10px] font-semibold text-primary hover:text-primary/80 hover:bg-primary/5 transition-all duration-200 border-t border-border/20"
                   >
                     Ver ranking completo ({ranked.length})
                   </button>
@@ -197,15 +201,17 @@ const GlobalRanking = ({ trends, onSelectTrend, onFilterCountry, collapsed: init
 
       {/* Full ranking modal */}
       <Dialog open={modalOpen} onOpenChange={setModalOpen}>
-        <DialogContent className="max-w-md max-h-[70vh] overflow-hidden flex flex-col">
+        <DialogContent className="max-w-md max-h-[70vh] overflow-hidden flex flex-col bg-card/80 backdrop-blur-2xl border-border/20 shadow-[0_24px_80px_-16px_rgba(0,0,0,0.2)] dark:shadow-[0_24px_80px_-16px_rgba(0,0,0,0.5)] rounded-2xl">
           <DialogHeader>
-            <DialogTitle className="flex items-center gap-2 text-base">
-              <Trophy className="w-4 h-4 text-amber-500" />
-              🔥 Ranking Global de Trends
+            <DialogTitle className="flex items-center gap-2.5 text-base">
+              <div className="w-6 h-6 rounded-lg bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center shadow-sm">
+                <Trophy className="w-3.5 h-3.5 text-white" />
+              </div>
+              Ranking Global de Trends
             </DialogTitle>
           </DialogHeader>
-          <p className="text-[11px] text-muted-foreground -mt-2">Atualizado a cada 15 min · {ranked.length} trends ordenadas por volume</p>
-          <div className="flex-1 overflow-y-auto scrollbar-thin -mx-2 px-2 mt-2">
+          <p className="text-[11px] text-muted-foreground/70 -mt-2 font-medium">Atualizado a cada 15 min · {ranked.length} trends ordenadas por volume</p>
+          <div className="flex-1 overflow-y-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden -mx-2 px-2 mt-2">
             {ranked.map((trend, i) => (
               <RankItem key={`modal-${trend.platform}-${trend.title.slice(0, 20)}-${i}`} trend={trend} index={i} />
             ))}
