@@ -299,27 +299,6 @@ const TimelineCard = ({
               )}
             </div>
 
-            {/* Thumbnail - full width when expanded, with platform fallback */}
-            {expanded && (
-              <div className="mb-2">
-                {thumbnail && !imgError ? (
-                  <img
-                    src={thumbnail}
-                    alt=""
-                    className="w-full aspect-video rounded-lg object-cover bg-secondary transition-all duration-200"
-                    loading="lazy"
-                    onError={() => setImgError(true)}
-                  />
-                ) : (
-                  <div
-                    className="w-full aspect-video rounded-lg flex items-center justify-center bg-gradient-to-br from-secondary to-muted transition-all duration-200"
-                  >
-                    <span className="text-4xl opacity-60" style={{ color: pf.color }}>{pf.emoji}</span>
-                  </div>
-                )}
-              </div>
-            )}
-
             {/* Title + Thumbnail row */}
             <div className="flex gap-2.5 mb-1">
               <div className="flex-1 min-w-0">
@@ -347,6 +326,27 @@ const TimelineCard = ({
                 </div>
               )}
             </div>
+
+            {/* Thumbnail - full width when expanded, shown AFTER title */}
+            {expanded && (
+              <div className="mb-2">
+                {thumbnail && !imgError ? (
+                  <img
+                    src={thumbnail}
+                    alt=""
+                    className="w-full aspect-video rounded-lg object-cover bg-secondary transition-all duration-200"
+                    loading="lazy"
+                    onError={() => setImgError(true)}
+                  />
+                ) : (
+                  <div
+                    className="w-full aspect-video rounded-lg flex items-center justify-center bg-gradient-to-br from-secondary to-muted transition-all duration-200"
+                  >
+                    <span className="text-4xl opacity-60" style={{ color: pf.color }}>{pf.emoji}</span>
+                  </div>
+                )}
+              </div>
+            )}
 
             <div className="flex items-center gap-2 text-[11px] flex-wrap min-h-[18px]">
               <span className="text-muted-foreground whitespace-nowrap">{category}</span>
