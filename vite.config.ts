@@ -16,6 +16,9 @@ export default defineConfig(({ mode }) => ({
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),
+      // Force ALL react imports to resolve to the same physical file
+      "react": path.resolve(__dirname, "node_modules/react"),
+      "react-dom": path.resolve(__dirname, "node_modules/react-dom"),
     },
     dedupe: [
       "react",
@@ -23,11 +26,6 @@ export default defineConfig(({ mode }) => ({
       "react/jsx-runtime",
       "react/jsx-dev-runtime",
       "@tanstack/react-query",
-      "@radix-ui/react-tooltip",
-      "@radix-ui/react-dialog",
-      "@radix-ui/react-popover",
-      "@radix-ui/react-dropdown-menu",
-      "@radix-ui/react-progress",
       "framer-motion",
     ],
   },
