@@ -10,6 +10,7 @@ import Index from "./pages/Index";
 import Methodology from "./pages/Methodology";
 import History from "./pages/History";
 import Profile from "./pages/Profile";
+import AuthCallback from "./pages/AuthCallback";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient({ defaultOptions: { queries: { retry: 1 } } });
@@ -24,6 +25,7 @@ const App = () => (
         <BrowserRouter>
           <Routes>
             <Route path="/" element={<Index />} />
+            <Route path="/auth/callback" element={<AuthCallback />} />
             <Route path="/metodologia" element={<Methodology />} />
             <Route path="/historico" element={<History />} />
             <Route path="/perfil" element={<Profile />} />

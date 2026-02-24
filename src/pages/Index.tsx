@@ -373,7 +373,7 @@ const Index = () => {
 
       <div className="flex-1 overflow-hidden">
         {isMobile ? (
-          <div className="h-full flex flex-col">
+          <div className="h-full min-h-0 flex flex-col">
             <div className="flex border-b border-border bg-card/80 backdrop-blur-sm">
               <button
                 className={`flex-1 py-2 text-xs font-semibold transition-colors ${
@@ -396,7 +396,7 @@ const Index = () => {
                 {t("map")}
               </button>
             </div>
-            <div className="flex-1 overflow-hidden">
+            <div className="flex-1 min-h-0 overflow-hidden">
               {mobileTab === "timeline" ? renderTimeline() : renderMap()}
             </div>
           </div>

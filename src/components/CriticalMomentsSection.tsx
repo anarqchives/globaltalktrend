@@ -33,7 +33,7 @@ export default function CriticalMomentsSection({ moments, onSelectTrend }: Props
           </h2>
         </div>
 
-        <div className="space-y-2">
+        <div className="space-y-2 max-h-[34vh] overflow-y-auto pr-1 scrollbar-thin md:max-h-none md:overflow-visible md:pr-0">
           <AnimatePresence>
             {moments.map((m, i) => (
               <motion.div
