@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import {
   ArrowLeft, Star, Bell, Clock, BarChart3, Settings, Trash2, Edit2,
   Play, BellOff, BellRing, Plus, Sun, Moon, Monitor, Mail, AlertTriangle, Globe
@@ -132,13 +132,21 @@ const Profile = () => {
         </div>
 
         {/* Tab Content */}
-        <motion.div key={activeTab} initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.2 }}>
-          {activeTab === "filters" && <FiltersTab filters={savedFilters} loading={filtersLoading} onDelete={deleteFilter} onApply={handleApplyFilter} countryLabel={countryLabel} />}
-          {activeTab === "alerts" && <AlertsTab alerts={alerts} loading={alertsLoading} onToggle={toggleAlert} onDelete={deleteAlert} onCreate={createAlert} countryLabel={countryLabel} />}
-          {activeTab === "history" && <HistoryTab history={history} loading={historyLoading} onClear={clearHistory} onDelete={deleteItem} onNavigate={(id) => navigate("/")} />}
-          {activeTab === "stats" && <StatsTab history={history} totalPoints={totalPoints} achievements={achievements} unlocked={unlocked} loading={gamLoading} countryLabel={countryLabel} />}
-          {activeTab === "settings" && <SettingsTab lang={lang} setLang={setLang} dark={dark} setDark={setDark} user={user} />}
-        </motion.div>
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={activeTab}
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: -20 }}
+            transition={{ duration: 0.25, ease: "easeInOut" }}
+          >
+            {activeTab === "filters" && <FiltersTab filters={savedFilters} loading={filtersLoading} onDelete={deleteFilter} onApply={handleApplyFilter} countryLabel={countryLabel} />}
+            {activeTab === "alerts" && <AlertsTab alerts={alerts} loading={alertsLoading} onToggle={toggleAlert} onDelete={deleteAlert} onCreate={createAlert} countryLabel={countryLabel} />}
+            {activeTab === "history" && <HistoryTab history={history} loading={historyLoading} onClear={clearHistory} onDelete={deleteItem} onNavigate={(id) => navigate("/")} />}
+            {activeTab === "stats" && <StatsTab history={history} totalPoints={totalPoints} achievements={achievements} unlocked={unlocked} loading={gamLoading} countryLabel={countryLabel} />}
+            {activeTab === "settings" && <SettingsTab lang={lang} setLang={setLang} dark={dark} setDark={setDark} user={user} />}
+          </motion.div>
+        </AnimatePresence>
       </div>
     </div>
   );
