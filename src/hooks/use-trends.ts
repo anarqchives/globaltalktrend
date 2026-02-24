@@ -182,13 +182,21 @@ export function useTrends(filters: FilterState, onTrendCountsChange: (counts: Re
       const extraTrends: TrendCardProps[] = extraResult.data?.trends || [];
       const extraSourcesTrends: TrendCardProps[] = extraSourcesResult.data?.trends || [];
       const rawTrends = [...edgeTrends, ...extraTrends, ...extraSourcesTrends, ...redditItems, ...blueskyItems, ...mastodonItems];
-      // Apply unified categorization
-      const allTrends = rawTrends.map((t) => ({
-        ...t,
-        category: categorizeTrend(t.title, t.platform, t.category, {
+      // Apply unified categorization and trust badges
+      const allTrends = rawTrends.map((t) => {
+        const category = categorizeTrend(t.title, t.platform, t.category, {
           subreddit: t.category?.startsWith("r/") ? t.category.replace("r/", "") : undefined,
-        }),
-      }));
+        });
+        // Assign trust badge based on platform
+        let trustBadge = t.trustBadge;
+        if (!trustBadge) {
+          if (["World Bank", "IBGE"].includes(t.platform)) trustBadge = "official";
+          else if (t.platform === "OpenAlex") trustBadge = "scientific";
+          else if (["The Guardian", "BBC", "Reuters"].includes(t.platform)) trustBadge = "international";
+          else if (["NewsAPI", "NewsData", "GNews", "Bing News"].includes(t.platform)) trustBadge = "press";
+        }
+        return { ...t, category, trustBadge };
+      });
       if (allTrends.length > 0) {
         setTrends(allTrends);
         if (!isFirstLoad) {

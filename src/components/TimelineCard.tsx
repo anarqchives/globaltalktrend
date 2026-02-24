@@ -1,12 +1,12 @@
 import { useState, useMemo } from "react";
-import { Share2, ChevronDown, ChevronUp, Sparkles, Link2, Bell, ExternalLink, Shield, CheckCircle2, FlaskConical, Globe, Image } from "lucide-react";
+import { Share2, ChevronDown, ChevronUp, Sparkles, Link2, Bell, ExternalLink, Shield, CheckCircle2, FlaskConical, Globe, Newspaper } from "lucide-react";
 import { AreaChart, Area, ResponsiveContainer, XAxis, YAxis, Tooltip, CartesianGrid } from "recharts";
 import { toast } from "@/hooks/use-toast";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { TrendCardProps } from "./TrendCard";
 import { supabase } from "@/integrations/supabase/client";
 import AlertModal from "./AlertModal";
-import { copyShareImage } from "@/lib/share-image";
+
 
 const platformIcons: Record<string, { emoji: string; color: string }> = {
   YouTube: { emoji: "▶", color: "hsl(0, 72%, 51%)" },
@@ -31,8 +31,9 @@ const countryCodeToFlag = (code?: string) => {
 const trustBadgeMap: Record<string, { label: string; icon: React.ReactNode; className: string }> = {
   official: { label: "Fonte Oficial", icon: <Shield className="w-2.5 h-2.5" />, className: "bg-blue-500/10 text-blue-500 border-blue-500/20" },
   verified: { label: "Verificado", icon: <CheckCircle2 className="w-2.5 h-2.5" />, className: "bg-green-500/10 text-green-500 border-green-500/20" },
-  scientific: { label: "Científico", icon: <FlaskConical className="w-2.5 h-2.5" />, className: "bg-purple-500/10 text-purple-500 border-purple-500/20" },
-  international: { label: "Fonte Internacional", icon: <Globe className="w-2.5 h-2.5" />, className: "bg-amber-500/10 text-amber-600 border-amber-500/20" },
+  scientific: { label: "Acadêmico/Científico", icon: <FlaskConical className="w-2.5 h-2.5" />, className: "bg-purple-500/10 text-purple-500 border-purple-500/20" },
+  international: { label: "Internacional", icon: <Globe className="w-2.5 h-2.5" />, className: "bg-amber-500/10 text-amber-600 border-amber-500/20" },
+  press: { label: "Imprensa", icon: <Newspaper className="w-2.5 h-2.5" />, className: "bg-emerald-500/10 text-emerald-600 border-emerald-500/20" },
 };
 
 interface TimelineCardProps extends TrendCardProps {
@@ -70,7 +71,7 @@ const TimelineCard = ({
   userId,
   onTrackAction,
 }: TimelineCardProps) => {
-  const { t } = useLanguage();
+  const { t, lang } = useLanguage();
   const [expanded, setExpanded] = useState(false);
   const [alertOpen, setAlertOpen] = useState(false);
   const [aiSummary, setAiSummary] = useState<{ summary: string; sentiment: string; impact: string } | null>(null);
@@ -81,6 +82,21 @@ const TimelineCard = ({
   const gradientId = `tl-${title.replace(/[^a-zA-Z0-9]/g, "").slice(0, 8)}-${Math.random().toString(36).slice(2, 5)}`;
   const [imgError, setImgError] = useState(false);
 
+  const relativeTimeFormats: Record<string, { now: string; min: string; h: string; d: string }> = {
+    pt: { now: "agora", min: "há {n}min", h: "há {n}h", d: "há {n}d" },
+    en: { now: "now", min: "{n}min ago", h: "{n}h ago", d: "{n}d ago" },
+    es: { now: "ahora", min: "hace {n}min", h: "hace {n}h", d: "hace {n}d" },
+    fr: { now: "maintenant", min: "il y a {n}min", h: "il y a {n}h", d: "il y a {n}j" },
+    de: { now: "jetzt", min: "vor {n}min", h: "vor {n}h", d: "vor {n}T" },
+    it: { now: "adesso", min: "{n}min fa", h: "{n}h fa", d: "{n}g fa" },
+    zh: { now: "刚刚", min: "{n}分钟前", h: "{n}小时前", d: "{n}天前" },
+    ja: { now: "たった今", min: "{n}分前", h: "{n}時間前", d: "{n}日前" },
+    ko: { now: "방금", min: "{n}분 전", h: "{n}시간 전", d: "{n}일 전" },
+    ar: { now: "الآن", min: "منذ {n} دقيقة", h: "منذ {n} ساعة", d: "منذ {n} يوم" },
+    hi: { now: "अभी", min: "{n} मिनट पहले", h: "{n} घंटे पहले", d: "{n} दिन पहले" },
+    ru: { now: "сейчас", min: "{n} мин назад", h: "{n}ч назад", d: "{n}д назад" },
+  };
+
   const formattedDate = useMemo(() => {
     if (!publishedAt) return null;
     try {
@@ -89,15 +105,17 @@ const TimelineCard = ({
       const now = new Date();
       const diffMs = now.getTime() - date.getTime();
       const diffMin = Math.floor(diffMs / 60000);
-      if (diffMin < 1) return "agora";
-      if (diffMin < 60) return `há ${diffMin}min`;
+      const fmt = relativeTimeFormats[lang] || relativeTimeFormats.pt;
+      if (diffMin < 1) return fmt.now;
+      if (diffMin < 60) return fmt.min.replace("{n}", String(diffMin));
       const diffH = Math.floor(diffMin / 60);
-      if (diffH < 24) return `há ${diffH}h`;
+      if (diffH < 24) return fmt.h.replace("{n}", String(diffH));
       const diffD = Math.floor(diffH / 24);
-      if (diffD < 7) return `há ${diffD}d`;
-      return date.toLocaleDateString("pt-BR", { day: "2-digit", month: "short" });
+      if (diffD < 7) return fmt.d.replace("{n}", String(diffD));
+      const localeMap: Record<string, string> = { pt: "pt-BR", en: "en-US", es: "es-ES", fr: "fr-FR", de: "de-DE", it: "it-IT", zh: "zh-CN", ja: "ja-JP", ko: "ko-KR", ar: "ar-SA", hi: "hi-IN", ru: "ru-RU" };
+      return date.toLocaleDateString(localeMap[lang] || "pt-BR", { day: "2-digit", month: "short" });
     } catch { return null; }
-  }, [publishedAt]);
+  }, [publishedAt, lang]);
 
   const displayDescription = description || details;
 
@@ -120,12 +138,6 @@ const TimelineCard = ({
     toast({ title: "🔗 Link copiado!", description: "Link com filtros atuais copiado." });
   };
 
-  const handleShareImage = async (e: React.MouseEvent) => {
-    e.stopPropagation();
-    toast({ title: "📸 Gerando imagem...", description: "Aguarde um momento." });
-    const copied = await copyShareImage({ title, platform, volume, change, changePositive, category });
-    toast({ title: copied ? "📋 Imagem copiada!" : "📥 Imagem baixada!", description: title.slice(0, 50) });
-  };
 
   const handleExpand = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -220,6 +232,19 @@ const TimelineCard = ({
               )}
             </div>
 
+            {/* Thumbnail - full width when expanded, small inline when collapsed */}
+            {thumbnail && !imgError && expanded && (
+              <div className="mb-2">
+                <img
+                  src={thumbnail}
+                  alt=""
+                  className="w-full aspect-video rounded-lg object-cover bg-secondary transition-all duration-200"
+                  loading="lazy"
+                  onError={() => setImgError(true)}
+                />
+              </div>
+            )}
+
             {/* Title + Thumbnail row */}
             <div className="flex gap-2.5 mb-1">
               <div className="flex-1 min-w-0">
@@ -232,7 +257,7 @@ const TimelineCard = ({
                   </p>
                 )}
               </div>
-              {thumbnail && !imgError && (
+              {thumbnail && !imgError && !expanded && (
                 <img
                   src={thumbnail}
                   alt=""
@@ -240,6 +265,11 @@ const TimelineCard = ({
                   loading="lazy"
                   onError={() => setImgError(true)}
                 />
+              )}
+              {!thumbnail && !expanded && (
+                <div className="w-16 h-12 rounded-lg bg-secondary flex items-center justify-center flex-shrink-0">
+                  <span className="text-lg" style={{ color: pf.color }}>{pf.emoji}</span>
+                </div>
               )}
             </div>
 
@@ -282,26 +312,19 @@ const TimelineCard = ({
               >
                 <span className="text-sm flex-shrink-0" style={{ color: pf.color }} title={platform}>{pf.emoji}</span>
                 <ExternalLink className="w-3 h-3 group-hover:translate-x-0.5 transition-transform" />
-                {platform === "YouTube" ? "Assistir no YouTube" :
-                 platform === "Reddit" ? "Ver no Reddit" :
-                 platform === "Google Trends" ? "Ver no Google Trends" :
-                 platform === "Bluesky" ? "Ver no Bluesky" :
-                 platform === "Mastodon" ? "Ver no Mastodon" :
-                 platform === "The Guardian" ? "Ler no The Guardian" :
-                 platform === "World Bank" ? "Ver dados no World Bank" :
-                 platform === "IBGE" ? "Ver no IBGE" :
-                 platform === "OpenAlex" ? "Ver publicação" :
-                 "Ver fonte original"}
+                {platform === "YouTube" ? `${t("watchOn")} YouTube` :
+                 platform === "Reddit" ? `${t("viewOn")} Reddit` :
+                 platform === "Google Trends" ? `${t("viewOn")} Google Trends` :
+                 platform === "Bluesky" ? `${t("viewOn")} Bluesky` :
+                 platform === "Mastodon" ? `${t("viewOn")} Mastodon` :
+                 platform === "The Guardian" ? `${t("readOn")} The Guardian` :
+                 platform === "World Bank" ? `${t("viewOn")} World Bank` :
+                 platform === "IBGE" ? `${t("viewOn")} IBGE` :
+                 platform === "OpenAlex" ? `${t("viewSource")}` :
+                 t("viewSource")}
               </a>
             )}
 
-            <button
-              onClick={handleShareImage}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-medium bg-secondary text-muted-foreground hover:text-foreground hover:bg-secondary/80 transition-colors mb-3"
-            >
-              <Image className="w-3 h-3" />
-              Gerar imagem para compartilhar
-            </button>
 
             {!aiSummary && (
               <button
@@ -310,7 +333,7 @@ const TimelineCard = ({
                 className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-medium bg-primary/10 text-primary hover:bg-primary/20 transition-colors mb-3 disabled:opacity-50"
               >
                 <Sparkles className={`w-3 h-3 ${summarizing ? "animate-spin" : ""}`} />
-                {summarizing ? "Analisando..." : "✨ Resumir com IA"}
+                {summarizing ? t("analyzing") : `✨ ${t("summarizeAI")}`}
               </button>
             )}
 
@@ -318,7 +341,7 @@ const TimelineCard = ({
               <div className="mb-3 p-2.5 rounded-lg bg-primary/5 border border-primary/10">
                 <div className="flex items-center gap-2 mb-1.5">
                   <Sparkles className="w-3 h-3 text-primary" />
-                  <span className="text-[10px] font-semibold text-primary uppercase tracking-wider">Resumo IA</span>
+                  <span className="text-[10px] font-semibold text-primary uppercase tracking-wider">{t("aiSummary")}</span>
                   {sentiment && (
                     <span className={`text-xs ${sentiment.color} ml-auto`}>
                       {sentiment.icon} {sentiment.label}
@@ -332,7 +355,7 @@ const TimelineCard = ({
                     aiSummary.impact === "medium" ? "bg-yellow-500/10 text-yellow-600" :
                     "bg-green-500/10 text-green-600"
                   }`}>
-                    Impacto: {aiSummary.impact === "high" ? "Alto" : aiSummary.impact === "medium" ? "Médio" : "Baixo"}
+                    {aiSummary.impact === "high" ? t("impactHigh") : aiSummary.impact === "medium" ? t("impactMedium") : t("impactLow")}
                   </span>
                 )}
               </div>
@@ -340,10 +363,10 @@ const TimelineCard = ({
 
             <div className="flex flex-wrap gap-2 mb-3 text-[11px]">
               {platform === "YouTube" && likeRatio !== undefined && likeRatio > 0 && (
-                <span className="source-tag text-[10px] py-0.5 px-2">👍 {likeRatio}% likes</span>
+                <span className="source-tag text-[10px] py-0.5 px-2">👍 {likeRatio}% {t("likes")}</span>
               )}
               {platform === "Reddit" && commentCount !== undefined && (
-                <span className="source-tag text-[10px] py-0.5 px-2">💬 {commentCount >= 1000 ? `${(commentCount / 1000).toFixed(1)}K` : commentCount} comments</span>
+                <span className="source-tag text-[10px] py-0.5 px-2">💬 {commentCount >= 1000 ? `${(commentCount / 1000).toFixed(1)}K` : commentCount} {t("comments")}</span>
               )}
               {platform === "Google Trends" && region && (
                 <span className="source-tag text-[10px] py-0.5 px-2">📍 {region}</span>
