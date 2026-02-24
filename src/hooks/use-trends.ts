@@ -56,7 +56,100 @@ const fallbackData: TrendCardProps[] = [
     change: "+340%",
     changePositive: true,
     sparkData: [10, 15, 12, 25, 40, 65, 80, 95, 88, 92],
-    details: "Volume de buscas disparou.",
+    details: "Volume de buscas disparou nas últimas horas.",
+    countryCode: "BR",
+  },
+  {
+    icon: "▶",
+    platform: "YouTube",
+    title: "Nova descoberta científica surpreende pesquisadores",
+    category: "Ciência",
+    time: "há 25 min",
+    volume: "890K views",
+    change: "+180%",
+    changePositive: true,
+    sparkData: [20, 30, 25, 45, 60, 75, 85, 90, 88, 95],
+    details: "Vídeo viral sobre avanço na medicina genética.",
+    countryCode: "US",
+  },
+  {
+    icon: "💬",
+    platform: "Reddit",
+    title: "Inteligência artificial e o futuro do trabalho",
+    category: "Tecnologia",
+    time: "há 30 min",
+    volume: "45K upvotes",
+    change: "+92%",
+    changePositive: true,
+    sparkData: [15, 25, 35, 50, 55, 70, 80, 75, 85, 90],
+    details: "Discussão sobre impactos da IA no mercado de trabalho.",
+    countryCode: "US",
+  },
+  {
+    icon: "📰",
+    platform: "The Guardian",
+    title: "Climate summit reaches historic agreement",
+    category: "Meio Ambiente",
+    time: "há 45 min",
+    volume: "320K leituras",
+    change: "+210%",
+    changePositive: true,
+    sparkData: [5, 10, 20, 35, 55, 70, 80, 90, 88, 92],
+    details: "Líderes mundiais chegam a acordo histórico sobre clima.",
+    countryCode: "GB",
+  },
+  {
+    icon: "🔶",
+    platform: "Hacker News",
+    title: "Open source project breaks new ground in AI safety",
+    category: "Tecnologia",
+    time: "há 1h",
+    volume: "580 pts",
+    change: "+95 comments",
+    changePositive: true,
+    sparkData: [10, 20, 30, 40, 50, 60, 55, 70, 65, 80],
+    details: "Novo framework de segurança para modelos de linguagem.",
+    countryCode: "US",
+  },
+  {
+    icon: "📊",
+    platform: "World Bank",
+    title: "PIB global cresce 3.2% no primeiro trimestre",
+    category: "Economia",
+    time: "há 2h",
+    volume: "Relatório oficial",
+    change: "+0.4%",
+    changePositive: true,
+    sparkData: [40, 42, 45, 48, 50, 52, 55, 58, 60, 62],
+    details: "Dados preliminares indicam crescimento acima do esperado.",
+    countryCode: "US",
+    trustBadge: "official" as any,
+  },
+  {
+    icon: "🦋",
+    platform: "Bluesky",
+    title: "Debate sobre regulação de redes sociais ganha força",
+    category: "Política",
+    time: "há 1h",
+    volume: "12K likes",
+    change: "+trending",
+    changePositive: true,
+    sparkData: [15, 25, 30, 45, 55, 65, 70, 75, 80, 85],
+    details: "Usuários discutem propostas de regulamentação digital.",
+    countryCode: "US",
+  },
+  {
+    icon: "📚",
+    platform: "Wikipedia",
+    title: "Artigo sobre exploração espacial bate recorde de acessos",
+    category: "Ciência",
+    time: "há 3h",
+    volume: "2.1M views",
+    change: "+450%",
+    changePositive: true,
+    sparkData: [5, 10, 15, 30, 50, 70, 85, 90, 95, 98],
+    details: "Interesse público cresce após anúncio de missão lunar.",
+    countryCode: "US",
   },
 ];
 
@@ -215,27 +308,27 @@ export function useTrends(filters: FilterState, onTrendCountsChange: (counts: Re
       const [edgeResult, extraResult, extraSourcesResult, socialTrendsResult, redditItems, blueskyItems, mastodonItems] = await Promise.all([
         withTimeout(
           supabase.functions.invoke("fetch-trends"),
-          3500,
+          12000,
           { data: { trends: [] } } as Awaited<ReturnType<typeof supabase.functions.invoke>>
         ),
         withTimeout(
           supabase.functions.invoke("fetch-news-extra").catch(() => ({ data: { trends: [] } })),
-          2500,
+          10000,
           { data: { trends: [] } } as Awaited<ReturnType<typeof supabase.functions.invoke>>
         ),
         withTimeout(
           supabase.functions.invoke("fetch-extra-sources").catch(() => ({ data: { trends: [] } })),
-          2500,
+          10000,
           { data: { trends: [] } } as Awaited<ReturnType<typeof supabase.functions.invoke>>
         ),
         withTimeout(
           supabase.functions.invoke("fetch-social-trends").catch(() => ({ data: { trends: [] } })),
-          2500,
+          10000,
           { data: { trends: [] } } as Awaited<ReturnType<typeof supabase.functions.invoke>>
         ),
-        withTimeout(fetchRedditClientSide(), 2500, []),
-        withTimeout(fetchBlueskyClientSide(), 2500, []),
-        withTimeout(fetchMastodonClientSide(), 2500, []),
+        withTimeout(fetchRedditClientSide(), 8000, []),
+        withTimeout(fetchBlueskyClientSide(), 8000, []),
+        withTimeout(fetchMastodonClientSide(), 8000, []),
       ]);
       const edgeTrends: TrendCardProps[] = edgeResult.data?.trends || [];
       const extraTrends: TrendCardProps[] = extraResult.data?.trends || [];
@@ -268,9 +361,18 @@ export function useTrends(filters: FilterState, onTrendCountsChange: (counts: Re
           toast({ title: "✅ Atualizado", description: `${allTrends.length} trends de ${new Set(allTrends.map(t => t.platform)).size} fontes` });
         }
         setIsFirstLoad(false);
+      } else {
+        // If all APIs returned empty, use fallback data so timeline is never blank
+        console.warn("All data sources returned empty, using fallback data");
+        setTrends(fallbackData);
+        setIsFirstLoad(false);
       }
     } catch (e) {
       console.error("Fetch error:", e);
+      // On error, ensure fallback data is shown
+      if (trends.length <= 1) {
+        setTrends(fallbackData);
+      }
     } finally {
       setLoading(false);
     }
