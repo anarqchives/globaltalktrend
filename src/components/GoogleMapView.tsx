@@ -537,7 +537,7 @@ const GoogleMapView = ({
   return (
     <div className="w-full h-full relative" style={{ isolation: "isolate" }}>
       {/* Map controls — top left, glassmorphism pill */}
-      <div className="absolute top-3 left-3 z-[5] flex items-center gap-1 p-1 rounded-2xl bg-card/80 backdrop-blur-xl border border-border/30 shadow-lg outline-none ring-0">
+      <div className="absolute top-3 left-3 z-[5] flex items-center gap-1 p-1 rounded-2xl bg-card/80 backdrop-blur-xl border border-transparent shadow-lg outline-none ring-0">
         <button
           onClick={() => setMapViewType("roadmap")}
           className={controlBtnClass(mapViewType === "roadmap")}
