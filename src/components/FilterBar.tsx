@@ -92,7 +92,7 @@ export const countries = [
   ]},
 ];
 
-const selectClass = "appearance-none bg-transparent text-foreground text-[13px] font-medium pl-3 pr-7 py-2 rounded-lg cursor-pointer min-w-0 hover:bg-muted/50 dark:hover:bg-white/5 transition-colors focus:outline-none focus:ring-0";
+const selectClass = "appearance-none bg-transparent text-foreground text-[13px] font-medium pl-3 pr-7 py-2 min-h-[44px] rounded-lg cursor-pointer min-w-0 hover:bg-muted/50 dark:hover:bg-white/5 transition-colors focus:outline-none focus:ring-0";
 
 const FilterBar = ({ filters, onChange }: FilterBarProps) => {
   const { t } = useLanguage();
