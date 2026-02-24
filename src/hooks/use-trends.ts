@@ -3,6 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { TrendCardProps } from "../components/TrendCard";
 import { toast } from "@/hooks/use-toast";
 import { FilterState } from "../components/FilterBar";
+import { categorizeTrend } from "@/lib/categorize-trend";
 
 const fallbackData: TrendCardProps[] = [
   {
@@ -174,7 +175,14 @@ export function useTrends(filters: FilterState, onTrendCountsChange: (counts: Re
       const edgeTrends: TrendCardProps[] = edgeResult.data?.trends || [];
       const extraTrends: TrendCardProps[] = extraResult.data?.trends || [];
       const extraSourcesTrends: TrendCardProps[] = extraSourcesResult.data?.trends || [];
-      const allTrends = [...edgeTrends, ...extraTrends, ...extraSourcesTrends, ...redditItems, ...blueskyItems, ...mastodonItems];
+      const rawTrends = [...edgeTrends, ...extraTrends, ...extraSourcesTrends, ...redditItems, ...blueskyItems, ...mastodonItems];
+      // Apply unified categorization
+      const allTrends = rawTrends.map((t) => ({
+        ...t,
+        category: categorizeTrend(t.title, t.platform, t.category, {
+          subreddit: t.category?.startsWith("r/") ? t.category.replace("r/", "") : undefined,
+        }),
+      }));
       if (allTrends.length > 0) {
         setTrends(allTrends);
         if (!isFirstLoad) {
@@ -206,7 +214,11 @@ export function useTrends(filters: FilterState, onTrendCountsChange: (counts: Re
     else if (filters.type === "Dados oficiais") result = result.filter((t) => ["World Bank", "IBGE"].includes(t.platform));
     else if (filters.type === "Ciência") result = result.filter((t) => t.platform === "OpenAlex");
     if (filters.category !== "Todas") {
-      result = result.filter((t) => t.category.toLowerCase().includes(filters.category.toLowerCase()));
+      result = result.filter((t) => {
+        const cat = t.category?.toLowerCase() || "";
+        const filterCat = filters.category.toLowerCase();
+        return cat === filterCat || cat.includes(filterCat);
+      });
     }
     return result;
   }, [trends, filters]);
