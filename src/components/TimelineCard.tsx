@@ -1,11 +1,12 @@
 import { useState } from "react";
-import { Share2, ChevronDown, ChevronUp, Sparkles, Link2, Bell, ExternalLink } from "lucide-react";
+import { Share2, ChevronDown, ChevronUp, Sparkles, Link2, Bell, ExternalLink, Shield, CheckCircle2, FlaskConical, Globe, Image } from "lucide-react";
 import { AreaChart, Area, ResponsiveContainer, XAxis, YAxis, Tooltip, CartesianGrid } from "recharts";
 import { toast } from "@/hooks/use-toast";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { TrendCardProps } from "./TrendCard";
 import { supabase } from "@/integrations/supabase/client";
 import AlertModal from "./AlertModal";
+import { copyShareImage } from "@/lib/share-image";
 
 const platformIcons: Record<string, { emoji: string; color: string }> = {
   YouTube: { emoji: "▶", color: "hsl(0, 72%, 51%)" },
@@ -25,6 +26,13 @@ const sentimentConfig = {
 const countryCodeToFlag = (code?: string) => {
   if (!code || code.length !== 2) return null;
   return String.fromCodePoint(...[...code.toUpperCase()].map(c => 0x1F1E6 + c.charCodeAt(0) - 65));
+};
+
+const trustBadgeMap: Record<string, { label: string; icon: React.ReactNode; className: string }> = {
+  official: { label: "Fonte Oficial", icon: <Shield className="w-2.5 h-2.5" />, className: "bg-blue-500/10 text-blue-500 border-blue-500/20" },
+  verified: { label: "Verificado", icon: <CheckCircle2 className="w-2.5 h-2.5" />, className: "bg-green-500/10 text-green-500 border-green-500/20" },
+  scientific: { label: "Científico", icon: <FlaskConical className="w-2.5 h-2.5" />, className: "bg-purple-500/10 text-purple-500 border-purple-500/20" },
+  international: { label: "Fonte Internacional", icon: <Globe className="w-2.5 h-2.5" />, className: "bg-amber-500/10 text-amber-600 border-amber-500/20" },
 };
 
 interface TimelineCardProps extends TrendCardProps {
@@ -51,6 +59,7 @@ const TimelineCard = ({
   countryCode,
   sources,
   sourceUrl,
+  trustBadge,
   onClick,
   onFilterPlatform,
   onExpand,
@@ -82,6 +91,13 @@ const TimelineCard = ({
     const url = window.location.href;
     navigator.clipboard.writeText(url);
     toast({ title: "🔗 Link copiado!", description: "Link com filtros atuais copiado." });
+  };
+
+  const handleShareImage = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    toast({ title: "📸 Gerando imagem...", description: "Aguarde um momento." });
+    const copied = await copyShareImage({ title, platform, volume, change, changePositive, category });
+    toast({ title: copied ? "📋 Imagem copiada!" : "📥 Imagem baixada!", description: title.slice(0, 50) });
   };
 
   const handleExpand = (e: React.MouseEvent) => {
@@ -163,8 +179,13 @@ const TimelineCard = ({
               </span>
               {flag && <span className="text-xs" title={countryCode}>{flag}</span>}
               <span className="text-[11px] text-muted-foreground">{time}</span>
-              {isPeak && <span className="peak-badge">🔥 {t("peak")}</span>}
-              {sentiment && (
+               {isPeak && <span className="peak-badge">🔥 {t("peak")}</span>}
+               {trustBadge && trustBadgeMap[trustBadge] && (
+                 <span className={`inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full text-[9px] font-semibold border ${trustBadgeMap[trustBadge].className}`} title={trustBadgeMap[trustBadge].label}>
+                   {trustBadgeMap[trustBadge].icon}
+                 </span>
+               )}
+               {sentiment && (
                 <span className={`text-xs ${sentiment.color}`} title={sentiment.label}>
                   {sentiment.icon}
                 </span>
@@ -226,6 +247,14 @@ const TimelineCard = ({
                  "Ver fonte original"}
               </a>
             )}
+
+            <button
+              onClick={handleShareImage}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-medium bg-secondary text-muted-foreground hover:text-foreground hover:bg-secondary/80 transition-colors mb-3"
+            >
+              <Image className="w-3 h-3" />
+              Gerar imagem para compartilhar
+            </button>
 
             {!aiSummary && (
               <button
