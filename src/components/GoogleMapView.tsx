@@ -5,6 +5,7 @@ import { setOptions, importLibrary } from "@googlemaps/js-api-loader";
 import { supabase } from "@/integrations/supabase/client";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { TrendCardProps } from "./TrendCard";
+import GlobalRanking from "./GlobalRanking";
 
 interface CountryPoint {
   id: string;
@@ -98,6 +99,7 @@ interface GoogleMapViewProps {
   activeTrend?: TrendCardProps | null;
   onDismissTrend?: () => void;
   trends?: TrendCardProps[];
+  onSelectTrend?: (trend: TrendCardProps) => void;
 }
 
 const GoogleMapView = ({
@@ -107,6 +109,7 @@ const GoogleMapView = ({
   activeTrend,
   onDismissTrend,
   trends = [],
+  onSelectTrend,
 }: GoogleMapViewProps) => {
   const { t } = useLanguage();
   const mapRef = useRef<HTMLDivElement>(null);
@@ -490,6 +493,15 @@ const GoogleMapView = ({
         >
           🌎 {t("global")}
         </button>
+      )}
+
+      {/* Global Ranking panel */}
+      {mapLoaded && trends.length > 0 && (
+        <GlobalRanking
+          trends={trends}
+          onSelectTrend={onSelectTrend}
+          collapsed={false}
+        />
       )}
 
       {/* Map container */}
