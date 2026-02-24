@@ -196,9 +196,8 @@ const Index = () => {
   }, [isMobile]);
 
   const handleCardExpand = useCallback((trend: TrendCardProps) => {
-    if (trend.countryCode) {
-      setExpandedTrendId(`${trend.platform}-${trend.title.slice(0, 20)}`);
-    }
+    const trendId = `${trend.platform}-${trend.title.slice(0, 20)}`;
+    setExpandedTrendId(prev => prev === trendId ? null : trendId);
   }, []);
 
   const expandedTrendCountry = useMemo(() => {
@@ -269,7 +268,6 @@ const Index = () => {
                 onTrackAction={trackAction}
                 forceExpanded={expandedTrendId === trendId}
                 onClick={() => {
-                  handleCardExpand(trend);
                   trackAction("view", 1, { title: trend.title, platform: trend.platform, countryCode: trend.countryCode, category: trend.category });
                 }}
                 onExpand={(title, platform, metadata) => {
