@@ -1,6 +1,6 @@
 import { AreaChart, Area, ResponsiveContainer, XAxis, YAxis, Tooltip, CartesianGrid } from "recharts";
 import { useState, lazy, Suspense } from "react";
-import { Share2, MessageCircle, ThumbsUp, MapPin, Newspaper } from "lucide-react";
+import { Share2, MessageCircle, ThumbsUp, MapPin, Newspaper, ExternalLink } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 
 export interface TrendCardProps {
@@ -20,6 +20,7 @@ export interface TrendCardProps {
   region?: string;
   countryCode?: string;
   sources?: string[];
+  sourceUrl?: string;
   historicalData?: { hour: string; value: number }[];
   metricLabel?: string;
 }
@@ -53,6 +54,7 @@ const TrendCard = ({
   region,
   countryCode,
   sources,
+  sourceUrl,
   historicalData,
   metricLabel,
 }: TrendCardProps) => {
@@ -66,9 +68,10 @@ const TrendCard = ({
 
   const handleShare = (e: React.MouseEvent) => {
     e.stopPropagation();
-    const text = `${title} — ${volume} (${platform})`;
+    const shareUrl = sourceUrl || window.location.href;
+    const text = `${title} — ${volume} (${platform})\n${shareUrl}`;
     navigator.clipboard.writeText(text);
-    toast({ title: "Link copiado!", description: text.slice(0, 80) });
+    toast({ title: "Link copiado!", description: title.slice(0, 60) });
   };
 
   return (
@@ -158,6 +161,25 @@ const TrendCard = ({
         <div className="mt-4 pt-4 border-t border-border animate-in fade-in slide-in-from-top-2 duration-300">
           {details && (
             <p className="text-sm text-muted-foreground mb-4">{details}</p>
+          )}
+
+          {/* Source link */}
+          {sourceUrl && (
+            <a
+              href={sourceUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={(e) => e.stopPropagation()}
+              className="inline-flex items-center gap-1.5 text-xs font-medium text-primary hover:text-primary/80 transition-colors mb-4 group"
+            >
+              <ExternalLink className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" />
+              {platform === "YouTube" ? "Assistir no YouTube" :
+               platform === "Reddit" ? "Ver no Reddit" :
+               platform === "Google Trends" ? "Ver no Google Trends" :
+               platform === "Bluesky" ? "Ver no Bluesky" :
+               platform === "Mastodon" ? "Ver no Mastodon" :
+               "Ler artigo original"}
+            </a>
           )}
 
           {/* Historical 24h chart */}

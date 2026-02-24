@@ -23,6 +23,7 @@ interface TrendItem {
   region?: string;
   countryCode?: string;
   sources?: string[];
+  sourceUrl?: string;
   historicalData?: { hour: string; value: number }[];
   metricLabel?: string;
 }
@@ -113,6 +114,7 @@ async function fetchYouTubeTrends(): Promise<TrendItem[]> {
         likeRatio,
         commentCount: comments,
         countryCode: "BR",
+        sourceUrl: `https://www.youtube.com/watch?v=${item.id}`,
         historicalData,
         metricLabel,
       };
@@ -150,6 +152,8 @@ async function fetchGoogleTrendsForGeo(geo: string, region: string, maxItems = 3
       const newsTitle = block.match(/<ht:news_item_title><!\[CDATA\[(.*?)\]\]>/)?.[1]
         || block.match(/<ht:news_item_title>(.*?)<\/ht:news_item_title>/)?.[1] || "";
       const newsSource = block.match(/<ht:news_item_source>(.*?)<\/ht:news_item_source>/)?.[1] || "Tendência";
+      const newsUrl = block.match(/<ht:news_item_url><!\[CDATA\[(.*?)\]\]>/)?.[1]
+        || block.match(/<ht:news_item_url>(.*?)<\/ht:news_item_url>/)?.[1] || "";
 
       const trafficNum = parseInt(traffic.replace(/[^0-9]/g, "")) || 500;
       const { historicalData, metricLabel } = generateHistorical(trafficNum, "índice de busca");
@@ -167,6 +171,7 @@ async function fetchGoogleTrendsForGeo(geo: string, region: string, maxItems = 3
         details: newsTitle,
         region,
         countryCode: geo,
+        sourceUrl: newsUrl || `https://trends.google.com/trending?geo=${geo}&q=${encodeURIComponent(title)}`,
         historicalData,
         metricLabel,
       });
@@ -233,6 +238,7 @@ async function fetchNewsAPI(): Promise<TrendItem[]> {
         sparkData: Array.from({ length: 10 }, () => Math.floor(Math.random() * 70 + 30)),
         details: article.description || "",
         sources: [sourceName],
+        sourceUrl: article.url || "",
         countryCode: "US",
         historicalData,
         metricLabel,
