@@ -1,4 +1,4 @@
-const CACHE_NAME = 'globaltalk-v3';
+const CACHE_NAME = 'globaltalk-v4';
 const STATIC_ASSETS = [
   '/favicon.png',
   '/manifest.json',
@@ -22,16 +22,23 @@ self.addEventListener('activate', (event) => {
 
 self.addEventListener('fetch', (event) => {
   if (event.request.method !== 'GET') return;
+
   const url = new URL(event.request.url);
-  
   if (url.origin !== self.location.origin) return;
-  if (url.pathname.startsWith('/functions/')) return;
 
-  // Network-first for HTML and JS (always get latest app)
-  const isAppShell = event.request.destination === 'document' ||
-    event.request.destination === 'script' ||
-    url.pathname === '/';
+  // Never cache auth redirects or backend function routes
+  if (url.pathname.startsWith('/functions/') || url.pathname.startsWith('/~oauth') || url.pathname.startsWith('/auth/callback')) {
+    return;
+  }
 
+  // Critical fix: scripts/styles should be network-only to avoid stale chunk white-screen on mobile
+  if (event.request.destination === 'script' || event.request.destination === 'style' || url.pathname.startsWith('/assets/')) {
+    event.respondWith(fetch(event.request));
+    return;
+  }
+
+  // Network-first for app shell documents
+  const isAppShell = event.request.destination === 'document' || url.pathname === '/';
   if (isAppShell) {
     event.respondWith(
       fetch(event.request)
@@ -42,12 +49,12 @@ self.addEventListener('fetch', (event) => {
           }
           return response;
         })
-        .catch(() => caches.match(event.request).then((c) => c || new Response('Offline', { status: 503 })))
+        .catch(() => caches.match(event.request).then((cached) => cached || new Response('Offline', { status: 503 })))
     );
     return;
   }
 
-  // Cache-first for static assets (images, fonts, etc.)
+  // Cache-first for static assets only (images/fonts/etc)
   event.respondWith(
     caches.match(event.request).then((cached) => {
       if (cached) return cached;
