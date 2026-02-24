@@ -733,12 +733,12 @@ const CoffeeDonationButton = () => {
               Mantenha o Global-Talk gratuito
             </p>
             <a
-              href="https://buymeacoffee.com/globaltalktrending"
+              href="https://buy.stripe.com/fZu7sMgw6cHLeTnbWVdIA00"
               target="_blank"
               rel="noopener noreferrer"
               className="flex items-center justify-center gap-2 w-full py-2 px-4 rounded-full bg-primary hover:bg-primary/90 text-primary-foreground text-[13px] font-semibold transition-colors shadow-sm"
             >
-              ☕ Apoie-se
+              ☕ Apoie
             </a>
           </motion.div>
         )}
