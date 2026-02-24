@@ -236,7 +236,7 @@ const TimelineCard = ({
   const sentiment = aiSummary ? sentimentConfig[aiSummary.sentiment as keyof typeof sentimentConfig] || sentimentConfig.neutral : null;
 
   return (
-    <>
+    <div className="timeline-card-wrapper">
       <div className={`timeline-card group ${expanded ? 'timeline-card-expanded' : ''}`}>
         <div className="flex items-start gap-3 cursor-pointer" onClick={(e) => {
           e.stopPropagation();
@@ -376,7 +376,7 @@ const TimelineCard = ({
 
       {/* EXPANDED CONTENT — rendered OUTSIDE timeline-card to prevent layout overlap */}
       {expanded && (
-        <div className="bg-card/80 backdrop-blur-sm rounded-b-xl border border-t-0 border-border px-3 pb-3 -mt-1 mb-1 animate-in fade-in slide-in-from-top-2 duration-200">
+        <div className="timeline-card-expanded-content">
           {/* Tab switcher */}
           <div className="flex gap-1 mb-3 pt-2">
             <button
@@ -554,7 +554,7 @@ const TimelineCard = ({
         defaultKeyword={title}
         defaultCategory={category}
       />
-    </>
+    </div>
   );
 };
 

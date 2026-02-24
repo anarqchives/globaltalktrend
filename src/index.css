@@ -148,16 +148,26 @@
     @apply bg-muted;
   }
 
+  .timeline-card-wrapper {
+    width: 100%;
+    margin-bottom: 0.25rem;
+  }
+
   .timeline-card {
     @apply bg-card rounded-xl px-3 py-2.5 border border-transparent transition-all duration-150 cursor-pointer;
     min-height: 72px;
     position: relative;
-    z-index: 1;
   }
+
   .timeline-card-expanded {
     @apply border-border rounded-b-none border-b-0;
-    z-index: 2;
   }
+
+  .timeline-card-expanded-content {
+    @apply bg-card/80 backdrop-blur-sm rounded-b-xl border border-t-0 border-border px-3 pb-3 mb-1 animate-in fade-in slide-in-from-top-2 duration-200;
+    position: relative;
+  }
+
   .timeline-card:hover {
     @apply border-border;
     box-shadow: var(--card-hover-shadow);
