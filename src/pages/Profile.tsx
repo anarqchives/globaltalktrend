@@ -11,6 +11,7 @@ import { useAlerts, type Alert, type CreateAlertInput } from "@/hooks/use-alerts
 import { useHistory } from "@/hooks/use-history";
 import { useGamification } from "@/hooks/use-gamification";
 import { useLanguage, languages, type LangCode } from "@/contexts/LanguageContext";
+import { useUserMode, userModes, type UserMode } from "@/contexts/UserModeContext";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Switch } from "@/components/ui/switch";
 import { toast } from "@/hooks/use-toast";
@@ -382,6 +383,7 @@ function StatsTab({ history, totalPoints, achievements, unlocked, loading, count
 function SettingsTab({ lang, setLang, dark, setDark, user }: {
   lang: LangCode; setLang: (l: LangCode) => void; dark: boolean; setDark: (d: boolean) => void; user: any;
 }) {
+  const { mode, setMode } = useUserMode();
   const [themeMode, setThemeMode] = useState<"light" | "dark" | "system">(() => {
     const saved = localStorage.getItem("theme");
     if (!saved) return "system";
@@ -447,6 +449,27 @@ function SettingsTab({ lang, setLang, dark, setDark, user }: {
         </div>
       </SectionCard>
 
+      {/* User Mode */}
+      <SectionCard title="Modo de visualização">
+        <p className="text-[10px] text-muted-foreground mb-2">Adapta badges, métricas e ordenação da timeline ao seu perfil.</p>
+        <div className="grid grid-cols-2 gap-2">
+          {userModes.map((m) => (
+            <button
+              key={m.key}
+              onClick={() => setMode(m.key)}
+              className={`flex items-center gap-2 p-3 rounded-xl text-xs font-medium transition-all text-left ${
+                mode === m.key ? "bg-primary/10 text-primary border border-primary/30" : "bg-secondary text-muted-foreground hover:bg-secondary/80 border border-transparent"
+              }`}
+            >
+              <span className="text-lg">{m.emoji}</span>
+              <div>
+                <div className="font-semibold">{m.label}</div>
+                <div className="text-[10px] opacity-70">{m.description}</div>
+              </div>
+            </button>
+          ))}
+        </div>
+      </SectionCard>
       {/* Notifications placeholder */}
       <SectionCard title="Notificações por email">
         <div className="flex items-center justify-between">

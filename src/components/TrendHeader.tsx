@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
-import { motion } from "framer-motion";
-import { Info, Sun, Moon, RefreshCw, LogOut, LogIn, BookOpen, Star, Bell, Clock, ChevronDown, Trophy, User } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+import { Info, Sun, Moon, RefreshCw, LogOut, LogIn, BookOpen, Star, Bell, Clock, ChevronDown, Trophy, User, AlertTriangle, X } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useLanguage, languages } from "@/contexts/LanguageContext";
 import { lovable } from "@/integrations/lovable/index";
@@ -24,6 +24,8 @@ import { useSavedFilters } from "@/hooks/use-saved-filters";
 import { useAlerts } from "@/hooks/use-alerts";
 import { useGamification } from "@/hooks/use-gamification";
 import AchievementsPanel from "@/components/AchievementsPanel";
+import { useUserMode, userModes } from "@/contexts/UserModeContext";
+import type { AnomalyAlert } from "@/hooks/use-anomaly-alerts";
 import type { FilterState } from "@/components/FilterBar";
 
 interface TrendHeaderProps {
@@ -33,9 +35,12 @@ interface TrendHeaderProps {
   refreshing?: boolean;
   filters?: FilterState;
   onApplyFilter?: (filters: FilterState) => void;
+  anomalyCount?: number;
+  anomalies?: AnomalyAlert[];
+  onDismissAnomaly?: (title: string) => void;
 }
 
-const TrendHeader = ({ totalTrends = 0, countriesCount = 0, onRefresh, refreshing, filters, onApplyFilter }: TrendHeaderProps) => {
+const TrendHeader = ({ totalTrends = 0, countriesCount = 0, onRefresh, refreshing, filters, onApplyFilter, anomalyCount = 0, anomalies = [], onDismissAnomaly }: TrendHeaderProps) => {
   const { lang, setLang, t } = useLanguage();
   const [aboutOpen, setAboutOpen] = useState(false);
   const [loginOpen, setLoginOpen] = useState(false);
@@ -70,6 +75,8 @@ const TrendHeader = ({ totalTrends = 0, countriesCount = 0, onRefresh, refreshin
   const { alerts } = useAlerts(user?.id ?? null);
   const { totalPoints, achievements, unlocked } = useGamification(user?.id ?? null);
   const [achievementsOpen, setAchievementsOpen] = useState(false);
+  const [anomalyPanelOpen, setAnomalyPanelOpen] = useState(false);
+  const { mode, setMode } = useUserMode();
 
   const handleLoginGoogle = async () => {
     await lovable.auth.signInWithOAuth("google", {
@@ -164,6 +171,60 @@ const TrendHeader = ({ totalTrends = 0, countriesCount = 0, onRefresh, refreshin
             </button>
 
             <div className="w-px h-5 bg-border mx-1" />
+
+            {/* Anomaly alerts badge */}
+            {anomalyCount > 0 && (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <button className="relative p-1.5 rounded-full text-muted-foreground hover:bg-secondary transition-colors">
+                    <AlertTriangle className="w-3.5 h-3.5 text-destructive" />
+                    <span className="absolute -top-0.5 -right-0.5 w-3.5 h-3.5 rounded-full bg-destructive text-[8px] text-white flex items-center justify-center font-bold">
+                      {anomalyCount}
+                    </span>
+                  </button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-72 max-h-64 overflow-y-auto">
+                  <div className="px-2 py-1.5">
+                    <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">🚨 Anomalias detectadas</span>
+                  </div>
+                  {anomalies.map((a, i) => (
+                    <DropdownMenuItem key={i} className="text-xs gap-2 justify-between" onSelect={(e) => e.preventDefault()}>
+                      <span className="truncate flex-1">{a.message.slice(0, 80)}</span>
+                      <button
+                        onClick={(e) => { e.stopPropagation(); onDismissAnomaly?.(a.trend.title); }}
+                        className="text-muted-foreground hover:text-foreground p-0.5 shrink-0"
+                      >
+                        <X className="w-3 h-3" />
+                      </button>
+                    </DropdownMenuItem>
+                  ))}
+                </DropdownMenuContent>
+              </DropdownMenu>
+            )}
+
+            {/* User Mode selector */}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button className="px-1.5 py-0.5 rounded-full text-[10px] font-medium text-muted-foreground hover:bg-secondary transition-colors flex items-center gap-1">
+                  {userModes.find(m => m.key === mode)?.emoji} {userModes.find(m => m.key === mode)?.label}
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-48">
+                {userModes.map((m) => (
+                  <DropdownMenuItem
+                    key={m.key}
+                    className={`text-xs gap-2 ${mode === m.key ? "bg-primary/10 text-primary" : ""}`}
+                    onClick={() => setMode(m.key)}
+                  >
+                    <span>{m.emoji}</span>
+                    <div>
+                      <div className="font-medium">{m.label}</div>
+                      <div className="text-[10px] text-muted-foreground">{m.description}</div>
+                    </div>
+                  </DropdownMenuItem>
+                ))}
+              </DropdownMenuContent>
+            </DropdownMenu>
 
             <button
               onClick={() => setAboutOpen(true)}

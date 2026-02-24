@@ -3,6 +3,7 @@ import { Share2, ChevronDown, ChevronUp, Sparkles, Link2, Bell, ExternalLink, Sh
 import { AreaChart, Area, ResponsiveContainer, XAxis, YAxis, Tooltip, CartesianGrid } from "recharts";
 import { toast } from "@/hooks/use-toast";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { useUserMode } from "@/contexts/UserModeContext";
 import { TrendCardProps } from "./TrendCard";
 import { supabase } from "@/integrations/supabase/client";
 import AlertModal from "./AlertModal";
@@ -102,6 +103,7 @@ const TimelineCard = ({
   forceExpanded,
 }: TimelineCardProps) => {
   const { t, lang } = useLanguage();
+  const { mode, config: modeConfig } = useUserMode();
   const [expanded, setExpanded] = useState(forceExpanded || false);
   const [alertOpen, setAlertOpen] = useState(false);
 
@@ -271,6 +273,11 @@ const TimelineCard = ({
                {trigger && (
                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium bg-accent text-accent-foreground border border-border">
                    {trigger.emoji} {trigger.label}
+                 </span>
+               )}
+               {modeConfig.extraBadge && modeConfig.sortWeight({ title, category, change, trustBadge, sources, commentCount, likeRatio, platform }) > 20 && (
+                 <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium bg-primary/10 text-primary border border-primary/20">
+                   {modeConfig.extraBadge.emoji} {modeConfig.extraBadge.label}
                  </span>
                )}
                {sentiment && (
