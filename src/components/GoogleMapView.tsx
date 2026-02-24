@@ -114,9 +114,11 @@ const GoogleMapView = ({
   const infoWindowRef = useRef<any>(null);
   const hoverInfoRef = useRef<any>(null);
   const googleRef = useRef<any>(null);
+  const heatmapRef = useRef<any>(null);
   const [mapLoaded, setMapLoaded] = useState(false);
   const [mapError, setMapError] = useState<string | null>(null);
   const [mapViewType, setMapViewType] = useState<MapViewType>("roadmap");
+  const [heatmapEnabled, setHeatmapEnabled] = useState(true);
   const [isDark, setIsDark] = useState(() => document.documentElement.classList.contains("dark"));
 
   // Listen for dark mode changes
@@ -153,11 +155,12 @@ const GoogleMapView = ({
           return;
         }
 
-        setOptions({ key: data.key, v: "weekly" });
+        setOptions({ key: data.key, v: "weekly", libraries: ["visualization"] });
 
-        const [mapsLib, markerLib] = await Promise.all([
+        const [mapsLib, markerLib, vizLib] = await Promise.all([
           importLibrary("maps"),
           importLibrary("marker"),
+          importLibrary("visualization"),
         ]);
 
         if (cancelled || !mapRef.current) {
@@ -168,7 +171,6 @@ const GoogleMapView = ({
         const { Map: GMap, InfoWindow } = mapsLib;
         const { Marker } = markerLib;
 
-        // Store references for markers/infowindow
         googleRef.current = {
           maps: {
             Map: GMap,
@@ -177,6 +179,7 @@ const GoogleMapView = ({
             SymbolPath: google.maps.SymbolPath,
             Animation: google.maps.Animation,
           },
+          visualization: vizLib,
         };
 
         const map = new GMap(mapRef.current, {
@@ -206,12 +209,55 @@ const GoogleMapView = ({
     return () => { cancelled = true; };
   }, []);
 
+  // Create/update heatmap when trendCounts change
+  useEffect(() => {
+    const map = googleMapRef.current;
+    if (!map || !mapLoaded || !googleRef.current?.visualization) return;
+
+    // Remove old heatmap
+    if (heatmapRef.current) {
+      heatmapRef.current.setMap(null);
+    }
+
+    const heatmapData = countryPoints
+      .filter((cp) => (trendCounts[cp.id] || 0) > 0)
+      .map((cp) => ({
+        location: new google.maps.LatLng(cp.lat, cp.lng),
+        weight: trendCounts[cp.id] || 1,
+      }));
+
+    if (heatmapData.length > 0) {
+      const heatmap = new google.maps.visualization.HeatmapLayer({
+        data: heatmapData,
+        map: heatmapEnabled ? map : null,
+        radius: 40,
+        opacity: 0.6,
+        gradient: [
+          "rgba(0, 0, 0, 0)",
+          "rgba(66, 133, 244, 0.4)",
+          "rgba(66, 133, 244, 0.7)",
+          "rgba(251, 188, 4, 0.6)",
+          "rgba(251, 188, 4, 0.8)",
+          "rgba(234, 67, 53, 0.7)",
+          "rgba(234, 67, 53, 1)",
+        ],
+      });
+      heatmapRef.current = heatmap;
+    }
+  }, [trendCounts, mapLoaded, heatmapEnabled]);
+
+  // Toggle heatmap visibility
+  useEffect(() => {
+    if (heatmapRef.current) {
+      heatmapRef.current.setMap(heatmapEnabled ? googleMapRef.current : null);
+    }
+  }, [heatmapEnabled]);
+
   // Create/update markers when trendCounts change
   useEffect(() => {
     const map = googleMapRef.current;
     if (!map || !mapLoaded) return;
 
-    // Clear old markers
     markersRef.current.forEach((m) => m.setMap(null));
     markersRef.current = [];
 
@@ -224,10 +270,9 @@ const GoogleMapView = ({
       const isPeak = count > avgCount;
       const isSelected = selectedCountry === cp.id;
 
-      // Determine color
-      let fillColor = "#4285F4"; // blue
-      if (intensity > 0.33) fillColor = "#FBBC04"; // yellow
-      if (intensity > 0.66) fillColor = "#EA4335"; // red
+      let fillColor = "#4285F4";
+      if (intensity > 0.33) fillColor = "#FBBC04";
+      if (intensity > 0.66) fillColor = "#EA4335";
 
       const scale = isPeak ? 1.2 + intensity * 1.5 : 0.8 + intensity * 0.6;
 
@@ -246,13 +291,11 @@ const GoogleMapView = ({
         zIndex: isPeak ? 10 : 1,
       });
 
-      // Pulse effect via animation
       if (isPeak) {
         marker.setAnimation(g.maps.Animation.BOUNCE);
         setTimeout(() => marker.setAnimation(null), 2000);
       }
 
-      // Hover tooltip with top 3 trends
       marker.addListener("mouseover", () => {
         if (hoverInfoRef.current) {
           const countryTrends = trends
@@ -323,25 +366,38 @@ const GoogleMapView = ({
 
   return (
     <div className="w-full h-full relative">
-      {/* Map type toggle */}
-      <div className="absolute top-3 right-3 z-10 flex rounded-lg overflow-hidden border border-border shadow-sm">
-        {([
-          { type: "roadmap" as MapViewType, label: t("map") },
-          { type: "satellite" as MapViewType, label: t("satellite") },
-          { type: "terrain" as MapViewType, label: t("terrain") },
-        ]).map(({ type, label }) => (
-          <button
-            key={type}
-            onClick={() => setMapViewType(type)}
-            className={`px-2.5 py-1 text-[10px] font-medium transition-colors ${
-              mapViewType === type
-                ? "bg-primary text-primary-foreground"
-                : "bg-card/90 text-muted-foreground hover:bg-secondary"
-            }`}
-          >
-            {label}
-          </button>
-        ))}
+      {/* Map type toggle + heatmap toggle */}
+      <div className="absolute top-3 right-3 z-10 flex gap-1.5">
+        <div className="flex rounded-lg overflow-hidden border border-border shadow-sm">
+          {([
+            { type: "roadmap" as MapViewType, label: t("map") },
+            { type: "satellite" as MapViewType, label: t("satellite") },
+            { type: "terrain" as MapViewType, label: t("terrain") },
+          ]).map(({ type, label }) => (
+            <button
+              key={type}
+              onClick={() => setMapViewType(type)}
+              className={`px-2.5 py-1 text-[10px] font-medium transition-colors ${
+                mapViewType === type
+                  ? "bg-primary text-primary-foreground"
+                  : "bg-card/90 text-muted-foreground hover:bg-secondary"
+              }`}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
+        <button
+          onClick={() => setHeatmapEnabled(!heatmapEnabled)}
+          className={`px-2.5 py-1 text-[10px] font-medium rounded-lg border border-border shadow-sm transition-colors ${
+            heatmapEnabled
+              ? "bg-primary text-primary-foreground"
+              : "bg-card/90 text-muted-foreground hover:bg-secondary"
+          }`}
+          title="Heatmap"
+        >
+          🔥 Heatmap
+        </button>
       </div>
 
       {/* Reset view button */}
@@ -401,14 +457,6 @@ const GoogleMapView = ({
           <p className="text-[10px] text-muted-foreground mt-2">{t("clickToClose")}</p>
         </div>
       )}
-
-      {/* Pulse animation CSS */}
-      <style>{`
-        @keyframes pulseRing {
-          0% { transform: translate(-50%, -50%) scale(1); opacity: 0.6; }
-          100% { transform: translate(-50%, -50%) scale(2.5); opacity: 0; }
-        }
-      `}</style>
     </div>
   );
 };

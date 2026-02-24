@@ -1,7 +1,10 @@
 import { useState, useEffect } from "react";
-import { Info, Sun, Moon, RefreshCw } from "lucide-react";
+import { Info, Sun, Moon, RefreshCw, LogIn, LogOut } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useLanguage, languages } from "@/contexts/LanguageContext";
+import { lovable } from "@/integrations/lovable/index";
+import { supabase } from "@/integrations/supabase/client";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import {
   Dialog,
   DialogContent,
@@ -9,6 +12,12 @@ import {
   DialogTitle,
   DialogDescription,
 } from "@/components/ui/dialog";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 interface TrendHeaderProps {
   totalTrends?: number;
@@ -20,6 +29,7 @@ interface TrendHeaderProps {
 const TrendHeader = ({ totalTrends = 0, countriesCount = 0, onRefresh, refreshing }: TrendHeaderProps) => {
   const { lang, setLang, t } = useLanguage();
   const [aboutOpen, setAboutOpen] = useState(false);
+  const [user, setUser] = useState<any>(null);
   const [dark, setDark] = useState(() => {
     if (typeof window !== "undefined") {
       const saved = localStorage.getItem("theme");
@@ -33,6 +43,31 @@ const TrendHeader = ({ totalTrends = 0, countriesCount = 0, onRefresh, refreshin
     document.documentElement.classList.toggle("dark", dark);
     localStorage.setItem("theme", dark ? "dark" : "light");
   }, [dark]);
+
+  useEffect(() => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user ?? null);
+    });
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setUser(session?.user ?? null);
+    });
+    return () => subscription.unsubscribe();
+  }, []);
+
+  const handleLogin = async () => {
+    await lovable.auth.signInWithOAuth("google", {
+      redirect_uri: window.location.origin,
+    });
+  };
+
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+    setUser(null);
+  };
+
+  const userAvatar = user?.user_metadata?.avatar_url;
+  const userName = user?.user_metadata?.full_name || user?.email?.split("@")[0] || "";
+  const userInitial = userName.charAt(0).toUpperCase();
 
   return (
     <>
@@ -113,6 +148,39 @@ const TrendHeader = ({ totalTrends = 0, countriesCount = 0, onRefresh, refreshin
               <Info className="w-3 h-3" />
               {t("about")}
             </button>
+
+            {/* Auth button */}
+            {user ? (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <button className="flex items-center gap-1.5 px-1.5 py-0.5 rounded-full hover:bg-secondary transition-colors">
+                    <Avatar className="w-6 h-6">
+                      {userAvatar && <AvatarImage src={userAvatar} alt={userName} />}
+                      <AvatarFallback className="text-[10px] bg-primary/10 text-primary font-bold">
+                        {userInitial}
+                      </AvatarFallback>
+                    </Avatar>
+                    <span className="text-[11px] font-medium text-foreground hidden sm:inline max-w-[80px] truncate">
+                      {userName}
+                    </span>
+                  </button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-40">
+                  <DropdownMenuItem onClick={handleLogout} className="text-xs gap-2">
+                    <LogOut className="w-3.5 h-3.5" />
+                    Sair
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            ) : (
+              <button
+                onClick={handleLogin}
+                className="flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-medium bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
+              >
+                <LogIn className="w-3 h-3" />
+                <span className="hidden sm:inline">Entrar</span>
+              </button>
+            )}
           </div>
         </div>
       </header>
@@ -142,7 +210,7 @@ const TrendHeader = ({ totalTrends = 0, countriesCount = 0, onRefresh, refreshin
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.1, duration: 0.3 }}
                 >
-                  <div className="grid grid-cols-2 gap-2 text-xs">
+                  <div className="grid grid-cols-3 gap-2 text-xs">
                     {[
                       { name: "YouTube", color: "hsl(0, 72%, 51%)" },
                       { name: "Reddit", color: "hsl(16, 100%, 50%)" },
@@ -150,6 +218,9 @@ const TrendHeader = ({ totalTrends = 0, countriesCount = 0, onRefresh, refreshin
                       { name: "NewsAPI", color: "hsl(142, 60%, 40%)" },
                       { name: "Bluesky", color: "hsl(200, 100%, 50%)" },
                       { name: "Mastodon", color: "hsl(270, 60%, 55%)" },
+                      { name: "NewsData", color: "hsl(35, 90%, 50%)" },
+                      { name: "GNews", color: "hsl(160, 60%, 45%)" },
+                      { name: "Bing News", color: "hsl(195, 80%, 45%)" },
                     ].map((src, i) => (
                       <motion.div
                         key={src.name}
@@ -159,7 +230,7 @@ const TrendHeader = ({ totalTrends = 0, countriesCount = 0, onRefresh, refreshin
                         className="flex items-center gap-2 p-2 rounded-lg bg-secondary/50"
                       >
                         <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: src.color }} />
-                        <span className="font-medium text-foreground">{src.name}</span>
+                        <span className="font-medium text-foreground text-[10px]">{src.name}</span>
                       </motion.div>
                     ))}
                   </div>

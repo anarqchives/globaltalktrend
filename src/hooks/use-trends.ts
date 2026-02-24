@@ -159,14 +159,16 @@ export function useTrends(filters: FilterState, onTrendCountsChange: (counts: Re
   const fetchTrends = useCallback(async () => {
     try {
       setLoading(true);
-      const [edgeResult, redditItems, blueskyItems, mastodonItems] = await Promise.all([
+      const [edgeResult, extraResult, redditItems, blueskyItems, mastodonItems] = await Promise.all([
         supabase.functions.invoke("fetch-trends"),
+        supabase.functions.invoke("fetch-news-extra").catch(() => ({ data: { trends: [] } })),
         fetchRedditClientSide(),
         fetchBlueskyClientSide(),
         fetchMastodonClientSide(),
       ]);
       const edgeTrends: TrendCardProps[] = edgeResult.data?.trends || [];
-      const allTrends = [...edgeTrends, ...redditItems, ...blueskyItems, ...mastodonItems];
+      const extraTrends: TrendCardProps[] = extraResult.data?.trends || [];
+      const allTrends = [...edgeTrends, ...extraTrends, ...redditItems, ...blueskyItems, ...mastodonItems];
       if (allTrends.length > 0) {
         setTrends(allTrends);
         if (!isFirstLoad) {
@@ -193,7 +195,7 @@ export function useTrends(filters: FilterState, onTrendCountsChange: (counts: Re
       result = result.filter((t) => t.countryCode === filters.country);
     }
     if (filters.type === "Redes sociais") result = result.filter((t) => ["Reddit", "Bluesky", "Mastodon"].includes(t.platform));
-    else if (filters.type === "Imprensa") result = result.filter((t) => t.platform === "NewsAPI");
+    else if (filters.type === "Imprensa") result = result.filter((t) => ["NewsAPI", "NewsData", "GNews", "Bing News"].includes(t.platform));
     else if (filters.type === "Buscas (Google)") result = result.filter((t) => t.platform === "Google Trends");
     if (filters.category !== "Todas") {
       result = result.filter((t) => t.category.toLowerCase().includes(filters.category.toLowerCase()));

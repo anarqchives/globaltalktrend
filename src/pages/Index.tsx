@@ -114,6 +114,9 @@ const Index = () => {
                   "Bluesky": "Redes sociais",
                   "Mastodon": "Redes sociais",
                   "NewsAPI": "Imprensa",
+                  "NewsData": "Imprensa",
+                  "GNews": "Imprensa",
+                  "Bing News": "Imprensa",
                   "Google Trends": "Buscas (Google)",
                   "YouTube": "Todas mídias",
                 };
