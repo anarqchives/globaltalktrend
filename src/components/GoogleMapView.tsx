@@ -212,7 +212,7 @@ const GoogleMapView = ({
   // Create/update heatmap when trendCounts change
   useEffect(() => {
     const map = googleMapRef.current;
-    if (!map || !mapLoaded || !googleRef.current?.visualization) return;
+    if (!map || !mapLoaded || !google?.maps?.visualization?.HeatmapLayer) return;
 
     // Remove old heatmap
     if (heatmapRef.current) {
