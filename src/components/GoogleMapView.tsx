@@ -186,9 +186,14 @@ const GoogleMapView = ({
       try {
         const { data, error: fnError } = await supabase.functions.invoke("get-maps-key");
         if (cancelled) return; // StrictMode cleanup — exit silently
-        if (!data?.key) {
-          console.error("[GoogleMapView] API key missing", fnError);
-          setMapError("Chave do mapa não disponível");
+
+        if (fnError || !data?.key) {
+          console.error("[GoogleMapView] get-maps-key failed", {
+            fnError,
+            hasKey: !!data?.key,
+            hostname: window.location.hostname,
+          });
+          setMapError("Chave do mapa indisponível para este domínio");
           return;
         }
 
@@ -646,7 +651,7 @@ const GoogleMapView = ({
         <div className="absolute inset-0 flex items-center justify-center bg-background/50 backdrop-blur-sm">
           <div className="flex items-center gap-3 text-muted-foreground text-sm">
             <div className="w-5 h-5 border-2 border-primary/30 border-t-primary rounded-full animate-spin" />
-            <span className="font-medium">{t("loading")}</span>
+            <span className="font-medium">Carregando mapa...</span>
           </div>
         </div>
       )}

@@ -5,20 +5,44 @@ import { toast } from "@/hooks/use-toast";
 import { FilterState } from "../components/FilterBar";
 import { categorizeTrend } from "@/lib/categorize-trend";
 const CACHE_KEY = "gtt_trends_cache";
-const CACHE_TTL = 3 * 60 * 1000; // 3 min
+const CACHE_TTL = 5 * 60 * 1000; // 5 min
 
-function getCachedTrends(): TrendCardProps[] | null {
+type TrendsCachePayload = {
+  ts: number;
+  data: TrendCardProps[];
+};
+
+function getCachedTrends(): TrendsCachePayload | null {
   try {
     const raw = sessionStorage.getItem(CACHE_KEY);
     if (!raw) return null;
-    const { ts, data } = JSON.parse(raw);
-    if (Date.now() - ts > CACHE_TTL) { sessionStorage.removeItem(CACHE_KEY); return null; }
-    return data;
-  } catch { return null; }
+    const parsed = JSON.parse(raw) as TrendsCachePayload;
+    if (!parsed?.ts || !Array.isArray(parsed?.data)) return null;
+    if (Date.now() - parsed.ts > CACHE_TTL) {
+      sessionStorage.removeItem(CACHE_KEY);
+      return null;
+    }
+    return parsed;
+  } catch {
+    return null;
+  }
 }
 
 function setCachedTrends(data: TrendCardProps[]) {
-  try { sessionStorage.setItem(CACHE_KEY, JSON.stringify({ ts: Date.now(), data: data.slice(0, 80) })); } catch {}
+  try {
+    sessionStorage.setItem(CACHE_KEY, JSON.stringify({ ts: Date.now(), data: data.slice(0, 80) }));
+  } catch {}
+}
+
+async function withTimeout<T>(promise: Promise<T>, timeoutMs: number, fallback: T): Promise<T> {
+  let timeoutId: number | undefined;
+  const timeoutPromise = new Promise<T>((resolve) => {
+    timeoutId = window.setTimeout(() => resolve(fallback), timeoutMs);
+  });
+
+  const result = await Promise.race([promise, timeoutPromise]);
+  if (timeoutId) window.clearTimeout(timeoutId);
+  return result;
 }
 
 const fallbackData: TrendCardProps[] = [
@@ -180,7 +204,8 @@ async function fetchMastodonClientSide(): Promise<TrendCardProps[]> {
 
 export function useTrends(filters: FilterState, onTrendCountsChange: (counts: Record<string, number>) => void) {
   const cached = getCachedTrends();
-  const [trends, setTrends] = useState<TrendCardProps[]>(cached || fallbackData);
+  const cacheAgeMs = cached ? Date.now() - cached.ts : Number.POSITIVE_INFINITY;
+  const [trends, setTrends] = useState<TrendCardProps[]>(cached?.data || fallbackData);
   const [loading, setLoading] = useState(!cached);
   const [isFirstLoad, setIsFirstLoad] = useState(!cached);
 
@@ -188,13 +213,29 @@ export function useTrends(filters: FilterState, onTrendCountsChange: (counts: Re
     try {
       setLoading(true);
       const [edgeResult, extraResult, extraSourcesResult, socialTrendsResult, redditItems, blueskyItems, mastodonItems] = await Promise.all([
-        supabase.functions.invoke("fetch-trends"),
-        supabase.functions.invoke("fetch-news-extra").catch(() => ({ data: { trends: [] } })),
-        supabase.functions.invoke("fetch-extra-sources").catch(() => ({ data: { trends: [] } })),
-        supabase.functions.invoke("fetch-social-trends").catch(() => ({ data: { trends: [] } })),
-        fetchRedditClientSide(),
-        fetchBlueskyClientSide(),
-        fetchMastodonClientSide(),
+        withTimeout(
+          supabase.functions.invoke("fetch-trends"),
+          3500,
+          { data: { trends: [] } } as Awaited<ReturnType<typeof supabase.functions.invoke>>
+        ),
+        withTimeout(
+          supabase.functions.invoke("fetch-news-extra").catch(() => ({ data: { trends: [] } })),
+          2500,
+          { data: { trends: [] } } as Awaited<ReturnType<typeof supabase.functions.invoke>>
+        ),
+        withTimeout(
+          supabase.functions.invoke("fetch-extra-sources").catch(() => ({ data: { trends: [] } })),
+          2500,
+          { data: { trends: [] } } as Awaited<ReturnType<typeof supabase.functions.invoke>>
+        ),
+        withTimeout(
+          supabase.functions.invoke("fetch-social-trends").catch(() => ({ data: { trends: [] } })),
+          2500,
+          { data: { trends: [] } } as Awaited<ReturnType<typeof supabase.functions.invoke>>
+        ),
+        withTimeout(fetchRedditClientSide(), 2500, []),
+        withTimeout(fetchBlueskyClientSide(), 2500, []),
+        withTimeout(fetchMastodonClientSide(), 2500, []),
       ]);
       const edgeTrends: TrendCardProps[] = edgeResult.data?.trends || [];
       const extraTrends: TrendCardProps[] = extraResult.data?.trends || [];
@@ -236,10 +277,27 @@ export function useTrends(filters: FilterState, onTrendCountsChange: (counts: Re
   }, [isFirstLoad]);
 
   useEffect(() => {
-    fetchTrends();
-    const interval = setInterval(fetchTrends, 5 * 60 * 1000);
-    return () => clearInterval(interval);
-  }, []);
+    let intervalId: number | undefined;
+    let initialFetchTimer: number | undefined;
+
+    const startPolling = () => {
+      intervalId = window.setInterval(fetchTrends, 5 * 60 * 1000);
+    };
+
+    if (cacheAgeMs < CACHE_TTL) {
+      const remainingMs = CACHE_TTL - cacheAgeMs;
+      initialFetchTimer = window.setTimeout(fetchTrends, remainingMs);
+      startPolling();
+    } else {
+      fetchTrends();
+      startPolling();
+    }
+
+    return () => {
+      if (initialFetchTimer) window.clearTimeout(initialFetchTimer);
+      if (intervalId) window.clearInterval(intervalId);
+    };
+  }, [fetchTrends, cacheAgeMs]);
 
   const filteredTrends = useMemo(() => {
     let result = trends;

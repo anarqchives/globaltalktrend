@@ -5,6 +5,7 @@ import { Link } from "react-router-dom";
 import { useLanguage, languages } from "@/contexts/LanguageContext";
 import { lovable } from "@/integrations/lovable/index";
 import { supabase } from "@/integrations/supabase/client";
+import { toast } from "@/hooks/use-toast";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import {
   Dialog,
@@ -78,16 +79,49 @@ const TrendHeader = ({ totalTrends = 0, countriesCount = 0, onRefresh, refreshin
   const [anomalyPanelOpen, setAnomalyPanelOpen] = useState(false);
   const { mode, setMode } = useUserMode();
 
+  const resolveOAuthRedirectUri = () => {
+    const host = window.location.hostname;
+    const isLovableDomain = host.endsWith("lovable.app") || host.endsWith("lovableproject.com");
+    return isLovableDomain ? window.location.origin : `${window.location.origin}/auth/callback`;
+  };
+
+  const handleOAuthLogin = async (provider: "google" | "apple") => {
+    try {
+      const redirectUri = resolveOAuthRedirectUri();
+      console.info("[Auth] OAuth start", { provider, redirectUri });
+      const result = await lovable.auth.signInWithOAuth(provider, {
+        redirect_uri: redirectUri,
+      });
+
+      if (result?.error) {
+        console.error("[Auth] OAuth failed", { provider, error: result.error });
+        toast({
+          title: "Falha no login",
+          description: "Não foi possível concluir o login. Tente novamente.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      if (!result?.redirected) {
+        setLoginOpen(false);
+      }
+    } catch (error) {
+      console.error("[Auth] Unexpected login error", { provider, error });
+      toast({
+        title: "Erro inesperado",
+        description: "Houve um problema ao iniciar o login.",
+        variant: "destructive",
+      });
+    }
+  };
+
   const handleLoginGoogle = async () => {
-    await lovable.auth.signInWithOAuth("google", {
-      redirect_uri: window.location.origin,
-    });
+    await handleOAuthLogin("google");
   };
 
   const handleLoginApple = async () => {
-    await lovable.auth.signInWithOAuth("apple", {
-      redirect_uri: window.location.origin,
-    });
+    await handleOAuthLogin("apple");
   };
 
   const handleLogout = async () => {
@@ -512,7 +546,7 @@ const TrendHeader = ({ totalTrends = 0, countriesCount = 0, onRefresh, refreshin
 
             <div className="px-6 py-5 space-y-3">
               <button
-                onClick={() => { handleLoginGoogle(); setLoginOpen(false); }}
+                onClick={handleLoginGoogle}
                 className="w-full h-12 flex items-center justify-center gap-3 rounded-full border border-border/60 bg-white dark:bg-secondary hover:bg-muted dark:hover:bg-muted transition-all duration-200 shadow-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
               >
                 <svg className="w-5 h-5 shrink-0" viewBox="0 0 24 24" fill="none">
@@ -525,7 +559,7 @@ const TrendHeader = ({ totalTrends = 0, countriesCount = 0, onRefresh, refreshin
               </button>
 
               <button
-                onClick={() => { handleLoginApple(); setLoginOpen(false); }}
+                onClick={handleLoginApple}
                 className="w-full h-12 flex items-center justify-center gap-3 rounded-full border border-border/60 bg-white dark:bg-secondary hover:bg-muted dark:hover:bg-muted transition-all duration-200 shadow-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
               >
                 <svg className="w-5 h-5 shrink-0" viewBox="0 0 24 24" fill="currentColor">
