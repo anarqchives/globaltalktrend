@@ -27,6 +27,9 @@ export default defineConfig(({ mode }) => ({
       "react/jsx-dev-runtime",
       "@tanstack/react-query",
       "framer-motion",
+      "@radix-ui/react-dialog",
+      "@radix-ui/react-dropdown-menu",
+      "@lovable.dev/cloud-auth-js",
     ],
   },
   optimizeDeps: {
