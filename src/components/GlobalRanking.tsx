@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ChevronDown, ChevronUp, Trophy, ExternalLink } from "lucide-react";
 import { TrendCardProps } from "./TrendCard";
@@ -55,7 +55,8 @@ interface GlobalRankingProps {
 
 const GlobalRanking = ({ trends, onSelectTrend, onFilterCountry, collapsed: initialCollapsed }: GlobalRankingProps) => {
   const { t } = useLanguage();
-  const [collapsed, setCollapsed] = useState(initialCollapsed ?? false);
+  const isMobile = typeof window !== "undefined" && window.innerWidth < 768;
+  const [collapsed, setCollapsed] = useState(initialCollapsed ?? isMobile);
   const [modalOpen, setModalOpen] = useState(false);
 
   const ranked = useMemo(() => {
