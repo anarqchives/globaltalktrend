@@ -409,8 +409,28 @@ const GoogleMapView = ({
         optimized: false,
       });
 
-      // Tooltip
+      // Hover scale animation helper
+      const animateMarkerScale = (from: number, to: number, duration = 200) => {
+        const start = performance.now();
+        const step = (now: number) => {
+          const progress = Math.min((now - start) / duration, 1);
+          const eased = 1 - Math.pow(1 - progress, 3); // easeOutCubic
+          const current = from + (to - from) * eased;
+          const icon = marker.getIcon();
+          if (icon) {
+            marker.setIcon({ ...icon, scale: current });
+          }
+          if (progress < 1) requestAnimationFrame(step);
+        };
+        requestAnimationFrame(step);
+      };
+
+      const hoverScale = scale * 1.35;
+
+      // Tooltip + hover scale
       marker.addListener("mouseover", () => {
+        animateMarkerScale(scale, hoverScale);
+
         if (!hoverInfoRef.current) return;
         const countryTrends = trends.filter((tr) => tr.countryCode === cp.id).slice(0, 3);
 
@@ -467,6 +487,7 @@ const GoogleMapView = ({
       });
 
       marker.addListener("mouseout", () => {
+        animateMarkerScale(hoverScale, scale);
         hoverInfoRef.current?.close();
       });
 
