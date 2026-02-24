@@ -176,11 +176,14 @@ const GoogleMapView = ({
 
     const loadMap = async () => {
       try {
-        const { data } = await supabase.functions.invoke("get-maps-key");
+        console.log("[GoogleMapView] Fetching API key...");
+        const { data, error: fnError } = await supabase.functions.invoke("get-maps-key");
         if (cancelled || !data?.key) {
+          console.error("[GoogleMapView] API key missing", fnError);
           setMapError("API key not available");
           return;
         }
+        console.log("[GoogleMapView] API key received, loading libraries...");
 
         setOptions({ key: data.key, v: "weekly", libraries: ["visualization", "marker"] });
 
@@ -190,7 +193,10 @@ const GoogleMapView = ({
           importLibrary("visualization"),
         ]);
 
+        console.log("[GoogleMapView] Libraries loaded:", { mapsLib: !!mapsLib, markerLib: !!markerLib, vizLib: !!vizLib });
+
         if (cancelled || !mapRef.current) {
+          console.warn("[GoogleMapView] Cancelled or no mapRef");
           setMapError("Google Maps failed to initialize");
           return;
         }

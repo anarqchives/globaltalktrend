@@ -41,6 +41,7 @@ export default defineConfig(({ mode }) => ({
       "@tanstack/react-query",
       "@supabase/supabase-js",
       "framer-motion",
+      "@googlemaps/js-api-loader",
     ],
   },
 }));
