@@ -311,7 +311,7 @@ const TimelineCard = ({
             {/* Title + Thumbnail row */}
             <div className="flex gap-2.5 mb-1">
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-semibold text-foreground line-clamp-2 leading-snug">
+                <p className="text-sm font-medium text-foreground line-clamp-2 leading-snug">
                   {title}
                 </p>
                 {displayDescription && (
