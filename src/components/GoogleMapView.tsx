@@ -68,23 +68,25 @@ type MapViewType = "roadmap" | "satellite" | "terrain";
 
 // Apple Maps–inspired light style
 const lightStyles: google.maps.MapTypeStyle[] = [
-  { elementType: "geometry", stylers: [{ color: "#f8f9fa" }] },
+  { elementType: "geometry", stylers: [{ color: "#f5f7fa" }] },
   { elementType: "labels.icon", stylers: [{ visibility: "off" }] },
   { elementType: "labels.text.fill", stylers: [{ color: "#9ca3af" }] },
-  { elementType: "labels.text.stroke", stylers: [{ color: "#f8f9fa" }, { weight: 2 }] },
-  { featureType: "administrative.country", elementType: "geometry.stroke", stylers: [{ color: "#c0c4cc" }, { weight: 0.8 }] },
-  { featureType: "administrative.country", elementType: "labels.text.fill", stylers: [{ color: "#4a5568" }] },
-  { featureType: "administrative.province", elementType: "geometry.stroke", stylers: [{ visibility: "off" }] },
+  { elementType: "labels.text.stroke", stylers: [{ color: "#ffffff" }, { weight: 2 }] },
+  { featureType: "administrative.country", elementType: "geometry.stroke", stylers: [{ color: "#a0afc0" }, { weight: 1 }] },
+  { featureType: "administrative.country", elementType: "labels.text.fill", stylers: [{ color: "#2d3748" }] },
+  { featureType: "administrative.country", elementType: "labels.text.stroke", stylers: [{ color: "#ffffff" }, { weight: 2 }] },
+  { featureType: "administrative.province", elementType: "geometry.stroke", stylers: [{ color: "#cbd5e0" }, { weight: 0.5 }] },
   { featureType: "administrative.locality", elementType: "labels", stylers: [{ visibility: "off" }] },
+  { featureType: "administrative.neighborhood", elementType: "labels", stylers: [{ visibility: "off" }] },
   { featureType: "administrative.land_parcel", stylers: [{ visibility: "off" }] },
   { featureType: "poi", stylers: [{ visibility: "off" }] },
   { featureType: "road", stylers: [{ visibility: "off" }] },
   { featureType: "transit", stylers: [{ visibility: "off" }] },
-  { featureType: "water", elementType: "geometry", stylers: [{ color: "#e3f0ff" }] },
+  { featureType: "water", elementType: "geometry", stylers: [{ color: "#d4e7ff" }] },
   { featureType: "water", elementType: "labels", stylers: [{ visibility: "off" }] },
-  { featureType: "landscape", elementType: "geometry", stylers: [{ color: "#f8f9fa" }] },
-  { featureType: "landscape.natural", elementType: "geometry", stylers: [{ color: "#f0f2f5" }] },
-  { featureType: "landscape.man_made", stylers: [{ visibility: "off" }] },
+  { featureType: "landscape", elementType: "geometry", stylers: [{ color: "#f5f7fa" }] },
+  { featureType: "landscape.natural", elementType: "geometry", stylers: [{ color: "#edf2f7" }] },
+  { featureType: "landscape.man_made", elementType: "geometry", stylers: [{ color: "#e9eef3" }] },
 ];
 
 // Apple Maps–inspired dark style
@@ -526,7 +528,7 @@ const GoogleMapView = ({
   }, [mapViewType, mapLoaded, isDark]);
 
   const controlBtnClass = (active: boolean) =>
-    `p-2 rounded-xl transition-all duration-200 ${
+    `p-2 rounded-xl transition-all duration-200 outline-none ring-0 focus:outline-none focus:ring-0 focus-visible:ring-1 focus-visible:ring-primary/30 ${
       active
         ? "bg-primary text-primary-foreground shadow-sm"
         : "text-muted-foreground hover:text-foreground hover:bg-white/60 dark:hover:bg-white/10"
@@ -535,7 +537,7 @@ const GoogleMapView = ({
   return (
     <div className="w-full h-full relative" style={{ isolation: "isolate" }}>
       {/* Map controls — top left, glassmorphism pill */}
-      <div className="absolute top-3 left-3 z-[5] flex items-center gap-1 p-1 rounded-2xl bg-card/80 backdrop-blur-xl border border-border/30 shadow-lg">
+      <div className="absolute top-3 left-3 z-[5] flex items-center gap-1 p-1 rounded-2xl bg-card/80 backdrop-blur-xl border border-border/30 shadow-lg outline-none ring-0">
         <button
           onClick={() => setMapViewType("roadmap")}
           className={controlBtnClass(mapViewType === "roadmap")}

@@ -153,12 +153,12 @@ const GlobalRanking = ({ trends, onSelectTrend, onFilterCountry, collapsed: init
 
   return (
     <>
-      <div className="absolute top-3 right-3 z-10 w-72 max-w-[calc(100%-80px)]">
-        <div className="bg-card/70 backdrop-blur-2xl border border-border/20 rounded-2xl shadow-[0_8px_32px_-8px_rgba(0,0,0,0.12)] dark:shadow-[0_8px_32px_-8px_rgba(0,0,0,0.4)] overflow-hidden ring-1 ring-white/10 dark:ring-white/5">
+      <div className="absolute top-14 right-3 z-10 w-72 max-w-[calc(100%-80px)]">
+        <div className="bg-card/70 backdrop-blur-2xl border border-border/20 rounded-2xl shadow-[0_8px_32px_-8px_rgba(0,0,0,0.12)] dark:shadow-[0_8px_32px_-8px_rgba(0,0,0,0.4)] overflow-hidden outline-none ring-0">
           {/* Header */}
           <button
             onClick={() => setCollapsed(!collapsed)}
-            className="w-full flex items-center justify-between px-3.5 py-2.5 hover:bg-white/10 dark:hover:bg-white/5 transition-all duration-200"
+            className="w-full flex items-center justify-between px-3.5 py-2.5 hover:bg-white/10 dark:hover:bg-white/5 transition-all duration-200 outline-none ring-0 focus:outline-none focus:ring-0"
           >
             <div className="flex items-center gap-2">
               <div className="w-5 h-5 rounded-lg bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center shadow-sm">
