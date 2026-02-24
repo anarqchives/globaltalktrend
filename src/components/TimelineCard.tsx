@@ -1,12 +1,12 @@
 import { useState, useMemo, useEffect } from "react";
-import { Share2, ChevronDown, ChevronUp, Sparkles, Link2, Bell, ExternalLink, Shield, CheckCircle2, FlaskConical, Globe, Newspaper } from "lucide-react";
+import { Share2, ChevronDown, ChevronUp, Sparkles, Link2, Bell, ExternalLink, Shield, CheckCircle2, FlaskConical, Globe, Newspaper, Search } from "lucide-react";
 import { AreaChart, Area, ResponsiveContainer, XAxis, YAxis, Tooltip, CartesianGrid } from "recharts";
 import { toast } from "@/hooks/use-toast";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { TrendCardProps } from "./TrendCard";
 import { supabase } from "@/integrations/supabase/client";
 import AlertModal from "./AlertModal";
-
+import TrendContextTab from "./TrendContextTab";
 
 const platformIcons: Record<string, { emoji: string; color: string }> = {
   YouTube: { emoji: "▶", color: "hsl(0, 72%, 51%)" },
@@ -41,6 +41,27 @@ const trustBadgeMap: Record<string, { label: string; icon: React.ReactNode; clas
   press: { label: "Imprensa Verificada", icon: <Newspaper className="w-2.5 h-2.5" />, className: "bg-emerald-100/80 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-400" },
   hot: { label: "PAUTA QUENTE", icon: <span className="text-[9px]">🔥</span>, className: "bg-red-100/80 text-red-700 dark:bg-red-500/15 dark:text-red-400" },
 };
+
+// Client-side quick trigger detection (before AI analysis)
+const triggerPatterns: { type: string; emoji: string; label: string; keywords: string[] }[] = [
+  { type: "launch", emoji: "🎬", label: "Lançamento", keywords: ["trailer", "estreia", "lançamento", "novo", "nova", "release", "launch", "premiere", "debut"] },
+  { type: "politics", emoji: "🗳️", label: "Política", keywords: ["eleição", "voto", "governo", "presidente", "congresso", "election", "vote", "government", "president", "congress", "trump", "biden"] },
+  { type: "crisis", emoji: "⚠️", label: "Crise", keywords: ["acidente", "crise", "emergência", "desastre", "ataque", "crash", "crisis", "emergency", "disaster", "attack", "war", "earthquake"] },
+  { type: "sports", emoji: "🏆", label: "Esportes", keywords: ["jogo", "copa", "campeonato", "final", "gol", "partida", "game", "cup", "championship", "goal", "match", "nba", "nfl", "fifa"] },
+  { type: "statement", emoji: "📢", label: "Declaração", keywords: ["diz", "afirma", "declara", "polêmica", "fala sobre", "says", "claims", "declares", "controversy", "statement"] },
+  { type: "science", emoji: "🔬", label: "Ciência", keywords: ["pesquisa", "estudo", "descoberta", "nasa", "vacina", "research", "study", "discovery", "nasa", "vaccine", "breakthrough"] },
+  { type: "business", emoji: "📈", label: "Negócios", keywords: ["bolsa", "mercado", "ações", "investimento", "pib", "market", "stock", "investment", "gdp", "revenue", "profit", "tariff"] },
+];
+
+function detectTriggerFromTitle(title: string): { emoji: string; label: string } | null {
+  const lower = title.toLowerCase();
+  for (const pattern of triggerPatterns) {
+    if (pattern.keywords.some(kw => lower.includes(kw))) {
+      return { emoji: pattern.emoji, label: pattern.label };
+    }
+  }
+  return null;
+}
 
 interface TimelineCardProps extends TrendCardProps {
   onClick?: () => void;
@@ -94,6 +115,8 @@ const TimelineCard = ({
   const flag = countryCodeToFlag(countryCode);
   const gradientId = `tl-${title.replace(/[^a-zA-Z0-9]/g, "").slice(0, 8)}-${Math.random().toString(36).slice(2, 5)}`;
   const [imgError, setImgError] = useState(false);
+  const trigger = useMemo(() => detectTriggerFromTitle(title), [title]);
+  const [activeTab, setActiveTab] = useState<"details" | "context">("details");
 
   const relativeTimeFormats: Record<string, { now: string; min: string; h: string; d: string }> = {
     pt: { now: "agora", min: "há {n}min", h: "há {n}h", d: "há {n}d" },
@@ -243,6 +266,11 @@ const TimelineCard = ({
                  <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-medium ${trustBadgeMap.hot.className}`}>
                    🔥 PAUTA QUENTE
                  </span>
+                )}
+               {trigger && (
+                 <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium bg-accent text-accent-foreground border border-border">
+                   {trigger.emoji} {trigger.label}
+                 </span>
                )}
                {sentiment && (
                 <span className={`text-xs ${sentiment.color}`} title={sentiment.label}>
@@ -327,115 +355,152 @@ const TimelineCard = ({
 
         {expanded && (
           <div className="mt-3 pt-3 border-t border-border animate-in fade-in slide-in-from-top-2 duration-200">
-            {details && <p className="text-xs text-muted-foreground mb-3">{details}</p>}
-
-            {sourceUrl && (
-              <a
-                href={sourceUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                onClick={(e) => e.stopPropagation()}
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-medium bg-primary/10 text-primary hover:bg-primary/20 transition-colors mb-3 group"
-              >
-                <span className="text-sm flex-shrink-0" style={{ color: pf.color }} title={platform}>{pf.emoji}</span>
-                <ExternalLink className="w-3 h-3 group-hover:translate-x-0.5 transition-transform" />
-                {platform === "YouTube" ? `${t("watchOn")} YouTube` :
-                 platform === "Reddit" ? `${t("viewOn")} Reddit` :
-                 platform === "Google Trends" ? `${t("viewOn")} Google Trends` :
-                 platform === "Bluesky" ? `${t("viewOn")} Bluesky` :
-                 platform === "Mastodon" ? `${t("viewOn")} Mastodon` :
-                 platform === "The Guardian" ? `${t("readOn")} The Guardian` :
-                 platform === "World Bank" ? `${t("viewOn")} World Bank` :
-                 platform === "IBGE" ? `${t("viewOn")} IBGE` :
-                 platform === "OpenAlex" ? `${t("viewSource")}` :
-                 t("viewSource")}
-              </a>
-            )}
-
-
-            {!aiSummary && (
+            {/* Tab switcher: Detalhes | Contexto */}
+            <div className="flex gap-1 mb-3">
               <button
-                onClick={handleSummarize}
-                disabled={summarizing}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-medium bg-primary/10 text-primary hover:bg-primary/20 transition-colors mb-3 disabled:opacity-50"
+                onClick={(e) => { e.stopPropagation(); setActiveTab("details"); }}
+                className={`px-3 py-1 rounded-full text-[10px] font-semibold transition-colors ${
+                  activeTab === "details"
+                    ? "bg-primary text-primary-foreground"
+                    : "bg-muted text-muted-foreground hover:text-foreground"
+                }`}
               >
-                <Sparkles className={`w-3 h-3 ${summarizing ? "animate-spin" : ""}`} />
-                {summarizing ? t("analyzing") : `✨ ${t("summarizeAI")}`}
+                📋 Detalhes
               </button>
-            )}
-
-            {aiSummary && (
-              <div className="mb-3 p-2.5 rounded-lg bg-primary/5 border border-primary/10">
-                <div className="flex items-center gap-2 mb-1.5">
-                  <Sparkles className="w-3 h-3 text-primary" />
-                  <span className="text-[10px] font-semibold text-primary uppercase tracking-wider">{t("aiSummary")}</span>
-                  {sentiment && (
-                    <span className={`text-xs ${sentiment.color} ml-auto`}>
-                      {sentiment.icon} {sentiment.label}
-                    </span>
-                  )}
-                </div>
-                <p className="text-xs text-foreground leading-relaxed">{aiSummary.summary}</p>
-                {aiSummary.impact && (
-                  <span className={`inline-block mt-1.5 text-[10px] font-medium px-2 py-0.5 rounded-full ${
-                    aiSummary.impact === "high" ? "bg-red-500/10 text-red-500" :
-                    aiSummary.impact === "medium" ? "bg-yellow-500/10 text-yellow-600" :
-                    "bg-green-500/10 text-green-600"
-                  }`}>
-                    {aiSummary.impact === "high" ? t("impactHigh") : aiSummary.impact === "medium" ? t("impactMedium") : t("impactLow")}
-                  </span>
-                )}
-              </div>
-            )}
-
-            <div className="flex flex-wrap gap-2 mb-3 text-[11px]">
-              {platform === "YouTube" && likeRatio !== undefined && likeRatio > 0 && (
-                <span className="source-tag text-[10px] py-0.5 px-2">👍 {likeRatio}% {t("likes")}</span>
-              )}
-              {platform === "Reddit" && commentCount !== undefined && (
-                <span className="source-tag text-[10px] py-0.5 px-2">💬 {commentCount >= 1000 ? `${(commentCount / 1000).toFixed(1)}K` : commentCount} {t("comments")}</span>
-              )}
-              {platform === "Google Trends" && region && (
-                <span className="source-tag text-[10px] py-0.5 px-2">📍 {region}</span>
-              )}
-              {platform === "NewsAPI" && sources && sources.length > 0 && (
-                <div className="flex flex-wrap gap-1">
-                  {sources.slice(0, 3).map((s) => (
-                    <span key={s} className="source-tag text-[10px] py-0.5 px-2">📰 {s}</span>
-                  ))}
-                </div>
-              )}
+              <button
+                onClick={(e) => { e.stopPropagation(); setActiveTab("context"); }}
+                className={`px-3 py-1 rounded-full text-[10px] font-semibold transition-colors ${
+                  activeTab === "context"
+                    ? "bg-primary text-primary-foreground"
+                    : "bg-muted text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                🔍 Contexto
+              </button>
             </div>
 
-            {historicalData && historicalData.length > 0 && (
-              <div>
-                <div className="flex items-center justify-between mb-1.5">
-                  <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">
-                    {t("evolution24h")}
-                  </span>
-                  <span className="text-[10px] text-muted-foreground">{metricLabel}</span>
+            {activeTab === "details" ? (
+              <>
+                {details && <p className="text-xs text-muted-foreground mb-3">{details}</p>}
+
+                {sourceUrl && (
+                  <a
+                    href={sourceUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    onClick={(e) => e.stopPropagation()}
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-medium bg-primary/10 text-primary hover:bg-primary/20 transition-colors mb-3 group"
+                  >
+                    <span className="text-sm flex-shrink-0" style={{ color: pf.color }} title={platform}>{pf.emoji}</span>
+                    <ExternalLink className="w-3 h-3 group-hover:translate-x-0.5 transition-transform" />
+                    {platform === "YouTube" ? `${t("watchOn")} YouTube` :
+                     platform === "Reddit" ? `${t("viewOn")} Reddit` :
+                     platform === "Google Trends" ? `${t("viewOn")} Google Trends` :
+                     platform === "Bluesky" ? `${t("viewOn")} Bluesky` :
+                     platform === "Mastodon" ? `${t("viewOn")} Mastodon` :
+                     platform === "The Guardian" ? `${t("readOn")} The Guardian` :
+                     platform === "World Bank" ? `${t("viewOn")} World Bank` :
+                     platform === "IBGE" ? `${t("viewOn")} IBGE` :
+                     platform === "OpenAlex" ? `${t("viewSource")}` :
+                     t("viewSource")}
+                  </a>
+                )}
+
+                {!aiSummary && (
+                  <button
+                    onClick={handleSummarize}
+                    disabled={summarizing}
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-medium bg-primary/10 text-primary hover:bg-primary/20 transition-colors mb-3 disabled:opacity-50"
+                  >
+                    <Sparkles className={`w-3 h-3 ${summarizing ? "animate-spin" : ""}`} />
+                    {summarizing ? t("analyzing") : `✨ ${t("summarizeAI")}`}
+                  </button>
+                )}
+
+                {aiSummary && (
+                  <div className="mb-3 p-2.5 rounded-lg bg-primary/5 border border-primary/10">
+                    <div className="flex items-center gap-2 mb-1.5">
+                      <Sparkles className="w-3 h-3 text-primary" />
+                      <span className="text-[10px] font-semibold text-primary uppercase tracking-wider">{t("aiSummary")}</span>
+                      {sentiment && (
+                        <span className={`text-xs ${sentiment.color} ml-auto`}>
+                          {sentiment.icon} {sentiment.label}
+                        </span>
+                      )}
+                    </div>
+                    <p className="text-xs text-foreground leading-relaxed">{aiSummary.summary}</p>
+                    {aiSummary.impact && (
+                      <span className={`inline-block mt-1.5 text-[10px] font-medium px-2 py-0.5 rounded-full ${
+                        aiSummary.impact === "high" ? "bg-red-500/10 text-red-500" :
+                        aiSummary.impact === "medium" ? "bg-yellow-500/10 text-yellow-600" :
+                        "bg-green-500/10 text-green-600"
+                      }`}>
+                        {aiSummary.impact === "high" ? t("impactHigh") : aiSummary.impact === "medium" ? t("impactMedium") : t("impactLow")}
+                      </span>
+                    )}
+                  </div>
+                )}
+
+                <div className="flex flex-wrap gap-2 mb-3 text-[11px]">
+                  {platform === "YouTube" && likeRatio !== undefined && likeRatio > 0 && (
+                    <span className="source-tag text-[10px] py-0.5 px-2">👍 {likeRatio}% {t("likes")}</span>
+                  )}
+                  {platform === "Reddit" && commentCount !== undefined && (
+                    <span className="source-tag text-[10px] py-0.5 px-2">💬 {commentCount >= 1000 ? `${(commentCount / 1000).toFixed(1)}K` : commentCount} {t("comments")}</span>
+                  )}
+                  {platform === "Google Trends" && region && (
+                    <span className="source-tag text-[10px] py-0.5 px-2">📍 {region}</span>
+                  )}
+                  {platform === "NewsAPI" && sources && sources.length > 0 && (
+                    <div className="flex flex-wrap gap-1">
+                      {sources.slice(0, 3).map((s) => (
+                        <span key={s} className="source-tag text-[10px] py-0.5 px-2">📰 {s}</span>
+                      ))}
+                    </div>
+                  )}
                 </div>
-                <div className="h-28 -mx-1">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <AreaChart data={historicalData}>
-                      <defs>
-                        <linearGradient id={gradientId} x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="0%" stopColor={pf.color} stopOpacity={0.2} />
-                          <stop offset="100%" stopColor={pf.color} stopOpacity={0} />
-                        </linearGradient>
-                      </defs>
-                      <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                      <XAxis dataKey="hour" tick={{ fontSize: 9, fill: "hsl(var(--muted-foreground))" }} tickLine={false} axisLine={false} interval={5} />
-                      <YAxis tick={{ fontSize: 9, fill: "hsl(var(--muted-foreground))" }} tickLine={false} axisLine={false} width={30} tickFormatter={(v) => v >= 1000 ? `${(v / 1000).toFixed(0)}K` : v} />
-                      <Tooltip
-                        contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: "8px", fontSize: 11 }}
-                        formatter={(value: number) => [value >= 1000 ? `${(value / 1000).toFixed(1)}K` : value, metricLabel || "valor"]}
-                      />
-                      <Area type="monotone" dataKey="value" stroke={pf.color} strokeWidth={1.5} fill={`url(#${gradientId})`} />
-                    </AreaChart>
-                  </ResponsiveContainer>
-                </div>
-              </div>
+
+                {historicalData && historicalData.length > 0 && (
+                  <div>
+                    <div className="flex items-center justify-between mb-1.5">
+                      <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">
+                        {t("evolution24h")}
+                      </span>
+                      <span className="text-[10px] text-muted-foreground">{metricLabel}</span>
+                    </div>
+                    <div className="h-28 -mx-1">
+                      <ResponsiveContainer width="100%" height="100%">
+                        <AreaChart data={historicalData}>
+                          <defs>
+                            <linearGradient id={gradientId} x1="0" y1="0" x2="0" y2="1">
+                              <stop offset="0%" stopColor={pf.color} stopOpacity={0.2} />
+                              <stop offset="100%" stopColor={pf.color} stopOpacity={0} />
+                            </linearGradient>
+                          </defs>
+                          <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                          <XAxis dataKey="hour" tick={{ fontSize: 9, fill: "hsl(var(--muted-foreground))" }} tickLine={false} axisLine={false} interval={5} />
+                          <YAxis tick={{ fontSize: 9, fill: "hsl(var(--muted-foreground))" }} tickLine={false} axisLine={false} width={30} tickFormatter={(v) => v >= 1000 ? `${(v / 1000).toFixed(0)}K` : v} />
+                          <Tooltip
+                            contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: "8px", fontSize: 11 }}
+                            formatter={(value: number) => [value >= 1000 ? `${(value / 1000).toFixed(1)}K` : value, metricLabel || "valor"]}
+                          />
+                          <Area type="monotone" dataKey="value" stroke={pf.color} strokeWidth={1.5} fill={`url(#${gradientId})`} />
+                        </AreaChart>
+                      </ResponsiveContainer>
+                    </div>
+                  </div>
+                )}
+              </>
+            ) : (
+              <TrendContextTab
+                title={title}
+                details={details}
+                description={description}
+                platform={platform}
+                volume={volume}
+                category={category}
+                sources={sources}
+              />
             )}
           </div>
         )}
