@@ -327,6 +327,8 @@ export function useTrends(filters: FilterState, onTrendCountsChange: (counts: Re
   const [trends, setTrends] = useState<TrendCardProps[]>(cached?.data || fallbackData);
   const [loading, setLoading] = useState(!cached);
   const [isFirstLoad, setIsFirstLoad] = useState(!cached);
+  const [lastUpdated, setLastUpdated] = useState<Date | null>(cached ? new Date(cached.ts) : null);
+  const [sourcesStatus, setSourcesStatus] = useState<Record<string, { ok: boolean; count: number; lastUpdate: Date }>>({});
 
   const fetchTrends = useCallback(async () => {
     try {
@@ -379,6 +381,29 @@ export function useTrends(filters: FilterState, onTrendCountsChange: (counts: Re
       if (allTrends.length > 0) {
         setTrends(allTrends);
         setCachedTrends(allTrends);
+        const now = new Date();
+        setLastUpdated(now);
+
+        // Track source status for transparency panel
+        const statusMap: Record<string, { ok: boolean; count: number; lastUpdate: Date }> = {};
+        const platformCounts: Record<string, number> = {};
+        for (const t of allTrends) {
+          platformCounts[t.platform] = (platformCounts[t.platform] || 0) + 1;
+        }
+        const allPlatforms = ["YouTube", "Google Trends", "Reddit", "Bluesky", "Mastodon", "The Guardian", "Hacker News", "Wikipedia", "Stack Overflow", "GitHub", "NewsAPI", "World Bank", "IBGE", "OpenAlex"];
+        for (const p of allPlatforms) {
+          statusMap[p] = { ok: (platformCounts[p] || 0) > 0, count: platformCounts[p] || 0, lastUpdate: now };
+        }
+        setSourcesStatus(statusMap);
+
+        // Console monitoring log
+        console.log('🔄 Atualização:', {
+          timestamp: now.toLocaleTimeString(),
+          trends: allTrends.length,
+          fontes: [...new Set(allTrends.map(t => t.platform))],
+          porFonte: platformCounts,
+        });
+
         // Save snapshots for critical moment detection (fire & forget)
         supabase.functions.invoke("save-trend-snapshots", {
           body: { trends: allTrends.slice(0, 50) },
@@ -487,5 +512,5 @@ export function useTrends(filters: FilterState, onTrendCountsChange: (counts: Re
     onTrendCountsChange(counts);
   }, [filteredTrends, filters.country, onTrendCountsChange]);
 
-  return { leftTrends, rightTrends, loading, isFirstLoad, filteredTrends, allTrends: trends, fetchTrends, countriesCount };
+  return { leftTrends, rightTrends, loading, isFirstLoad, filteredTrends, allTrends: trends, fetchTrends, countriesCount, lastUpdated, sourcesStatus };
 }

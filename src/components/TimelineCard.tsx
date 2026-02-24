@@ -9,6 +9,7 @@ import { supabase } from "@/integrations/supabase/client";
 import AlertModal from "./AlertModal";
 import TrendContextTab from "./TrendContextTab";
 import TrendHistoryTab from "./TrendHistoryTab";
+import TrendFeedback from "./TrendFeedback";
 
 const platformIcons: Record<string, { emoji: string; color: string }> = {
   YouTube: { emoji: "▶", color: "hsl(0, 72%, 51%)" },
@@ -35,13 +36,13 @@ const countryCodeToFlag = (code?: string) => {
   return String.fromCodePoint(...[...code.toUpperCase()].map(c => 0x1F1E6 + c.charCodeAt(0) - 65));
 };
 
-const trustBadgeMap: Record<string, { label: string; icon: React.ReactNode; className: string }> = {
-  official: { label: "Fonte Oficial", icon: <Shield className="w-2.5 h-2.5" />, className: "bg-blue-100/80 text-blue-700 dark:bg-blue-500/15 dark:text-blue-400" },
-  verified: { label: "Imprensa Verificada", icon: <CheckCircle2 className="w-2.5 h-2.5" />, className: "bg-green-100/80 text-green-700 dark:bg-green-500/15 dark:text-green-400" },
-  scientific: { label: "Dados Científicos", icon: <FlaskConical className="w-2.5 h-2.5" />, className: "bg-purple-100/80 text-purple-700 dark:bg-purple-500/15 dark:text-purple-400" },
-  international: { label: "Fonte Internacional", icon: <Globe className="w-2.5 h-2.5" />, className: "bg-amber-100/80 text-amber-700 dark:bg-amber-500/15 dark:text-amber-500" },
-  press: { label: "Imprensa Verificada", icon: <Newspaper className="w-2.5 h-2.5" />, className: "bg-emerald-100/80 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-400" },
-  hot: { label: "PAUTA QUENTE", icon: <span className="text-[9px]">🔥</span>, className: "bg-red-100/80 text-red-700 dark:bg-red-500/15 dark:text-red-400" },
+const trustBadgeMap: Record<string, { label: string; icon: React.ReactNode; className: string; tooltip: string }> = {
+  official: { label: "Fonte Oficial", icon: <Shield className="w-2.5 h-2.5" />, className: "bg-blue-100/80 text-blue-700 dark:bg-blue-500/15 dark:text-blue-400", tooltip: "Dados de órgãos governamentais ou científicos oficiais (ex: World Bank, IBGE)" },
+  verified: { label: "Imprensa Verificada", icon: <CheckCircle2 className="w-2.5 h-2.5" />, className: "bg-green-100/80 text-green-700 dark:bg-green-500/15 dark:text-green-400", tooltip: "Veículo de imprensa tradicional com histórico comprovado de verificação" },
+  scientific: { label: "Dados Científicos", icon: <FlaskConical className="w-2.5 h-2.5" />, className: "bg-purple-100/80 text-purple-700 dark:bg-purple-500/15 dark:text-purple-400", tooltip: "Artigos acadêmicos revisados por pares via OpenAlex" },
+  international: { label: "Fonte Internacional", icon: <Globe className="w-2.5 h-2.5" />, className: "bg-amber-100/80 text-amber-700 dark:bg-amber-500/15 dark:text-amber-500", tooltip: "Cobertura global de veículos de referência internacional (ex: The Guardian, BBC)" },
+  press: { label: "Imprensa Verificada", icon: <Newspaper className="w-2.5 h-2.5" />, className: "bg-emerald-100/80 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-400", tooltip: "Agregador de notícias com fontes verificadas (NewsAPI, GNews)" },
+  hot: { label: "PAUTA QUENTE", icon: <span className="text-[9px]">🔥</span>, className: "bg-red-100/80 text-red-700 dark:bg-red-500/15 dark:text-red-400", tooltip: "Trend viral com crescimento acelerado nas redes sociais" },
 };
 
 // Client-side quick trigger detection (before AI analysis)
@@ -260,7 +261,10 @@ const TimelineCard = ({
               <span className="text-[11px] text-muted-foreground flex-shrink-0">{formattedDate || time}</span>
                {isPeak && <span className="peak-badge flex-shrink-0 whitespace-nowrap">🔥 {t("peak")}</span>}
                {trustBadge && trustBadgeMap[trustBadge] && (
-                 <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium whitespace-nowrap overflow-hidden text-ellipsis max-w-[120px] flex-shrink-0 ${trustBadgeMap[trustBadge].className}`}>
+                 <span
+                   className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium whitespace-nowrap overflow-hidden text-ellipsis max-w-[120px] flex-shrink-0 cursor-help ${trustBadgeMap[trustBadge].className}`}
+                   title={trustBadgeMap[trustBadge].tooltip}
+                 >
                    {trustBadgeMap[trustBadge].icon}
                    {trustBadgeMap[trustBadge].label}
                  </span>
@@ -527,6 +531,9 @@ const TimelineCard = ({
                 platformColor={pf.color}
               />
             )}
+
+            {/* Feedback buttons */}
+            <TrendFeedback title={title} platform={platform} userId={userId} />
           </div>
         )}
       </div>

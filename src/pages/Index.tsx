@@ -4,6 +4,7 @@ import FilterBar, { FilterState, countries } from "@/components/FilterBar";
 import TimelineCard from "@/components/TimelineCard";
 import TrendCardSkeleton from "@/components/TrendCardSkeleton";
 import CriticalMomentsSection from "@/components/CriticalMomentsSection";
+import TransparencyPanel from "@/components/TransparencyPanel";
 import { TrendCardProps } from "@/components/TrendCard";
 import { useTrends } from "@/hooks/use-trends";
 import { useCriticalMoments } from "@/hooks/use-critical-moments";
@@ -117,9 +118,10 @@ const Index = () => {
   const scrollRef = useRef<HTMLDivElement>(null);
   const sentinelRef = useRef<HTMLDivElement>(null);
 
-  const { filteredTrends: rawFilteredTrends, allTrends, loading, isFirstLoad, fetchTrends, countriesCount } = useTrends(filters, setTrendCounts);
+  const { filteredTrends: rawFilteredTrends, allTrends, loading, isFirstLoad, fetchTrends, countriesCount, lastUpdated, sourcesStatus } = useTrends(filters, setTrendCounts);
   const criticalMoments = useCriticalMoments(allTrends);
   const { anomalies, totalCount: anomalyCount, dismiss: dismissAnomaly } = useAnomalyAlerts(allTrends);
+  const [transparencyOpen, setTransparencyOpen] = useState(false);
 
   // Apply mode-based sorting
   const filteredTrends = useMemo(() => {
@@ -302,8 +304,22 @@ const Index = () => {
         <div ref={sentinelRef} className="h-10" />
       )}
       {!hasMore && filteredTrends.length > 0 && (
-        <div className="flex items-center justify-center py-4 text-[11px] text-muted-foreground/50">
-          — {t("noTrends")} —
+        <div className="flex flex-col items-center py-4 gap-2">
+          <span className="text-[11px] text-muted-foreground/50">
+            — {t("noTrends")} —
+          </span>
+          {lastUpdated && (
+            <div className="flex items-center gap-2 text-[10px] text-muted-foreground">
+              <span className="w-1.5 h-1.5 rounded-full bg-green-500" />
+              Última atualização: {lastUpdated.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}
+            </div>
+          )}
+          <button
+            onClick={() => setTransparencyOpen(true)}
+            className="text-[10px] text-primary hover:underline cursor-pointer"
+          >
+            🔍 Ver status das fontes
+          </button>
         </div>
       )}
       {!loading && !isFirstLoad && filteredTrends.length === 0 && (
@@ -360,6 +376,7 @@ const Index = () => {
         anomalyCount={anomalyCount}
         anomalies={anomalies}
         onDismissAnomaly={dismissAnomaly}
+        onOpenTransparency={() => setTransparencyOpen(true)}
       />
       <FilterBar filters={filters} onChange={setFilters} />
 
@@ -417,6 +434,15 @@ const Index = () => {
 
       {/* Mobile floating coffee button */}
       {isMobile && <MobileCoffeeButton />}
+
+      {/* Transparency Panel */}
+      <TransparencyPanel
+        open={transparencyOpen}
+        onClose={() => setTransparencyOpen(false)}
+        sourcesStatus={sourcesStatus}
+        lastUpdated={lastUpdated}
+        totalTrends={filteredTrends.length}
+      />
     </div>
   );
 };
