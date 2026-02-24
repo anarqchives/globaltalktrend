@@ -105,8 +105,30 @@ const Index = () => {
     setRefreshing(false);
   }, [fetchTrends]);
 
+  const [showScrollTop, setShowScrollTop] = useState(false);
+
+  // Track scroll position for back-to-top button
+  useEffect(() => {
+    const el = scrollRef.current;
+    if (!el) return;
+    const onScroll = () => setShowScrollTop(el.scrollTop > 400);
+    el.addEventListener("scroll", onScroll, { passive: true });
+    return () => el.removeEventListener("scroll", onScroll);
+  }, []);
+
+  const scrollToTop = useCallback(() => {
+    scrollRef.current?.scrollTo({ top: 0, behavior: "smooth" });
+  }, []);
+
+  const handleSelectTrend = useCallback((trend: TrendCardProps) => {
+    setActiveTrend(trend);
+    if (isMobile) setMobileTab("timeline");
+    // Scroll timeline to top to highlight selected trend
+    scrollRef.current?.scrollTo({ top: 0, behavior: "smooth" });
+  }, [isMobile]);
+
   const renderTimeline = () => (
-    <div ref={scrollRef} className="flex flex-col gap-1 p-2 h-full overflow-y-auto scrollbar-thin">
+    <div ref={scrollRef} className="flex flex-col gap-1 p-2 h-full overflow-y-auto scrollbar-thin relative">
       <div className="px-2 py-1.5 flex items-center justify-between sticky top-0 bg-background/90 backdrop-blur-sm z-10">
         <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-widest">
           {t("timeline")}
@@ -164,6 +186,16 @@ const Index = () => {
           </p>
         </div>
       )}
+
+      {/* Scroll to top button */}
+      {showScrollTop && (
+        <button
+          onClick={scrollToTop}
+          className="sticky bottom-4 left-1/2 -translate-x-1/2 z-20 px-3 py-1.5 rounded-full bg-primary text-primary-foreground text-[11px] font-semibold shadow-lg hover:bg-primary/90 transition-all animate-in fade-in slide-in-from-bottom-2"
+        >
+          ↑ Voltar ao topo
+        </button>
+      )}
     </div>
   );
 
@@ -215,6 +247,7 @@ const Index = () => {
                   activeTrend={activeTrend}
                   onDismissTrend={() => setActiveTrend(null)}
                   trends={allTrends}
+                  onSelectTrend={handleSelectTrend}
                 />
               )}
             </div>
@@ -234,6 +267,7 @@ const Index = () => {
                   activeTrend={activeTrend}
                   onDismissTrend={() => setActiveTrend(null)}
                   trends={allTrends}
+                  onSelectTrend={handleSelectTrend}
                 />
               </div>
             </ResizablePanel>
