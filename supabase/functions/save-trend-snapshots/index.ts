@@ -68,7 +68,7 @@ Deno.serve(async (req) => {
     }
 
     // Cleanup old snapshots
-    await supabase.rpc("cleanup_old_snapshots").catch(() => {});
+    try { await supabase.rpc("cleanup_old_snapshots"); } catch { /* ignore */ }
 
     return new Response(JSON.stringify({ saved: rows.length }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
