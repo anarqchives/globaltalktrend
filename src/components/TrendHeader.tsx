@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Info, Sun, Moon, RefreshCw, LogOut, BookOpen, Star, Bell, Clock, ChevronDown } from "lucide-react";
+import { Info, Sun, Moon, RefreshCw, LogOut, BookOpen, Star, Bell, Clock, ChevronDown, Trophy } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useLanguage, languages } from "@/contexts/LanguageContext";
 import { lovable } from "@/integrations/lovable/index";
@@ -21,6 +21,8 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { useSavedFilters } from "@/hooks/use-saved-filters";
 import { useAlerts } from "@/hooks/use-alerts";
+import { useGamification } from "@/hooks/use-gamification";
+import AchievementsPanel from "@/components/AchievementsPanel";
 import type { FilterState } from "@/components/FilterBar";
 
 interface TrendHeaderProps {
@@ -64,6 +66,8 @@ const TrendHeader = ({ totalTrends = 0, countriesCount = 0, onRefresh, refreshin
 
   const { savedFilters, saveFilter, deleteFilter } = useSavedFilters(user?.id ?? null);
   const { alerts } = useAlerts(user?.id ?? null);
+  const { totalPoints, achievements, unlocked } = useGamification(user?.id ?? null);
+  const [achievementsOpen, setAchievementsOpen] = useState(false);
 
   const handleLogin = async () => {
     await lovable.auth.signInWithOAuth("google", {
@@ -235,6 +239,15 @@ const TrendHeader = ({ totalTrends = 0, countriesCount = 0, onRefresh, refreshin
 
                   <DropdownMenuSeparator />
 
+                  {/* Achievements */}
+                  <DropdownMenuItem className="text-xs gap-2" onClick={() => setAchievementsOpen(true)}>
+                    <Trophy className="w-3.5 h-3.5 text-yellow-500" />
+                    Conquistas
+                    <span className="ml-auto text-[10px] bg-primary/10 text-primary px-1.5 py-0.5 rounded-full font-bold tabular-nums">
+                      {totalPoints} pts
+                    </span>
+                  </DropdownMenuItem>
+
                   {/* Alerts */}
                   <DropdownMenuItem className="text-xs gap-2" asChild>
                     <span className="flex items-center gap-2 cursor-default">
@@ -289,6 +302,14 @@ const TrendHeader = ({ totalTrends = 0, countriesCount = 0, onRefresh, refreshin
           </div>
         </div>
       </header>
+
+      <AchievementsPanel
+        open={achievementsOpen}
+        onClose={() => setAchievementsOpen(false)}
+        totalPoints={totalPoints}
+        achievements={achievements}
+        unlocked={unlocked}
+      />
 
       <Dialog open={aboutOpen} onOpenChange={setAboutOpen}>
         <DialogContent className="max-w-md bg-card/95 backdrop-blur-xl border-border/50 shadow-2xl rounded-2xl p-6 overflow-hidden">
