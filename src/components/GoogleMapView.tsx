@@ -292,6 +292,13 @@ const GoogleMapView = ({
         map,
         position: { lat: cp.lat, lng: cp.lng },
         title: `${cp.name} · ${count} trends`,
+        label: count > 0 ? {
+          text: String(count),
+          color: "#fff",
+          fontSize: scale > 1.2 ? "11px" : "9px",
+          fontWeight: "700",
+          fontFamily: "Inter, system-ui, sans-serif",
+        } : undefined,
         icon: {
           path: g.maps.SymbolPath.CIRCLE,
           fillColor,
@@ -299,6 +306,7 @@ const GoogleMapView = ({
           strokeColor: isSelected ? "#1a73e8" : "rgba(255,255,255,0.9)",
           strokeWeight: isSelected ? 3 : 2,
           scale: scale * 8,
+          labelOrigin: { x: 0, y: 0 } as google.maps.Point,
         },
         zIndex: isPeak ? 10 : 1,
       });
