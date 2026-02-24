@@ -212,44 +212,55 @@ const GoogleMapView = ({
   // Create/update heatmap when trendCounts change
   useEffect(() => {
     const map = googleMapRef.current;
-    if (!map || !mapLoaded || !google?.maps?.visualization?.HeatmapLayer) return;
+    if (!map || !mapLoaded) return;
+
+    // Wait for visualization library
+    if (!google?.maps?.visualization?.HeatmapLayer) {
+      console.log("HeatmapLayer not available yet");
+      return;
+    }
 
     // Remove old heatmap
     if (heatmapRef.current) {
       heatmapRef.current.setMap(null);
+      heatmapRef.current = null;
     }
 
     const heatmapData = countryPoints
       .filter((cp) => (trendCounts[cp.id] || 0) > 0)
       .map((cp) => ({
         location: new google.maps.LatLng(cp.lat, cp.lng),
-        weight: trendCounts[cp.id] || 1,
+        weight: (trendCounts[cp.id] || 1) * 3,
       }));
 
     if (heatmapData.length > 0) {
       const heatmap = new google.maps.visualization.HeatmapLayer({
         data: heatmapData,
         map: heatmapEnabled ? map : null,
-        radius: 40,
-        opacity: 0.6,
+        radius: 80,
+        opacity: 0.7,
+        dissipating: true,
         gradient: [
           "rgba(0, 0, 0, 0)",
-          "rgba(66, 133, 244, 0.4)",
-          "rgba(66, 133, 244, 0.7)",
-          "rgba(251, 188, 4, 0.6)",
-          "rgba(251, 188, 4, 0.8)",
-          "rgba(234, 67, 53, 0.7)",
+          "rgba(66, 133, 244, 0.3)",
+          "rgba(66, 133, 244, 0.6)",
+          "rgba(102, 187, 255, 0.7)",
+          "rgba(251, 188, 4, 0.7)",
+          "rgba(255, 160, 0, 0.8)",
+          "rgba(234, 67, 53, 0.8)",
           "rgba(234, 67, 53, 1)",
         ],
       });
       heatmapRef.current = heatmap;
+      console.log(`Heatmap created with ${heatmapData.length} points, enabled: ${heatmapEnabled}`);
     }
-  }, [trendCounts, mapLoaded, heatmapEnabled]);
+  }, [trendCounts, mapLoaded]);
 
   // Toggle heatmap visibility
   useEffect(() => {
     if (heatmapRef.current) {
       heatmapRef.current.setMap(heatmapEnabled ? googleMapRef.current : null);
+      console.log("Heatmap toggled:", heatmapEnabled);
     }
   }, [heatmapEnabled]);
 
