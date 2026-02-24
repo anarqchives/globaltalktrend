@@ -34,11 +34,12 @@ const countryCodeToFlag = (code?: string) => {
 };
 
 const trustBadgeMap: Record<string, { label: string; icon: React.ReactNode; className: string }> = {
-  official: { label: "Fonte Oficial", icon: <Shield className="w-2.5 h-2.5" />, className: "bg-blue-500/10 text-blue-500 border-blue-500/20" },
-  verified: { label: "Verificado", icon: <CheckCircle2 className="w-2.5 h-2.5" />, className: "bg-green-500/10 text-green-500 border-green-500/20" },
-  scientific: { label: "Acadêmico/Científico", icon: <FlaskConical className="w-2.5 h-2.5" />, className: "bg-purple-500/10 text-purple-500 border-purple-500/20" },
-  international: { label: "Internacional", icon: <Globe className="w-2.5 h-2.5" />, className: "bg-amber-500/10 text-amber-600 border-amber-500/20" },
-  press: { label: "Imprensa", icon: <Newspaper className="w-2.5 h-2.5" />, className: "bg-emerald-500/10 text-emerald-600 border-emerald-500/20" },
+  official: { label: "Fonte Oficial", icon: <Shield className="w-2.5 h-2.5" />, className: "bg-blue-100/80 text-blue-700 dark:bg-blue-500/15 dark:text-blue-400" },
+  verified: { label: "Imprensa Verificada", icon: <CheckCircle2 className="w-2.5 h-2.5" />, className: "bg-green-100/80 text-green-700 dark:bg-green-500/15 dark:text-green-400" },
+  scientific: { label: "Dados Científicos", icon: <FlaskConical className="w-2.5 h-2.5" />, className: "bg-purple-100/80 text-purple-700 dark:bg-purple-500/15 dark:text-purple-400" },
+  international: { label: "Fonte Internacional", icon: <Globe className="w-2.5 h-2.5" />, className: "bg-amber-100/80 text-amber-700 dark:bg-amber-500/15 dark:text-amber-500" },
+  press: { label: "Imprensa Verificada", icon: <Newspaper className="w-2.5 h-2.5" />, className: "bg-emerald-100/80 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-400" },
+  hot: { label: "PAUTA QUENTE", icon: <span className="text-[9px]">🔥</span>, className: "bg-red-100/80 text-red-700 dark:bg-red-500/15 dark:text-red-400" },
 };
 
 interface TimelineCardProps extends TrendCardProps {
@@ -233,8 +234,14 @@ const TimelineCard = ({
               <span className="text-[11px] text-muted-foreground">{formattedDate || time}</span>
                {isPeak && <span className="peak-badge">🔥 {t("peak")}</span>}
                {trustBadge && trustBadgeMap[trustBadge] && (
-                 <span className={`inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full text-[9px] font-semibold border ${trustBadgeMap[trustBadge].className}`} title={trustBadgeMap[trustBadge].label}>
+                 <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-medium ${trustBadgeMap[trustBadge].className}`}>
                    {trustBadgeMap[trustBadge].icon}
+                   {trustBadgeMap[trustBadge].label}
+                 </span>
+               )}
+               {isPeak && !trustBadge && trustBadgeMap.hot && (
+                 <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-medium ${trustBadgeMap.hot.className}`}>
+                   🔥 PAUTA QUENTE
                  </span>
                )}
                {sentiment && (

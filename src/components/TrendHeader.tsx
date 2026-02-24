@@ -406,24 +406,7 @@ const TrendHeader = ({ totalTrends = 0, countriesCount = 0, onRefresh, refreshin
                 </p>
               </section>
 
-              {/* Seção 5: Apoie */}
-              <section className="space-y-2.5">
-                <h3 className="text-sm font-semibold text-foreground flex items-center gap-1.5">
-                  <span className="w-1.5 h-1.5 rounded-full bg-primary" />
-                  Apoie
-                </h3>
-                <p className="text-xs text-muted-foreground">
-                  Mantenha esta ferramenta gratuita e independente
-                </p>
-                <a
-                  href="https://buymeacoffee.com/globaltalktrending"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center justify-center w-full py-2.5 px-4 rounded-full bg-primary hover:bg-primary/90 text-primary-foreground text-sm font-semibold tracking-tight transition-colors duration-200 shadow-lg"
-                >
-                  ☕ Apoie com uma doação
-                </a>
-              </section>
+              {/* Seção 5: Apoie - removido, agora é floating button no mapa */}
 
               {/* Metodologia link */}
               <div className="flex items-center justify-center">
