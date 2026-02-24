@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import React, { useState, useEffect, forwardRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Info, Sun, Moon, RefreshCw, LogOut, LogIn, BookOpen, Star, Bell, Clock, ChevronDown, User, AlertTriangle, X, FileText, Users } from "lucide-react";
 import { Link } from "react-router-dom";
@@ -42,7 +42,7 @@ interface TrendHeaderProps {
   onOpenTransparency?: () => void;
 }
 
-const TrendHeader = ({ totalTrends = 0, countriesCount = 0, onRefresh, refreshing, filters, onApplyFilter, anomalyCount = 0, anomalies = [], onDismissAnomaly, onOpenTransparency }: TrendHeaderProps) => {
+const TrendHeader = forwardRef<HTMLDivElement, TrendHeaderProps>(({ totalTrends = 0, countriesCount = 0, onRefresh, refreshing, filters, onApplyFilter, anomalyCount = 0, anomalies = [], onDismissAnomaly, onOpenTransparency }, ref) => {
   const { lang, setLang, t } = useLanguage();
   const [aboutOpen, setAboutOpen] = useState(false);
   const [loginOpen, setLoginOpen] = useState(false);
@@ -603,6 +603,8 @@ const TrendHeader = ({ totalTrends = 0, countriesCount = 0, onRefresh, refreshin
       </Dialog>
     </>
   );
-};
+});
+
+TrendHeader.displayName = "TrendHeader";
 
 export default TrendHeader;
