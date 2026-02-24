@@ -92,6 +92,8 @@ export const countries = [
   ]},
 ];
 
+const selectClass = "appearance-none bg-transparent text-[#1d1d1f] dark:text-foreground text-[13px] font-medium px-3 py-2 rounded-lg cursor-pointer min-w-0 hover:bg-black/[0.02] dark:hover:bg-white/5 transition-colors";
+
 const FilterBar = ({ filters, onChange }: FilterBarProps) => {
   const { t } = useLanguage();
 
@@ -120,8 +122,6 @@ const FilterBar = ({ filters, onChange }: FilterBarProps) => {
     { value: "Cultura", label: t("culture") },
     { value: "Negócios/Finanças", label: t("business") },
     { value: "Ciência", label: t("science") },
-    { value: "Dados oficiais", label: "📊 Dados Oficiais" },
-    { value: "Enciclopédia", label: "📖 Enciclopédia" },
   ];
 
   const typeOptions = [
@@ -132,12 +132,16 @@ const FilterBar = ({ filters, onChange }: FilterBarProps) => {
   ];
 
   return (
-    <div className="mx-2 md:mx-4 my-1.5 rounded-[12px] bg-card/95 dark:bg-card/80 backdrop-blur-xl border border-border/30 shadow-sm">
-      <div className="flex items-center gap-2 px-3 md:px-4 py-2 overflow-x-auto scrollbar-thin flex-nowrap">
+    <div
+      className="mx-2 md:mx-4 my-1.5 rounded-[12px] bg-white/95 dark:bg-card/80 backdrop-blur-md"
+      style={{ border: '1px solid #eaeaea', boxShadow: '0 2px 8px rgba(0,0,0,0.02)' }}
+    >
+      <div className="flex items-center gap-1 px-2 md:px-3 py-1.5 overflow-x-auto scrollbar-thin flex-nowrap">
         <select
-          className="appearance-none bg-muted/40 text-foreground text-[12px] font-medium px-2.5 py-1 rounded-lg border-none outline-none focus:ring-2 focus:ring-primary/20 cursor-pointer min-w-0"
+          className={selectClass}
           value={filters.country}
           onChange={(e) => update("country", e.target.value)}
+          style={{ outline: 'none' }}
         >
           {countries.map((group) => (
             <optgroup key={group.group} label={group.group}>
@@ -149,9 +153,10 @@ const FilterBar = ({ filters, onChange }: FilterBarProps) => {
         </select>
 
         <select
-          className="appearance-none bg-muted/40 text-foreground text-[12px] font-medium px-2.5 py-1 rounded-lg border-none outline-none focus:ring-2 focus:ring-primary/20 cursor-pointer min-w-0"
+          className={selectClass}
           value={filters.period}
           onChange={(e) => update("period", e.target.value)}
+          style={{ outline: 'none' }}
         >
           {periodOptions.map((p) => (
             <option key={p.value} value={p.value}>{p.label}</option>
@@ -159,9 +164,10 @@ const FilterBar = ({ filters, onChange }: FilterBarProps) => {
         </select>
 
         <select
-          className="appearance-none bg-muted/40 text-foreground text-[12px] font-medium px-2.5 py-1 rounded-lg border-none outline-none focus:ring-2 focus:ring-primary/20 cursor-pointer min-w-0"
+          className={selectClass}
           value={filters.category}
           onChange={(e) => update("category", e.target.value)}
+          style={{ outline: 'none' }}
         >
           {categoryOptions.map((c) => (
             <option key={c.value} value={c.value}>{c.label}</option>
@@ -169,9 +175,10 @@ const FilterBar = ({ filters, onChange }: FilterBarProps) => {
         </select>
 
         <select
-          className="appearance-none bg-muted/40 text-foreground text-[12px] font-medium px-2.5 py-1 rounded-lg border-none outline-none focus:ring-2 focus:ring-primary/20 cursor-pointer min-w-0"
+          className={selectClass}
           value={filters.type}
           onChange={(e) => update("type", e.target.value)}
+          style={{ outline: 'none' }}
         >
           {typeOptions.map((opt) => (
             <option key={opt.value} value={opt.value}>{opt.label}</option>
@@ -181,7 +188,8 @@ const FilterBar = ({ filters, onChange }: FilterBarProps) => {
         {isFiltered && (
           <button
             onClick={() => onChange(defaultFilters)}
-            className="flex items-center gap-1 px-2.5 py-1 rounded-lg text-[11px] font-medium text-primary hover:bg-primary/10 transition-colors flex-shrink-0 outline-none focus:ring-2 focus:ring-primary/20"
+            className="flex items-center gap-1 px-3 py-2 rounded-lg text-[12px] font-medium text-primary hover:bg-black/[0.02] transition-colors flex-shrink-0"
+            style={{ outline: 'none' }}
             title="Limpar filtros"
           >
             <RotateCcw className="w-3 h-3" />
