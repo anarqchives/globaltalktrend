@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import { TrendCardProps } from "@/components/TrendCard";
 import { toast } from "@/hooks/use-toast";
 
@@ -14,6 +14,31 @@ function parseChange(change: string): number {
   return match ? parseFloat(match[0]) : 0;
 }
 
+/** Request notification permission and return status */
+async function requestPushPermission(): Promise<boolean> {
+  if (!("Notification" in window)) return false;
+  if (Notification.permission === "granted") return true;
+  if (Notification.permission === "denied") return false;
+  const result = await Notification.requestPermission();
+  return result === "granted";
+}
+
+/** Send a local push notification via the service worker */
+async function sendPushNotification(title: string, body: string) {
+  try {
+    if (Notification.permission !== "granted") return;
+    const reg = await navigator.serviceWorker?.ready;
+    if (reg) {
+      reg.showNotification(title, {
+        body: body.slice(0, 120),
+        icon: "/favicon.png",
+        badge: "/favicon.png",
+        tag: "anomaly-alert",
+      } as NotificationOptions);
+    }
+  } catch {}
+}
+
 export function useAnomalyAlerts(trends: TrendCardProps[]) {
   const [dismissed, setDismissed] = useState<Set<string>>(() => {
     try {
@@ -22,6 +47,12 @@ export function useAnomalyAlerts(trends: TrendCardProps[]) {
     } catch { return new Set(); }
   });
   const [notified, setNotified] = useState<Set<string>>(new Set());
+  const [pushEnabled, setPushEnabled] = useState(false);
+
+  // Request permission on mount
+  useEffect(() => {
+    requestPushPermission().then(setPushEnabled);
+  }, []);
 
   const anomalies = useMemo(() => {
     const results: AnomalyAlert[] = [];
@@ -38,7 +69,6 @@ export function useAnomalyAlerts(trends: TrendCardProps[]) {
       const change = parseChange(t.change);
       const platforms = new Set((titleMap.get(key) || []).map(x => x.platform));
 
-      // Spike: > 300% growth
       if (change > 300) {
         results.push({
           trend: t,
@@ -49,7 +79,6 @@ export function useAnomalyAlerts(trends: TrendCardProps[]) {
         continue;
       }
 
-      // Multi-platform convergence
       if (platforms.size >= 3 && change > 100) {
         results.push({
           trend: t,
@@ -60,7 +89,6 @@ export function useAnomalyAlerts(trends: TrendCardProps[]) {
         continue;
       }
 
-      // Rapid growth
       if (change > 200) {
         results.push({
           trend: t,
@@ -71,7 +99,6 @@ export function useAnomalyAlerts(trends: TrendCardProps[]) {
       }
     }
 
-    // Dedupe by title key
     const seen = new Set<string>();
     return results.filter(a => {
       const k = a.trend.title.toLowerCase().slice(0, 40);
@@ -86,25 +113,34 @@ export function useAnomalyAlerts(trends: TrendCardProps[]) {
     [anomalies, dismissed]
   );
 
-  // Show toast for new anomalies (once per session)
+  // Show toast + push for new high-severity anomalies
   useEffect(() => {
     for (const a of activeAnomalies) {
       const key = a.trend.title.toLowerCase().slice(0, 40);
       if (!notified.has(key) && a.severity === "high") {
         toast({ title: "🚨 Anomalia detectada", description: a.message.slice(0, 100) });
+        if (pushEnabled) {
+          sendPushNotification("🚨 Anomalia detectada", a.message);
+        }
         setNotified(prev => new Set(prev).add(key));
       }
     }
-  }, [activeAnomalies]);
+  }, [activeAnomalies, pushEnabled]);
 
-  const dismiss = (title: string) => {
+  const dismiss = useCallback((title: string) => {
     const key = title.toLowerCase().slice(0, 40);
     setDismissed(prev => {
       const next = new Set(prev).add(key);
       sessionStorage.setItem("gtt_dismissed_anomalies", JSON.stringify([...next]));
       return next;
     });
-  };
+  }, []);
 
-  return { anomalies: activeAnomalies, totalCount: activeAnomalies.length, dismiss };
+  const enablePush = useCallback(async () => {
+    const granted = await requestPushPermission();
+    setPushEnabled(granted);
+    return granted;
+  }, []);
+
+  return { anomalies: activeAnomalies, totalCount: activeAnomalies.length, dismiss, pushEnabled, enablePush };
 }

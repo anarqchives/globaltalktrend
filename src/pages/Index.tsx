@@ -51,7 +51,7 @@ const MobileCoffeeButton = () => {
       {expanded && (
         <div className="mb-2 p-4 rounded-2xl bg-white/95 dark:bg-card/95 backdrop-blur-[12px] border border-white/50 dark:border-white/10 shadow-[0_8px_24px_rgba(0,0,0,0.1)] w-56 animate-in fade-in slide-in-from-bottom-2">
           <p className="text-[13px] font-medium text-foreground mb-3">
-            Mantenha o Global-Talk gratuito
+            Apoie a melhoria contínua da ferramenta
           </p>
           <a
             href="https://buy.stripe.com/fZu7sMgw6cHLeTnbWVdIA00"
