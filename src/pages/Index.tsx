@@ -1,7 +1,6 @@
-import { useState, useRef, useCallback, useEffect, useMemo } from "react";
+import { useState, useRef, useCallback, useEffect, useMemo, lazy, Suspense } from "react";
 import TrendHeader from "@/components/TrendHeader";
 import FilterBar, { FilterState, countries } from "@/components/FilterBar";
-import GoogleMapView from "@/components/GoogleMapView";
 import TimelineCard from "@/components/TimelineCard";
 import TrendCardSkeleton from "@/components/TrendCardSkeleton";
 import { TrendCardProps } from "@/components/TrendCard";
@@ -17,6 +16,59 @@ import {
   ResizablePanel,
   ResizableHandle,
 } from "@/components/ui/resizable";
+
+// Lazy load the heavy map component
+const GoogleMapView = lazy(() => import("@/components/GoogleMapView"));
+
+const MapFallback = () => (
+  <div className="h-full flex items-center justify-center bg-secondary/10">
+    <div className="flex items-center gap-3 text-muted-foreground text-sm">
+      <div className="w-5 h-5 border-2 border-primary/30 border-t-primary rounded-full animate-spin" />
+      <span className="font-medium">Carregando mapa…</span>
+    </div>
+  </div>
+);
+
+// Mobile floating coffee button
+const MobileCoffeeButton = () => {
+  const [expanded, setExpanded] = useState(false);
+
+  useEffect(() => {
+    if (!expanded) return;
+    const handler = (e: MouseEvent) => {
+      if (!(e.target as HTMLElement).closest('[data-mobile-coffee]')) setExpanded(false);
+    };
+    document.addEventListener('click', handler);
+    return () => document.removeEventListener('click', handler);
+  }, [expanded]);
+
+  return (
+    <div className="fixed bottom-5 right-4 z-50 md:hidden" data-mobile-coffee>
+      {expanded && (
+        <div className="mb-2 p-4 rounded-2xl bg-white/95 dark:bg-card/95 backdrop-blur-[12px] border border-white/50 dark:border-white/10 shadow-[0_8px_24px_rgba(0,0,0,0.1)] w-56 animate-in fade-in slide-in-from-bottom-2">
+          <p className="text-[13px] font-medium text-foreground mb-3">
+            Mantenha o Global-Talk gratuito
+          </p>
+          <a
+            href="https://buymeacoffee.com/globaltalktrending"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center justify-center gap-2 w-full py-2.5 px-4 rounded-full bg-primary hover:bg-primary/90 text-primary-foreground text-[13px] font-semibold transition-colors shadow-sm"
+          >
+            ☕ Apoie-se
+          </a>
+        </div>
+      )}
+      <button
+        onClick={(e) => { e.stopPropagation(); setExpanded(!expanded); }}
+        className="w-12 h-12 rounded-full bg-white/95 dark:bg-card/95 backdrop-blur-[12px] border border-white/50 dark:border-white/10 shadow-[0_4px_16px_rgba(0,0,0,0.12)] flex items-center justify-center text-xl hover:scale-105 active:scale-95 transition-transform focus:outline-none"
+        title="Apoie o projeto"
+      >
+        ☕
+      </button>
+    </div>
+  );
+};
 
 const defaultFilters: FilterState = {
   country: "global",
@@ -121,7 +173,6 @@ const Index = () => {
     scrollRef.current?.scrollTo({ top: 0, behavior: "smooth" });
   }, []);
 
-  // When a trend is selected from ranking, expand it in timeline and sync map
   const handleSelectTrend = useCallback((trend: TrendCardProps) => {
     const trendId = `${trend.platform}-${trend.title.slice(0, 20)}`;
     setExpandedTrendId(trendId);
@@ -129,22 +180,18 @@ const Index = () => {
     scrollRef.current?.scrollTo({ top: 0, behavior: "smooth" });
   }, [isMobile]);
 
-  // When a card expands, sync map to its country
   const handleCardExpand = useCallback((trend: TrendCardProps) => {
     if (trend.countryCode) {
-      // Don't change filters, just let the map know which country to highlight
       setExpandedTrendId(`${trend.platform}-${trend.title.slice(0, 20)}`);
     }
   }, []);
 
-  // Get the country of the currently expanded trend for map sync
   const expandedTrendCountry = useMemo(() => {
     if (!expandedTrendId) return null;
     const trend = filteredTrends.find(t => `${t.platform}-${t.title.slice(0, 20)}` === expandedTrendId);
     return trend?.countryCode?.slice(0, 2).toUpperCase() || null;
   }, [expandedTrendId, filteredTrends]);
 
-  // Breadcrumb segments
   const breadcrumbs = useMemo(() => {
     const segments: { label: string; key: keyof FilterState }[] = [];
     if (filters.country !== "global") {
@@ -175,7 +222,6 @@ const Index = () => {
         </span>
       </div>
 
-      {/* Breadcrumb showing active filters */}
       {breadcrumbs.length > 0 && (
         <div className="px-2 py-1 flex items-center gap-1 flex-wrap text-[10px]">
           <span className="text-muted-foreground/60">Mostrando:</span>
@@ -213,11 +259,8 @@ const Index = () => {
                 }}
                 onExpand={(title, platform, metadata) => {
                   trackView(title, platform, metadata);
-                  // Sync map to trend's country
                   if (trend.countryCode) {
                     const cc = trend.countryCode.slice(0, 2).toUpperCase();
-                    const map = document.querySelector('[data-map-sync]');
-                    // We pass the country through a custom event
                     window.dispatchEvent(new CustomEvent('trend-expand-country', { detail: cc }));
                   }
                 }}
@@ -279,6 +322,19 @@ const Index = () => {
     </div>
   );
 
+  const renderMap = () => (
+    <Suspense fallback={<MapFallback />}>
+      <GoogleMapView
+        trendCounts={trendCounts}
+        selectedCountry={filters.country}
+        onSelectCountry={handleMapClick}
+        trends={allTrends}
+        onSelectTrend={handleSelectTrend}
+        highlightCountry={expandedTrendCountry}
+      />
+    </Suspense>
+  );
+
   return (
     <div className="h-screen flex flex-col bg-background overflow-hidden">
       <TrendHeader
@@ -317,18 +373,7 @@ const Index = () => {
               </button>
             </div>
             <div className="flex-1 overflow-hidden">
-              {mobileTab === "timeline" ? (
-                renderTimeline()
-              ) : (
-                <GoogleMapView
-                  trendCounts={trendCounts}
-                  selectedCountry={filters.country}
-                  onSelectCountry={handleMapClick}
-                  trends={allTrends}
-                  onSelectTrend={handleSelectTrend}
-                  highlightCountry={expandedTrendCountry}
-                />
-              )}
+              {mobileTab === "timeline" ? renderTimeline() : renderMap()}
             </div>
           </div>
         ) : (
@@ -339,19 +384,15 @@ const Index = () => {
             <ResizableHandle withHandle />
             <ResizablePanel defaultSize={62}>
               <div className="h-full bg-secondary/10">
-                <GoogleMapView
-                  trendCounts={trendCounts}
-                  selectedCountry={filters.country}
-                  onSelectCountry={handleMapClick}
-                  trends={allTrends}
-                  onSelectTrend={handleSelectTrend}
-                  highlightCountry={expandedTrendCountry}
-                />
+                {renderMap()}
               </div>
             </ResizablePanel>
           </ResizablePanelGroup>
         )}
       </div>
+
+      {/* Mobile floating coffee button */}
+      {isMobile && <MobileCoffeeButton />}
     </div>
   );
 };
