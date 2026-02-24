@@ -1,6 +1,6 @@
 import { useState, useRef, useCallback, useEffect } from "react";
 import TrendHeader from "@/components/TrendHeader";
-import FilterBar, { FilterState } from "@/components/FilterBar";
+import FilterBar, { FilterState, countries } from "@/components/FilterBar";
 import GoogleMapView from "@/components/GoogleMapView";
 import TimelineCard from "@/components/TimelineCard";
 import TrendCardSkeleton from "@/components/TrendCardSkeleton";
@@ -147,6 +147,21 @@ const Index = () => {
       {!hasMore && filteredTrends.length > 0 && (
         <div className="flex items-center justify-center py-4 text-[11px] text-muted-foreground/50">
           — {t("noTrends")} —
+        </div>
+      )}
+      {!loading && !isFirstLoad && filteredTrends.length === 0 && (
+        <div className="flex flex-col items-center justify-center py-16 px-4 text-center gap-3">
+          <span className="text-4xl">🔍</span>
+          <p className="text-sm font-medium text-foreground">
+            {filters.country !== "global"
+              ? `${t("noTrends")} — ${countries.flatMap(g => g.items).find(c => c.value === filters.country)?.label?.replace(/^.{2}\s?/, '') || filters.country}`
+              : t("noTrends")}
+          </p>
+          <p className="text-xs text-muted-foreground max-w-[260px]">
+            {filters.country !== "global"
+              ? "Tente mudar o período ou os filtros, ou volte mais tarde."
+              : "Nenhuma trend encontrada com os filtros atuais."}
+          </p>
         </div>
       )}
     </div>
