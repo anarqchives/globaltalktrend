@@ -189,12 +189,14 @@ const Index = () => {
 
       {/* Scroll to top button */}
       {showScrollTop && (
-        <button
-          onClick={scrollToTop}
-          className="sticky bottom-4 left-1/2 -translate-x-1/2 z-20 px-3 py-1.5 rounded-full bg-primary text-primary-foreground text-[11px] font-semibold shadow-lg hover:bg-primary/90 transition-all animate-in fade-in slide-in-from-bottom-2"
-        >
-          ↑ Voltar ao topo
-        </button>
+        <div className="sticky bottom-4 z-20 flex justify-center">
+          <button
+            onClick={scrollToTop}
+            className="px-3 py-1.5 rounded-full bg-primary text-primary-foreground text-[11px] font-semibold shadow-lg hover:bg-primary/90 transition-all animate-in fade-in slide-in-from-bottom-2"
+          >
+            ↑ Voltar ao topo
+          </button>
+        </div>
       )}
     </div>
   );
