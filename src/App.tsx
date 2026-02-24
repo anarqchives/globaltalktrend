@@ -5,6 +5,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { LanguageProvider } from "@/contexts/LanguageContext";
+import { UserModeProvider } from "@/contexts/UserModeContext";
 import Index from "./pages/Index";
 import Methodology from "./pages/Methodology";
 import History from "./pages/History";
@@ -16,6 +17,7 @@ const queryClient = new QueryClient({ defaultOptions: { queries: { retry: 1 } } 
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <LanguageProvider>
+      <UserModeProvider>
       <TooltipProvider>
         <Toaster />
         <Sonner />
@@ -29,6 +31,7 @@ const App = () => (
           </Routes>
         </BrowserRouter>
       </TooltipProvider>
+      </UserModeProvider>
     </LanguageProvider>
   </QueryClientProvider>
 );

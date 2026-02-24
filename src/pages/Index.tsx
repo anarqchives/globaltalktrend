@@ -7,8 +7,10 @@ import CriticalMomentsSection from "@/components/CriticalMomentsSection";
 import { TrendCardProps } from "@/components/TrendCard";
 import { useTrends } from "@/hooks/use-trends";
 import { useCriticalMoments } from "@/hooks/use-critical-moments";
+import { useAnomalyAlerts } from "@/hooks/use-anomaly-alerts";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { useUserMode } from "@/contexts/UserModeContext";
 import { useHistory } from "@/hooks/use-history";
 import { useGamification } from "@/hooks/use-gamification";
 import { supabase } from "@/integrations/supabase/client";
@@ -95,6 +97,7 @@ function getInitialFilters(): FilterState {
 
 const Index = () => {
   const { t } = useLanguage();
+  const { config: modeConfig, mode } = useUserMode();
   const [filters, setFilters] = useState<FilterState>(getInitialFilters);
   const [user, setUser] = useState<any>(null);
 
@@ -114,8 +117,15 @@ const Index = () => {
   const scrollRef = useRef<HTMLDivElement>(null);
   const sentinelRef = useRef<HTMLDivElement>(null);
 
-  const { filteredTrends, allTrends, loading, isFirstLoad, fetchTrends, countriesCount } = useTrends(filters, setTrendCounts);
+  const { filteredTrends: rawFilteredTrends, allTrends, loading, isFirstLoad, fetchTrends, countriesCount } = useTrends(filters, setTrendCounts);
   const criticalMoments = useCriticalMoments(allTrends);
+  const { anomalies, totalCount: anomalyCount, dismiss: dismissAnomaly } = useAnomalyAlerts(allTrends);
+
+  // Apply mode-based sorting
+  const filteredTrends = useMemo(() => {
+    if (mode === "cidadao") return rawFilteredTrends;
+    return [...rawFilteredTrends].sort((a, b) => modeConfig.sortWeight(b) - modeConfig.sortWeight(a));
+  }, [rawFilteredTrends, mode, modeConfig]);
 
   // Sync filters to URL
   useEffect(() => {
@@ -347,6 +357,9 @@ const Index = () => {
         refreshing={refreshing}
         filters={filters}
         onApplyFilter={setFilters}
+        anomalyCount={anomalyCount}
+        anomalies={anomalies}
+        onDismissAnomaly={dismissAnomaly}
       />
       <FilterBar filters={filters} onChange={setFilters} />
 
