@@ -537,10 +537,15 @@ const GoogleMapView = ({
     });
   }, [trendCounts, maxCount, avgCount, selectedCountry, mapLoaded, onSelectCountry, t, trends, isDark]);
 
-  // Pan to selected country
+  // Pan to selected country or reset to world view
   useEffect(() => {
     const map = googleMapRef.current;
-    if (!map || !mapLoaded || selectedCountry === "global") return;
+    if (!map || !mapLoaded) return;
+    if (selectedCountry === "global") {
+      map.panTo({ lat: 20, lng: 0 });
+      map.setZoom(2);
+      return;
+    }
     const cp = countryPoints.find((c) => c.id === selectedCountry);
     if (cp) {
       map.panTo({ lat: cp.lat, lng: cp.lng });

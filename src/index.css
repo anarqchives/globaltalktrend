@@ -150,10 +150,22 @@
 
   .timeline-card {
     @apply bg-card rounded-xl px-3 py-2.5 border border-transparent transition-all duration-150 cursor-pointer;
+    min-height: 72px;
   }
   .timeline-card:hover {
     @apply border-border;
     box-shadow: var(--card-hover-shadow);
+  }
+
+  /* Mobile: make action buttons always visible (no hover on touch) */
+  @media (hover: none), (pointer: coarse) {
+    .timeline-card .group-hover\:opacity-100 {
+      opacity: 1 !important;
+    }
+    .timeline-card:active {
+      @apply border-border;
+      box-shadow: var(--card-hover-shadow);
+    }
   }
 
   .trend-card-base {
