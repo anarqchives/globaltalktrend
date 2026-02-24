@@ -24,7 +24,8 @@ type TranslationKey =
   | "allMedia" | "socialMedia" | "press" | "searches"
   | "live" | "peak" | "copied" | "updated" | "about" | "aboutTitle" | "aboutDesc"
   | "map" | "satellite" | "terrain" | "timeline" | "clickToClose"
-  | "trendCount" | "loading" | "expandDetails" | "evolution24h" | "share" | "noTrends";
+  | "trendCount" | "loading" | "expandDetails" | "evolution24h" | "share" | "noTrends"
+  | "heatmapDensity" | "low" | "high";
 
 const translations: Record<LangCode, Record<TranslationKey, string>> = {
   pt: {
@@ -40,6 +41,7 @@ const translations: Record<LangCode, Record<TranslationKey, string>> = {
     map: "Mapa", satellite: "Satélite", terrain: "Terreno", timeline: "Timeline",
     clickToClose: "Clique para fechar", trendCount: "trends", loading: "Carregando...",
     expandDetails: "Ver detalhes", evolution24h: "Evolução 24h", share: "Compartilhar", noTrends: "Sem tendências",
+    heatmapDensity: "Densidade de Trends", low: "Baixo", high: "Alto",
   },
   en: {
     trends: "Trends", moreTrends: "More trends", filters: "Filters",
@@ -54,6 +56,7 @@ const translations: Record<LangCode, Record<TranslationKey, string>> = {
     map: "Map", satellite: "Satellite", terrain: "Terrain", timeline: "Timeline",
     clickToClose: "Click to close", trendCount: "trends", loading: "Loading...",
     expandDetails: "View details", evolution24h: "24h Evolution", share: "Share", noTrends: "No trends",
+    heatmapDensity: "Trend Density", low: "Low", high: "High",
   },
   es: {
     trends: "Tendencias", moreTrends: "Más trends", filters: "Filtros",
@@ -68,6 +71,7 @@ const translations: Record<LangCode, Record<TranslationKey, string>> = {
     map: "Mapa", satellite: "Satélite", terrain: "Terreno", timeline: "Timeline",
     clickToClose: "Clic para cerrar", trendCount: "tendencias", loading: "Cargando...",
     expandDetails: "Ver detalles", evolution24h: "Evolución 24h", share: "Compartir", noTrends: "Sin tendencias",
+    heatmapDensity: "Densidad de Trends", low: "Bajo", high: "Alto",
   },
   fr: {
     trends: "Tendances", moreTrends: "Plus de tendances", filters: "Filtres",
@@ -82,6 +86,7 @@ const translations: Record<LangCode, Record<TranslationKey, string>> = {
     map: "Carte", satellite: "Satellite", terrain: "Terrain", timeline: "Timeline",
     clickToClose: "Cliquer pour fermer", trendCount: "tendances", loading: "Chargement...",
     expandDetails: "Voir les détails", evolution24h: "Évolution 24h", share: "Partager", noTrends: "Aucune tendance",
+    heatmapDensity: "Densité des Trends", low: "Faible", high: "Élevé",
   },
   de: {
     trends: "Trends", moreTrends: "Mehr Trends", filters: "Filter",
@@ -96,6 +101,7 @@ const translations: Record<LangCode, Record<TranslationKey, string>> = {
     map: "Karte", satellite: "Satellit", terrain: "Gelände", timeline: "Timeline",
     clickToClose: "Klicken zum Schließen", trendCount: "Trends", loading: "Laden...",
     expandDetails: "Details anzeigen", evolution24h: "24h-Entwicklung", share: "Teilen", noTrends: "Keine Trends",
+    heatmapDensity: "Trend-Dichte", low: "Niedrig", high: "Hoch",
   },
   it: {
     trends: "Tendenze", moreTrends: "Più tendenze", filters: "Filtri",
@@ -110,6 +116,7 @@ const translations: Record<LangCode, Record<TranslationKey, string>> = {
     map: "Mappa", satellite: "Satellite", terrain: "Terreno", timeline: "Timeline",
     clickToClose: "Clicca per chiudere", trendCount: "tendenze", loading: "Caricamento...",
     expandDetails: "Vedi dettagli", evolution24h: "Evoluzione 24h", share: "Condividi", noTrends: "Nessuna tendenza",
+    heatmapDensity: "Densità dei Trend", low: "Basso", high: "Alto",
   },
   zh: {
     trends: "趋势", moreTrends: "更多趋势", filters: "筛选",
@@ -124,6 +131,7 @@ const translations: Record<LangCode, Record<TranslationKey, string>> = {
     map: "地图", satellite: "卫星", terrain: "地形", timeline: "时间线",
     clickToClose: "点击关闭", trendCount: "趋势", loading: "加载中...",
     expandDetails: "查看详情", evolution24h: "24小时演变", share: "分享", noTrends: "无趋势",
+    heatmapDensity: "趋势密度", low: "低", high: "高",
   },
   ja: {
     trends: "トレンド", moreTrends: "もっと見る", filters: "フィルター",
@@ -138,6 +146,7 @@ const translations: Record<LangCode, Record<TranslationKey, string>> = {
     map: "マップ", satellite: "衛星", terrain: "地形", timeline: "タイムライン",
     clickToClose: "クリックして閉じる", trendCount: "トレンド", loading: "読み込み中...",
     expandDetails: "詳細を見る", evolution24h: "24時間の推移", share: "共有", noTrends: "トレンドなし",
+    heatmapDensity: "トレンド密度", low: "低", high: "高",
   },
   ko: {
     trends: "트렌드", moreTrends: "더 많은 트렌드", filters: "필터",
@@ -152,6 +161,7 @@ const translations: Record<LangCode, Record<TranslationKey, string>> = {
     map: "지도", satellite: "위성", terrain: "지형", timeline: "타임라인",
     clickToClose: "닫으려면 클릭", trendCount: "트렌드", loading: "로딩 중...",
     expandDetails: "상세 보기", evolution24h: "24시간 추이", share: "공유", noTrends: "트렌드 없음",
+    heatmapDensity: "트렌드 밀도", low: "낮음", high: "높음",
   },
   ar: {
     trends: "الاتجاهات", moreTrends: "المزيد", filters: "التصفية",
@@ -166,6 +176,7 @@ const translations: Record<LangCode, Record<TranslationKey, string>> = {
     map: "خريطة", satellite: "قمر صناعي", terrain: "تضاريس", timeline: "الجدول الزمني",
     clickToClose: "اضغط للإغلاق", trendCount: "اتجاهات", loading: "جار التحميل...",
     expandDetails: "عرض التفاصيل", evolution24h: "التطور 24 ساعة", share: "مشاركة", noTrends: "لا توجد اتجاهات",
+    heatmapDensity: "كثافة الاتجاهات", low: "منخفض", high: "مرتفع",
   },
   hi: {
     trends: "रुझान", moreTrends: "और रुझान", filters: "फ़िल्टर",
@@ -180,6 +191,7 @@ const translations: Record<LangCode, Record<TranslationKey, string>> = {
     map: "मानचित्र", satellite: "उपग्रह", terrain: "भूभाग", timeline: "टाइमलाइन",
     clickToClose: "बंद करने के लिए क्लिक करें", trendCount: "रुझान", loading: "लोड हो रहा है...",
     expandDetails: "विवरण देखें", evolution24h: "24 घंटे का विकास", share: "शेयर", noTrends: "कोई रुझान नहीं",
+    heatmapDensity: "रुझान घनत्व", low: "कम", high: "अधिक",
   },
   ru: {
     trends: "Тренды", moreTrends: "Больше трендов", filters: "Фильтры",
@@ -194,6 +206,7 @@ const translations: Record<LangCode, Record<TranslationKey, string>> = {
     map: "Карта", satellite: "Спутник", terrain: "Рельеф", timeline: "Таймлайн",
     clickToClose: "Нажмите, чтобы закрыть", trendCount: "тренды", loading: "Загрузка...",
     expandDetails: "Подробнее", evolution24h: "Динамика 24ч", share: "Поделиться", noTrends: "Нет трендов",
+    heatmapDensity: "Плотность трендов", low: "Низкий", high: "Высокий",
   },
 };
 

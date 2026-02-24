@@ -414,9 +414,9 @@ const GoogleMapView = ({
       {/* Heatmap legend */}
       {heatmapEnabled && (
         <div className="absolute bottom-4 right-3 z-10 bg-card/90 backdrop-blur-sm border border-border rounded-lg shadow-sm px-3 py-2">
-          <p className="text-[10px] font-semibold text-foreground mb-1.5">Densidade de Trends</p>
+          <p className="text-[10px] font-semibold text-foreground mb-1.5">{t("heatmapDensity")}</p>
           <div className="flex items-center gap-1.5">
-            <span className="text-[9px] text-muted-foreground">Baixo</span>
+            <span className="text-[9px] text-muted-foreground">{t("low")}</span>
             <div className="flex h-2.5 rounded-full overflow-hidden w-24">
               <div className="flex-1" style={{ background: "#4285F4" }} />
               <div className="flex-1" style={{ background: "#66BBFF" }} />
@@ -424,7 +424,7 @@ const GoogleMapView = ({
               <div className="flex-1" style={{ background: "#FFA000" }} />
               <div className="flex-1" style={{ background: "#EA4335" }} />
             </div>
-            <span className="text-[9px] text-muted-foreground">Alto</span>
+            <span className="text-[9px] text-muted-foreground">{t("high")}</span>
           </div>
         </div>
       )}
