@@ -56,7 +56,7 @@ interface GlobalRankingProps {
 const GlobalRanking = ({ trends, onSelectTrend, onFilterCountry, collapsed: initialCollapsed }: GlobalRankingProps) => {
   const { t } = useLanguage();
   const isMobile = typeof window !== "undefined" && window.innerWidth < 768;
-  const [collapsed, setCollapsed] = useState(initialCollapsed ?? isMobile);
+  const [collapsed, setCollapsed] = useState(initialCollapsed ?? true);
   const [modalOpen, setModalOpen] = useState(false);
 
   const ranked = useMemo(() => {

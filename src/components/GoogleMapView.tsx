@@ -594,7 +594,7 @@ const GoogleMapView = ({
           trends={trends}
           onSelectTrend={onSelectTrend}
           onFilterCountry={onSelectCountry}
-          collapsed={false}
+          collapsed={true}
         />
       )}
 
