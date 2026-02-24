@@ -87,8 +87,39 @@ const WordCloud = ({ words }: { words: SentimentWord[] }) => {
   );
 };
 
+const CACHE_KEY = "gt_context_cache";
+const CACHE_TTL = 1000 * 60 * 60; // 1 hour
+
+function getCachedContext(key: string): TrendContextData | null {
+  try {
+    const raw = localStorage.getItem(CACHE_KEY);
+    if (!raw) return null;
+    const cache = JSON.parse(raw) as Record<string, { data: TrendContextData; ts: number }>;
+    const entry = cache[key];
+    if (!entry || Date.now() - entry.ts > CACHE_TTL) return null;
+    return entry.data;
+  } catch { return null; }
+}
+
+function setCachedContext(key: string, data: TrendContextData) {
+  try {
+    const raw = localStorage.getItem(CACHE_KEY);
+    const cache = raw ? JSON.parse(raw) : {};
+    // Keep max 50 entries
+    const keys = Object.keys(cache);
+    if (keys.length > 50) {
+      const oldest = keys.sort((a, b) => cache[a].ts - cache[b].ts).slice(0, keys.length - 40);
+      oldest.forEach(k => delete cache[k]);
+    }
+    cache[key] = { data, ts: Date.now() };
+    localStorage.setItem(CACHE_KEY, JSON.stringify(cache));
+  } catch { /* quota exceeded, ignore */ }
+}
+
 const TrendContextTab = ({ title, details, description, platform, volume, category, sources }: TrendContextTabProps) => {
-  const [contextData, setContextData] = useState<TrendContextData | null>(null);
+  const cacheKey = `${platform}::${title.slice(0, 60)}`;
+  const cached = useMemo(() => getCachedContext(cacheKey), [cacheKey]);
+  const [contextData, setContextData] = useState<TrendContextData | null>(cached);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(false);
 
@@ -102,6 +133,7 @@ const TrendContextTab = ({ title, details, description, platform, volume, catego
       });
       if (fnError) throw fnError;
       setContextData(data);
+      if (data) setCachedContext(cacheKey, data);
     } catch (err: any) {
       console.error("Context analysis error:", err);
       setError(true);
