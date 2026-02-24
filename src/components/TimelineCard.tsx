@@ -110,7 +110,7 @@ const TimelineCard = ({
 
   // Sync with external forceExpanded prop
   useEffect(() => {
-    if (forceExpanded) setExpanded(true);
+    setExpanded(!!forceExpanded);
   }, [forceExpanded]);
   const [aiSummary, setAiSummary] = useState<{ summary: string; sentiment: string; impact: string } | null>(null);
   const [summarizing, setSummarizing] = useState(false);
@@ -238,7 +238,15 @@ const TimelineCard = ({
   return (
     <>
       <div className="timeline-card group">
-        <div className="flex items-start gap-3" onClick={onClick}>
+        <div className="flex items-start gap-3 cursor-pointer" onClick={(e) => {
+          e.stopPropagation();
+          const newExpanded = !expanded;
+          setExpanded(newExpanded);
+          if (newExpanded) {
+            onExpand?.(title, platform, { volume, category, countryCode });
+            onTrackAction?.("expand", 2, { title, platform, countryCode, category });
+          }
+        }}>
           <div
             className="w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold flex-shrink-0 mt-0.5 cursor-pointer hover:scale-110 transition-transform"
             style={{ background: `${pf.color}15`, color: pf.color }}
