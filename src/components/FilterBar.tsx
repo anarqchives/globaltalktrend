@@ -1,4 +1,4 @@
-import { RotateCcw } from "lucide-react";
+import { RotateCcw, ChevronDown } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
 
 const defaultFilters: FilterState = {
@@ -92,7 +92,7 @@ export const countries = [
   ]},
 ];
 
-const selectClass = "appearance-none bg-transparent text-[#1d1d1f] dark:text-foreground text-[13px] font-medium px-3 py-2 rounded-lg cursor-pointer min-w-0 hover:bg-black/[0.02] dark:hover:bg-white/5 transition-colors";
+const selectClass = "appearance-none bg-transparent text-foreground text-[13px] font-medium pl-3 pr-7 py-2 rounded-lg cursor-pointer min-w-0 hover:bg-muted/50 dark:hover:bg-white/5 transition-colors focus:outline-none focus:ring-0";
 
 const FilterBar = ({ filters, onChange }: FilterBarProps) => {
   const { t } = useLanguage();
@@ -132,75 +132,76 @@ const FilterBar = ({ filters, onChange }: FilterBarProps) => {
   ];
 
   return (
-    <div
-      className="mx-2 md:mx-4 my-1.5 rounded-[12px] bg-white/95 dark:bg-card/80 backdrop-blur-md"
-      style={{ border: '1px solid #eaeaea', boxShadow: '0 2px 8px rgba(0,0,0,0.02)' }}
-    >
-      <div className="flex items-center gap-1 px-2 md:px-3 py-1.5 overflow-x-auto scrollbar-thin flex-nowrap">
-        <select
-          className={selectClass}
-          value={filters.country}
-          onChange={(e) => update("country", e.target.value)}
-          style={{ outline: 'none' }}
-        >
-          {countries.map((group) => (
-            <optgroup key={group.group} label={group.group}>
-              {group.items.map((c) => (
-                <option key={c.value} value={c.value}>{c.label}</option>
-              ))}
-            </optgroup>
-          ))}
-        </select>
+    <div className="px-4 md:px-6 py-1.5">
+      <div className="flex items-center gap-1 overflow-x-auto scrollbar-thin flex-nowrap">
+        <div className="relative flex-shrink-0">
+          <select
+            className={selectClass}
+            value={filters.country}
+            onChange={(e) => update("country", e.target.value)}
+          >
+            {countries.map((group) => (
+              <optgroup key={group.group} label={group.group}>
+                {group.items.map((c) => (
+                  <option key={c.value} value={c.value}>{c.label}</option>
+                ))}
+              </optgroup>
+            ))}
+          </select>
+          <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 w-3 h-3 text-muted-foreground pointer-events-none" />
+        </div>
 
-        <select
-          className={selectClass}
-          value={filters.period}
-          onChange={(e) => update("period", e.target.value)}
-          style={{ outline: 'none' }}
-        >
-          {periodOptions.map((p) => (
-            <option key={p.value} value={p.value}>{p.label}</option>
-          ))}
-        </select>
+        <div className="relative flex-shrink-0">
+          <select
+            className={selectClass}
+            value={filters.period}
+            onChange={(e) => update("period", e.target.value)}
+          >
+            {periodOptions.map((p) => (
+              <option key={p.value} value={p.value}>{p.label}</option>
+            ))}
+          </select>
+          <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 w-3 h-3 text-muted-foreground pointer-events-none" />
+        </div>
 
-        <select
-          className={selectClass}
-          value={filters.category}
-          onChange={(e) => update("category", e.target.value)}
-          style={{ outline: 'none' }}
-        >
-          {categoryOptions.map((c) => (
-            <option key={c.value} value={c.value}>{c.label}</option>
-          ))}
-        </select>
+        <div className="relative flex-shrink-0">
+          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[11px] text-muted-foreground pointer-events-none">Categoria:</span>
+          <select
+            className={`${selectClass} pl-[80px]`}
+            value={filters.category}
+            onChange={(e) => update("category", e.target.value)}
+          >
+            {categoryOptions.map((c) => (
+              <option key={c.value} value={c.value}>{c.label}</option>
+            ))}
+          </select>
+          <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 w-3 h-3 text-muted-foreground pointer-events-none" />
+        </div>
 
-        <select
-          className={selectClass}
-          value={filters.type}
-          onChange={(e) => update("type", e.target.value)}
-          style={{ outline: 'none' }}
-        >
-          {typeOptions.map((opt) => (
-            <option key={opt.value} value={opt.value}>{opt.label}</option>
-          ))}
-        </select>
+        <div className="relative flex-shrink-0">
+          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[11px] text-muted-foreground pointer-events-none">Fonte:</span>
+          <select
+            className={`${selectClass} pl-[52px]`}
+            value={filters.type}
+            onChange={(e) => update("type", e.target.value)}
+          >
+            {typeOptions.map((opt) => (
+              <option key={opt.value} value={opt.value}>{opt.label}</option>
+            ))}
+          </select>
+          <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 w-3 h-3 text-muted-foreground pointer-events-none" />
+        </div>
 
         {isFiltered && (
           <button
             onClick={() => onChange(defaultFilters)}
-            className="flex items-center gap-1 px-3 py-2 rounded-lg text-[12px] font-medium text-primary hover:bg-black/[0.02] transition-colors flex-shrink-0"
-            style={{ outline: 'none' }}
+            className="flex items-center gap-1 px-3 py-2 rounded-lg text-[12px] font-medium text-primary hover:bg-muted/50 transition-colors flex-shrink-0 focus:outline-none"
             title="Limpar filtros"
           >
             <RotateCcw className="w-3 h-3" />
             Reset
           </button>
         )}
-
-        <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground ml-auto whitespace-nowrap">
-          <span className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ background: "hsl(142, 72%, 45%)" }} />
-          {t("live")}
-        </div>
       </div>
     </div>
   );
