@@ -107,7 +107,7 @@ const TrendHeader = ({ totalTrends = 0, countriesCount = 0, onRefresh, refreshin
         <div className="w-full flex items-center justify-between gap-3">
           <div className="flex items-center gap-2 min-w-0">
             <h1 className="text-base font-light tracking-tight whitespace-nowrap select-none flex items-center gap-2">
-              <span className="font-semibold text-foreground">Global-Talk-Trending</span>
+              <span className="font-semibold text-foreground">GLOBAL TALK TRENDS</span>
               <span className="text-muted-foreground hidden sm:inline">: real time monitor</span>
             </h1>
             {totalTrends > 0 && (
