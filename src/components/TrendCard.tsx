@@ -27,6 +27,9 @@ export interface TrendCardProps {
   thumbnail?: string;
   publishedAt?: string;
   description?: string;
+  firstSeenAt?: string;
+  peakAt?: string;
+  relevanceScore?: number;
 }
 
 const platformColors: Record<string, { stroke: string; fill: string }> = {

@@ -75,6 +75,28 @@ interface TimelineCardProps extends TrendCardProps {
   forceExpanded?: boolean;
 }
 
+function formatTemporalBadge(firstSeenAt?: string, peakAt?: string): { started: string | null; peak: string | null } {
+  if (!firstSeenAt) return { started: null, peak: null };
+  const now = new Date();
+  const first = new Date(firstSeenAt);
+  const diffMs = now.getTime() - first.getTime();
+  const diffH = Math.floor(diffMs / (1000 * 60 * 60));
+  const diffMin = Math.floor(diffMs / (1000 * 60));
+
+  let started: string | null = null;
+  if (diffMin < 60) started = `⏰ Começou há ${diffMin}min`;
+  else if (diffH < 24) started = `⏰ Começou há ${diffH}h`;
+  else started = `⏰ Começou há ${Math.floor(diffH / 24)}d`;
+
+  let peak: string | null = null;
+  if (peakAt) {
+    const peakDate = new Date(peakAt);
+    peak = `📈 Pico às ${peakDate.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}`;
+  }
+
+  return { started, peak };
+}
+
 const TimelineCard = ({
   platform,
   title,
@@ -96,6 +118,9 @@ const TimelineCard = ({
   thumbnail,
   publishedAt,
   description,
+  firstSeenAt,
+  peakAt,
+  relevanceScore,
   onClick,
   onFilterPlatform,
   onExpand,
@@ -121,6 +146,7 @@ const TimelineCard = ({
   const [imgError, setImgError] = useState(false);
   const trigger = useMemo(() => detectTriggerFromTitle(title), [title]);
   const [activeTab, setActiveTab] = useState<"details" | "context" | "history">("details");
+  const temporal = useMemo(() => formatTemporalBadge(firstSeenAt, peakAt), [firstSeenAt, peakAt]);
 
   const relativeTimeFormats: Record<string, { now: string; min: string; h: string; d: string }> = {
     pt: { now: "agora", min: "há {n}min", h: "há {n}h", d: "há {n}d" },
@@ -354,6 +380,12 @@ const TimelineCard = ({
               <span className={`whitespace-nowrap ${changePositive ? "text-green-600 font-medium" : "text-red-500 font-medium"}`}>
                 {change}
               </span>
+              {temporal.started && (
+                <span className="text-[10px] text-muted-foreground/70 whitespace-nowrap">{temporal.started}</span>
+              )}
+              {temporal.peak && (
+                <span className="text-[10px] text-muted-foreground/70 whitespace-nowrap">{temporal.peak}</span>
+              )}
             </div>
           </div>
 
