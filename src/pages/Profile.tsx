@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   ArrowLeft, Star, Bell, Clock, BarChart3, Settings, Trash2, Edit2,
-  Play, BellOff, BellRing, Plus, Sun, Moon, Monitor, Mail, AlertTriangle, Globe
+  Play, BellOff, BellRing, Plus, Sun, Moon, Monitor, Mail, AlertTriangle, Globe, FileText
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useSavedFilters, type SavedFilter } from "@/hooks/use-saved-filters";
@@ -16,9 +16,11 @@ import { Switch } from "@/components/ui/switch";
 import { toast } from "@/hooks/use-toast";
 import { format } from "date-fns";
 import { countries } from "@/components/FilterBar";
+import ReportsTab from "@/components/ReportsTab";
 
 const tabs = [
   { key: "filters", label: "Meus Filtros", icon: Star },
+  { key: "reports", label: "Relatórios", icon: FileText },
   { key: "alerts", label: "Meus Alertas", icon: Bell },
   { key: "history", label: "Histórico", icon: Clock },
   { key: "stats", label: "Estatísticas", icon: BarChart3 },
@@ -141,6 +143,7 @@ const Profile = () => {
             transition={{ duration: 0.25, ease: "easeInOut" }}
           >
             {activeTab === "filters" && <FiltersTab filters={savedFilters} loading={filtersLoading} onDelete={deleteFilter} onApply={handleApplyFilter} countryLabel={countryLabel} />}
+            {activeTab === "reports" && <ReportsTab userId={user.id} />}
             {activeTab === "alerts" && <AlertsTab alerts={alerts} loading={alertsLoading} onToggle={toggleAlert} onDelete={deleteAlert} onCreate={createAlert} countryLabel={countryLabel} />}
             {activeTab === "history" && <HistoryTab history={history} loading={historyLoading} onClear={clearHistory} onDelete={deleteItem} onNavigate={(id) => navigate("/")} />}
             {activeTab === "stats" && <StatsTab history={history} totalPoints={totalPoints} achievements={achievements} unlocked={unlocked} loading={gamLoading} countryLabel={countryLabel} />}

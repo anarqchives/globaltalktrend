@@ -3,8 +3,10 @@ import TrendHeader from "@/components/TrendHeader";
 import FilterBar, { FilterState, countries } from "@/components/FilterBar";
 import TimelineCard from "@/components/TimelineCard";
 import TrendCardSkeleton from "@/components/TrendCardSkeleton";
+import CriticalMomentsSection from "@/components/CriticalMomentsSection";
 import { TrendCardProps } from "@/components/TrendCard";
 import { useTrends } from "@/hooks/use-trends";
+import { useCriticalMoments } from "@/hooks/use-critical-moments";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useHistory } from "@/hooks/use-history";
@@ -113,6 +115,7 @@ const Index = () => {
   const sentinelRef = useRef<HTMLDivElement>(null);
 
   const { filteredTrends, allTrends, loading, isFirstLoad, fetchTrends, countriesCount } = useTrends(filters, setTrendCounts);
+  const criticalMoments = useCriticalMoments(allTrends);
 
   // Sync filters to URL
   useEffect(() => {
@@ -346,6 +349,14 @@ const Index = () => {
         onApplyFilter={setFilters}
       />
       <FilterBar filters={filters} onChange={setFilters} />
+
+      {/* Critical Moments Section */}
+      {criticalMoments.length > 0 && (
+        <CriticalMomentsSection
+          moments={criticalMoments}
+          onSelectTrend={handleSelectTrend}
+        />
+      )}
 
       <div className="flex-1 overflow-hidden">
         {isMobile ? (
