@@ -170,10 +170,11 @@ export function useTrends(filters: FilterState, onTrendCountsChange: (counts: Re
   const fetchTrends = useCallback(async () => {
     try {
       setLoading(true);
-      const [edgeResult, extraResult, extraSourcesResult, redditItems, blueskyItems, mastodonItems] = await Promise.all([
+      const [edgeResult, extraResult, extraSourcesResult, socialTrendsResult, redditItems, blueskyItems, mastodonItems] = await Promise.all([
         supabase.functions.invoke("fetch-trends"),
         supabase.functions.invoke("fetch-news-extra").catch(() => ({ data: { trends: [] } })),
         supabase.functions.invoke("fetch-extra-sources").catch(() => ({ data: { trends: [] } })),
+        supabase.functions.invoke("fetch-social-trends").catch(() => ({ data: { trends: [] } })),
         fetchRedditClientSide(),
         fetchBlueskyClientSide(),
         fetchMastodonClientSide(),
@@ -181,7 +182,8 @@ export function useTrends(filters: FilterState, onTrendCountsChange: (counts: Re
       const edgeTrends: TrendCardProps[] = edgeResult.data?.trends || [];
       const extraTrends: TrendCardProps[] = extraResult.data?.trends || [];
       const extraSourcesTrends: TrendCardProps[] = extraSourcesResult.data?.trends || [];
-      const rawTrends = [...edgeTrends, ...extraTrends, ...extraSourcesTrends, ...redditItems, ...blueskyItems, ...mastodonItems];
+      const socialTrends: TrendCardProps[] = socialTrendsResult.data?.trends || [];
+      const rawTrends = [...edgeTrends, ...extraTrends, ...extraSourcesTrends, ...socialTrends, ...redditItems, ...blueskyItems, ...mastodonItems];
       // Apply unified categorization and trust badges
       const allTrends = rawTrends.map((t) => {
         const category = categorizeTrend(t.title, t.platform, t.category, {
@@ -222,11 +224,13 @@ export function useTrends(filters: FilterState, onTrendCountsChange: (counts: Re
     if (filters.country !== "global") {
       result = result.filter((t) => t.countryCode === filters.country);
     }
-    if (filters.type === "Redes sociais") result = result.filter((t) => ["Reddit", "Bluesky", "Mastodon"].includes(t.platform));
+    if (filters.type === "Redes sociais") result = result.filter((t) => ["Reddit", "Bluesky", "Mastodon", "X (Twitter)"].includes(t.platform));
     else if (filters.type === "Imprensa") result = result.filter((t) => ["NewsAPI", "NewsData", "GNews", "Bing News", "The Guardian"].includes(t.platform));
     else if (filters.type === "Buscas (Google)") result = result.filter((t) => t.platform === "Google Trends");
     else if (filters.type === "Dados oficiais") result = result.filter((t) => ["World Bank", "IBGE"].includes(t.platform));
     else if (filters.type === "Ciência") result = result.filter((t) => t.platform === "OpenAlex");
+    else if (filters.type === "Tech") result = result.filter((t) => ["Hacker News", "GitHub", "Stack Overflow"].includes(t.platform));
+    else if (filters.type === "Enciclopédia") result = result.filter((t) => t.platform === "Wikipedia");
     if (filters.category !== "Todas") {
       result = result.filter((t) => {
         const cat = t.category?.toLowerCase() || "";
