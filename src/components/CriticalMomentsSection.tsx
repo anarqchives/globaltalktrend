@@ -53,7 +53,32 @@ export default function CriticalMomentsSection({ moments, onSelectTrend }: Props
                   <p className="text-sm font-semibold text-foreground line-clamp-1">
                     {m.trend.title}
                   </p>
-                  <div className="flex items-center gap-2 mt-1 flex-wrap">
+
+                  {/* Detailed "WHY" explanation */}
+                  <div className="mt-1.5 px-2.5 py-1.5 rounded-lg bg-red-500/5 border border-red-500/10">
+                    <p className="text-[10px] font-bold text-red-600 dark:text-red-400 mb-1">
+                      🔴 POR QUE É CRÍTICO:
+                    </p>
+                    <ul className="text-[10px] text-muted-foreground space-y-0.5">
+                      {m.reasons.includes("volumeSpike") && (
+                        <li>• Aumento de <span className="font-bold text-red-500">+{Math.round(m.changePercent)}%</span> na última hora</li>
+                      )}
+                      {m.reasons.includes("acceleration") && (
+                        <li>• Crescimento acelerado ({Math.round(m.changePercent)}% de variação)</li>
+                      )}
+                      {m.reasons.includes("multiSource") && (
+                        <li>• Aparecendo em <span className="font-bold">múltiplas plataformas</span> simultaneamente</li>
+                      )}
+                      {m.reasons.includes("geographicSpread") && (
+                        <li>• Detectado em <span className="font-bold">vários países</span> diferentes</li>
+                      )}
+                      {m.reasons.includes("verifiedSource") && (
+                        <li>• Reportado por <span className="font-bold">fonte verificada/oficial</span></li>
+                      )}
+                    </ul>
+                  </div>
+
+                  <div className="flex items-center gap-2 mt-1.5 flex-wrap">
                     <span className="text-xs font-bold text-red-500">
                       +{Math.round(m.changePercent)}%
                     </span>

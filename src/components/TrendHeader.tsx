@@ -39,9 +39,10 @@ interface TrendHeaderProps {
   anomalyCount?: number;
   anomalies?: AnomalyAlert[];
   onDismissAnomaly?: (title: string) => void;
+  onOpenTransparency?: () => void;
 }
 
-const TrendHeader = ({ totalTrends = 0, countriesCount = 0, onRefresh, refreshing, filters, onApplyFilter, anomalyCount = 0, anomalies = [], onDismissAnomaly }: TrendHeaderProps) => {
+const TrendHeader = ({ totalTrends = 0, countriesCount = 0, onRefresh, refreshing, filters, onApplyFilter, anomalyCount = 0, anomalies = [], onDismissAnomaly, onOpenTransparency }: TrendHeaderProps) => {
   const { lang, setLang, t } = useLanguage();
   const [aboutOpen, setAboutOpen] = useState(false);
   const [loginOpen, setLoginOpen] = useState(false);
@@ -273,6 +274,14 @@ const TrendHeader = ({ totalTrends = 0, countriesCount = 0, onRefresh, refreshin
                 ))}
               </DropdownMenuContent>
             </DropdownMenu>
+
+            <button
+              onClick={() => onOpenTransparency?.()}
+              className="px-2 py-1 rounded-full text-xs font-medium text-muted-foreground hover:bg-secondary transition-colors flex items-center gap-1"
+              title="Status das fontes de dados"
+            >
+              🔍 Status
+            </button>
 
             <button
               onClick={() => setAboutOpen(true)}

@@ -152,6 +152,36 @@ export type Database = {
         }
         Relationships: []
       }
+      trend_feedback: {
+        Row: {
+          created_at: string
+          feedback_type: string
+          id: string
+          platform: string
+          session_id: string | null
+          trend_title: string
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          feedback_type: string
+          id?: string
+          platform: string
+          session_id?: string | null
+          trend_title: string
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          feedback_type?: string
+          id?: string
+          platform?: string
+          session_id?: string | null
+          trend_title?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       trend_snapshots: {
         Row: {
           category: string | null
