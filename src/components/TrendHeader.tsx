@@ -1,7 +1,6 @@
 import { useState, useEffect } from "react";
-import { Info, Sun, Moon, RefreshCw, LogIn, LogOut, BookOpen } from "lucide-react";
+import { Info, Sun, Moon, RefreshCw, LogOut, BookOpen, Star, Bell, Clock, ChevronDown } from "lucide-react";
 import { Link } from "react-router-dom";
-import { motion, AnimatePresence } from "framer-motion";
 import { useLanguage, languages } from "@/contexts/LanguageContext";
 import { lovable } from "@/integrations/lovable/index";
 import { supabase } from "@/integrations/supabase/client";
@@ -17,17 +16,23 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { useSavedFilters } from "@/hooks/use-saved-filters";
+import { useAlerts } from "@/hooks/use-alerts";
+import type { FilterState } from "@/components/FilterBar";
 
 interface TrendHeaderProps {
   totalTrends?: number;
   countriesCount?: number;
   onRefresh?: () => void;
   refreshing?: boolean;
+  filters?: FilterState;
+  onApplyFilter?: (filters: FilterState) => void;
 }
 
-const TrendHeader = ({ totalTrends = 0, countriesCount = 0, onRefresh, refreshing }: TrendHeaderProps) => {
+const TrendHeader = ({ totalTrends = 0, countriesCount = 0, onRefresh, refreshing, filters, onApplyFilter }: TrendHeaderProps) => {
   const { lang, setLang, t } = useLanguage();
   const [aboutOpen, setAboutOpen] = useState(false);
   const [user, setUser] = useState<any>(null);
@@ -39,6 +44,8 @@ const TrendHeader = ({ totalTrends = 0, countriesCount = 0, onRefresh, refreshin
     }
     return false;
   });
+  const [saveFilterName, setSaveFilterName] = useState("");
+  const [showSaveInput, setShowSaveInput] = useState(false);
 
   useEffect(() => {
     document.documentElement.classList.toggle("dark", dark);
@@ -55,6 +62,9 @@ const TrendHeader = ({ totalTrends = 0, countriesCount = 0, onRefresh, refreshin
     return () => subscription.unsubscribe();
   }, []);
 
+  const { savedFilters, saveFilter, deleteFilter } = useSavedFilters(user?.id ?? null);
+  const { alerts } = useAlerts(user?.id ?? null);
+
   const handleLogin = async () => {
     await lovable.auth.signInWithOAuth("google", {
       redirect_uri: window.location.origin,
@@ -64,6 +74,23 @@ const TrendHeader = ({ totalTrends = 0, countriesCount = 0, onRefresh, refreshin
   const handleLogout = async () => {
     await supabase.auth.signOut();
     setUser(null);
+  };
+
+  const handleSaveFilter = () => {
+    if (!saveFilterName.trim() || !filters) return;
+    saveFilter(saveFilterName.trim(), filters);
+    setSaveFilterName("");
+    setShowSaveInput(false);
+  };
+
+  const handleApplySavedFilter = (sf: any) => {
+    if (!onApplyFilter) return;
+    onApplyFilter({
+      country: sf.country || "global",
+      period: sf.period || "Hoje",
+      category: sf.category || "Todas",
+      type: sf.media_type || "Todas mídias",
+    });
   };
 
   const userAvatar = user?.user_metadata?.avatar_url;
@@ -80,19 +107,13 @@ const TrendHeader = ({ totalTrends = 0, countriesCount = 0, onRefresh, refreshin
               <span className="text-muted-foreground hidden sm:inline">: real time monitor</span>
             </h1>
             {totalTrends > 0 && (
-              <motion.span
-                key={totalTrends}
-                initial={{ scale: 0.8, opacity: 0 }}
-                animate={{ scale: 1, opacity: 1 }}
-                className="inline-flex items-center px-2 py-0.5 rounded-full bg-primary/10 text-primary text-[11px] font-bold tabular-nums flex-shrink-0"
-              >
+              <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-primary/10 text-primary text-[11px] font-bold tabular-nums flex-shrink-0">
                 {totalTrends} {t("trends")} · {countriesCount} {t("country")}
-              </motion.span>
+              </span>
             )}
           </div>
 
           <div className="flex items-center gap-1.5 flex-shrink-0">
-            {/* Refresh button */}
             {onRefresh && (
               <button
                 onClick={onRefresh}
@@ -126,18 +147,7 @@ const TrendHeader = ({ totalTrends = 0, countriesCount = 0, onRefresh, refreshin
               className="p-1.5 rounded-full text-muted-foreground hover:bg-secondary transition-colors"
               title={dark ? "Modo claro" : "Modo escuro"}
             >
-              <AnimatePresence mode="wait" initial={false}>
-                <motion.span
-                  key={dark ? "moon" : "sun"}
-                  initial={{ rotate: -90, opacity: 0 }}
-                  animate={{ rotate: 0, opacity: 1 }}
-                  exit={{ rotate: 90, opacity: 0 }}
-                  transition={{ duration: 0.2 }}
-                  className="block"
-                >
-                  {dark ? <Sun className="w-3.5 h-3.5" /> : <Moon className="w-3.5 h-3.5" />}
-                </motion.span>
-              </AnimatePresence>
+              {dark ? <Sun className="w-3.5 h-3.5" /> : <Moon className="w-3.5 h-3.5" />}
             </button>
 
             <div className="w-px h-5 bg-border mx-1" />
@@ -150,7 +160,7 @@ const TrendHeader = ({ totalTrends = 0, countriesCount = 0, onRefresh, refreshin
               {t("about")}
             </button>
 
-            {/* Auth button */}
+            {/* Auth + user menu */}
             {user ? (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
@@ -164,10 +174,99 @@ const TrendHeader = ({ totalTrends = 0, countriesCount = 0, onRefresh, refreshin
                     <span className="text-[11px] font-medium text-foreground hidden sm:inline max-w-[80px] truncate">
                       {userName}
                     </span>
+                    <ChevronDown className="w-3 h-3 text-muted-foreground" />
                   </button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-40">
-                  <DropdownMenuItem onClick={handleLogout} className="text-xs gap-2">
+                <DropdownMenuContent align="end" className="w-56">
+                  {/* Saved Filters section */}
+                  <div className="px-2 py-1.5">
+                    <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Meus Filtros</span>
+                  </div>
+                  {savedFilters.length > 0 ? (
+                    savedFilters.slice(0, 5).map((sf) => (
+                      <DropdownMenuItem
+                        key={sf.id}
+                        className="text-xs gap-2 justify-between"
+                        onClick={() => handleApplySavedFilter(sf)}
+                      >
+                        <span className="flex items-center gap-1.5 truncate">
+                          <Star className="w-3 h-3 text-yellow-500 fill-yellow-500" />
+                          {sf.name}
+                        </span>
+                        <button
+                          onClick={(e) => { e.stopPropagation(); deleteFilter(sf.id); }}
+                          className="text-muted-foreground hover:text-red-500 p-0.5"
+                        >
+                          ×
+                        </button>
+                      </DropdownMenuItem>
+                    ))
+                  ) : (
+                    <div className="px-2 py-1 text-[11px] text-muted-foreground/60">Nenhum filtro salvo</div>
+                  )}
+                  {filters && (
+                    <>
+                      {showSaveInput ? (
+                        <div className="px-2 py-1.5 flex gap-1">
+                          <input
+                            type="text"
+                            value={saveFilterName}
+                            onChange={(e) => setSaveFilterName(e.target.value)}
+                            onKeyDown={(e) => e.key === "Enter" && handleSaveFilter()}
+                            placeholder="Nome do filtro..."
+                            className="flex-1 px-2 py-1 rounded-md bg-secondary text-xs border border-border focus:outline-none focus:ring-1 focus:ring-primary/30"
+                            autoFocus
+                          />
+                          <button
+                            onClick={handleSaveFilter}
+                            className="px-2 py-1 rounded-md bg-primary text-primary-foreground text-[10px] font-medium"
+                          >
+                            Salvar
+                          </button>
+                        </div>
+                      ) : (
+                        <DropdownMenuItem className="text-xs gap-2" onClick={() => setShowSaveInput(true)}>
+                          <Star className="w-3 h-3" />
+                          Salvar filtros atuais
+                        </DropdownMenuItem>
+                      )}
+                    </>
+                  )}
+
+                  <DropdownMenuSeparator />
+
+                  {/* Alerts */}
+                  <DropdownMenuItem className="text-xs gap-2" asChild>
+                    <span className="flex items-center gap-2 cursor-default">
+                      <Bell className="w-3.5 h-3.5" />
+                      Meus Alertas
+                      {alerts.length > 0 && (
+                        <span className="ml-auto text-[10px] bg-primary/10 text-primary px-1.5 py-0.5 rounded-full font-bold">
+                          {alerts.length}
+                        </span>
+                      )}
+                    </span>
+                  </DropdownMenuItem>
+
+                  {/* History */}
+                  <DropdownMenuItem className="text-xs gap-2" asChild>
+                    <Link to="/historico" className="flex items-center gap-2">
+                      <Clock className="w-3.5 h-3.5" />
+                      Meu Histórico
+                    </Link>
+                  </DropdownMenuItem>
+
+                  {/* Methodology */}
+                  <DropdownMenuItem className="text-xs gap-2" asChild>
+                    <Link to="/metodologia" className="flex items-center gap-2">
+                      <BookOpen className="w-3.5 h-3.5" />
+                      Metodologia
+                    </Link>
+                  </DropdownMenuItem>
+
+                  <DropdownMenuSeparator />
+
+                  <DropdownMenuItem onClick={handleLogout} className="text-xs gap-2 text-red-500 focus:text-red-500">
                     <LogOut className="w-3.5 h-3.5" />
                     Sair
                   </DropdownMenuItem>
