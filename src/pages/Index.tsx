@@ -255,7 +255,7 @@ const Index = () => {
         </div>
       )}
 
-      {(loading && isFirstLoad) || (filteredTrends.length <= 1 && loading)
+      {(loading && isFirstLoad && filteredTrends.length === 0)
         ? Array.from({ length: 6 }).map((_, i) => <TrendCardSkeleton key={i} />)
         : visibleTrends.map((trend, i) => {
             const trendId = `${trend.platform}-${trend.title.slice(0, 20)}`;
