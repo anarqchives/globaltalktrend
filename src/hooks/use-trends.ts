@@ -15,6 +15,10 @@ const STANDARD_CATEGORIES = new Set([
   "Cultura",
   "Negócios/Finanças",
   "Ciência",
+  "Saúde",
+  "Clima/Meio Ambiente",
+  "Conflitos/Crises",
+  "Conhecimento",
   "Geral",
 ]);
 
@@ -365,7 +369,7 @@ export function useTrends(filters: FilterState, onTrendCountsChange: (counts: Re
   const fetchTrends = useCallback(async () => {
     try {
       setLoading(true);
-      const [edgeResult, extraResult, extraSourcesResult, socialTrendsResult, redditItems, blueskyItems, mastodonItems] = await Promise.all([
+      const [edgeResult, extraResult, extraSourcesResult, socialTrendsResult, openDataResult, redditItems, blueskyItems, mastodonItems] = await Promise.all([
         withTimeout(
           supabase.functions.invoke("fetch-trends"),
           12000,
@@ -386,6 +390,11 @@ export function useTrends(filters: FilterState, onTrendCountsChange: (counts: Re
           10000,
           { data: { trends: [] } } as Awaited<ReturnType<typeof supabase.functions.invoke>>
         ),
+        withTimeout(
+          supabase.functions.invoke("fetch-open-data").catch(() => ({ data: { trends: [] } })),
+          12000,
+          { data: { trends: [] } } as Awaited<ReturnType<typeof supabase.functions.invoke>>
+        ),
         withTimeout(fetchRedditClientSide(), 8000, []),
         withTimeout(fetchBlueskyClientSide(), 8000, []),
         withTimeout(fetchMastodonClientSide(), 8000, []),
@@ -394,7 +403,8 @@ export function useTrends(filters: FilterState, onTrendCountsChange: (counts: Re
       const extraTrends: TrendCardProps[] = extraResult.data?.trends || [];
       const extraSourcesTrends: TrendCardProps[] = extraSourcesResult.data?.trends || [];
       const socialTrends: TrendCardProps[] = socialTrendsResult.data?.trends || [];
-      const rawTrends = [...edgeTrends, ...extraTrends, ...extraSourcesTrends, ...socialTrends, ...redditItems, ...blueskyItems, ...mastodonItems];
+      const openDataTrends: TrendCardProps[] = openDataResult.data?.trends || [];
+      const rawTrends = [...edgeTrends, ...extraTrends, ...extraSourcesTrends, ...socialTrends, ...openDataTrends, ...redditItems, ...blueskyItems, ...mastodonItems];
       // Apply unified categorization, normalization and trust badges
       const allTrends = rawTrends.map((t) => {
         const category = normalizeCategory(t.title || "Sem título", t.platform || "Unknown", t.category);
@@ -409,11 +419,12 @@ export function useTrends(filters: FilterState, onTrendCountsChange: (counts: Re
 
         // Assign trust badge based on platform
         let trustBadge = t.trustBadge;
-        if (!trustBadge) {
-          if (["World Bank", "IBGE"].includes(t.platform)) trustBadge = "official";
-          else if (t.platform === "OpenAlex") trustBadge = "scientific";
+         if (!trustBadge) {
+          if (["World Bank", "IBGE", "IMF", "FRED", "NOAA"].includes(t.platform)) trustBadge = "official";
+          else if (["OpenAlex", "arXiv", "PubMed", "Crossref"].includes(t.platform)) trustBadge = "scientific";
           else if (["The Guardian", "BBC", "Reuters"].includes(t.platform)) trustBadge = "international";
           else if (["NewsAPI", "NewsData", "GNews", "Bing News"].includes(t.platform)) trustBadge = "press";
+          else if (t.platform === "GDELT") trustBadge = "verified";
         }
 
         return {
@@ -463,7 +474,7 @@ export function useTrends(filters: FilterState, onTrendCountsChange: (counts: Re
         for (const t of combinedTrends) {
           platformCounts[t.platform] = (platformCounts[t.platform] || 0) + 1;
         }
-        const allPlatforms = ["YouTube", "Google Trends", "Reddit", "Bluesky", "Mastodon", "The Guardian", "Hacker News", "Wikipedia", "Stack Overflow", "GitHub", "NewsAPI", "World Bank", "IBGE", "OpenAlex"];
+        const allPlatforms = ["YouTube", "Google Trends", "Reddit", "Bluesky", "Mastodon", "The Guardian", "Hacker News", "Wikipedia", "Stack Overflow", "GitHub", "NewsAPI", "World Bank", "IBGE", "OpenAlex", "arXiv", "PubMed", "IMF", "FRED", "NOAA", "GDELT", "Crossref"];
         for (const p of allPlatforms) {
           statusMap[p] = { ok: (platformCounts[p] || 0) > 0, count: platformCounts[p] || 0, lastUpdate: now };
         }
@@ -540,10 +551,11 @@ export function useTrends(filters: FilterState, onTrendCountsChange: (counts: Re
       if (filters.type === "Redes sociais") return input.filter((t) => ["Reddit", "Bluesky", "Mastodon", "X (Twitter)"].includes(t.platform));
       if (filters.type === "Imprensa") return input.filter((t) => ["NewsAPI", "NewsData", "GNews", "Bing News", "The Guardian"].includes(t.platform));
       if (filters.type === "Buscas (Google)") return input.filter((t) => t.platform === "Google Trends");
-      if (filters.type === "Dados oficiais") return input.filter((t) => ["World Bank", "IBGE"].includes(t.platform));
-      if (filters.type === "Ciência") return input.filter((t) => t.platform === "OpenAlex");
+      if (filters.type === "Dados oficiais") return input.filter((t) => ["World Bank", "IBGE", "IMF", "FRED", "NOAA"].includes(t.platform));
+      if (filters.type === "Ciência") return input.filter((t) => ["OpenAlex", "arXiv", "PubMed", "Crossref"].includes(t.platform));
       if (filters.type === "Tech") return input.filter((t) => ["Hacker News", "GitHub", "Stack Overflow"].includes(t.platform));
       if (filters.type === "Enciclopédia") return input.filter((t) => t.platform === "Wikipedia");
+      if (filters.type === "Conflitos") return input.filter((t) => ["GDELT"].includes(t.platform));
       return input;
     };
 
