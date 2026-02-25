@@ -119,7 +119,7 @@ const Index = () => {
   const sentinelRef = useRef<HTMLDivElement>(null);
 
   const { filteredTrends: rawFilteredTrends, allTrends, loading, isFirstLoad, fetchTrends, countriesCount, lastUpdated, sourcesStatus } = useTrends(filters, setTrendCounts);
-  const criticalMoments = useCriticalMoments(allTrends);
+  const criticalMoments = useCriticalMoments(rawFilteredTrends.length > 5 ? rawFilteredTrends : allTrends);
   const { anomalies, totalCount: anomalyCount, dismiss: dismissAnomaly } = useAnomalyAlerts(allTrends);
   const [transparencyOpen, setTransparencyOpen] = useState(false);
   const [criticalDismissed, setCriticalDismissed] = useState(false);
