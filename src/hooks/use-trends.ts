@@ -481,7 +481,7 @@ async function fetchMastodonClientSide(): Promise<TrendCardProps[]> {
   }
 }
 
-export function useTrends(filters: FilterState, onTrendCountsChange: (counts: Record<string, number>) => void) {
+export function useTrends(filters: FilterState, onTrendCountsChange: (counts: Record<string, number>) => void, lang: string = "pt") {
   const cached = getCachedTrends();
   const cacheAgeMs = cached ? Date.now() - cached.ts : Number.POSITIVE_INFINITY;
   const [trends, setTrends] = useState<TrendCardProps[]>(cached?.data || []);
@@ -503,7 +503,7 @@ export function useTrends(filters: FilterState, onTrendCountsChange: (counts: Re
       ) => {
         console.log(`🔍 Buscando ${sourceName}...`);
         const result = await withTimeout(
-          supabase.functions.invoke(functionName).catch(() => ({ data: { trends: [] } })),
+          supabase.functions.invoke(functionName, { body: { lang } }).catch(() => ({ data: { trends: [] } })),
           timeoutMs,
           { data: { trends: [] } } as Awaited<ReturnType<typeof supabase.functions.invoke>>
         );
@@ -669,7 +669,7 @@ export function useTrends(filters: FilterState, onTrendCountsChange: (counts: Re
     } finally {
       setLoading(false);
     }
-  }, [isFirstLoad]);
+  }, [isFirstLoad, lang]);
 
   useEffect(() => {
     let intervalId: number | undefined;

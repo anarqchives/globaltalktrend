@@ -95,7 +95,7 @@ async function fetchHackerNews(): Promise<TrendItem[]> {
 }
 
 // ── Wikipedia Most Read ──
-async function fetchWikipediaTrending(): Promise<TrendItem[]> {
+async function fetchWikipediaTrending(lang = "en"): Promise<TrendItem[]> {
   try {
     const now = new Date();
     const yesterday = new Date(now.getTime() - 86400000);
@@ -103,8 +103,9 @@ async function fetchWikipediaTrending(): Promise<TrendItem[]> {
     const m = String(yesterday.getMonth() + 1).padStart(2, "0");
     const d = String(yesterday.getDate()).padStart(2, "0");
 
+    const wikiLang = ["pt", "en", "es", "fr", "de", "it", "ja", "ko", "ru", "zh", "ar", "hi"].includes(lang) ? lang : "en";
     const res = await fetch(
-      `https://wikimedia.org/api/rest_v1/metrics/pageviews/top/en.wikipedia/all-access/${y}/${m}/${d}`
+      `https://wikimedia.org/api/rest_v1/metrics/pageviews/top/${wikiLang}.wikipedia/all-access/${y}/${m}/${d}`
     );
     if (!res.ok) return [];
     const data = await res.json();
@@ -135,7 +136,7 @@ async function fetchWikipediaTrending(): Promise<TrendItem[]> {
         sparkData: sparkRandom(),
         details: `Artigo "${title}" foi um dos mais acessados na Wikipedia ontem com ${views.toLocaleString()} visualizações.`,
         description: `${views.toLocaleString()} visualizações ontem`,
-        sourceUrl: `https://en.wikipedia.org/wiki/${a.article}`,
+        sourceUrl: `https://${wikiLang}.wikipedia.org/wiki/${a.article}`,
         countryCode: "US",
         publishedAt: yesterday.toISOString(),
         historicalData,
@@ -297,6 +298,9 @@ serve(async (req) => {
   }
 
   try {
+    let lang = "pt";
+    try { const body = await req.json(); lang = body?.lang || "pt"; } catch { /* no body */ }
+
     if (cachedResponse && Date.now() - cachedResponse.timestamp < CACHE_TTL) {
       return new Response(cachedResponse.data, {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -305,7 +309,7 @@ serve(async (req) => {
 
     const [hackerNews, wikipedia, stackoverflow, github, rssBridge] = await Promise.all([
       fetchHackerNews(),
-      fetchWikipediaTrending(),
+      fetchWikipediaTrending(lang),
       fetchStackOverflow(),
       fetchGitHubTrending(),
       fetchRSSBridge(),

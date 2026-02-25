@@ -71,10 +71,14 @@ function generateHistorical(baseValue: number, label: string): { historicalData:
   return { historicalData: data, metricLabel: label };
 }
 
-let cachedResponse: { data: string; timestamp: number } | null = null;
+let cachedResponse: Record<string, { data: string; timestamp: number }> = {};
 const CACHE_TTL = 5 * 60 * 1000;
 
-async function fetchYouTubeTrends(): Promise<TrendItem[]> {
+// Map lang codes to YouTube/NewsAPI region codes
+const langToYTRegion: Record<string, string> = { pt: "BR", en: "US", es: "MX", fr: "FR", de: "DE", it: "IT", ja: "JP", ko: "KR", ar: "SA", hi: "IN", ru: "RU", zh: "CN" };
+const langToNewsAPILang: Record<string, string> = { pt: "pt", en: "en", es: "es", fr: "fr", de: "de", it: "it", ar: "ar", ru: "ru", zh: "zh" };
+
+async function fetchYouTubeTrends(lang = "pt"): Promise<TrendItem[]> {
   const API_KEY = Deno.env.get("YOUTUBE_API_KEY");
   if (!API_KEY) {
     console.error("YOUTUBE_API_KEY not set");
@@ -82,8 +86,9 @@ async function fetchYouTubeTrends(): Promise<TrendItem[]> {
   }
 
   try {
+    const regionCode = langToYTRegion[lang] || "BR";
     const res = await fetch(
-      `https://www.googleapis.com/youtube/v3/videos?part=snippet,statistics&chart=mostPopular&regionCode=BR&maxResults=12&key=${API_KEY}`
+      `https://www.googleapis.com/youtube/v3/videos?part=snippet,statistics&chart=mostPopular&regionCode=${regionCode}&relevanceLanguage=${lang}&maxResults=12&key=${API_KEY}`
     );
     if (!res.ok) {
       console.error("YouTube API error:", res.status, await res.text());
@@ -230,7 +235,7 @@ async function fetchAllGoogleTrends(): Promise<TrendItem[]> {
   return allItems;
 }
 
-async function fetchNewsAPI(): Promise<TrendItem[]> {
+async function fetchNewsAPI(lang = "pt"): Promise<TrendItem[]> {
   const API_KEY = Deno.env.get("NEWSAPI_KEY");
   if (!API_KEY) {
     console.error("NEWSAPI_KEY not set - skipping NewsAPI");
@@ -238,15 +243,12 @@ async function fetchNewsAPI(): Promise<TrendItem[]> {
   }
 
   try {
-    let url = `https://newsapi.org/v2/top-headlines?country=br&pageSize=12&apiKey=${API_KEY}`;
+    const newsLang = langToNewsAPILang[lang] || "pt";
+    let url = `https://newsapi.org/v2/top-headlines?language=${newsLang}&pageSize=12&apiKey=${API_KEY}`;
     let res = await fetch(url);
     let data = await res.json();
     if (!res.ok || !data.articles?.length) {
-      url = `https://newsapi.org/v2/top-headlines?language=pt&pageSize=12&apiKey=${API_KEY}`;
-      res = await fetch(url);
-      data = await res.json();
-    }
-    if (!res.ok || !data.articles?.length) {
+      // Fallback to English
       url = `https://newsapi.org/v2/top-headlines?language=en&pageSize=12&apiKey=${API_KEY}`;
       res = await fetch(url);
       data = await res.json();
@@ -290,22 +292,27 @@ serve(async (req) => {
   }
 
   try {
-    if (cachedResponse && Date.now() - cachedResponse.timestamp < CACHE_TTL) {
-      console.log("Serving cached response");
-      return new Response(cachedResponse.data, {
+    let lang = "pt";
+    try { const body = await req.json(); lang = body?.lang || "pt"; } catch { /* no body */ }
+    
+    const cacheKey = `trends_${lang}`;
+    const cached = cachedResponse[cacheKey];
+    if (cached && Date.now() - cached.timestamp < CACHE_TTL) {
+      console.log("Serving cached response for lang:", lang);
+      return new Response(cached.data, {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
     const [youtube, news, googleTrends] = await Promise.all([
-      fetchYouTubeTrends(),
-      fetchNewsAPI(),
+      fetchYouTubeTrends(lang),
+      fetchNewsAPI(lang),
       fetchAllGoogleTrends(),
     ]);
     const trends = [...youtube, ...news, ...googleTrends];
     const responseData = JSON.stringify({ trends });
 
-    cachedResponse = { data: responseData, timestamp: Date.now() };
+    cachedResponse[cacheKey] = { data: responseData, timestamp: Date.now() };
 
     return new Response(responseData, {
       headers: { ...corsHeaders, "Content-Type": "application/json" },

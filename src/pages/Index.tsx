@@ -7,6 +7,7 @@ import CriticalMomentsSection from "@/components/CriticalMomentsSection";
 import TransparencyPanel from "@/components/TransparencyPanel";
 import { TrendCardProps } from "@/components/TrendCard";
 import { useTrends } from "@/hooks/use-trends";
+import { useTranslatedTrends } from "@/hooks/use-translated-trends";
 import { useCriticalMoments } from "@/hooks/use-critical-moments";
 import { useAnomalyAlerts } from "@/hooks/use-anomaly-alerts";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -97,7 +98,7 @@ function getInitialFilters(): FilterState {
 }
 
 const Index = () => {
-  const { t } = useLanguage();
+  const { t, lang } = useLanguage();
   const { config: modeConfig, mode } = useUserMode();
   const [filters, setFilters] = useState<FilterState>(getInitialFilters);
   const [user, setUser] = useState<any>(null);
@@ -118,7 +119,7 @@ const Index = () => {
   const scrollRef = useRef<HTMLDivElement>(null);
   const sentinelRef = useRef<HTMLDivElement>(null);
 
-  const { filteredTrends: rawFilteredTrends, allTrends, loading, isFirstLoad, fetchTrends, countriesCount, lastUpdated, sourcesStatus } = useTrends(filters, setTrendCounts);
+  const { filteredTrends: rawFilteredTrends, allTrends, loading, isFirstLoad, fetchTrends, countriesCount, lastUpdated, sourcesStatus } = useTrends(filters, setTrendCounts, lang);
   const criticalMoments = useCriticalMoments(rawFilteredTrends.length > 5 ? rawFilteredTrends : allTrends);
   const { anomalies, totalCount: anomalyCount, dismiss: dismissAnomaly } = useAnomalyAlerts(allTrends);
   const [transparencyOpen, setTransparencyOpen] = useState(false);
@@ -129,11 +130,14 @@ const Index = () => {
     if (criticalMoments.length > 0) setCriticalDismissed(false);
   }, [criticalMoments.length]);
 
+  // Translate trends content based on selected language
+  const { translatedTrends, isTranslating } = useTranslatedTrends(rawFilteredTrends, lang);
+
   // Apply mode-based sorting
   const filteredTrends = useMemo(() => {
-    if (mode === "cidadao") return rawFilteredTrends;
-    return [...rawFilteredTrends].sort((a, b) => modeConfig.sortWeight(b) - modeConfig.sortWeight(a));
-  }, [rawFilteredTrends, mode, modeConfig]);
+    if (mode === "cidadao") return translatedTrends;
+    return [...translatedTrends].sort((a, b) => modeConfig.sortWeight(b) - modeConfig.sortWeight(a));
+  }, [translatedTrends, mode, modeConfig]);
 
   // Sync filters to URL
   useEffect(() => {

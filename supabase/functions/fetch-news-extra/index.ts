@@ -36,17 +36,18 @@ function generateHistorical(baseValue: number, label: string) {
   return { historicalData: data, metricLabel: label };
 }
 
-// Extended cache: 1 hour for quota-limited APIs
-let cachedResponse: { data: string; timestamp: number } | null = null;
-const CACHE_TTL = 60 * 60 * 1000; // 1 hour (was 5 min) to avoid quota exhaustion
+// Lang-aware caches
+let cachedResponses: Record<string, { data: string; timestamp: number }> = {};
+const CACHE_TTL = 60 * 60 * 1000;
+const langToGNewsLang: Record<string, string> = { pt: "pt", en: "en", es: "es", fr: "fr", de: "de", it: "it", ar: "ar", ru: "ru", zh: "zh", ja: "ja", ko: "ko", hi: "hi" };
 
-async function fetchNewsData(): Promise<TrendItem[]> {
+async function fetchNewsData(lang = "pt"): Promise<TrendItem[]> {
   const key = Deno.env.get("NEWSDATA_API_KEY");
   if (!key) { console.log("NEWSDATA_API_KEY not set"); return []; }
   try {
     const controller = new AbortController();
     setTimeout(() => controller.abort(), 8000);
-    const res = await fetch(`https://newsdata.io/api/1/latest?apikey=${key}&language=pt,en&size=12`, { signal: controller.signal });
+    const res = await fetch(`https://newsdata.io/api/1/latest?apikey=${key}&language=${lang},en&size=12`, { signal: controller.signal });
     if (res.status === 429) { console.warn("NewsData quota exceeded (429)"); return []; }
     if (!res.ok) { console.error("NewsData error:", res.status); return []; }
     const data = await res.json();
@@ -77,13 +78,14 @@ async function fetchNewsData(): Promise<TrendItem[]> {
   } catch (e) { console.error("NewsData fetch error:", e); return []; }
 }
 
-async function fetchGNews(): Promise<TrendItem[]> {
+async function fetchGNews(lang = "pt"): Promise<TrendItem[]> {
   const key = Deno.env.get("GNEWS_API_KEY");
   if (!key) { console.log("GNEWS_API_KEY not set"); return []; }
   try {
     const controller = new AbortController();
     setTimeout(() => controller.abort(), 8000);
-    const res = await fetch(`https://gnews.io/api/v4/top-headlines?lang=pt&max=12&apikey=${key}`, { signal: controller.signal });
+    const gnewsLang = langToGNewsLang[lang] || "pt";
+    const res = await fetch(`https://gnews.io/api/v4/top-headlines?lang=${gnewsLang}&max=12&apikey=${key}`, { signal: controller.signal });
     if (res.status === 429) { console.warn("GNews quota exceeded (429)"); return []; }
     if (!res.ok) {
       const res2 = await fetch(`https://gnews.io/api/v4/top-headlines?lang=en&max=12&apikey=${key}`);
@@ -123,13 +125,14 @@ function mapGNewsArticles(articles: any[]): TrendItem[] {
   });
 }
 
-async function fetchBingNews(): Promise<TrendItem[]> {
+async function fetchBingNews(lang = "pt"): Promise<TrendItem[]> {
   const key = Deno.env.get("BING_NEWS_API_KEY");
   if (!key) { console.log("BING_NEWS_API_KEY not set"); return []; }
   try {
     const controller = new AbortController();
     setTimeout(() => controller.abort(), 8000);
-    const res = await fetch("https://api.bing.microsoft.com/v7.0/news/trendingtopics?mkt=pt-BR&count=12", {
+    const mkt = lang === "pt" ? "pt-BR" : lang === "es" ? "es-ES" : lang === "fr" ? "fr-FR" : lang === "de" ? "de-DE" : lang === "it" ? "it-IT" : lang === "ja" ? "ja-JP" : lang === "ko" ? "ko-KR" : "en-US";
+    const res = await fetch(`https://api.bing.microsoft.com/v7.0/news/trendingtopics?mkt=${mkt}&count=12`, {
       headers: { "Ocp-Apim-Subscription-Key": key },
       signal: controller.signal,
     });
@@ -253,32 +256,34 @@ serve(async (req) => {
   }
 
   try {
-    // Use extended cache to avoid quota issues
-    if (cachedResponse && Date.now() - cachedResponse.timestamp < CACHE_TTL) {
-      return new Response(cachedResponse.data, {
+    let lang = "pt";
+    try { const body = await req.json(); lang = body?.lang || "pt"; } catch { /* no body */ }
+
+    const cacheKey = `news_extra_${lang}`;
+    const cached = cachedResponses[cacheKey];
+    if (cached && Date.now() - cached.timestamp < CACHE_TTL) {
+      return new Response(cached.data, {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
     const [newsData, gnews, bing] = await Promise.all([
-      fetchNewsData(),
-      fetchGNews(),
-      fetchBingNews(),
+      fetchNewsData(lang),
+      fetchGNews(lang),
+      fetchBingNews(lang),
     ]);
     
     let trends = [...newsData, ...gnews, ...bing];
-    console.log(`fetch-news-extra: ${newsData.length} NewsData, ${gnews.length} GNews, ${bing.length} Bing`);
+    console.log(`fetch-news-extra [${lang}]: ${newsData.length} NewsData, ${gnews.length} GNews, ${bing.length} Bing`);
     
-    // If all quota-limited APIs returned empty, use Guardian as fallback
     if (trends.length === 0) {
       console.log("All news APIs returned empty, using Guardian fallback");
       const guardianTrends = await fetchGuardianFallback();
       trends = guardianTrends;
-      console.log(`Guardian fallback: ${guardianTrends.length} items`);
     }
 
     const responseData = JSON.stringify({ trends });
-    cachedResponse = { data: responseData, timestamp: Date.now() };
+    cachedResponses[cacheKey] = { data: responseData, timestamp: Date.now() };
 
     return new Response(responseData, {
       headers: { ...corsHeaders, "Content-Type": "application/json" },

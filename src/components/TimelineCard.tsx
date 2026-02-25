@@ -121,6 +121,7 @@ const TimelineCard = ({
   firstSeenAt,
   peakAt,
   relevanceScore,
+  translated,
   onClick,
   onFilterPlatform,
   onExpand,
@@ -306,6 +307,11 @@ const TimelineCard = ({
                  <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium whitespace-nowrap flex-shrink-0 ${trustBadgeKeys.hot.className}`}>
                    🔥 {t("hotTopic")}
                  </span>
+                 )}
+                {translated && (
+                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium whitespace-nowrap flex-shrink-0 bg-blue-500/10 text-blue-600 dark:text-blue-400 cursor-help" title={t("autoTranslated")}>
+                    🌐
+                  </span>
                 )}
                {trigger && (
                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium bg-accent text-accent-foreground border border-border whitespace-nowrap flex-shrink-0">

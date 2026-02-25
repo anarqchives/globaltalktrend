@@ -41,7 +41,7 @@ type TranslationKey =
   | "error" | "alertCreated" | "monitoring" | "errorSummarize" | "tryAgain"
   | "filterByPlatform" | "copyLinkFilters" | "createAlert"
   | "tabDetails" | "tabContext" | "tabHistory"
-  | "general";
+  | "general" | "autoTranslated";
 
 const translations: Record<LangCode, Record<TranslationKey, string>> = {
   pt: {
@@ -76,7 +76,7 @@ const translations: Record<LangCode, Record<TranslationKey, string>> = {
     errorSummarize: "Erro ao resumir", tryAgain: "Tente novamente.",
     filterByPlatform: "Filtrar por", copyLinkFilters: "Copiar link com filtros", createAlert: "Criar alerta",
     tabDetails: "Detalhes", tabContext: "Contexto", tabHistory: "Histórico",
-    general: "Geral",
+    general: "Geral", autoTranslated: "Traduzido automaticamente",
   },
   en: {
     trends: "Trends", moreTrends: "More trends", filters: "Filters",
@@ -110,7 +110,7 @@ const translations: Record<LangCode, Record<TranslationKey, string>> = {
     errorSummarize: "Error summarizing", tryAgain: "Try again.",
     filterByPlatform: "Filter by", copyLinkFilters: "Copy link with filters", createAlert: "Create alert",
     tabDetails: "Details", tabContext: "Context", tabHistory: "History",
-    general: "General",
+    general: "General", autoTranslated: "Auto-translated",
   },
   es: {
     trends: "Tendencias", moreTrends: "Más trends", filters: "Filtros",
@@ -144,7 +144,7 @@ const translations: Record<LangCode, Record<TranslationKey, string>> = {
     errorSummarize: "Error al resumir", tryAgain: "Inténtalo de nuevo.",
     filterByPlatform: "Filtrar por", copyLinkFilters: "Copiar enlace con filtros", createAlert: "Crear alerta",
     tabDetails: "Detalles", tabContext: "Contexto", tabHistory: "Historial",
-    general: "General",
+    general: "General", autoTranslated: "Traducido automáticamente",
   },
   fr: {
     trends: "Tendances", moreTrends: "Plus de tendances", filters: "Filtres",
@@ -178,7 +178,7 @@ const translations: Record<LangCode, Record<TranslationKey, string>> = {
     errorSummarize: "Erreur de résumé", tryAgain: "Réessayez.",
     filterByPlatform: "Filtrer par", copyLinkFilters: "Copier le lien avec filtres", createAlert: "Créer une alerte",
     tabDetails: "Détails", tabContext: "Contexte", tabHistory: "Historique",
-    general: "Général",
+    general: "Général", autoTranslated: "Traduit automatiquement",
   },
   de: {
     trends: "Trends", moreTrends: "Mehr Trends", filters: "Filter",
@@ -212,7 +212,7 @@ const translations: Record<LangCode, Record<TranslationKey, string>> = {
     errorSummarize: "Fehler beim Zusammenfassen", tryAgain: "Erneut versuchen.",
     filterByPlatform: "Filtern nach", copyLinkFilters: "Link mit Filtern kopieren", createAlert: "Alarm erstellen",
     tabDetails: "Details", tabContext: "Kontext", tabHistory: "Verlauf",
-    general: "Allgemein",
+    general: "Allgemein", autoTranslated: "Automatisch übersetzt",
   },
   it: {
     trends: "Tendenze", moreTrends: "Più tendenze", filters: "Filtri",
@@ -246,7 +246,7 @@ const translations: Record<LangCode, Record<TranslationKey, string>> = {
     errorSummarize: "Errore nel riepilogo", tryAgain: "Riprova.",
     filterByPlatform: "Filtra per", copyLinkFilters: "Copia link con filtri", createAlert: "Crea avviso",
     tabDetails: "Dettagli", tabContext: "Contesto", tabHistory: "Storico",
-    general: "Generale",
+    general: "Generale", autoTranslated: "Tradotto automaticamente",
   },
   zh: {
     trends: "趋势", moreTrends: "更多趋势", filters: "筛选",
@@ -280,7 +280,7 @@ const translations: Record<LangCode, Record<TranslationKey, string>> = {
     errorSummarize: "摘要出错", tryAgain: "请重试。",
     filterByPlatform: "按平台筛选", copyLinkFilters: "复制带筛选链接", createAlert: "创建警报",
     tabDetails: "详情", tabContext: "背景", tabHistory: "历史",
-    general: "综合",
+    general: "综合", autoTranslated: "自动翻译",
   },
   ja: {
     trends: "トレンド", moreTrends: "もっと見る", filters: "フィルター",
@@ -314,7 +314,7 @@ const translations: Record<LangCode, Record<TranslationKey, string>> = {
     errorSummarize: "要約エラー", tryAgain: "再試行してください。",
     filterByPlatform: "プラットフォームで絞り込み", copyLinkFilters: "フィルター付きリンクをコピー", createAlert: "アラート作成",
     tabDetails: "詳細", tabContext: "コンテキスト", tabHistory: "履歴",
-    general: "一般",
+    general: "一般", autoTranslated: "自動翻訳済み",
   },
   ko: {
     trends: "트렌드", moreTrends: "더 많은 트렌드", filters: "필터",
@@ -348,7 +348,7 @@ const translations: Record<LangCode, Record<TranslationKey, string>> = {
     errorSummarize: "요약 오류", tryAgain: "다시 시도하세요.",
     filterByPlatform: "플랫폼별 필터", copyLinkFilters: "필터 포함 링크 복사", createAlert: "알림 생성",
     tabDetails: "상세", tabContext: "맥락", tabHistory: "기록",
-    general: "일반",
+    general: "일반", autoTranslated: "자동 번역됨",
   },
   ar: {
     trends: "الاتجاهات", moreTrends: "المزيد", filters: "التصفية",
@@ -382,7 +382,7 @@ const translations: Record<LangCode, Record<TranslationKey, string>> = {
     errorSummarize: "خطأ في التلخيص", tryAgain: "حاول مجدداً.",
     filterByPlatform: "تصفية حسب", copyLinkFilters: "نسخ رابط مع فلاتر", createAlert: "إنشاء تنبيه",
     tabDetails: "تفاصيل", tabContext: "سياق", tabHistory: "تاريخ",
-    general: "عام",
+    general: "عام", autoTranslated: "مترجم تلقائيًا",
   },
   hi: {
     trends: "रुझान", moreTrends: "और रुझान", filters: "फ़िल्टर",
@@ -416,7 +416,7 @@ const translations: Record<LangCode, Record<TranslationKey, string>> = {
     errorSummarize: "सारांश त्रुटि", tryAgain: "पुनः प्रयास करें।",
     filterByPlatform: "प्लेटफ़ॉर्म से फ़िल्टर", copyLinkFilters: "फ़िल्टर वाला लिंक कॉपी करें", createAlert: "अलर्ट बनाएं",
     tabDetails: "विवरण", tabContext: "संदर्भ", tabHistory: "इतिहास",
-    general: "सामान्य",
+    general: "सामान्य", autoTranslated: "स्वचालित अनुवाद",
   },
   ru: {
     trends: "Тренды", moreTrends: "Больше трендов", filters: "Фильтры",
@@ -450,7 +450,7 @@ const translations: Record<LangCode, Record<TranslationKey, string>> = {
     errorSummarize: "Ошибка резюмирования", tryAgain: "Попробуйте снова.",
     filterByPlatform: "Фильтр по", copyLinkFilters: "Копировать ссылку с фильтрами", createAlert: "Создать оповещение",
     tabDetails: "Детали", tabContext: "Контекст", tabHistory: "История",
-    general: "Общее",
+    general: "Общее", autoTranslated: "Автоматический перевод",
   },
 };
 

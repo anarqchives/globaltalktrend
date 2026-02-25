@@ -30,6 +30,7 @@ export interface TrendCardProps {
   firstSeenAt?: string;
   peakAt?: string;
   relevanceScore?: number;
+  translated?: boolean;
 }
 
 const platformColors: Record<string, { stroke: string; fill: string }> = {
