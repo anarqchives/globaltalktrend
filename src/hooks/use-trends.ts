@@ -428,12 +428,21 @@ export function useTrends(filters: FilterState, onTrendCountsChange: (counts: Re
       // Merge with historical 24h trends from snapshots
       const historicalTrends = await withTimeout(fetchHistorical(), 5000, []);
       
-      // Deduplicate: live trends take priority over historical
-      const liveTitleSet = new Set(allTrends.map(t => `${t.title}||${t.platform}`));
+      // Deduplicate: by normalized title (cross-source dedup)
+      const seenTitles = new Set<string>();
+      const deduped = allTrends.filter(t => {
+        const key = t.title.toLowerCase().trim().slice(0, 80);
+        if (seenTitles.has(key)) return false;
+        seenTitles.add(key);
+        return true;
+      });
+
+      // Merge with historical, deduplicating those too
+      const liveTitleSet = new Set(deduped.map(t => `${t.title}||${t.platform}`));
       const uniqueHistorical = historicalTrends.filter(h => !liveTitleSet.has(`${h.title}||${h.platform}`));
       
       // Add relevance scores to live trends (they get a boost for being current)
-      const scoredLive = allTrends.map(t => ({
+      const scoredLive = deduped.map(t => ({
         ...t,
         relevanceScore: t.relevanceScore ?? 80 + Math.random() * 20, // Live trends get high scores
         firstSeenAt: t.firstSeenAt || new Date().toISOString(),
@@ -552,18 +561,8 @@ export function useTrends(filters: FilterState, onTrendCountsChange: (counts: Re
       return input.filter((t) => normalizeCountryCode(t.countryCode) === countryFilter);
     };
 
-    // Primary filtering
-    let result = applyCountryFilter(applyCategoryFilter(applyTypeFilter(trends)));
-
-    // Fallback 1: keep category+type if selected country is empty
-    if (result.length === 0 && filters.country !== "global") {
-      result = applyCategoryFilter(applyTypeFilter(trends));
-    }
-
-    // Fallback 2: keep type only if category has no matches
-    if (result.length === 0 && filters.category !== "Todas") {
-      result = applyTypeFilter(trends);
-    }
+    // Primary filtering — strict, no silent fallbacks that drop country
+    const result = applyCountryFilter(applyCategoryFilter(applyTypeFilter(trends)));
 
     return [...result].sort((a, b) => (b.relevanceScore || 50) - (a.relevanceScore || 50));
   }, [trends, filters]);

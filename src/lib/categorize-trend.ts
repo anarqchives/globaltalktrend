@@ -5,8 +5,8 @@
 
 const categoryKeywords: Record<string, string[]> = {
   Política: [
-    "eleição", "governo", "presidente", "congresso", "senado", "deputado", "voto", "partido", "ministro",
-    "election", "government", "president", "congress", "senate", "parliament", "minister", "political", "politics", "democrat", "republican",
+    "eleição", "eleitoral", "governo", "presidente", "congresso", "senado", "deputado", "voto", "partido", "ministro", "prefeito", "governador", "câmara", "plenário",
+    "election", "government", "president", "congress", "senate", "parliament", "minister", "political", "politics", "democrat", "republican", "byelection", "campaign",
     "elección", "gobierno", "presidente",
     "élection", "gouvernement", "président",
     "wahl", "regierung", "präsident",
@@ -28,8 +28,10 @@ const categoryKeywords: Record<string, string[]> = {
     "科技", "テクノロジー", "기술", "تكنولوجيا", "तकनीक", "технологии",
   ],
   Esportes: [
-    "futebol", "copa", "jogo", "campeonato", "gol", "seleção", "time", "liga", "olimpíada",
+    "futebol", "copa", "campeonato", "gol", "seleção", "time", "liga", "olimpíada", "esporte",
     "sports", "game", "match", "football", "soccer", "basketball", "tennis", "nba", "nfl", "fifa", "championship", "league", "world cup", "olympic", "goal", "player", "team", "score",
+    "champions league", "bundesliga", "premier league", "la liga", "serie a", "ligue 1", "taekwondo", "cricket", "rugby",
+    "borussia", "atalanta", "barcelona", "real madrid", "manchester", "liverpool", "arsenal", "chelsea", "juventus",
     "deporte", "fútbol", "partido",
     "sport", "fußball", "spiel",
     "体育", "スポーツ", "스포츠", "رياضة", "खेल", "спорт",
@@ -42,17 +44,18 @@ const categoryKeywords: Record<string, string[]> = {
     "文化", "芸術", "문화", "ثقافة", "संस्कृति", "культура",
   ],
   "Negócios/Finanças": [
-    "bolsa", "mercado", "economia", "inflação", "dólar", "real", "ações", "investimento", "pib", "banco",
-    "market", "economy", "business", "finance", "stock", "wall street", "inflation", "gdp", "investment", "bank", "trade", "tariff", "dollar", "euro", "revenue", "profit",
+    "bolsa", "mercado", "economia", "inflação", "dólar", "real", "ações", "investimento", "pib", "banco", "imposto", "renda", "tributário", "fiscal",
+    "desocupação", "desemprego", "emprego", "trabalho", "salário", "aposentadoria", "previdência", "orçamento",
+    "market", "economy", "business", "finance", "stock", "wall street", "inflation", "gdp", "investment", "bank", "trade", "tariff", "dollar", "euro", "revenue", "profit", "capital gains", "tax", "budget", "treasury", "unemployment", "jobs", "wages",
     "mercado", "economía", "negocio",
     "marché", "économie", "affaire",
     "wirtschaft", "markt", "geschäft",
     "经济", "経済", "경제", "اقتصاد", "अर्थव्यवस्था", "экономика",
   ],
   Ciência: [
-    "pesquisa", "estudo", "ciência", "cientista", "descoberta", "nasa", "espaço", "vacina", "saúde",
+    "ciência", "cientista", "descoberta", "nasa", "espaço", "vacina", "saúde", "laboratório",
     "science", "research", "study", "scientist", "discovery", "nasa", "space", "vaccine", "health", "medical", "biology", "physics", "climate", "environment",
-    "ciencia", "investigación", "estudio",
+    "ciencia", "investigación",
     "wissenschaft", "forschung", "studie",
     "科学", "科學", "과학", "علوم", "विज्ञान", "наука",
   ],
@@ -108,18 +111,18 @@ export function categorizeTrend(
     if (mapped) return mapped;
   }
 
-  // Priority 3: If existing category already matches a standard one, keep it
-  const standardCategories = Object.keys(categoryKeywords);
-  if (existingCategory && standardCategories.includes(existingCategory)) {
-    return existingCategory;
-  }
-
-  // Priority 4: Keyword analysis on title + existing category text
+  // Priority 3: Keyword analysis on title (always re-classify via content)
   const searchText = `${title} ${existingCategory || ""}`.toLowerCase();
   for (const [category, keywords] of Object.entries(categoryKeywords)) {
     if (keywords.some((kw) => searchText.includes(kw))) {
       return category;
     }
+  }
+
+  // Priority 4: If existing category already matches a standard one, keep it
+  const standardCategories = Object.keys(categoryKeywords);
+  if (existingCategory && standardCategories.includes(existingCategory)) {
+    return existingCategory;
   }
 
   // Priority 5: Platform-based defaults
@@ -156,7 +159,9 @@ const countryKeywordsMap: Record<string, string[]> = {
   KR: ["south korea", "coreia do sul", "seoul", "seul", "k-pop", "samsung"],
   CN: ["china", "beijing", "pequim", "shanghai", "xi jinping", "yuan"],
   IN: ["india", "índia", "modi", "mumbai", "delhi", "bollywood", "rupee"],
-  AU: ["australia", "austrália", "sydney", "melbourne", "canberra"],
+  AU: ["australia", "austrália", "australian", "sydney", "melbourne", "canberra", "queensland", "victoria", "new south wales"],
+  CL: ["chile", "chileno", "chilena", "santiago", "valparaíso"],
+  NZ: ["new zealand", "nova zelândia", "auckland", "wellington"],
   CA: ["canada", "canadá", "ottawa", "toronto", "trudeau"],
   RU: ["russia", "rússia", "moscow", "moscou", "putin", "kremlin"],
   UA: ["ukraine", "ucrânia", "kiev", "kyiv", "zelensky"],
