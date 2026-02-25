@@ -438,7 +438,7 @@ const TrendHeader = ({ totalTrends = 0, countriesCount = 0, onRefresh, refreshin
 
             <button
               onClick={() => setLoginOpen(true)}
-              className="flex items-center gap-1 rounded-full text-[11px] font-semibold bg-primary text-primary-foreground hover:bg-primary/90 transition-colors shadow-sm min-h-[32px] min-w-[44px] mx-px px-[16px] py-[2px]">
+              className="flex items-center gap-1 rounded-full text-[11px] font-semibold bg-primary text-primary-foreground hover:bg-primary/90 transition-colors shadow-sm min-h-[26px] min-w-[40px] mx-px px-[14px] py-[1px]">
 
                 <LogIn className="w-3.5 h-3.5" />
                 <span className="hidden sm:inline">Entrar</span>
