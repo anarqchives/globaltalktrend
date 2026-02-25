@@ -214,6 +214,93 @@ const fallbackData: TrendCardProps[] = [
   },
 ];
 
+const FORCED_FALLBACK_TRENDS: TrendCardProps[] = [
+  {
+    icon: "📰",
+    platform: "The Guardian",
+    title: "The Guardian - Teste Política UK",
+    category: "Política",
+    time: "agora",
+    volume: "12.4K",
+    change: "+22%",
+    changePositive: true,
+    sparkData: [10, 20, 28, 31, 40, 52, 60, 64, 70, 74],
+    details: "Fallback forçado de diagnóstico.",
+    countryCode: "GB",
+    sourceUrl: "https://www.theguardian.com",
+  },
+  {
+    icon: "📰",
+    platform: "The Guardian",
+    title: "The Guardian - Teste Economia UK",
+    category: "Negócios/Finanças",
+    time: "agora",
+    volume: "8.1K",
+    change: "+14%",
+    changePositive: true,
+    sparkData: [8, 14, 21, 24, 28, 33, 40, 48, 53, 59],
+    details: "Fallback forçado de diagnóstico.",
+    countryCode: "GB",
+    sourceUrl: "https://www.theguardian.com",
+  },
+  {
+    icon: "📰",
+    platform: "The Guardian",
+    title: "The Guardian - Teste Tecnologia UK",
+    category: "Tecnologia",
+    time: "agora",
+    volume: "15.7K",
+    change: "+35%",
+    changePositive: true,
+    sparkData: [7, 11, 18, 26, 31, 39, 47, 58, 66, 72],
+    details: "Fallback forçado de diagnóstico.",
+    countryCode: "GB",
+    sourceUrl: "https://www.theguardian.com",
+  },
+  {
+    icon: "📰",
+    platform: "The Guardian",
+    title: "The Guardian - Teste Ciência UK",
+    category: "Ciência",
+    time: "agora",
+    volume: "6.9K",
+    change: "+9%",
+    changePositive: true,
+    sparkData: [9, 12, 14, 16, 21, 26, 31, 36, 42, 49],
+    details: "Fallback forçado de diagnóstico.",
+    countryCode: "GB",
+    sourceUrl: "https://www.theguardian.com",
+  },
+  {
+    icon: "📰",
+    platform: "The Guardian",
+    title: "The Guardian - Teste Saúde UK",
+    category: "Saúde",
+    time: "agora",
+    volume: "9.3K",
+    change: "+17%",
+    changePositive: true,
+    sparkData: [6, 10, 13, 15, 19, 23, 29, 34, 39, 45],
+    details: "Fallback forçado de diagnóstico.",
+    countryCode: "GB",
+    sourceUrl: "https://www.theguardian.com",
+  },
+  {
+    icon: "📰",
+    platform: "The Guardian",
+    title: "The Guardian - Teste Clima UK",
+    category: "Clima/Meio Ambiente",
+    time: "agora",
+    volume: "11.0K",
+    change: "+20%",
+    changePositive: true,
+    sparkData: [11, 15, 18, 20, 25, 32, 37, 44, 51, 58],
+    details: "Fallback forçado de diagnóstico.",
+    countryCode: "GB",
+    sourceUrl: "https://www.theguardian.com",
+  },
+];
+
 function generateHistorical(baseValue: number, label: string) {
   const now = new Date();
   const data = [];
@@ -359,7 +446,7 @@ async function fetchMastodonClientSide(): Promise<TrendCardProps[]> {
 export function useTrends(filters: FilterState, onTrendCountsChange: (counts: Record<string, number>) => void) {
   const cached = getCachedTrends();
   const cacheAgeMs = cached ? Date.now() - cached.ts : Number.POSITIVE_INFINITY;
-  const [trends, setTrends] = useState<TrendCardProps[]>(cached?.data || fallbackData);
+  const [trends, setTrends] = useState<TrendCardProps[]>(cached?.data || []);
   const [loading, setLoading] = useState(!cached);
   const [isFirstLoad, setIsFirstLoad] = useState(!cached);
   const [lastUpdated, setLastUpdated] = useState<Date | null>(cached ? new Date(cached.ts) : null);
@@ -368,43 +455,54 @@ export function useTrends(filters: FilterState, onTrendCountsChange: (counts: Re
 
   const fetchTrends = useCallback(async () => {
     try {
+      console.log("📥 Iniciando carregamento de trends");
       setLoading(true);
+
+      const invokeFunctionWithLogs = async (
+        sourceName: string,
+        functionName: string,
+        timeoutMs: number
+      ) => {
+        console.log(`🔍 Buscando ${sourceName}...`);
+        const result = await withTimeout(
+          supabase.functions.invoke(functionName).catch(() => ({ data: { trends: [] } })),
+          timeoutMs,
+          { data: { trends: [] } } as Awaited<ReturnType<typeof supabase.functions.invoke>>
+        );
+        const count = result.data?.trends?.length || 0;
+        console.log(`✅ ${sourceName} retornou:`, count, "itens");
+        return result;
+      };
+
+      const fetchClientSourceWithLogs = async (
+        sourceName: string,
+        fetchPromise: Promise<TrendCardProps[]>,
+        timeoutMs = 8000
+      ) => {
+        console.log(`🔍 Buscando ${sourceName}...`);
+        const result = await withTimeout(fetchPromise, timeoutMs, [] as TrendCardProps[]);
+        console.log(`✅ ${sourceName} retornou:`, result.length, "itens");
+        return result;
+      };
+
       const [edgeResult, extraResult, extraSourcesResult, socialTrendsResult, openDataResult, redditItems, blueskyItems, mastodonItems] = await Promise.all([
-        withTimeout(
-          supabase.functions.invoke("fetch-trends"),
-          12000,
-          { data: { trends: [] } } as Awaited<ReturnType<typeof supabase.functions.invoke>>
-        ),
-        withTimeout(
-          supabase.functions.invoke("fetch-news-extra").catch(() => ({ data: { trends: [] } })),
-          10000,
-          { data: { trends: [] } } as Awaited<ReturnType<typeof supabase.functions.invoke>>
-        ),
-        withTimeout(
-          supabase.functions.invoke("fetch-extra-sources").catch(() => ({ data: { trends: [] } })),
-          10000,
-          { data: { trends: [] } } as Awaited<ReturnType<typeof supabase.functions.invoke>>
-        ),
-        withTimeout(
-          supabase.functions.invoke("fetch-social-trends").catch(() => ({ data: { trends: [] } })),
-          10000,
-          { data: { trends: [] } } as Awaited<ReturnType<typeof supabase.functions.invoke>>
-        ),
-        withTimeout(
-          supabase.functions.invoke("fetch-open-data").catch(() => ({ data: { trends: [] } })),
-          12000,
-          { data: { trends: [] } } as Awaited<ReturnType<typeof supabase.functions.invoke>>
-        ),
-        withTimeout(fetchRedditClientSide(), 8000, []),
-        withTimeout(fetchBlueskyClientSide(), 8000, []),
-        withTimeout(fetchMastodonClientSide(), 8000, []),
+        invokeFunctionWithLogs("Google Trends", "fetch-trends", 12000),
+        invokeFunctionWithLogs("The Guardian/News Extra", "fetch-news-extra", 10000),
+        invokeFunctionWithLogs("Fontes Oficiais Extras", "fetch-extra-sources", 10000),
+        invokeFunctionWithLogs("Social Trends", "fetch-social-trends", 10000),
+        invokeFunctionWithLogs("Open Data", "fetch-open-data", 12000),
+        fetchClientSourceWithLogs("Reddit", fetchRedditClientSide()),
+        fetchClientSourceWithLogs("Bluesky", fetchBlueskyClientSide()),
+        fetchClientSourceWithLogs("Mastodon", fetchMastodonClientSide()),
       ]);
+
       const edgeTrends: TrendCardProps[] = edgeResult.data?.trends || [];
       const extraTrends: TrendCardProps[] = extraResult.data?.trends || [];
       const extraSourcesTrends: TrendCardProps[] = extraSourcesResult.data?.trends || [];
       const socialTrends: TrendCardProps[] = socialTrendsResult.data?.trends || [];
       const openDataTrends: TrendCardProps[] = openDataResult.data?.trends || [];
       const rawTrends = [...edgeTrends, ...extraTrends, ...extraSourcesTrends, ...socialTrends, ...openDataTrends, ...redditItems, ...blueskyItems, ...mastodonItems];
+      console.log("📦 Total de trends combinadas:", rawTrends.length);
       // Apply unified categorization, normalization and trust badges
       const allTrends = rawTrends.map((t) => {
         const category = normalizeCategory(t.title || "Sem título", t.platform || "Unknown", t.category);
@@ -543,6 +641,17 @@ export function useTrends(filters: FilterState, onTrendCountsChange: (counts: Re
     };
   }, [fetchTrends, cacheAgeMs]);
 
+  useEffect(() => {
+    const timer = window.setTimeout(() => {
+      if (!loading && trends.length === 0) {
+        console.log("⚠️ Usando fallback - sem dados reais");
+        setTrends(FORCED_FALLBACK_TRENDS);
+      }
+    }, 5000);
+
+    return () => window.clearTimeout(timer);
+  }, [loading, trends.length]);
+
   const filteredTrends = useMemo(() => {
     const countryFilter = normalizeCountryCode(filters.country);
     const filterCategory = normalizeText(filters.category);
@@ -578,6 +687,11 @@ export function useTrends(filters: FilterState, onTrendCountsChange: (counts: Re
 
     return [...result].sort((a, b) => (b.relevanceScore || 50) - (a.relevanceScore || 50));
   }, [trends, filters]);
+
+  useEffect(() => {
+    console.log("🔎 Filtros aplicados:", filters);
+    console.log("📋 Trends após filtro:", filteredTrends.length);
+  }, [filters, filteredTrends.length]);
 
   const leftTrends = useMemo(() => filteredTrends.filter((_, i) => i % 2 === 0), [filteredTrends]);
   const rightTrends = useMemo(() => filteredTrends.filter((_, i) => i % 2 === 1), [filteredTrends]);
