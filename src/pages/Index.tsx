@@ -112,7 +112,7 @@ const Index = () => {
   const { trackAction } = useGamification(user?.id ?? null);
   const [trendCounts, setTrendCounts] = useState<Record<string, number>>({});
   const [expandedTrendId, setExpandedTrendId] = useState<string | null>(null);
-  const [mobileTab, setMobileTab] = useState<"timeline" | "map">("timeline");
+  const [_mobileTab, _setMobileTab] = useState<"timeline" | "map">("timeline"); // kept for compat
   const [visibleCount, setVisibleCount] = useState(INITIAL_COUNT);
   const isMobile = useIsMobile();
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -209,7 +209,7 @@ const Index = () => {
   const handleSelectTrend = useCallback((trend: TrendCardProps) => {
     const trendId = `${trend.platform}-${trend.title.slice(0, 20)}`;
     setExpandedTrendId(trendId);
-    if (isMobile) setMobileTab("timeline");
+    if (isMobile) _setMobileTab("timeline");
     scrollRef.current?.scrollTo({ top: 0, behavior: "smooth" });
   }, [isMobile]);
 
@@ -407,30 +407,9 @@ const Index = () => {
                 onClose={() => setCriticalDismissed(true)}
               />
             )}
-            <div className="flex border-b border-border bg-card/80 backdrop-blur-sm">
-              <button
-                className={`flex-1 py-3 min-h-[44px] text-xs font-semibold transition-colors ${
-                  mobileTab === "timeline"
-                    ? "text-primary border-b-2 border-primary"
-                    : "text-muted-foreground"
-                }`}
-                onClick={() => setMobileTab("timeline")}
-              >
-                {t("timeline")}
-              </button>
-              <button
-                className={`flex-1 py-3 min-h-[44px] text-xs font-semibold transition-colors ${
-                  mobileTab === "map"
-                    ? "text-primary border-b-2 border-primary"
-                    : "text-muted-foreground"
-                }`}
-                onClick={() => setMobileTab("map")}
-              >
-                {t("map")}
-              </button>
-            </div>
+            {/* Mobile: timeline only, no map */}
             <div className="flex-1 min-h-0 overflow-hidden">
-              {mobileTab === "timeline" ? renderTimeline() : renderMap()}
+              {renderTimeline()}
             </div>
           </div>
         ) : (

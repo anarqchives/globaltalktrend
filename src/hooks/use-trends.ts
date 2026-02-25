@@ -3,7 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { TrendCardProps } from "../components/TrendCard";
 import { toast } from "@/hooks/use-toast";
 import { FilterState } from "../components/FilterBar";
-import { categorizeTrend } from "@/lib/categorize-trend";
+import { categorizeTrend, detectCountryFromContent } from "@/lib/categorize-trend";
 import { useHistoricalTrends } from "./use-historical-trends";
 const CACHE_KEY = "gtt_trends_cache";
 const CACHE_TTL = 5 * 60 * 1000; // 5 min
@@ -398,7 +398,14 @@ export function useTrends(filters: FilterState, onTrendCountsChange: (counts: Re
       // Apply unified categorization, normalization and trust badges
       const allTrends = rawTrends.map((t) => {
         const category = normalizeCategory(t.title || "Sem título", t.platform || "Unknown", t.category);
-        const countryCode = normalizeCountryCode(t.countryCode);
+        // Multi-layer country detection: content keywords > source mapping > existing code
+        const detectedCountry = detectCountryFromContent(
+          t.title || "",
+          t.platform || "Unknown",
+          t.details || t.description || "",
+          t.countryCode
+        );
+        const countryCode = normalizeCountryCode(detectedCountry || t.countryCode);
 
         // Assign trust badge based on platform
         let trustBadge = t.trustBadge;
