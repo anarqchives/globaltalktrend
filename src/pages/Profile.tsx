@@ -34,6 +34,7 @@ const Profile = () => {
   const navigate = useNavigate();
   const { lang, setLang, t } = useLanguage();
   const [user, setUser] = useState<any>(null);
+  const [authLoading, setAuthLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<TabKey>(() => {
     const params = new URLSearchParams(window.location.search);
     const tab = params.get("tab");
@@ -43,14 +44,22 @@ const Profile = () => {
   const [dark, setDark] = useState(() => localStorage.getItem("theme") === "dark");
 
   useEffect(() => {
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      const nextUser = session?.user ?? null;
+      setUser(nextUser);
+      setAuthLoading(false);
+      if (!nextUser) navigate("/");
+    });
+
     supabase.auth.getSession().then(({ data: { session } }) => {
-      if (!session?.user) navigate("/");
-      else setUser(session.user);
+      const nextUser = session?.user ?? null;
+      setUser(nextUser);
+      setAuthLoading(false);
+      if (!nextUser) navigate("/");
     });
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_e, session) => {
-      if (!session?.user) navigate("/");
-      else setUser(session.user);
-    });
+
     return () => subscription.unsubscribe();
   }, [navigate]);
 
@@ -59,6 +68,14 @@ const Profile = () => {
   const { alerts, toggleAlert, deleteAlert, createAlert, loading: alertsLoading } = useAlerts(userId);
   const { history, clearHistory, deleteItem, loading: historyLoading } = useHistory(userId);
   const { totalPoints, achievements, unlocked, loading: gamLoading } = useGamification(userId);
+
+  if (authLoading) {
+    return (
+      <div className="min-h-screen bg-background text-foreground flex items-center justify-center px-4">
+        <p className="text-sm text-muted-foreground">Carregando perfil…</p>
+      </div>
+    );
+  }
 
   if (!user) return null;
 
