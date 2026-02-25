@@ -456,7 +456,7 @@ const TrendHeader = ({ totalTrends = 0, countriesCount = 0, onRefresh, refreshin
               className="flex items-center gap-1 rounded-full text-[11px] font-semibold bg-primary text-primary-foreground hover:bg-primary/90 transition-colors shadow-sm min-h-[26px] min-w-[40px] mx-px px-[14px] py-[1px]">
 
                 <LogIn className="w-3.5 h-3.5" />
-                <span className="hidden sm:inline">Entrar</span>
+                <span className="hidden sm:inline">{t("enter")}</span>
               </button>
             }
           </div>
@@ -626,10 +626,10 @@ const TrendHeader = ({ totalTrends = 0, countriesCount = 0, onRefresh, refreshin
             <div className="px-6 pt-6 pb-2">
               <DialogHeader className="space-y-1.5">
                 <DialogTitle className="text-xl font-semibold text-foreground tracking-tight text-center">
-                  Entrar no Global Talk Trends
+                  {t("loginTitle")}
                 </DialogTitle>
                 <DialogDescription className="text-sm text-muted-foreground text-center">
-                  Acesse para salvar filtros e receber alertas
+                  {t("loginSubtitle")}
                 </DialogDescription>
               </DialogHeader>
             </div>
@@ -651,7 +651,7 @@ const TrendHeader = ({ totalTrends = 0, countriesCount = 0, onRefresh, refreshin
                   </svg>
                 )}
                 <span className="text-[15px] font-medium text-foreground">
-                  {loginLoading === "google" ? "Conectando…" : "Continuar com Google"}
+                  {loginLoading === "google" ? t("connecting") : t("continueWithGoogle")}
                 </span>
               </button>
 
@@ -668,22 +668,22 @@ const TrendHeader = ({ totalTrends = 0, countriesCount = 0, onRefresh, refreshin
                   </svg>
                 )}
                 <span className="text-[15px] font-medium text-foreground">
-                  {loginLoading === "apple" ? "Conectando…" : "Continuar com Apple"}
+                  {loginLoading === "apple" ? t("connecting") : t("continueWithApple")}
                 </span>
               </button>
             </div>
 
             <div className="px-6 pb-6 space-y-3">
               <p className="text-xs text-muted-foreground/70 text-center leading-relaxed">
-                Ao continuar, você concorda com nossos{" "}
-                <a href="#" className="text-primary hover:underline">Termos de Uso</a>
-                {" "}e{" "}
-                <a href="#" className="text-primary hover:underline">Política de Privacidade</a>
+                {t("termsIntro")}{" "}
+                <a href="#" className="text-primary hover:underline">{t("termsOfUse")}</a>
+                {" "}&{" "}
+                <a href="#" className="text-primary hover:underline">{t("privacyPolicy")}</a>
               </p>
 
               <div className="flex items-center justify-center gap-1.5 text-[13px] text-muted-foreground">
                 <span>❤️</span>
-                <span>Todas as funcionalidades são gratuitas</span>
+                <span>{t("allFeaturesFree")}</span>
               </div>
             </div>
           </motion.div>
