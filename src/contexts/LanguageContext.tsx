@@ -41,7 +41,9 @@ type TranslationKey =
   | "error" | "alertCreated" | "monitoring" | "errorSummarize" | "tryAgain"
   | "filterByPlatform" | "copyLinkFilters" | "createAlert"
   | "tabDetails" | "tabContext" | "tabHistory"
-  | "general" | "autoTranslated";
+  | "general" | "autoTranslated"
+  | "loginTitle" | "loginSubtitle" | "continueWithGoogle" | "continueWithApple" | "connecting"
+  | "termsIntro" | "termsOfUse" | "privacyPolicy" | "allFeaturesFree" | "enter";
 
 const translations: Record<LangCode, Record<TranslationKey, string>> = {
   pt: {
@@ -77,6 +79,10 @@ const translations: Record<LangCode, Record<TranslationKey, string>> = {
     filterByPlatform: "Filtrar por", copyLinkFilters: "Copiar link com filtros", createAlert: "Criar alerta",
     tabDetails: "Detalhes", tabContext: "Contexto", tabHistory: "Histórico",
     general: "Geral", autoTranslated: "Traduzido automaticamente",
+    loginTitle: "Entrar no Global Talk Trends", loginSubtitle: "Acesse para salvar filtros e receber alertas",
+    continueWithGoogle: "Continuar com Google", continueWithApple: "Continuar com Apple", connecting: "Conectando…",
+    termsIntro: "Ao continuar, você concorda com nossos", termsOfUse: "Termos de Uso", privacyPolicy: "Política de Privacidade",
+    allFeaturesFree: "Todas as funcionalidades são gratuitas", enter: "Entrar",
   },
   en: {
     trends: "Trends", moreTrends: "More trends", filters: "Filters",
@@ -111,6 +117,10 @@ const translations: Record<LangCode, Record<TranslationKey, string>> = {
     filterByPlatform: "Filter by", copyLinkFilters: "Copy link with filters", createAlert: "Create alert",
     tabDetails: "Details", tabContext: "Context", tabHistory: "History",
     general: "General", autoTranslated: "Auto-translated",
+    loginTitle: "Sign in to Global Talk Trends", loginSubtitle: "Access to save filters and receive alerts",
+    continueWithGoogle: "Continue with Google", continueWithApple: "Continue with Apple", connecting: "Connecting…",
+    termsIntro: "By continuing, you agree to our", termsOfUse: "Terms of Use", privacyPolicy: "Privacy Policy",
+    allFeaturesFree: "All features are free", enter: "Sign in",
   },
   es: {
     trends: "Tendencias", moreTrends: "Más trends", filters: "Filtros",
@@ -145,6 +155,10 @@ const translations: Record<LangCode, Record<TranslationKey, string>> = {
     filterByPlatform: "Filtrar por", copyLinkFilters: "Copiar enlace con filtros", createAlert: "Crear alerta",
     tabDetails: "Detalles", tabContext: "Contexto", tabHistory: "Historial",
     general: "General", autoTranslated: "Traducido automáticamente",
+    loginTitle: "Entrar en Global Talk Trends", loginSubtitle: "Accede para guardar filtros y recibir alertas",
+    continueWithGoogle: "Continuar con Google", continueWithApple: "Continuar con Apple", connecting: "Conectando…",
+    termsIntro: "Al continuar, aceptas nuestros", termsOfUse: "Términos de Uso", privacyPolicy: "Política de Privacidad",
+    allFeaturesFree: "Todas las funcionalidades son gratuitas", enter: "Entrar",
   },
   fr: {
     trends: "Tendances", moreTrends: "Plus de tendances", filters: "Filtres",
@@ -179,6 +193,10 @@ const translations: Record<LangCode, Record<TranslationKey, string>> = {
     filterByPlatform: "Filtrer par", copyLinkFilters: "Copier le lien avec filtres", createAlert: "Créer une alerte",
     tabDetails: "Détails", tabContext: "Contexte", tabHistory: "Historique",
     general: "Général", autoTranslated: "Traduit automatiquement",
+    loginTitle: "Se connecter à Global Talk Trends", loginSubtitle: "Accédez pour sauvegarder vos filtres et recevoir des alertes",
+    continueWithGoogle: "Continuer avec Google", continueWithApple: "Continuer avec Apple", connecting: "Connexion…",
+    termsIntro: "En continuant, vous acceptez nos", termsOfUse: "Conditions d'utilisation", privacyPolicy: "Politique de confidentialité",
+    allFeaturesFree: "Toutes les fonctionnalités sont gratuites", enter: "Connexion",
   },
   de: {
     trends: "Trends", moreTrends: "Mehr Trends", filters: "Filter",
@@ -213,6 +231,10 @@ const translations: Record<LangCode, Record<TranslationKey, string>> = {
     filterByPlatform: "Filtern nach", copyLinkFilters: "Link mit Filtern kopieren", createAlert: "Alarm erstellen",
     tabDetails: "Details", tabContext: "Kontext", tabHistory: "Verlauf",
     general: "Allgemein", autoTranslated: "Automatisch übersetzt",
+    loginTitle: "Bei Global Talk Trends anmelden", loginSubtitle: "Zugang zum Speichern von Filtern und Erhalten von Benachrichtigungen",
+    continueWithGoogle: "Weiter mit Google", continueWithApple: "Weiter mit Apple", connecting: "Verbinden…",
+    termsIntro: "Durch Fortfahren stimmen Sie unseren zu", termsOfUse: "Nutzungsbedingungen", privacyPolicy: "Datenschutzrichtlinie",
+    allFeaturesFree: "Alle Funktionen sind kostenlos", enter: "Anmelden",
   },
   it: {
     trends: "Tendenze", moreTrends: "Più tendenze", filters: "Filtri",
@@ -247,6 +269,10 @@ const translations: Record<LangCode, Record<TranslationKey, string>> = {
     filterByPlatform: "Filtra per", copyLinkFilters: "Copia link con filtri", createAlert: "Crea avviso",
     tabDetails: "Dettagli", tabContext: "Contesto", tabHistory: "Storico",
     general: "Generale", autoTranslated: "Tradotto automaticamente",
+    loginTitle: "Accedi a Global Talk Trends", loginSubtitle: "Accedi per salvare filtri e ricevere avvisi",
+    continueWithGoogle: "Continua con Google", continueWithApple: "Continua con Apple", connecting: "Connessione…",
+    termsIntro: "Continuando, accetti i nostri", termsOfUse: "Termini di utilizzo", privacyPolicy: "Informativa sulla privacy",
+    allFeaturesFree: "Tutte le funzionalità sono gratuite", enter: "Accedi",
   },
   zh: {
     trends: "趋势", moreTrends: "更多趋势", filters: "筛选",
@@ -281,6 +307,10 @@ const translations: Record<LangCode, Record<TranslationKey, string>> = {
     filterByPlatform: "按平台筛选", copyLinkFilters: "复制带筛选链接", createAlert: "创建警报",
     tabDetails: "详情", tabContext: "背景", tabHistory: "历史",
     general: "综合", autoTranslated: "自动翻译",
+    loginTitle: "登录 Global Talk Trends", loginSubtitle: "登录以保存筛选条件和接收提醒",
+    continueWithGoogle: "使用 Google 继续", continueWithApple: "使用 Apple 继续", connecting: "连接中…",
+    termsIntro: "继续即表示您同意我们的", termsOfUse: "使用条款", privacyPolicy: "隐私政策",
+    allFeaturesFree: "所有功能均免费", enter: "登录",
   },
   ja: {
     trends: "トレンド", moreTrends: "もっと見る", filters: "フィルター",
@@ -315,6 +345,10 @@ const translations: Record<LangCode, Record<TranslationKey, string>> = {
     filterByPlatform: "プラットフォームで絞り込み", copyLinkFilters: "フィルター付きリンクをコピー", createAlert: "アラート作成",
     tabDetails: "詳細", tabContext: "コンテキスト", tabHistory: "履歴",
     general: "一般", autoTranslated: "自動翻訳済み",
+    loginTitle: "Global Talk Trends にサインイン", loginSubtitle: "フィルターの保存やアラートの受信にアクセス",
+    continueWithGoogle: "Google で続行", continueWithApple: "Apple で続行", connecting: "接続中…",
+    termsIntro: "続行すると、以下に同意したことになります", termsOfUse: "利用規約", privacyPolicy: "プライバシーポリシー",
+    allFeaturesFree: "すべての機能が無料です", enter: "サインイン",
   },
   ko: {
     trends: "트렌드", moreTrends: "더 많은 트렌드", filters: "필터",
@@ -349,6 +383,10 @@ const translations: Record<LangCode, Record<TranslationKey, string>> = {
     filterByPlatform: "플랫폼별 필터", copyLinkFilters: "필터 포함 링크 복사", createAlert: "알림 생성",
     tabDetails: "상세", tabContext: "맥락", tabHistory: "기록",
     general: "일반", autoTranslated: "자동 번역됨",
+    loginTitle: "Global Talk Trends 로그인", loginSubtitle: "필터 저장 및 알림 수신을 위해 로그인하세요",
+    continueWithGoogle: "Google로 계속", continueWithApple: "Apple로 계속", connecting: "연결 중…",
+    termsIntro: "계속하면 다음에 동의하는 것입니다", termsOfUse: "이용약관", privacyPolicy: "개인정보 처리방침",
+    allFeaturesFree: "모든 기능이 무료입니다", enter: "로그인",
   },
   ar: {
     trends: "الاتجاهات", moreTrends: "المزيد", filters: "التصفية",
@@ -383,6 +421,10 @@ const translations: Record<LangCode, Record<TranslationKey, string>> = {
     filterByPlatform: "تصفية حسب", copyLinkFilters: "نسخ رابط مع فلاتر", createAlert: "إنشاء تنبيه",
     tabDetails: "تفاصيل", tabContext: "سياق", tabHistory: "تاريخ",
     general: "عام", autoTranslated: "مترجم تلقائيًا",
+    loginTitle: "تسجيل الدخول إلى Global Talk Trends", loginSubtitle: "سجّل الدخول لحفظ الفلاتر واستقبال التنبيهات",
+    continueWithGoogle: "المتابعة مع Google", continueWithApple: "المتابعة مع Apple", connecting: "جاري الاتصال…",
+    termsIntro: "بالمتابعة، فإنك توافق على", termsOfUse: "شروط الاستخدام", privacyPolicy: "سياسة الخصوصية",
+    allFeaturesFree: "جميع الميزات مجانية", enter: "دخول",
   },
   hi: {
     trends: "रुझान", moreTrends: "और रुझान", filters: "फ़िल्टर",
@@ -417,6 +459,10 @@ const translations: Record<LangCode, Record<TranslationKey, string>> = {
     filterByPlatform: "प्लेटफ़ॉर्म से फ़िल्टर", copyLinkFilters: "फ़िल्टर वाला लिंक कॉपी करें", createAlert: "अलर्ट बनाएं",
     tabDetails: "विवरण", tabContext: "संदर्भ", tabHistory: "इतिहास",
     general: "सामान्य", autoTranslated: "स्वचालित अनुवाद",
+    loginTitle: "Global Talk Trends में साइन इन करें", loginSubtitle: "फ़िल्टर सहेजने और अलर्ट प्राप्त करने के लिए लॉगिन करें",
+    continueWithGoogle: "Google से जारी रखें", continueWithApple: "Apple से जारी रखें", connecting: "कनेक्ट हो रहा है…",
+    termsIntro: "जारी रखकर, आप सहमत होते हैं", termsOfUse: "उपयोग की शर्तें", privacyPolicy: "गोपनीयता नीति",
+    allFeaturesFree: "सभी सुविधाएं मुफ्त हैं", enter: "लॉगिन",
   },
   ru: {
     trends: "Тренды", moreTrends: "Больше трендов", filters: "Фильтры",
@@ -451,6 +497,10 @@ const translations: Record<LangCode, Record<TranslationKey, string>> = {
     filterByPlatform: "Фильтр по", copyLinkFilters: "Копировать ссылку с фильтрами", createAlert: "Создать оповещение",
     tabDetails: "Детали", tabContext: "Контекст", tabHistory: "История",
     general: "Общее", autoTranslated: "Автоматический перевод",
+    loginTitle: "Войти в Global Talk Trends", loginSubtitle: "Войдите, чтобы сохранять фильтры и получать уведомления",
+    continueWithGoogle: "Продолжить с Google", continueWithApple: "Продолжить с Apple", connecting: "Подключение…",
+    termsIntro: "Продолжая, вы соглашаетесь с нашими", termsOfUse: "Условия использования", privacyPolicy: "Политика конфиденциальности",
+    allFeaturesFree: "Все функции бесплатны", enter: "Войти",
   },
 };
 
