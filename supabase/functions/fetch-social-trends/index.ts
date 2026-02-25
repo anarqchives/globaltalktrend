@@ -54,7 +54,7 @@ async function fetchHackerNews(): Promise<TrendItem[]> {
     const res = await fetch("https://hacker-news.firebaseio.com/v0/topstories.json");
     if (!res.ok) return [];
     const ids: number[] = await res.json();
-    const top = ids.slice(0, 8);
+    const top = ids.slice(0, 15);
 
     const items = await Promise.all(
       top.map(async (id) => {
@@ -113,7 +113,7 @@ async function fetchWikipediaTrending(): Promise<TrendItem[]> {
     // Filter out main page and special pages
     const filtered = articles
       .filter((a: any) => !["Main_Page", "Special:Search", "-"].includes(a.article))
-      .slice(0, 8);
+      .slice(0, 15);
 
     return filtered.map((a: any) => {
       const views = a.views || 0;
@@ -152,7 +152,7 @@ async function fetchWikipediaTrending(): Promise<TrendItem[]> {
 async function fetchStackOverflow(): Promise<TrendItem[]> {
   try {
     const res = await fetch(
-      "https://api.stackexchange.com/2.3/questions?order=desc&sort=hot&site=stackoverflow&pagesize=6&filter=withbody"
+      "https://api.stackexchange.com/2.3/questions?order=desc&sort=hot&site=stackoverflow&pagesize=12&filter=withbody"
     );
     if (!res.ok) return [];
     const data = await res.json();
@@ -196,7 +196,7 @@ async function fetchGitHubTrending(): Promise<TrendItem[]> {
     // to find recently created repos with most stars
     const since = new Date(Date.now() - 7 * 86400000).toISOString().split("T")[0];
     const res = await fetch(
-      `https://api.github.com/search/repositories?q=created:>${since}&sort=stars&order=desc&per_page=6`,
+      `https://api.github.com/search/repositories?q=created:>${since}&sort=stars&order=desc&per_page=12`,
       {
         headers: {
           Accept: "application/vnd.github.v3+json",
@@ -258,7 +258,7 @@ async function fetchRSSBridge(): Promise<TrendItem[]> {
       const data = await res.json();
       const items = data.items || [];
 
-      return items.slice(0, 5).map((item: any) => {
+      return items.slice(0, 12).map((item: any) => {
         const { historicalData, metricLabel } = generateHistorical(
           Math.floor(Math.random() * 50 + 10),
           "interações"

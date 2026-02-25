@@ -7,11 +7,41 @@ import { categorizeTrend } from "@/lib/categorize-trend";
 import { useHistoricalTrends } from "./use-historical-trends";
 const CACHE_KEY = "gtt_trends_cache";
 const CACHE_TTL = 5 * 60 * 1000; // 5 min
+const STANDARD_CATEGORIES = new Set([
+  "Política",
+  "Entretenimento",
+  "Tecnologia",
+  "Esportes",
+  "Cultura",
+  "Negócios/Finanças",
+  "Ciência",
+  "Geral",
+]);
 
 type TrendsCachePayload = {
   ts: number;
   data: TrendCardProps[];
 };
+
+function normalizeText(value?: string): string {
+  return (value || "").normalize("NFC").toLowerCase().trim();
+}
+
+function normalizeCountryCode(code?: string): string | undefined {
+  if (!code) return undefined;
+  const cleaned = code.toUpperCase().replace(/[^A-Z]/g, "");
+  if (cleaned.length >= 2) return cleaned.slice(0, 2);
+  return undefined;
+}
+
+function normalizeCategory(title: string, platform: string, category?: string): string {
+  const normalized = categorizeTrend(title, platform, category);
+  if (STANDARD_CATEGORIES.has(normalized)) return normalized;
+  if (normalizeText(normalized).includes("news") || normalizeText(normalized).includes("notí")) {
+    return "Política";
+  }
+  return "Geral";
+}
 
 function getCachedTrends(): TrendsCachePayload | null {
   try {
@@ -31,7 +61,7 @@ function getCachedTrends(): TrendsCachePayload | null {
 
 function setCachedTrends(data: TrendCardProps[]) {
   try {
-    sessionStorage.setItem(CACHE_KEY, JSON.stringify({ ts: Date.now(), data: data.slice(0, 80) }));
+    sessionStorage.setItem(CACHE_KEY, JSON.stringify({ ts: Date.now(), data: data.slice(0, 120) }));
   } catch {}
 }
 
@@ -365,11 +395,11 @@ export function useTrends(filters: FilterState, onTrendCountsChange: (counts: Re
       const extraSourcesTrends: TrendCardProps[] = extraSourcesResult.data?.trends || [];
       const socialTrends: TrendCardProps[] = socialTrendsResult.data?.trends || [];
       const rawTrends = [...edgeTrends, ...extraTrends, ...extraSourcesTrends, ...socialTrends, ...redditItems, ...blueskyItems, ...mastodonItems];
-      // Apply unified categorization and trust badges
+      // Apply unified categorization, normalization and trust badges
       const allTrends = rawTrends.map((t) => {
-        const category = categorizeTrend(t.title, t.platform, t.category, {
-          subreddit: t.category?.startsWith("r/") ? t.category.replace("r/", "") : undefined,
-        });
+        const category = normalizeCategory(t.title || "Sem título", t.platform || "Unknown", t.category);
+        const countryCode = normalizeCountryCode(t.countryCode);
+
         // Assign trust badge based on platform
         let trustBadge = t.trustBadge;
         if (!trustBadge) {
@@ -378,7 +408,15 @@ export function useTrends(filters: FilterState, onTrendCountsChange: (counts: Re
           else if (["The Guardian", "BBC", "Reuters"].includes(t.platform)) trustBadge = "international";
           else if (["NewsAPI", "NewsData", "GNews", "Bing News"].includes(t.platform)) trustBadge = "press";
         }
-        return { ...t, category, trustBadge };
+
+        return {
+          ...t,
+          title: (t.title || "Sem título").trim(),
+          platform: t.platform || "Unknown",
+          category,
+          countryCode,
+          trustBadge,
+        };
       });
       // Merge with historical 24h trends from snapshots
       const historicalTrends = await withTimeout(fetchHistorical(), 5000, []);
@@ -427,7 +465,7 @@ export function useTrends(filters: FilterState, onTrendCountsChange: (counts: Re
 
         // Save snapshots for critical moment detection (fire & forget)
         supabase.functions.invoke("save-trend-snapshots", {
-          body: { trends: allTrends.slice(0, 50) },
+          body: { trends: allTrends.slice(0, 120) },
         }).catch(() => {});
         if (!isFirstLoad) {
           toast({ title: "✅ Atualizado", description: `${combinedTrends.length} trends (${allTrends.length} ao vivo + ${uniqueHistorical.length} históricas)` });
@@ -479,25 +517,47 @@ export function useTrends(filters: FilterState, onTrendCountsChange: (counts: Re
   }, [fetchTrends, cacheAgeMs]);
 
   const filteredTrends = useMemo(() => {
-    let result = trends;
-    if (filters.country !== "global") {
-      result = result.filter((t) => t.countryCode === filters.country);
-    }
-    if (filters.type === "Redes sociais") result = result.filter((t) => ["Reddit", "Bluesky", "Mastodon", "X (Twitter)"].includes(t.platform));
-    else if (filters.type === "Imprensa") result = result.filter((t) => ["NewsAPI", "NewsData", "GNews", "Bing News", "The Guardian"].includes(t.platform));
-    else if (filters.type === "Buscas (Google)") result = result.filter((t) => t.platform === "Google Trends");
-    else if (filters.type === "Dados oficiais") result = result.filter((t) => ["World Bank", "IBGE"].includes(t.platform));
-    else if (filters.type === "Ciência") result = result.filter((t) => t.platform === "OpenAlex");
-    else if (filters.type === "Tech") result = result.filter((t) => ["Hacker News", "GitHub", "Stack Overflow"].includes(t.platform));
-    else if (filters.type === "Enciclopédia") result = result.filter((t) => t.platform === "Wikipedia");
-    if (filters.category !== "Todas") {
-      result = result.filter((t) => {
-        const cat = (t.category || "").normalize("NFC").toLowerCase();
-        const filterCat = filters.category.normalize("NFC").toLowerCase();
-        return cat === filterCat || cat.startsWith(filterCat);
+    const countryFilter = normalizeCountryCode(filters.country);
+    const filterCategory = normalizeText(filters.category);
+
+    const applyTypeFilter = (input: TrendCardProps[]) => {
+      if (filters.type === "Redes sociais") return input.filter((t) => ["Reddit", "Bluesky", "Mastodon", "X (Twitter)"].includes(t.platform));
+      if (filters.type === "Imprensa") return input.filter((t) => ["NewsAPI", "NewsData", "GNews", "Bing News", "The Guardian"].includes(t.platform));
+      if (filters.type === "Buscas (Google)") return input.filter((t) => t.platform === "Google Trends");
+      if (filters.type === "Dados oficiais") return input.filter((t) => ["World Bank", "IBGE"].includes(t.platform));
+      if (filters.type === "Ciência") return input.filter((t) => t.platform === "OpenAlex");
+      if (filters.type === "Tech") return input.filter((t) => ["Hacker News", "GitHub", "Stack Overflow"].includes(t.platform));
+      if (filters.type === "Enciclopédia") return input.filter((t) => t.platform === "Wikipedia");
+      return input;
+    };
+
+    const applyCategoryFilter = (input: TrendCardProps[]) => {
+      if (filters.category === "Todas") return input;
+      return input.filter((t) => {
+        const cat = normalizeText(t.category || "Geral");
+        return cat === filterCategory || cat.startsWith(filterCategory);
       });
+    };
+
+    const applyCountryFilter = (input: TrendCardProps[]) => {
+      if (!countryFilter || countryFilter === "GL") return input;
+      if (filters.country === "global") return input;
+      return input.filter((t) => normalizeCountryCode(t.countryCode) === countryFilter);
+    };
+
+    // Primary filtering
+    let result = applyCountryFilter(applyCategoryFilter(applyTypeFilter(trends)));
+
+    // Fallback 1: keep category+type if selected country is empty
+    if (result.length === 0 && filters.country !== "global") {
+      result = applyCategoryFilter(applyTypeFilter(trends));
     }
-    // Sort by relevance score (higher = more relevant/recent)
+
+    // Fallback 2: keep type only if category has no matches
+    if (result.length === 0 && filters.category !== "Todas") {
+      result = applyTypeFilter(trends);
+    }
+
     return [...result].sort((a, b) => (b.relevanceScore || 50) - (a.relevanceScore || 50));
   }, [trends, filters]);
 
