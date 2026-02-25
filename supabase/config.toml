@@ -11,3 +11,15 @@ verify_jwt = false
 
 [functions.fetch-news-extra]
 verify_jwt = false
+
+[functions.fetch-extra-sources]
+verify_jwt = false
+
+[functions.fetch-social-trends]
+verify_jwt = false
+
+[functions.fetch-open-data]
+verify_jwt = false
+
+[functions.translate-trends]
+verify_jwt = false
