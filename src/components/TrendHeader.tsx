@@ -82,47 +82,24 @@ const TrendHeader = ({ totalTrends = 0, countriesCount = 0, onRefresh, refreshin
   const [anomalyPanelOpen, setAnomalyPanelOpen] = useState(false);
   const { mode, setMode } = useUserMode();
 
-  const isCustomDomain = () => {
-    const host = window.location.hostname;
-    return !host.endsWith("lovable.app") && !host.endsWith("lovableproject.com");
-  };
+
 
   const handleOAuthLogin = async (provider: "google" | "apple") => {
     try {
-      const redirectUri = isCustomDomain() ?
-      `${window.location.origin}/auth/callback` :
-      window.location.origin;
-
+      const redirectUri = window.location.origin;
       console.info("[Auth] OAuth start", { provider, redirectUri, hostname: window.location.hostname });
 
-      if (provider === "google" && isCustomDomain()) {
-        // Bypass auth-bridge for Google on custom domains
-        const { data, error } = await supabase.auth.signInWithOAuth({
-          provider: "google",
-          options: {
-            redirectTo: redirectUri,
-            skipBrowserRedirect: true
-          }
-        });
-        if (error) throw error;
-        if (data?.url) {
-          console.info("[Auth] Google custom domain redirect", { url: data.url });
-          window.location.href = data.url;
-          return;
-        }
-      } else {
-        // Lovable domains or Apple: use managed OAuth
-        const result = await lovable.auth.signInWithOAuth(provider, {
-          redirect_uri: redirectUri
-        });
-        if (result?.error) {
-          console.error("[Auth] OAuth failed", { provider, error: result.error });
-          toast({ title: "Falha no login", description: "Não foi possível concluir o login. Tente novamente.", variant: "destructive" });
-          return;
-        }
-        if (!result?.redirected) {
-          setLoginOpen(false);
-        }
+      const result = await lovable.auth.signInWithOAuth(provider, {
+        redirect_uri: redirectUri,
+      });
+
+      if (result?.error) {
+        console.error("[Auth] OAuth failed", { provider, error: result.error });
+        toast({ title: "Falha no login", description: "Não foi possível concluir o login. Tente novamente.", variant: "destructive" });
+        return;
+      }
+      if (!result?.redirected) {
+        setLoginOpen(false);
       }
     } catch (error) {
       console.error("[Auth] Unexpected login error", { provider, error });
