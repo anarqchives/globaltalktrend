@@ -75,6 +75,67 @@ interface TimelineCardProps extends TrendCardProps {
   forceExpanded?: boolean;
 }
 
+const normalizeText = (value: string) => value.toLowerCase().normalize("NFD").replace(/\p{Diacritic}/gu, "").trim();
+
+const localizeCategory = (category: string, t: (key: any) => string) => {
+  const normalized = normalizeText(category || "");
+  const map: Record<string, string> = {
+    politica: "politics",
+    politics: "politics",
+    entretenimento: "entertainment",
+    entertainment: "entertainment",
+    tecnologia: "technology",
+    technology: "technology",
+    esportes: "sports",
+    sports: "sports",
+    cultura: "culture",
+    culture: "culture",
+    negocios: "business",
+    "negocios/financas": "business",
+    business: "business",
+    ciencia: "science",
+    science: "science",
+    geral: "general",
+    general: "general",
+    social: "socialMedia",
+  };
+  const key = map[normalized];
+  return key ? t(key as any) : category;
+};
+
+function localizeFallbackTime(timeValue: string, lang: string): string {
+  if (!timeValue) return timeValue;
+  const lower = timeValue.toLowerCase().trim();
+  const relativeFormats: Record<string, { now: string; min: string; h: string; d: string }> = {
+    pt: { now: "agora", min: "há {n}min", h: "há {n}h", d: "há {n}d" },
+    en: { now: "now", min: "{n}min ago", h: "{n}h ago", d: "{n}d ago" },
+    es: { now: "ahora", min: "hace {n}min", h: "hace {n}h", d: "hace {n}d" },
+    fr: { now: "maintenant", min: "il y a {n}min", h: "il y a {n}h", d: "il y a {n}j" },
+    de: { now: "jetzt", min: "vor {n}min", h: "vor {n}h", d: "vor {n}T" },
+    it: { now: "adesso", min: "{n}min fa", h: "{n}h fa", d: "{n}g fa" },
+    zh: { now: "刚刚", min: "{n}分钟前", h: "{n}小时前", d: "{n}天前" },
+    ja: { now: "たった今", min: "{n}分前", h: "{n}時間前", d: "{n}日前" },
+    ko: { now: "방금", min: "{n}분 전", h: "{n}시간 전", d: "{n}일 전" },
+    ar: { now: "الآن", min: "منذ {n} دقيقة", h: "منذ {n} ساعة", d: "منذ {n} يوم" },
+    hi: { now: "अभी", min: "{n} मिनट पहले", h: "{n} घंटे पहले", d: "{n} दिन पहले" },
+    ru: { now: "сейчас", min: "{n} мин назад", h: "{n}ч назад", d: "{n}д назад" },
+  };
+
+  const fmt = relativeFormats[lang] || relativeFormats.pt;
+  if (lower === "agora" || lower === "now") return fmt.now;
+
+  const match = lower.match(/(?:há\s*)?(\d+)\s*(min|m|h|d)/i);
+  if (!match) return timeValue;
+
+  const value = match[1];
+  const unit = match[2].toLowerCase();
+
+  if (unit === "min" || unit === "m") return fmt.min.replace("{n}", value);
+  if (unit === "h") return fmt.h.replace("{n}", value);
+  if (unit === "d") return fmt.d.replace("{n}", value);
+  return timeValue;
+}
+
 function formatTemporalBadge(firstSeenAt?: string, peakAt?: string, startedLabel = "Começou há", peakLabel = "Pico às"): { started: string | null; peak: string | null } {
   if (!firstSeenAt) return { started: null, peak: null };
   const now = new Date();
@@ -185,6 +246,8 @@ const TimelineCard = ({
   }, [publishedAt, lang]);
 
   const displayDescription = description || details;
+  const localizedCategory = useMemo(() => localizeCategory(category, t), [category, t]);
+  const localizedTime = useMemo(() => formattedDate || localizeFallbackTime(time, lang), [formattedDate, time, lang]);
 
   const handlePlatformClick = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -293,7 +356,7 @@ const TimelineCard = ({
                 {platform}
               </span>
               {flag && <span className="text-xs flex-shrink-0" title={countryCode}>{flag}</span>}
-              <span className="text-[11px] text-muted-foreground flex-shrink-0">{formattedDate || time}</span>
+              <span className="text-[11px] text-muted-foreground flex-shrink-0 whitespace-nowrap">{localizedTime}</span>
                {isPeak && <span className="peak-badge flex-shrink-0 whitespace-nowrap">🔥 {t("peak")}</span>}
                {trustBadge && trustBadgeKeys[trustBadge] && (
                  <span
@@ -380,7 +443,7 @@ const TimelineCard = ({
             )}
 
             <div className="flex items-center gap-2 text-[11px] flex-wrap min-h-[18px]">
-              <span className="text-muted-foreground whitespace-nowrap">{category}</span>
+              <span className="text-muted-foreground whitespace-nowrap">{localizedCategory}</span>
               <span className="volume-badge text-[10px] py-0 whitespace-nowrap">{volume}</span>
               <span className={`whitespace-nowrap ${changePositive ? "text-green-600 font-medium" : "text-red-500 font-medium"}`}>
                 {change}
@@ -512,18 +575,18 @@ const TimelineCard = ({
 
               <div className="flex flex-wrap gap-2 mb-3 text-[11px]">
                 {platform === "YouTube" && likeRatio !== undefined && likeRatio > 0 && (
-                  <span className="source-tag text-[10px] py-0.5 px-2">👍 {likeRatio}% {t("likes")}</span>
+                  <span className="source-tag text-[10px] py-0.5 px-2 whitespace-nowrap">👍 {likeRatio}% {t("likes")}</span>
                 )}
                 {platform === "Reddit" && commentCount !== undefined && (
-                  <span className="source-tag text-[10px] py-0.5 px-2">💬 {commentCount >= 1000 ? `${(commentCount / 1000).toFixed(1)}K` : commentCount} {t("comments")}</span>
+                  <span className="source-tag text-[10px] py-0.5 px-2 whitespace-nowrap">💬 {commentCount >= 1000 ? `${(commentCount / 1000).toFixed(1)}K` : commentCount} {t("comments")}</span>
                 )}
                 {platform === "Google Trends" && region && (
-                  <span className="source-tag text-[10px] py-0.5 px-2">📍 {region}</span>
+                  <span className="source-tag text-[10px] py-0.5 px-2 whitespace-nowrap">📍 {region}</span>
                 )}
                 {platform === "NewsAPI" && sources && sources.length > 0 && (
                   <div className="flex flex-wrap gap-1">
                     {sources.slice(0, 3).map((s) => (
-                      <span key={s} className="source-tag text-[10px] py-0.5 px-2">📰 {s}</span>
+                      <span key={s} className="source-tag text-[10px] py-0.5 px-2 whitespace-nowrap">📰 {s}</span>
                     ))}
                   </div>
                 )}
