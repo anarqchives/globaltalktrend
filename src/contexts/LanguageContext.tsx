@@ -18,7 +18,7 @@ export const languages: { code: LangCode; label: string; name: string }[] = [
 ];
 
 type TranslationKey =
-  | "trends" | "moreTrends" | "filters" | "country" | "period" | "category" | "type"
+  | "trends" | "moreTrends" | "filters" | "country" | "countries" | "period" | "category" | "type"
   | "global" | "lastHour" | "today" | "thisWeek" | "thisMonth"
   | "all" | "politics" | "entertainment" | "technology" | "sports" | "culture" | "business" | "science"
   | "allMedia" | "socialMedia" | "press" | "searches"
@@ -29,7 +29,9 @@ type TranslationKey =
   | "views" | "upvotes" | "comments" | "interactions" | "likes"
   | "officialSource" | "scientific" | "international" | "localPress"
   | "watchOn" | "viewOn" | "readOn" | "viewSource" | "summarizeAI" | "analyzing"
-  | "aiSummary" | "impactHigh" | "impactMedium" | "impactLow";
+  | "aiSummary" | "impactHigh" | "impactMedium" | "impactLow"
+  | "showing" | "filterCategory" | "filterSource" | "critical" | "lastUpdate" | "viewSourceStatus"
+  | "backToTop" | "tryChangingFilters" | "noTrendsCurrentFilters" | "supportTool" | "support";
 
 const translations: Record<LangCode, Record<TranslationKey, string>> = {
   pt: {
@@ -50,6 +52,10 @@ const translations: Record<LangCode, Record<TranslationKey, string>> = {
     officialSource: "Fonte Oficial", scientific: "Acadêmico/Científico", international: "Internacional", localPress: "Imprensa",
     watchOn: "Assistir no", viewOn: "Ver no", readOn: "Ler no", viewSource: "Ver fonte original", summarizeAI: "Resumir com IA", analyzing: "Analisando...",
     aiSummary: "Resumo IA", impactHigh: "Alto", impactMedium: "Médio", impactLow: "Baixo",
+    countries: "Países", showing: "Mostrando", filterCategory: "Categoria", filterSource: "Fonte",
+    critical: "CRÍTICOS", lastUpdate: "Última atualização", viewSourceStatus: "Ver status das fontes",
+    backToTop: "Voltar ao topo", tryChangingFilters: "Tente mudar o período ou os filtros, ou volte mais tarde.",
+    noTrendsCurrentFilters: "Nenhuma trend encontrada com os filtros atuais.", supportTool: "Apoie a melhoria contínua da ferramenta", support: "Apoie",
   },
   en: {
     trends: "Trends", moreTrends: "More trends", filters: "Filters",
@@ -69,6 +75,10 @@ const translations: Record<LangCode, Record<TranslationKey, string>> = {
     officialSource: "Official Source", scientific: "Academic/Scientific", international: "International", localPress: "Press",
     watchOn: "Watch on", viewOn: "View on", readOn: "Read on", viewSource: "View original source", summarizeAI: "Summarize with AI", analyzing: "Analyzing...",
     aiSummary: "AI Summary", impactHigh: "High", impactMedium: "Medium", impactLow: "Low",
+    countries: "Countries", showing: "Showing", filterCategory: "Category", filterSource: "Source",
+    critical: "CRITICAL", lastUpdate: "Last update", viewSourceStatus: "View source status",
+    backToTop: "Back to top", tryChangingFilters: "Try changing the period or filters, or come back later.",
+    noTrendsCurrentFilters: "No trends found with current filters.", supportTool: "Support the continuous improvement of this tool", support: "Support",
   },
   es: {
     trends: "Tendencias", moreTrends: "Más trends", filters: "Filtros",
@@ -88,6 +98,10 @@ const translations: Record<LangCode, Record<TranslationKey, string>> = {
     officialSource: "Fuente Oficial", scientific: "Académico/Científico", international: "Internacional", localPress: "Prensa",
     watchOn: "Ver en", viewOn: "Ver en", readOn: "Leer en", viewSource: "Ver fuente original", summarizeAI: "Resumir con IA", analyzing: "Analizando...",
     aiSummary: "Resumen IA", impactHigh: "Alto", impactMedium: "Medio", impactLow: "Bajo",
+    countries: "Países", showing: "Mostrando", filterCategory: "Categoría", filterSource: "Fuente",
+    critical: "CRÍTICOS", lastUpdate: "Última actualización", viewSourceStatus: "Ver estado de fuentes",
+    backToTop: "Volver arriba", tryChangingFilters: "Intente cambiar el período o los filtros.",
+    noTrendsCurrentFilters: "No se encontraron tendencias con los filtros actuales.", supportTool: "Apoya la mejora continua de la herramienta", support: "Apoyar",
   },
   fr: {
     trends: "Tendances", moreTrends: "Plus de tendances", filters: "Filtres",
@@ -107,6 +121,10 @@ const translations: Record<LangCode, Record<TranslationKey, string>> = {
     officialSource: "Source Officielle", scientific: "Académique/Scientifique", international: "International", localPress: "Presse",
     watchOn: "Regarder sur", viewOn: "Voir sur", readOn: "Lire sur", viewSource: "Voir source originale", summarizeAI: "Résumer avec IA", analyzing: "Analyse...",
     aiSummary: "Résumé IA", impactHigh: "Élevé", impactMedium: "Moyen", impactLow: "Faible",
+    countries: "Pays", showing: "Affichage", filterCategory: "Catégorie", filterSource: "Source",
+    critical: "CRITIQUES", lastUpdate: "Dernière mise à jour", viewSourceStatus: "Voir statut des sources",
+    backToTop: "Retour en haut", tryChangingFilters: "Essayez de modifier la période ou les filtres.",
+    noTrendsCurrentFilters: "Aucune tendance trouvée avec les filtres actuels.", supportTool: "Soutenez l'amélioration continue de l'outil", support: "Soutenir",
   },
   de: {
     trends: "Trends", moreTrends: "Mehr Trends", filters: "Filter",
@@ -126,6 +144,10 @@ const translations: Record<LangCode, Record<TranslationKey, string>> = {
     officialSource: "Offizielle Quelle", scientific: "Akademisch/Wissenschaftlich", international: "International", localPress: "Presse",
     watchOn: "Ansehen auf", viewOn: "Ansehen auf", readOn: "Lesen auf", viewSource: "Originalquelle ansehen", summarizeAI: "Mit KI zusammenfassen", analyzing: "Analyse...",
     aiSummary: "KI-Zusammenfassung", impactHigh: "Hoch", impactMedium: "Mittel", impactLow: "Niedrig",
+    countries: "Länder", showing: "Anzeige", filterCategory: "Kategorie", filterSource: "Quelle",
+    critical: "KRITISCH", lastUpdate: "Letzte Aktualisierung", viewSourceStatus: "Quellenstatus anzeigen",
+    backToTop: "Nach oben", tryChangingFilters: "Versuchen Sie, den Zeitraum oder die Filter zu ändern.",
+    noTrendsCurrentFilters: "Keine Trends mit aktuellen Filtern gefunden.", supportTool: "Unterstützen Sie die kontinuierliche Verbesserung", support: "Unterstützen",
   },
   it: {
     trends: "Tendenze", moreTrends: "Più tendenze", filters: "Filtri",
@@ -145,6 +167,10 @@ const translations: Record<LangCode, Record<TranslationKey, string>> = {
     officialSource: "Fonte Ufficiale", scientific: "Accademico/Scientifico", international: "Internazionale", localPress: "Stampa",
     watchOn: "Guarda su", viewOn: "Vedi su", readOn: "Leggi su", viewSource: "Vedi fonte originale", summarizeAI: "Riassumi con IA", analyzing: "Analisi...",
     aiSummary: "Riassunto IA", impactHigh: "Alto", impactMedium: "Medio", impactLow: "Basso",
+    countries: "Paesi", showing: "Visualizzazione", filterCategory: "Categoria", filterSource: "Fonte",
+    critical: "CRITICI", lastUpdate: "Ultimo aggiornamento", viewSourceStatus: "Vedi stato fonti",
+    backToTop: "Torna in alto", tryChangingFilters: "Prova a cambiare il periodo o i filtri.",
+    noTrendsCurrentFilters: "Nessuna tendenza trovata con i filtri attuali.", supportTool: "Supporta il miglioramento continuo dello strumento", support: "Supporta",
   },
   zh: {
     trends: "趋势", moreTrends: "更多趋势", filters: "筛选",
@@ -164,6 +190,10 @@ const translations: Record<LangCode, Record<TranslationKey, string>> = {
     officialSource: "官方来源", scientific: "学术/科学", international: "国际", localPress: "新闻媒体",
     watchOn: "观看于", viewOn: "查看于", readOn: "阅读于", viewSource: "查看原始来源", summarizeAI: "AI总结", analyzing: "分析中...",
     aiSummary: "AI摘要", impactHigh: "高", impactMedium: "中", impactLow: "低",
+    countries: "国家", showing: "显示", filterCategory: "类别", filterSource: "来源",
+    critical: "紧急", lastUpdate: "最后更新", viewSourceStatus: "查看来源状态",
+    backToTop: "返回顶部", tryChangingFilters: "尝试更改时间段或筛选条件。",
+    noTrendsCurrentFilters: "当前筛选条件未找到趋势。", supportTool: "支持工具的持续改进", support: "支持",
   },
   ja: {
     trends: "トレンド", moreTrends: "もっと見る", filters: "フィルター",
@@ -183,6 +213,10 @@ const translations: Record<LangCode, Record<TranslationKey, string>> = {
     officialSource: "公式情報", scientific: "学術/科学", international: "国際", localPress: "報道",
     watchOn: "で視聴", viewOn: "で見る", readOn: "で読む", viewSource: "元の情報源を見る", summarizeAI: "AIで要約", analyzing: "分析中...",
     aiSummary: "AI要約", impactHigh: "高", impactMedium: "中", impactLow: "低",
+    countries: "カ国", showing: "表示中", filterCategory: "カテゴリー", filterSource: "ソース",
+    critical: "緊急", lastUpdate: "最終更新", viewSourceStatus: "ソース状態を表示",
+    backToTop: "トップに戻る", tryChangingFilters: "期間やフィルターを変更してみてください。",
+    noTrendsCurrentFilters: "現在のフィルターでトレンドが見つかりません。", supportTool: "ツールの継続的な改善を支援", support: "サポート",
   },
   ko: {
     trends: "트렌드", moreTrends: "더 많은 트렌드", filters: "필터",
@@ -202,6 +236,10 @@ const translations: Record<LangCode, Record<TranslationKey, string>> = {
     officialSource: "공식 출처", scientific: "학술/과학", international: "국제", localPress: "언론",
     watchOn: "에서 시청", viewOn: "에서 보기", readOn: "에서 읽기", viewSource: "원본 소스 보기", summarizeAI: "AI로 요약", analyzing: "분석 중...",
     aiSummary: "AI 요약", impactHigh: "높음", impactMedium: "중간", impactLow: "낮음",
+    countries: "개국", showing: "표시 중", filterCategory: "카테고리", filterSource: "출처",
+    critical: "긴급", lastUpdate: "마지막 업데이트", viewSourceStatus: "소스 상태 보기",
+    backToTop: "맨 위로", tryChangingFilters: "기간이나 필터를 변경해 보세요.",
+    noTrendsCurrentFilters: "현재 필터로 트렌드를 찾을 수 없습니다.", supportTool: "도구의 지속적인 개선을 지원하세요", support: "지원",
   },
   ar: {
     trends: "الاتجاهات", moreTrends: "المزيد", filters: "التصفية",
@@ -221,6 +259,10 @@ const translations: Record<LangCode, Record<TranslationKey, string>> = {
     officialSource: "مصدر رسمي", scientific: "أكاديمي/علمي", international: "دولي", localPress: "صحافة",
     watchOn: "شاهد على", viewOn: "عرض على", readOn: "اقرأ على", viewSource: "عرض المصدر الأصلي", summarizeAI: "تلخيص بالذكاء", analyzing: "جاري التحليل...",
     aiSummary: "ملخص ذكي", impactHigh: "مرتفع", impactMedium: "متوسط", impactLow: "منخفض",
+    countries: "دول", showing: "عرض", filterCategory: "الفئة", filterSource: "المصدر",
+    critical: "حرج", lastUpdate: "آخر تحديث", viewSourceStatus: "عرض حالة المصادر",
+    backToTop: "العودة للأعلى", tryChangingFilters: "حاول تغيير الفترة أو الفلاتر.",
+    noTrendsCurrentFilters: "لم يتم العثور على اتجاهات بالفلاتر الحالية.", supportTool: "ادعم التحسين المستمر للأداة", support: "دعم",
   },
   hi: {
     trends: "रुझान", moreTrends: "और रुझान", filters: "फ़िल्टर",
@@ -240,6 +282,10 @@ const translations: Record<LangCode, Record<TranslationKey, string>> = {
     officialSource: "आधिकारिक स्रोत", scientific: "अकादमिक/वैज्ञानिक", international: "अंतर्राष्ट्रीय", localPress: "प्रेस",
     watchOn: "पर देखें", viewOn: "पर देखें", readOn: "पर पढ़ें", viewSource: "मूल स्रोत देखें", summarizeAI: "AI से सारांश", analyzing: "विश्लेषण...",
     aiSummary: "AI सारांश", impactHigh: "उच्च", impactMedium: "मध्यम", impactLow: "कम",
+    countries: "देश", showing: "दिखा रहा है", filterCategory: "श्रेणी", filterSource: "स्रोत",
+    critical: "गंभीर", lastUpdate: "अंतिम अपडेट", viewSourceStatus: "स्रोत स्थिति देखें",
+    backToTop: "शीर्ष पर वापस", tryChangingFilters: "अवधि या फ़िल्टर बदलने का प्रयास करें।",
+    noTrendsCurrentFilters: "वर्तमान फ़िल्टर के साथ कोई रुझान नहीं मिला।", supportTool: "टूल के निरंतर सुधार का समर्थन करें", support: "सहयोग",
   },
   ru: {
     trends: "Тренды", moreTrends: "Больше трендов", filters: "Фильтры",
@@ -259,6 +305,10 @@ const translations: Record<LangCode, Record<TranslationKey, string>> = {
     officialSource: "Официальный источник", scientific: "Академический/Научный", international: "Международный", localPress: "Пресса",
     watchOn: "Смотреть на", viewOn: "Смотреть на", readOn: "Читать на", viewSource: "Оригинальный источник", summarizeAI: "Резюме с ИИ", analyzing: "Анализ...",
     aiSummary: "Резюме ИИ", impactHigh: "Высокий", impactMedium: "Средний", impactLow: "Низкий",
+    countries: "Стран", showing: "Показано", filterCategory: "Категория", filterSource: "Источник",
+    critical: "КРИТИЧЕСКИЕ", lastUpdate: "Последнее обновление", viewSourceStatus: "Статус источников",
+    backToTop: "Наверх", tryChangingFilters: "Попробуйте изменить период или фильтры.",
+    noTrendsCurrentFilters: "Не найдено трендов с текущими фильтрами.", supportTool: "Поддержите постоянное улучшение инструмента", support: "Поддержать",
   },
 };
 
