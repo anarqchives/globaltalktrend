@@ -598,6 +598,26 @@ export function useTrends(filters: FilterState, onTrendCountsChange: (counts: Re
       // Combine: live first, then historical fill
       const combinedTrends = [...scoredLive, ...uniqueHistorical];
 
+      const pressPlatforms = ["NewsAPI", "NewsData", "GNews", "Bing News", "The Guardian"];
+      const imprensaData = combinedTrends.filter((trend) => pressPlatforms.includes(trend.platform));
+      if (imprensaData.length === 0) {
+        console.log("📰 Imprensa sem dados - mostrando aviso");
+        combinedTrends.unshift({
+          icon: "📰",
+          platform: "The Guardian",
+          title: "Fontes de imprensa temporariamente indisponíveis",
+          category: "Geral",
+          time: "agora",
+          volume: "Sistema",
+          change: "sem dados",
+          changePositive: false,
+          sparkData: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+          details: "The Guardian e outras fontes podem estar com limite de API. Tente novamente mais tarde.",
+          countryCode: "GL",
+          trustBadge: "verified",
+        });
+      }
+
       if (combinedTrends.length > 0) {
         setTrends(combinedTrends);
         setCachedTrends(combinedTrends);
