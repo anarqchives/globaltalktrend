@@ -247,7 +247,7 @@ const Index = () => {
   };
 
   const renderTimeline = () => (
-    <div ref={scrollRef} className={`flex flex-col gap-1 p-2 h-full overflow-y-auto scrollbar-thin relative transition-opacity duration-200 ${filterTransitioning ? 'opacity-60' : 'opacity-100'}`}>
+    <div ref={scrollRef} className={`flex flex-col gap-1 p-2 h-full overflow-y-auto overflow-x-hidden scrollbar-thin relative transition-opacity duration-200 w-full max-w-full ${filterTransitioning ? 'opacity-60' : 'opacity-100'}`}>
       <div className="px-2 py-1.5 flex items-center justify-between sticky top-0 bg-background/90 backdrop-blur-sm z-10">
         <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-widest">
           {t("timeline")}
@@ -381,7 +381,7 @@ const Index = () => {
   );
 
   return (
-    <div className="h-screen flex flex-col bg-background overflow-hidden">
+    <div className="h-screen flex flex-col bg-background overflow-hidden w-full max-w-[100vw]">
       <TrendHeader
         totalTrends={filteredTrends.length}
         countriesCount={countriesCount}
