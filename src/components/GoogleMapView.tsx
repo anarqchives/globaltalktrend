@@ -267,6 +267,7 @@ const GoogleMapView = ({
   }, [mapLoaded, mapError]);
 
   // Heatmap
+  // TODO: migrar heatmap até maio/2026 — HeatmapLayer será descontinuado
   useEffect(() => {
     const map = googleMapRef.current;
     const viz = googleRef.current?.visualization as any;
@@ -335,6 +336,8 @@ const GoogleMapView = ({
       const isMedActivity = intensity > 0.25;
 
       // Animated ripple ring behind main marker (for medium+ activity)
+      // Note: ripples still use legacy Marker for symbol path support
+      // TODO: migrate ripples when AdvancedMarkerElement supports symbol paths
       if (count > 0 && (isHighActivity || isMedActivity)) {
         const rippleScale = scale * 2.5;
         const ripple = new g.maps.Marker({
