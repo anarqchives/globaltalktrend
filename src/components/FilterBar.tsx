@@ -165,7 +165,7 @@ const FilterBar = ({ filters, onChange }: FilterBarProps) => {
         </div>
 
         <div className="relative flex-shrink-0">
-          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[11px] text-muted-foreground pointer-events-none">Categoria:</span>
+          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[11px] text-muted-foreground pointer-events-none">{t("filterCategory")}:</span>
           <select
             className={`${selectClass} pl-[80px]`}
             value={filters.category}
@@ -179,7 +179,7 @@ const FilterBar = ({ filters, onChange }: FilterBarProps) => {
         </div>
 
         <div className="relative flex-shrink-0">
-          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[11px] text-muted-foreground pointer-events-none">Fonte:</span>
+          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[11px] text-muted-foreground pointer-events-none">{t("filterSource")}:</span>
           <select
             className={`${selectClass} pl-[52px]`}
             value={filters.type}

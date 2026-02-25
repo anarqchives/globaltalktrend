@@ -256,7 +256,7 @@ const Index = () => {
 
       {breadcrumbs.length > 0 && (
         <div className="px-2 py-1 flex items-center gap-1 flex-wrap text-[10px]">
-          <span className="text-muted-foreground/60">Mostrando:</span>
+          <span className="text-muted-foreground/60">{t("showing")}:</span>
           {breadcrumbs.map((seg, i) => (
             <span key={seg.key} className="inline-flex items-center gap-0.5">
               {i > 0 && <ChevronRight className="w-2.5 h-2.5 text-muted-foreground/40" />}
@@ -326,15 +326,15 @@ const Index = () => {
           </span>
           {lastUpdated && (
             <div className="flex items-center gap-2 text-[10px] text-muted-foreground">
-              <span className="w-1.5 h-1.5 rounded-full bg-green-500" />
-              Última atualização: {lastUpdated.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}
+             <span className="w-1.5 h-1.5 rounded-full bg-green-500" />
+              {t("lastUpdate")}: {lastUpdated.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}
             </div>
           )}
           <button
             onClick={() => setTransparencyOpen(true)}
             className="text-[10px] text-primary hover:underline cursor-pointer"
           >
-            🔍 Ver status das fontes
+            🔍 {t("viewSourceStatus")}
           </button>
         </div>
       )}
@@ -346,11 +346,11 @@ const Index = () => {
               ? `${t("noTrends")} — ${countries.flatMap(g => g.items).find(c => c.value === filters.country)?.label?.replace(/^.{2}\s?/, '') || filters.country}`
               : t("noTrends")}
           </p>
-          <p className="text-xs text-muted-foreground max-w-[260px]">
-            {filters.country !== "global"
-              ? "Tente mudar o período ou os filtros, ou volte mais tarde."
-              : "Nenhuma trend encontrada com os filtros atuais."}
-          </p>
+           <p className="text-xs text-muted-foreground max-w-[260px]">
+             {filters.country !== "global"
+               ? t("tryChangingFilters")
+               : t("noTrendsCurrentFilters")}
+           </p>
         </div>
       )}
 
@@ -360,7 +360,7 @@ const Index = () => {
             onClick={scrollToTop}
             className="px-3 py-1.5 rounded-full bg-primary text-primary-foreground text-[11px] font-semibold shadow-lg hover:bg-primary/90 transition-all animate-in fade-in slide-in-from-bottom-2"
           >
-            ↑ Voltar ao topo
+            ↑ {t("backToTop")}
           </button>
         </div>
       )}
