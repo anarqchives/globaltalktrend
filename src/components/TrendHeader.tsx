@@ -12,15 +12,15 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
-  DialogDescription,
-} from "@/components/ui/dialog";
+  DialogDescription } from
+"@/components/ui/dialog";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+  DropdownMenuTrigger } from
+"@/components/ui/dropdown-menu";
 import { useSavedFilters } from "@/hooks/use-saved-filters";
 import { useAlerts } from "@/hooks/use-alerts";
 // useGamification removed from header
@@ -86,9 +86,9 @@ const TrendHeader = ({ totalTrends = 0, countriesCount = 0, onRefresh, refreshin
 
   const handleOAuthLogin = async (provider: "google" | "apple") => {
     try {
-      const redirectUri = isCustomDomain()
-        ? `${window.location.origin}/auth/callback`
-        : window.location.origin;
+      const redirectUri = isCustomDomain() ?
+      `${window.location.origin}/auth/callback` :
+      window.location.origin;
 
       console.info("[Auth] OAuth start", { provider, redirectUri, hostname: window.location.hostname });
 
@@ -98,8 +98,8 @@ const TrendHeader = ({ totalTrends = 0, countriesCount = 0, onRefresh, refreshin
           provider: "google",
           options: {
             redirectTo: redirectUri,
-            skipBrowserRedirect: true,
-          },
+            skipBrowserRedirect: true
+          }
         });
         if (error) throw error;
         if (data?.url) {
@@ -110,7 +110,7 @@ const TrendHeader = ({ totalTrends = 0, countriesCount = 0, onRefresh, refreshin
       } else {
         // Lovable domains or Apple: use managed OAuth
         const result = await lovable.auth.signInWithOAuth(provider, {
-          redirect_uri: redirectUri,
+          redirect_uri: redirectUri
         });
         if (result?.error) {
           console.error("[Auth] OAuth failed", { provider, error: result.error });
@@ -153,7 +153,7 @@ const TrendHeader = ({ totalTrends = 0, countriesCount = 0, onRefresh, refreshin
       country: sf.country || "global",
       period: sf.period || "Hoje",
       category: sf.category || "Todas",
-      type: sf.media_type || "Todas mídias",
+      type: sf.media_type || "Todas mídias"
     });
   };
 
@@ -171,45 +171,45 @@ const TrendHeader = ({ totalTrends = 0, countriesCount = 0, onRefresh, refreshin
               <span className="font-semibold text-foreground sm:hidden">GTT</span>
               <span className="text-muted-foreground hidden md:inline">Monitor Imparcial em Tempo Real</span>
             </h1>
-            {totalTrends > 1 && countriesCount > 0 ? (
-              <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-primary/10 text-primary text-[11px] font-bold tabular-nums flex-shrink-0 hidden sm:inline-flex">
+            {totalTrends > 1 && countriesCount > 0 ?
+            <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-primary/10 text-primary text-[11px] font-bold tabular-nums flex-shrink-0 hidden sm:inline-flex">
                 {totalTrends} {t("trends")} · {countriesCount} {countriesCount > 1 ? t("countries") : t("country")}
-              </span>
-            ) : (
-              <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-muted text-muted-foreground text-[11px] font-medium flex-shrink-0 hidden sm:inline-flex animate-pulse">
+              </span> :
+
+            <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-muted text-muted-foreground text-[11px] font-medium flex-shrink-0 hidden sm:inline-flex animate-pulse">
                 Carregando tendências…
               </span>
-            )}
+            }
           </div>
 
           <div className="flex items-center gap-1.5 flex-shrink-0">
-            {onRefresh && (
-              <button
-                onClick={onRefresh}
-                disabled={refreshing}
-                className="p-1.5 rounded-full text-muted-foreground hover:bg-secondary transition-colors disabled:opacity-50"
-                title={t("updated")}
-              >
+            {onRefresh &&
+            <button
+              onClick={onRefresh}
+              disabled={refreshing}
+              className="p-1.5 rounded-full text-muted-foreground hover:bg-secondary transition-colors disabled:opacity-50"
+              title={t("updated")}>
+
                 <RefreshCw className={`w-3.5 h-3.5 ${refreshing ? "animate-spin" : ""}`} />
               </button>
-            )}
+            }
 
             {/* Language selector: dropdown on mobile, inline on desktop */}
             <div className="hidden md:flex gap-0.5 overflow-x-auto scrollbar-thin">
-              {languages.map((l) => (
-                <button
-                  key={l.code}
-                  onClick={() => setLang(l.code)}
-                  className={`px-1.5 py-0.5 rounded-full text-[10px] font-medium transition-all duration-200 whitespace-nowrap ${
-                    lang === l.code
-                      ? "bg-primary text-primary-foreground"
-                      : "text-muted-foreground hover:bg-secondary"
-                  }`}
-                  title={l.name}
-                >
+              {languages.map((l) =>
+              <button
+                key={l.code}
+                onClick={() => setLang(l.code)}
+                className={`px-1.5 py-0.5 rounded-full text-[10px] font-medium transition-all duration-200 whitespace-nowrap ${
+                lang === l.code ?
+                "bg-primary text-primary-foreground" :
+                "text-muted-foreground hover:bg-secondary"}`
+                }
+                title={l.name}>
+
                   {l.label}
                 </button>
-              ))}
+              )}
             </div>
             <div className="md:hidden">
               <DropdownMenu>
@@ -220,16 +220,16 @@ const TrendHeader = ({ totalTrends = 0, countriesCount = 0, onRefresh, refreshin
                   </button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="min-w-[160px] max-h-[300px] overflow-y-auto">
-                  {languages.map((l) => (
-                    <DropdownMenuItem
-                      key={l.code}
-                      className={`text-[13px] gap-2 ${lang === l.code ? "bg-primary/10 text-primary font-semibold" : ""}`}
-                      onClick={() => setLang(l.code)}
-                    >
+                  {languages.map((l) =>
+                  <DropdownMenuItem
+                    key={l.code}
+                    className={`text-[13px] gap-2 ${lang === l.code ? "bg-primary/10 text-primary font-semibold" : ""}`}
+                    onClick={() => setLang(l.code)}>
+
                       <span className="font-medium">{l.label}</span>
                       <span className="text-muted-foreground text-[11px]">{l.name}</span>
                     </DropdownMenuItem>
-                  ))}
+                  )}
                 </DropdownMenuContent>
               </DropdownMenu>
             </div>
@@ -237,16 +237,16 @@ const TrendHeader = ({ totalTrends = 0, countriesCount = 0, onRefresh, refreshin
             <button
               onClick={() => setDark(!dark)}
               className="p-1.5 rounded-full text-muted-foreground hover:bg-secondary transition-colors"
-              title={dark ? "Modo claro" : "Modo escuro"}
-            >
+              title={dark ? "Modo claro" : "Modo escuro"}>
+
               {dark ? <Sun className="w-3.5 h-3.5" /> : <Moon className="w-3.5 h-3.5" />}
             </button>
 
             <div className="w-px h-5 bg-border mx-1" />
 
             {/* Anomaly alerts badge */}
-            {anomalyCount > 0 && (
-              <DropdownMenu>
+            {anomalyCount > 0 &&
+            <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <button className="relative p-1.5 rounded-full text-muted-foreground hover:bg-secondary transition-colors">
                     <AlertTriangle className="w-3.5 h-3.5 text-destructive" />
@@ -259,57 +259,57 @@ const TrendHeader = ({ totalTrends = 0, countriesCount = 0, onRefresh, refreshin
                   <div className="px-2 py-1.5">
                     <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">🚨 Anomalias detectadas</span>
                   </div>
-                  {anomalies.map((a, i) => (
-                    <DropdownMenuItem key={i} className="text-xs gap-2 justify-between" onSelect={(e) => e.preventDefault()}>
+                  {anomalies.map((a, i) =>
+                <DropdownMenuItem key={i} className="text-xs gap-2 justify-between" onSelect={(e) => e.preventDefault()}>
                       <span className="truncate flex-1">{a.message.slice(0, 80)}</span>
                       <button
-                        onClick={(e) => { e.stopPropagation(); onDismissAnomaly?.(a.trend.title); }}
-                        className="text-muted-foreground hover:text-foreground p-0.5 shrink-0"
-                      >
+                    onClick={(e) => {e.stopPropagation();onDismissAnomaly?.(a.trend.title);}}
+                    className="text-muted-foreground hover:text-foreground p-0.5 shrink-0">
+
                         <X className="w-3 h-3" />
                       </button>
                     </DropdownMenuItem>
-                  ))}
+                )}
                 </DropdownMenuContent>
               </DropdownMenu>
-            )}
+            }
 
             {/* User Mode selector */}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <button className="px-1.5 py-0.5 rounded-full text-[10px] font-medium text-muted-foreground hover:bg-secondary transition-colors flex items-center gap-1 min-h-[36px]">
-                  {userModes.find(m => m.key === mode)?.emoji} <span className="hidden sm:inline">{userModes.find(m => m.key === mode)?.label}</span>
+                  {userModes.find((m) => m.key === mode)?.emoji} <span className="hidden sm:inline">{userModes.find((m) => m.key === mode)?.label}</span>
                 </button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-48">
-                {userModes.map((m) => (
-                  <DropdownMenuItem
-                    key={m.key}
-                    className={`text-xs gap-2 ${mode === m.key ? "bg-primary/10 text-primary" : ""}`}
-                    onClick={() => setMode(m.key)}
-                  >
+                {userModes.map((m) =>
+                <DropdownMenuItem
+                  key={m.key}
+                  className={`text-xs gap-2 ${mode === m.key ? "bg-primary/10 text-primary" : ""}`}
+                  onClick={() => setMode(m.key)}>
+
                     <span>{m.emoji}</span>
                     <div>
                       <div className="font-medium">{m.label}</div>
                       <div className="text-[10px] text-muted-foreground">{m.description}</div>
                     </div>
                   </DropdownMenuItem>
-                ))}
+                )}
               </DropdownMenuContent>
             </DropdownMenu>
 
 
             <button
               onClick={() => setAboutOpen(true)}
-              className="p-1.5 rounded-full text-muted-foreground hover:bg-secondary transition-colors flex items-center gap-1 min-h-[36px]"
-            >
+              className="p-1.5 rounded-full text-muted-foreground hover:bg-secondary transition-colors flex items-center gap-1 min-h-[36px]">
+
               <Info className="w-3.5 h-3.5" />
               <span className="hidden sm:inline text-xs font-medium">{t("about")}</span>
             </button>
 
             {/* Auth + user menu */}
-            {user ? (
-              <DropdownMenu>
+            {user ?
+            <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <button className="flex items-center gap-1.5 px-1.5 py-0.5 rounded-full hover:bg-secondary transition-colors min-h-[40px] min-w-[44px]">
                     <Avatar className="w-6 h-6">
@@ -329,56 +329,56 @@ const TrendHeader = ({ totalTrends = 0, countriesCount = 0, onRefresh, refreshin
                   <div className="px-2 py-1.5">
                     <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Meus Filtros</span>
                   </div>
-                  {savedFilters.length > 0 ? (
-                    savedFilters.slice(0, 5).map((sf) => (
-                      <DropdownMenuItem
-                        key={sf.id}
-                        className="text-xs gap-2 justify-between"
-                        onClick={() => handleApplySavedFilter(sf)}
-                      >
+                  {savedFilters.length > 0 ?
+                savedFilters.slice(0, 5).map((sf) =>
+                <DropdownMenuItem
+                  key={sf.id}
+                  className="text-xs gap-2 justify-between"
+                  onClick={() => handleApplySavedFilter(sf)}>
+
                         <span className="flex items-center gap-1.5 truncate">
                           <Star className="w-3 h-3 text-yellow-500 fill-yellow-500" />
                           {sf.name}
                         </span>
                         <button
-                          onClick={(e) => { e.stopPropagation(); deleteFilter(sf.id); }}
-                          className="text-muted-foreground hover:text-red-500 p-0.5"
-                        >
+                    onClick={(e) => {e.stopPropagation();deleteFilter(sf.id);}}
+                    className="text-muted-foreground hover:text-red-500 p-0.5">
+
                           ×
                         </button>
                       </DropdownMenuItem>
-                    ))
-                  ) : (
-                    <div className="px-2 py-1 text-[11px] text-muted-foreground/60">Nenhum filtro salvo</div>
-                  )}
-                  {filters && (
-                    <>
-                      {showSaveInput ? (
-                        <div className="px-2 py-1.5 flex gap-1">
+                ) :
+
+                <div className="px-2 py-1 text-[11px] text-muted-foreground/60">Nenhum filtro salvo</div>
+                }
+                  {filters &&
+                <>
+                      {showSaveInput ?
+                  <div className="px-2 py-1.5 flex gap-1">
                           <input
-                            type="text"
-                            value={saveFilterName}
-                            onChange={(e) => setSaveFilterName(e.target.value)}
-                            onKeyDown={(e) => e.key === "Enter" && handleSaveFilter()}
-                            placeholder="Nome do filtro..."
-                            className="flex-1 px-2 py-1 rounded-md bg-secondary text-xs border border-border focus:outline-none focus:ring-1 focus:ring-primary/30"
-                            autoFocus
-                          />
+                      type="text"
+                      value={saveFilterName}
+                      onChange={(e) => setSaveFilterName(e.target.value)}
+                      onKeyDown={(e) => e.key === "Enter" && handleSaveFilter()}
+                      placeholder="Nome do filtro..."
+                      className="flex-1 px-2 py-1 rounded-md bg-secondary text-xs border border-border focus:outline-none focus:ring-1 focus:ring-primary/30"
+                      autoFocus />
+
                           <button
-                            onClick={handleSaveFilter}
-                            className="px-2 py-1 rounded-md bg-primary text-primary-foreground text-[10px] font-medium"
-                          >
+                      onClick={handleSaveFilter}
+                      className="px-2 py-1 rounded-md bg-primary text-primary-foreground text-[10px] font-medium">
+
                             Salvar
                           </button>
-                        </div>
-                      ) : (
-                        <DropdownMenuItem className="text-xs gap-2" onClick={() => setShowSaveInput(true)}>
+                        </div> :
+
+                  <DropdownMenuItem className="text-xs gap-2" onClick={() => setShowSaveInput(true)}>
                           <Star className="w-3 h-3" />
                           Salvar filtros atuais
                         </DropdownMenuItem>
-                      )}
+                  }
                     </>
-                  )}
+                }
 
                   <DropdownMenuSeparator />
 
@@ -395,11 +395,11 @@ const TrendHeader = ({ totalTrends = 0, countriesCount = 0, onRefresh, refreshin
                     <span className="flex items-center gap-2 cursor-default">
                       <Bell className="w-3.5 h-3.5" />
                       Meus Alertas
-                      {alerts.length > 0 && (
-                        <span className="ml-auto text-[10px] bg-primary/10 text-primary px-1.5 py-0.5 rounded-full font-bold">
+                      {alerts.length > 0 &&
+                    <span className="ml-auto text-[10px] bg-primary/10 text-primary px-1.5 py-0.5 rounded-full font-bold">
                           {alerts.length}
                         </span>
-                      )}
+                    }
                     </span>
                   </DropdownMenuItem>
 
@@ -434,16 +434,16 @@ const TrendHeader = ({ totalTrends = 0, countriesCount = 0, onRefresh, refreshin
                     Sair
                   </DropdownMenuItem>
                 </DropdownMenuContent>
-              </DropdownMenu>
-            ) : (
-              <button
-                onClick={() => setLoginOpen(true)}
-                className="flex items-center gap-1 px-3 py-1.5 rounded-full text-[11px] font-semibold bg-primary text-primary-foreground hover:bg-primary/90 transition-colors shadow-sm min-h-[40px] min-w-[44px]"
-              >
+              </DropdownMenu> :
+
+            <button
+              onClick={() => setLoginOpen(true)}
+              className="flex items-center gap-1 rounded-full text-[11px] font-semibold bg-primary text-primary-foreground hover:bg-primary/90 transition-colors shadow-sm min-h-[40px] min-w-[44px] mx-px px-[20px] py-[4px]">
+
                 <LogIn className="w-3.5 h-3.5" />
                 <span className="hidden sm:inline">Entrar</span>
               </button>
-            )}
+            }
           </div>
         </div>
       </header>
@@ -456,8 +456,8 @@ const TrendHeader = ({ totalTrends = 0, countriesCount = 0, onRefresh, refreshin
             initial={{ opacity: 0, scale: 0.96 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.25, ease: [0.4, 0, 0.2, 1] }}
-            className="overflow-y-auto max-h-[85vh] scrollbar-thin"
-          >
+            className="overflow-y-auto max-h-[85vh] scrollbar-thin">
+
             <div className="px-6 pt-6 pb-4">
               <DialogHeader className="space-y-1">
                 <DialogTitle className="text-xl font-semibold tracking-tight text-foreground text-center">
@@ -489,26 +489,26 @@ const TrendHeader = ({ totalTrends = 0, countriesCount = 0, onRefresh, refreshin
                 </h3>
                 <div className="grid grid-cols-2 gap-1.5">
                   {[
-                    { name: "YouTube", detail: "API oficial", icon: "🎬", color: "hsl(0, 72%, 51%)" },
-                    { name: "Reddit", detail: "API pública", icon: "💬", color: "hsl(16, 100%, 50%)" },
-                    { name: "Google Trends", detail: "RSS", icon: "📈", color: "hsl(210, 100%, 40%)" },
-                    { name: "NewsAPI / Guardian / GNews", detail: "Notícias", icon: "📰", color: "hsl(142, 60%, 40%)" },
-                    { name: "Twitter/X", detail: "API gratuita", icon: "🐦", color: "hsl(200, 85%, 55%)" },
-                    { name: "TikTok", detail: "via Apify", icon: "🎵", color: "hsl(340, 80%, 55%)" },
-                    { name: "IBGE / ONU / World Bank", detail: "Gov & dados", icon: "🏛️", color: "hsl(200, 80%, 45%)" },
-                    { name: "OpenAlex", detail: "Científico", icon: "🔬", color: "hsl(270, 60%, 50%)" },
-                  ].map((src) => (
-                    <div
-                      key={src.name}
-                      className="flex items-center gap-2 px-2.5 py-2 rounded-xl bg-secondary/50 hover:bg-secondary/80 transition-colors"
-                    >
+                  { name: "YouTube", detail: "API oficial", icon: "🎬", color: "hsl(0, 72%, 51%)" },
+                  { name: "Reddit", detail: "API pública", icon: "💬", color: "hsl(16, 100%, 50%)" },
+                  { name: "Google Trends", detail: "RSS", icon: "📈", color: "hsl(210, 100%, 40%)" },
+                  { name: "NewsAPI / Guardian / GNews", detail: "Notícias", icon: "📰", color: "hsl(142, 60%, 40%)" },
+                  { name: "Twitter/X", detail: "API gratuita", icon: "🐦", color: "hsl(200, 85%, 55%)" },
+                  { name: "TikTok", detail: "via Apify", icon: "🎵", color: "hsl(340, 80%, 55%)" },
+                  { name: "IBGE / ONU / World Bank", detail: "Gov & dados", icon: "🏛️", color: "hsl(200, 80%, 45%)" },
+                  { name: "OpenAlex", detail: "Científico", icon: "🔬", color: "hsl(270, 60%, 50%)" }].
+                  map((src) =>
+                  <div
+                    key={src.name}
+                    className="flex items-center gap-2 px-2.5 py-2 rounded-xl bg-secondary/50 hover:bg-secondary/80 transition-colors">
+
                       <span className="text-sm shrink-0">{src.icon}</span>
                       <div className="min-w-0">
                         <span className="text-[11px] font-medium text-foreground block truncate">{src.name}</span>
                         <span className="text-[9px] text-muted-foreground">{src.detail}</span>
                       </div>
                     </div>
-                  ))}
+                  )}
                 </div>
               </section>
 
@@ -541,8 +541,8 @@ const TrendHeader = ({ totalTrends = 0, countriesCount = 0, onRefresh, refreshin
                 <Link
                   to="/metodologia"
                   onClick={() => setAboutOpen(false)}
-                  className="inline-flex items-center gap-1.5 text-xs text-primary hover:underline font-medium"
-                >
+                  className="inline-flex items-center gap-1.5 text-xs text-primary hover:underline font-medium">
+
                   <BookOpen className="w-3.5 h-3.5" /> Ver metodologia completa
                 </Link>
               </div>
@@ -563,8 +563,8 @@ const TrendHeader = ({ totalTrends = 0, countriesCount = 0, onRefresh, refreshin
           <motion.div
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.25, ease: [0.4, 0, 0.2, 1] }}
-          >
+            transition={{ duration: 0.25, ease: [0.4, 0, 0.2, 1] }}>
+
             <div className="px-6 pt-6 pb-2">
               <DialogHeader className="space-y-1.5">
                 <DialogTitle className="text-xl font-semibold text-foreground tracking-tight text-center">
@@ -579,23 +579,23 @@ const TrendHeader = ({ totalTrends = 0, countriesCount = 0, onRefresh, refreshin
             <div className="px-6 py-5 space-y-3">
               <button
                 onClick={handleLoginGoogle}
-                className="w-full h-12 flex items-center justify-center gap-3 rounded-full border border-border/60 bg-white dark:bg-secondary hover:bg-muted dark:hover:bg-muted transition-all duration-200 shadow-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
-              >
+                className="w-full h-12 flex items-center justify-center gap-3 rounded-full border border-border/60 bg-white dark:bg-secondary hover:bg-muted dark:hover:bg-muted transition-all duration-200 shadow-sm focus:outline-none focus:ring-2 focus:ring-primary/20">
+
                 <svg className="w-5 h-5 shrink-0" viewBox="0 0 24 24" fill="none">
-                  <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 01-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z" fill="#4285F4"/>
-                  <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
-                  <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
-                  <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
+                  <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 01-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z" fill="#4285F4" />
+                  <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853" />
+                  <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05" />
+                  <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335" />
                 </svg>
                 <span className="text-[15px] font-medium text-foreground">Continuar com Google</span>
               </button>
 
               <button
                 onClick={handleLoginApple}
-                className="w-full h-12 flex items-center justify-center gap-3 rounded-full border border-border/60 bg-white dark:bg-secondary hover:bg-muted dark:hover:bg-muted transition-all duration-200 shadow-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
-              >
+                className="w-full h-12 flex items-center justify-center gap-3 rounded-full border border-border/60 bg-white dark:bg-secondary hover:bg-muted dark:hover:bg-muted transition-all duration-200 shadow-sm focus:outline-none focus:ring-2 focus:ring-primary/20">
+
                 <svg className="w-5 h-5 shrink-0" viewBox="0 0 24 24" fill="currentColor">
-                  <path d="M17.05 20.28c-.98.95-2.05.88-3.08.4-1.09-.5-2.08-.48-3.24 0-1.44.62-2.2.44-3.06-.4C2.79 15.25 3.51 7.59 9.05 7.31c1.35.07 2.29.74 3.08.8 1.18-.24 2.31-.93 3.57-.84 1.51.12 2.65.72 3.4 1.8-3.12 1.87-2.38 5.98.48 7.13-.57 1.5-1.31 2.99-2.54 4.09zM12.03 7.25c-.15-2.23 1.66-4.07 3.74-4.25.29 2.58-2.34 4.5-3.74 4.25z"/>
+                  <path d="M17.05 20.28c-.98.95-2.05.88-3.08.4-1.09-.5-2.08-.48-3.24 0-1.44.62-2.2.44-3.06-.4C2.79 15.25 3.51 7.59 9.05 7.31c1.35.07 2.29.74 3.08.8 1.18-.24 2.31-.93 3.57-.84 1.51.12 2.65.72 3.4 1.8-3.12 1.87-2.38 5.98.48 7.13-.57 1.5-1.31 2.99-2.54 4.09zM12.03 7.25c-.15-2.23 1.66-4.07 3.74-4.25.29 2.58-2.34 4.5-3.74 4.25z" />
                 </svg>
                 <span className="text-[15px] font-medium text-foreground">Continuar com Apple</span>
               </button>
@@ -617,8 +617,8 @@ const TrendHeader = ({ totalTrends = 0, countriesCount = 0, onRefresh, refreshin
           </motion.div>
         </DialogContent>
       </Dialog>
-    </>
-  );
+    </>);
+
 };
 
 export default TrendHeader;
