@@ -129,6 +129,82 @@ export function categorizeTrend(
   return existingCategory || "Geral";
 }
 
+// ---- Country detection from content + platform ----
+
+const sourceCountryMap: Record<string, string> = {
+  "The Guardian": "GB",
+  "BBC": "GB",
+  "Reuters": "GL",
+  "IBGE": "BR",
+  "World Bank": "GL",
+  "OpenAlex": "GL",
+};
+
+const countryKeywordsMap: Record<string, string[]> = {
+  BR: ["brasil", "brasileiro", "brasileira", "rio de janeiro", "são paulo", "brasília", "governo federal", "lula", "bolsonaro", "real", "reais", "ibovespa", "petrobras", "stf", "senado federal"],
+  US: ["usa", "united states", "estados unidos", "biden", "trump", "white house", "casa branca", "washington", "new york", "wall street", "pentagon", "congress", "silicon valley", "california", "texas", "florida"],
+  GB: ["uk", "united kingdom", "reino unido", "britain", "british", "london", "londres", "king charles", "parliament", "downing street", "bbc", "premier league"],
+  FR: ["france", "frança", "paris", "macron", "élysée", "ligue 1"],
+  DE: ["germany", "alemanha", "berlin", "berlim", "scholz", "bundesliga", "bundestag"],
+  ES: ["spain", "espanha", "madrid", "barcelona", "la liga", "sánchez"],
+  IT: ["italy", "itália", "roma", "milan", "serie a", "meloni"],
+  PT: ["portugal", "lisboa", "porto", "portuguesa"],
+  AR: ["argentina", "buenos aires", "milei", "peso argentino"],
+  CO: ["colombia", "colômbia", "bogotá"],
+  MX: ["mexico", "méxico", "ciudad de méxico"],
+  JP: ["japan", "japão", "tokyo", "tóquio", "yen"],
+  KR: ["south korea", "coreia do sul", "seoul", "seul", "k-pop", "samsung"],
+  CN: ["china", "beijing", "pequim", "shanghai", "xi jinping", "yuan"],
+  IN: ["india", "índia", "modi", "mumbai", "delhi", "bollywood", "rupee"],
+  AU: ["australia", "austrália", "sydney", "melbourne", "canberra"],
+  CA: ["canada", "canadá", "ottawa", "toronto", "trudeau"],
+  RU: ["russia", "rússia", "moscow", "moscou", "putin", "kremlin"],
+  UA: ["ukraine", "ucrânia", "kiev", "kyiv", "zelensky"],
+  IL: ["israel", "tel aviv", "jerusalem", "jerusalém", "netanyahu"],
+  SA: ["saudi", "arábia saudita", "riyadh"],
+  AE: ["emirates", "emirados", "dubai", "abu dhabi"],
+  EG: ["egypt", "egito", "cairo"],
+  NG: ["nigeria", "nigéria", "lagos"],
+  ZA: ["south africa", "áfrica do sul", "cape town", "johannesburg"],
+};
+
+/**
+ * Detect country code from trend content using multi-layer analysis:
+ * 1. Source-based (e.g., The Guardian → GB)
+ * 2. Content keyword analysis
+ * 3. Existing countryCode validation
+ */
+export function detectCountryFromContent(
+  title: string,
+  platform: string,
+  description?: string,
+  existingCode?: string
+): string | undefined {
+  // Layer 1: Known source mapping
+  const sourceCountry = sourceCountryMap[platform];
+  if (sourceCountry && sourceCountry !== "GL") {
+    // Still check content — source gives default but content may override
+    const text = `${title} ${description || ""}`.toLowerCase();
+    for (const [code, keywords] of Object.entries(countryKeywordsMap)) {
+      if (keywords.some(k => text.includes(k))) return code;
+    }
+    return sourceCountry;
+  }
+
+  // Layer 2: Content keyword analysis
+  const text = `${title} ${description || ""}`.toLowerCase();
+  for (const [code, keywords] of Object.entries(countryKeywordsMap)) {
+    if (keywords.some(k => text.includes(k))) return code;
+  }
+
+  // Layer 3: Return existing code if valid
+  if (existingCode && existingCode.length >= 2) {
+    return existingCode.slice(0, 2).toUpperCase();
+  }
+
+  return undefined;
+}
+
 // Country code to flag emoji
 export function countryCodeToFlag(code?: string): string | null {
   if (!code || code.length < 2) return null;
