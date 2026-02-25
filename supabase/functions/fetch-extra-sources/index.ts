@@ -48,14 +48,23 @@ const CACHE_TTL = 5 * 60 * 1000;
 // ── The Guardian ──
 async function fetchGuardian(): Promise<TrendItem[]> {
   const key = Deno.env.get("GUARDIAN_API_KEY");
-  if (!key) { console.log("GUARDIAN_API_KEY not set"); return []; }
+  if (!key) { console.log("📰 The Guardian: chave ausente (GUARDIAN_API_KEY)"); return []; }
   try {
+    console.log("📰 The Guardian: buscando...");
     const res = await fetch(
       `https://content.guardianapis.com/search?order-by=newest&page-size=12&show-fields=trailText&api-key=${key}`
     );
-    if (!res.ok) { console.error("Guardian error:", res.status); return []; }
+    if (!res.ok) {
+      console.log("📰 The Guardian retornou: 0 itens");
+      console.log("❌ The Guardian falhou. Verificar:");
+      console.log("   - Chave da API válida?");
+      console.log("   - Cota excedida?");
+      console.log("   - Erro CORS?");
+      console.error("Guardian error:", res.status);
+      return [];
+    }
     const data = await res.json();
-    return (data.response?.results || []).map((a: any) => {
+    const guardianItems = (data.response?.results || []).map((a: any) => {
       const { historicalData, metricLabel } = generateHistorical(Math.floor(Math.random() * 10 + 3), "artigos");
       return {
         icon: "🏛️",
@@ -75,7 +84,23 @@ async function fetchGuardian(): Promise<TrendItem[]> {
         metricLabel,
       };
     });
-  } catch (e) { console.error("Guardian fetch error:", e); return []; }
+    console.log("📰 The Guardian retornou:", guardianItems.length, "itens");
+    if (guardianItems.length === 0) {
+      console.log("❌ The Guardian falhou. Verificar:");
+      console.log("   - Chave da API válida?");
+      console.log("   - Cota excedida?");
+      console.log("   - Erro CORS?");
+    }
+    return guardianItems;
+  } catch (e) {
+    console.log("📰 The Guardian retornou: 0 itens");
+    console.log("❌ The Guardian falhou. Verificar:");
+    console.log("   - Chave da API válida?");
+    console.log("   - Cota excedida?");
+    console.log("   - Erro CORS?");
+    console.error("Guardian fetch error:", e);
+    return [];
+  }
 }
 
 // ── World Bank ──

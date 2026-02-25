@@ -188,17 +188,25 @@ async function fetchBingNews(): Promise<TrendItem[]> {
 // Guardian as primary fallback when other APIs hit quota
 async function fetchGuardianFallback(): Promise<TrendItem[]> {
   const key = Deno.env.get("GUARDIAN_API_KEY");
-  if (!key) { console.log("GUARDIAN_API_KEY not set for fallback"); return []; }
+  if (!key) { console.log("📰 The Guardian: chave ausente (GUARDIAN_API_KEY)"); return []; }
   try {
+    console.log("📰 The Guardian: buscando...");
     const controller = new AbortController();
     setTimeout(() => controller.abort(), 8000);
     const res = await fetch(
       `https://content.guardianapis.com/search?api-key=${key}&page-size=15&order-by=newest&show-fields=trailText,thumbnail`,
       { signal: controller.signal }
     );
-    if (!res.ok) return [];
+    if (!res.ok) {
+      console.log("📰 The Guardian retornou: 0 itens");
+      console.log("❌ The Guardian falhou. Verificar:");
+      console.log("   - Chave da API válida?");
+      console.log("   - Cota excedida?");
+      console.log("   - Erro CORS?");
+      return [];
+    }
     const data = await res.json();
-    return (data.response?.results || []).map((a: any) => {
+    const guardianItems = (data.response?.results || []).map((a: any) => {
       const { historicalData, metricLabel } = generateHistorical(Math.floor(Math.random() * 20 + 5), "artigos");
       return {
         icon: "📰",
@@ -220,7 +228,23 @@ async function fetchGuardianFallback(): Promise<TrendItem[]> {
         trustBadge: "verified",
       };
     });
-  } catch (e) { console.error("Guardian fallback error:", e); return []; }
+    console.log("📰 The Guardian retornou:", guardianItems.length, "itens");
+    if (guardianItems.length === 0) {
+      console.log("❌ The Guardian falhou. Verificar:");
+      console.log("   - Chave da API válida?");
+      console.log("   - Cota excedida?");
+      console.log("   - Erro CORS?");
+    }
+    return guardianItems;
+  } catch (e) {
+    console.log("📰 The Guardian retornou: 0 itens");
+    console.log("❌ The Guardian falhou. Verificar:");
+    console.log("   - Chave da API válida?");
+    console.log("   - Cota excedida?");
+    console.log("   - Erro CORS?");
+    console.error("Guardian fallback error:", e);
+    return [];
+  }
 }
 
 serve(async (req) => {

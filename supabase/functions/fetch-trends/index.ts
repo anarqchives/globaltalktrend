@@ -128,6 +128,28 @@ async function fetchYouTubeTrends(): Promise<TrendItem[]> {
   }
 }
 
+function detectCategoryFromGoogleTrend(trend: { title?: string; description?: string }): string {
+  const title = (trend.title || "").toLowerCase();
+  const description = (trend.description || "").toLowerCase();
+
+  const categories: Record<string, string[]> = {
+    Entretenimento: ["filme", "série", "musica", "música", "trailer", "celebridade", "oscar", "netflix"],
+    Esportes: ["futebol", "copa", "jogo", "campeonato", "time", "clube", "partida"],
+    Tecnologia: ["celular", "smartphone", "app", "software", "iphone", "samsung", "update", "patch", "tech", "arc raiders"],
+    Ciência: ["cientista", "pesquisa", "descoberta", "estudo", "universidade", "langosta", "inseto"],
+    "Negócios/Finanças": ["inflação", "pib", "bolsa", "mercado", "dólar", "euro", "ações"],
+    Cultura: ["história", "cultura", "arte", "exposição", "museu"],
+  };
+
+  for (const [cat, keywords] of Object.entries(categories)) {
+    if (keywords.some((k) => title.includes(k) || description.includes(k))) {
+      return cat;
+    }
+  }
+
+  return "Geral";
+}
+
 async function fetchGoogleTrendsForGeo(geo: string, region: string, maxItems = 3): Promise<TrendItem[]> {
   try {
     const res = await fetch(
@@ -154,18 +176,23 @@ async function fetchGoogleTrendsForGeo(geo: string, region: string, maxItems = 3
       const traffic = block.match(/<ht:approx_traffic>(.*?)<\/ht:approx_traffic>/)?.[1] || "N/A";
       const newsTitle = block.match(/<ht:news_item_title><!\[CDATA\[(.*?)\]\]>/)?.[1]
         || block.match(/<ht:news_item_title>(.*?)<\/ht:news_item_title>/)?.[1] || "";
-      const newsSource = block.match(/<ht:news_item_source>(.*?)<\/ht:news_item_source>/)?.[1] || "Tendência";
+      
       const newsUrl = block.match(/<ht:news_item_url><!\[CDATA\[(.*?)\]\]>/)?.[1]
         || block.match(/<ht:news_item_url>(.*?)<\/ht:news_item_url>/)?.[1] || "";
 
       const trafficNum = parseInt(traffic.replace(/[^0-9]/g, "")) || 500;
       const { historicalData, metricLabel } = generateHistorical(trafficNum, "índice de busca");
 
+      const detectedCategory = detectCategoryFromGoogleTrend({
+        title,
+        description: newsTitle,
+      });
+
       items.push({
         icon: "🔍",
         platform: "Google Trends",
         title,
-        category: newsSource,
+        category: detectedCategory,
         time: "agora",
         volume: `${traffic} buscas`,
         change: "+trending",
