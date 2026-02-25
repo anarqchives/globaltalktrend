@@ -88,7 +88,7 @@ const TrendHeader = ({ totalTrends = 0, countriesCount = 0, onRefresh, refreshin
   const handleOAuthLogin = async (provider: "google" | "apple") => {
     try {
       setLoginLoading(provider);
-      const redirectUri = window.location.origin;
+      const redirectUri = `${window.location.origin}/auth/callback`;
       console.info("[Auth] OAuth start", { provider, redirectUri, hostname: window.location.hostname });
 
       const result = await lovable.auth.signInWithOAuth(provider, {
@@ -101,6 +101,9 @@ const TrendHeader = ({ totalTrends = 0, countriesCount = 0, onRefresh, refreshin
         setLoginLoading(null);
         return;
       }
+
+      console.info("[Auth] OAuth request accepted", { provider, redirected: !!result?.redirected });
+
       if (!result?.redirected) {
         setLoginOpen(false);
         setLoginLoading(null);
