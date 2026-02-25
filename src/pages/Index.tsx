@@ -122,6 +122,12 @@ const Index = () => {
   const criticalMoments = useCriticalMoments(allTrends);
   const { anomalies, totalCount: anomalyCount, dismiss: dismissAnomaly } = useAnomalyAlerts(allTrends);
   const [transparencyOpen, setTransparencyOpen] = useState(false);
+  const [criticalDismissed, setCriticalDismissed] = useState(false);
+
+  // Reset dismissed state when new critical moments appear
+  useEffect(() => {
+    if (criticalMoments.length > 0) setCriticalDismissed(false);
+  }, [criticalMoments.length]);
 
   // Apply mode-based sorting
   const filteredTrends = useMemo(() => {
@@ -390,17 +396,17 @@ const Index = () => {
       />
       <FilterBar filters={filters} onChange={setFilters} />
 
-      {/* Critical Moments Section - only after real data loaded */}
-      {!loading && criticalMoments.length > 0 && filteredTrends.length > 1 && (
-        <CriticalMomentsSection
-          moments={criticalMoments}
-          onSelectTrend={handleSelectTrend}
-        />
-      )}
-
       <div className="flex-1 overflow-hidden">
         {isMobile ? (
           <div className="h-full min-h-0 flex flex-col">
+            {/* Critical Moments inline on mobile */}
+            {!loading && criticalMoments.length > 0 && filteredTrends.length > 1 && !criticalDismissed && (
+              <CriticalMomentsSection
+                moments={criticalMoments}
+                onSelectTrend={handleSelectTrend}
+                onClose={() => setCriticalDismissed(true)}
+              />
+            )}
             <div className="flex border-b border-border bg-card/80 backdrop-blur-sm">
               <button
                 className={`flex-1 py-3 min-h-[44px] text-xs font-semibold transition-colors ${
@@ -429,11 +435,25 @@ const Index = () => {
           </div>
         ) : (
           <ResizablePanelGroup direction="horizontal" className="h-full">
-            <ResizablePanel defaultSize={38} minSize={25} maxSize={55}>
+            <ResizablePanel defaultSize={!loading && criticalMoments.length > 0 && !criticalDismissed ? 28 : 38} minSize={25} maxSize={55}>
               {renderTimeline()}
             </ResizablePanel>
             <ResizableHandle withHandle />
-            <ResizablePanel defaultSize={62}>
+            {/* Critical Moments as horizontal panel on desktop */}
+            {!loading && criticalMoments.length > 0 && filteredTrends.length > 1 && !criticalDismissed && (
+              <>
+                <ResizablePanel defaultSize={20} minSize={14} maxSize={30}>
+                  <CriticalMomentsSection
+                    moments={criticalMoments}
+                    onSelectTrend={handleSelectTrend}
+                    onClose={() => setCriticalDismissed(true)}
+                    horizontal
+                  />
+                </ResizablePanel>
+                <ResizableHandle withHandle />
+              </>
+            )}
+            <ResizablePanel defaultSize={!loading && criticalMoments.length > 0 && !criticalDismissed ? 52 : 62}>
               <div className="h-full bg-secondary/10">
                 {renderMap()}
               </div>
