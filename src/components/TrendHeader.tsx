@@ -57,6 +57,9 @@ const TrendHeader = ({ totalTrends = 0, countriesCount = 0, onRefresh, refreshin
   });
   const [saveFilterName, setSaveFilterName] = useState("");
   const [showSaveInput, setShowSaveInput] = useState(false);
+  const [contactName, setContactName] = useState("");
+  const [contactEmail, setContactEmail] = useState("");
+  const [contactMessage, setContactMessage] = useState("");
 
   useEffect(() => {
     document.documentElement.classList.toggle("dark", dark);
@@ -155,6 +158,36 @@ const TrendHeader = ({ totalTrends = 0, countriesCount = 0, onRefresh, refreshin
       category: sf.category || "Todas",
       type: sf.media_type || "Todas mídias"
     });
+  };
+
+  const handleContactSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+
+    const name = contactName.trim();
+    const email = contactEmail.trim();
+    const message = contactMessage.trim();
+
+    if (name.length < 2 || name.length > 80) {
+      toast({ title: "Nome inválido", description: "Use um nome entre 2 e 80 caracteres.", variant: "destructive" });
+      return;
+    }
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email) || email.length > 255) {
+      toast({ title: "Email inválido", description: "Informe um email válido.", variant: "destructive" });
+      return;
+    }
+
+    if (message.length < 10 || message.length > 2000) {
+      toast({ title: "Mensagem inválida", description: "A mensagem deve ter entre 10 e 2000 caracteres.", variant: "destructive" });
+      return;
+    }
+
+    const subject = encodeURIComponent(`[Contato Global Talk] ${name}`);
+    const body = encodeURIComponent(`Nome: ${name}\nEmail: ${email}\n\nMensagem:\n${message}`);
+
+    window.location.href = `mailto:talk@globaltalktrend.com?subject=${subject}&body=${body}`;
+    toast({ title: "Abrindo seu email", description: "Revise e envie sua mensagem no app de email." });
   };
 
   const userAvatar = user?.user_metadata?.avatar_url;
@@ -548,9 +581,52 @@ const TrendHeader = ({ totalTrends = 0, countriesCount = 0, onRefresh, refreshin
               </div>
 
               {/* Rodapé */}
-              <div className="pt-3 border-t border-border/50 flex flex-col sm:flex-row items-center justify-between gap-1 text-[10px] text-muted-foreground">
-                <span>✉ talk@globaltalktrend.com</span>
-                <span>v2.02</span>
+              <div className="pt-3 border-t border-border/50 space-y-3">
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-1 text-[10px] text-muted-foreground">
+                  <span className="whitespace-nowrap">✉ talk@globaltalktrend.com</span>
+                  <span>v2.02</span>
+                </div>
+
+                <form onSubmit={handleContactSubmit} className="space-y-2">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                    <input
+                      type="text"
+                      value={contactName}
+                      onChange={(e) => setContactName(e.target.value)}
+                      placeholder="Nome"
+                      maxLength={80}
+                      className="w-full rounded-lg border border-border bg-background px-3 py-2 text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20"
+                      required
+                    />
+                    <input
+                      type="email"
+                      value={contactEmail}
+                      onChange={(e) => setContactEmail(e.target.value)}
+                      placeholder="Email"
+                      maxLength={255}
+                      className="w-full rounded-lg border border-border bg-background px-3 py-2 text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20"
+                      required
+                    />
+                  </div>
+                  <textarea
+                    value={contactMessage}
+                    onChange={(e) => setContactMessage(e.target.value)}
+                    placeholder="Mensagem"
+                    minLength={10}
+                    maxLength={2000}
+                    rows={4}
+                    className="w-full rounded-lg border border-border bg-background px-3 py-2 text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 resize-y"
+                    required
+                  />
+                  <div className="flex justify-end">
+                    <button
+                      type="submit"
+                      className="inline-flex items-center justify-center rounded-full bg-primary px-4 py-2 text-xs font-semibold text-primary-foreground hover:bg-primary/90 transition-colors"
+                    >
+                      Enviar
+                    </button>
+                  </div>
+                </form>
               </div>
             </div>
           </motion.div>
