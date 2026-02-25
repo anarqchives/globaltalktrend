@@ -25,10 +25,10 @@ const platformIcons: Record<string, { emoji: string; color: string }> = {
   "X (Twitter)": { emoji: "𝕏", color: "hsl(0, 0%, 15%)" },
 };
 
-const sentimentConfig = {
-  positive: { icon: "😊", color: "text-green-600", label: "Positivo" },
-  negative: { icon: "😟", color: "text-red-500", label: "Negativo" },
-  neutral: { icon: "😐", color: "text-muted-foreground", label: "Neutro" },
+const sentimentKeys = {
+  positive: { icon: "😊", color: "text-green-600", key: "positive" as const },
+  negative: { icon: "😟", color: "text-red-500", key: "negative" as const },
+  neutral: { icon: "😐", color: "text-muted-foreground", key: "neutral" as const },
 };
 
 const countryCodeToFlag = (code?: string) => {
@@ -36,31 +36,31 @@ const countryCodeToFlag = (code?: string) => {
   return String.fromCodePoint(...[...code.toUpperCase()].map(c => 0x1F1E6 + c.charCodeAt(0) - 65));
 };
 
-const trustBadgeMap: Record<string, { label: string; icon: React.ReactNode; className: string; tooltip: string }> = {
-  official: { label: "Fonte Oficial", icon: <Shield className="w-2.5 h-2.5" />, className: "bg-blue-100/80 text-blue-700 dark:bg-blue-500/15 dark:text-blue-400", tooltip: "Dados de órgãos governamentais ou científicos oficiais (ex: World Bank, IBGE)" },
-  verified: { label: "Imprensa Verificada", icon: <CheckCircle2 className="w-2.5 h-2.5" />, className: "bg-green-100/80 text-green-700 dark:bg-green-500/15 dark:text-green-400", tooltip: "Veículo de imprensa tradicional com histórico comprovado de verificação" },
-  scientific: { label: "Dados Científicos", icon: <FlaskConical className="w-2.5 h-2.5" />, className: "bg-purple-100/80 text-purple-700 dark:bg-purple-500/15 dark:text-purple-400", tooltip: "Artigos acadêmicos revisados por pares via OpenAlex" },
-  international: { label: "Fonte Internacional", icon: <Globe className="w-2.5 h-2.5" />, className: "bg-amber-100/80 text-amber-700 dark:bg-amber-500/15 dark:text-amber-500", tooltip: "Cobertura global de veículos de referência internacional (ex: The Guardian, BBC)" },
-  press: { label: "Imprensa Verificada", icon: <Newspaper className="w-2.5 h-2.5" />, className: "bg-emerald-100/80 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-400", tooltip: "Agregador de notícias com fontes verificadas (NewsAPI, GNews)" },
-  hot: { label: "PAUTA QUENTE", icon: <span className="text-[9px]">🔥</span>, className: "bg-red-100/80 text-red-700 dark:bg-red-500/15 dark:text-red-400", tooltip: "Trend viral com crescimento acelerado nas redes sociais" },
+const trustBadgeKeys: Record<string, { labelKey: string; icon: React.ReactNode; className: string }> = {
+  official: { labelKey: "officialSource", icon: <Shield className="w-2.5 h-2.5" />, className: "bg-blue-100/80 text-blue-700 dark:bg-blue-500/15 dark:text-blue-400" },
+  verified: { labelKey: "verifiedPress", icon: <CheckCircle2 className="w-2.5 h-2.5" />, className: "bg-green-100/80 text-green-700 dark:bg-green-500/15 dark:text-green-400" },
+  scientific: { labelKey: "scientificData", icon: <FlaskConical className="w-2.5 h-2.5" />, className: "bg-purple-100/80 text-purple-700 dark:bg-purple-500/15 dark:text-purple-400" },
+  international: { labelKey: "internationalSource", icon: <Globe className="w-2.5 h-2.5" />, className: "bg-amber-100/80 text-amber-700 dark:bg-amber-500/15 dark:text-amber-500" },
+  press: { labelKey: "verifiedPress", icon: <Newspaper className="w-2.5 h-2.5" />, className: "bg-emerald-100/80 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-400" },
+  hot: { labelKey: "hotTopic", icon: <span className="text-[9px]">🔥</span>, className: "bg-red-100/80 text-red-700 dark:bg-red-500/15 dark:text-red-400" },
 };
 
 // Client-side quick trigger detection (before AI analysis)
-const triggerPatterns: { type: string; emoji: string; label: string; keywords: string[] }[] = [
-  { type: "launch", emoji: "🎬", label: "Lançamento", keywords: ["trailer", "estreia", "lançamento", "novo", "nova", "release", "launch", "premiere", "debut"] },
-  { type: "politics", emoji: "🗳️", label: "Política", keywords: ["eleição", "voto", "governo", "presidente", "congresso", "election", "vote", "government", "president", "congress", "trump", "biden"] },
-  { type: "crisis", emoji: "⚠️", label: "Crise", keywords: ["acidente", "crise", "emergência", "desastre", "ataque", "crash", "crisis", "emergency", "disaster", "attack", "war", "earthquake"] },
-  { type: "sports", emoji: "🏆", label: "Esportes", keywords: ["jogo", "copa", "campeonato", "final", "gol", "partida", "game", "cup", "championship", "goal", "match", "nba", "nfl", "fifa"] },
-  { type: "statement", emoji: "📢", label: "Declaração", keywords: ["diz", "afirma", "declara", "polêmica", "fala sobre", "says", "claims", "declares", "controversy", "statement"] },
-  { type: "science", emoji: "🔬", label: "Ciência", keywords: ["pesquisa", "estudo", "descoberta", "nasa", "vacina", "research", "study", "discovery", "nasa", "vaccine", "breakthrough"] },
-  { type: "business", emoji: "📈", label: "Negócios", keywords: ["bolsa", "mercado", "ações", "investimento", "pib", "market", "stock", "investment", "gdp", "revenue", "profit", "tariff"] },
+const triggerPatterns: { type: string; emoji: string; labelKey: string; keywords: string[] }[] = [
+  { type: "launch", emoji: "🎬", labelKey: "launch", keywords: ["trailer", "estreia", "lançamento", "novo", "nova", "release", "launch", "premiere", "debut"] },
+  { type: "politics", emoji: "🗳️", labelKey: "politics", keywords: ["eleição", "voto", "governo", "presidente", "congresso", "election", "vote", "government", "president", "congress", "trump", "biden"] },
+  { type: "crisis", emoji: "⚠️", labelKey: "crisis", keywords: ["acidente", "crise", "emergência", "desastre", "ataque", "crash", "crisis", "emergency", "disaster", "attack", "war", "earthquake"] },
+  { type: "sports", emoji: "🏆", labelKey: "sportsEvent", keywords: ["jogo", "copa", "campeonato", "final", "gol", "partida", "game", "cup", "championship", "goal", "match", "nba", "nfl", "fifa"] },
+  { type: "statement", emoji: "📢", labelKey: "declaration", keywords: ["diz", "afirma", "declara", "polêmica", "fala sobre", "says", "claims", "declares", "controversy", "statement"] },
+  { type: "science", emoji: "🔬", labelKey: "scienceEvent", keywords: ["pesquisa", "estudo", "descoberta", "nasa", "vacina", "research", "study", "discovery", "nasa", "vaccine", "breakthrough"] },
+  { type: "business", emoji: "📈", labelKey: "businessEvent", keywords: ["bolsa", "mercado", "ações", "investimento", "pib", "market", "stock", "investment", "gdp", "revenue", "profit", "tariff"] },
 ];
 
-function detectTriggerFromTitle(title: string): { emoji: string; label: string } | null {
+function detectTriggerFromTitle(title: string): { emoji: string; labelKey: string } | null {
   const lower = title.toLowerCase();
   for (const pattern of triggerPatterns) {
     if (pattern.keywords.some(kw => lower.includes(kw))) {
-      return { emoji: pattern.emoji, label: pattern.label };
+      return { emoji: pattern.emoji, labelKey: pattern.labelKey };
     }
   }
   return null;
@@ -75,7 +75,7 @@ interface TimelineCardProps extends TrendCardProps {
   forceExpanded?: boolean;
 }
 
-function formatTemporalBadge(firstSeenAt?: string, peakAt?: string): { started: string | null; peak: string | null } {
+function formatTemporalBadge(firstSeenAt?: string, peakAt?: string, startedLabel = "Começou há", peakLabel = "Pico às"): { started: string | null; peak: string | null } {
   if (!firstSeenAt) return { started: null, peak: null };
   const now = new Date();
   const first = new Date(firstSeenAt);
@@ -84,14 +84,14 @@ function formatTemporalBadge(firstSeenAt?: string, peakAt?: string): { started: 
   const diffMin = Math.floor(diffMs / (1000 * 60));
 
   let started: string | null = null;
-  if (diffMin < 60) started = `⏰ Começou há ${diffMin}min`;
-  else if (diffH < 24) started = `⏰ Começou há ${diffH}h`;
-  else started = `⏰ Começou há ${Math.floor(diffH / 24)}d`;
+  if (diffMin < 60) started = `⏰ ${startedLabel} ${diffMin}min`;
+  else if (diffH < 24) started = `⏰ ${startedLabel} ${diffH}h`;
+  else started = `⏰ ${startedLabel} ${Math.floor(diffH / 24)}d`;
 
   let peak: string | null = null;
   if (peakAt) {
     const peakDate = new Date(peakAt);
-    peak = `📈 Pico às ${peakDate.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}`;
+    peak = `📈 ${peakLabel} ${peakDate.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}`;
   }
 
   return { started, peak };
@@ -146,7 +146,7 @@ const TimelineCard = ({
   const [imgError, setImgError] = useState(false);
   const trigger = useMemo(() => detectTriggerFromTitle(title), [title]);
   const [activeTab, setActiveTab] = useState<"details" | "context" | "history">("details");
-  const temporal = useMemo(() => formatTemporalBadge(firstSeenAt, peakAt), [firstSeenAt, peakAt]);
+  const temporal = useMemo(() => formatTemporalBadge(firstSeenAt, peakAt, t("startedAgo"), t("peakAt")), [firstSeenAt, peakAt, lang]);
 
   const relativeTimeFormats: Record<string, { now: string; min: string; h: string; d: string }> = {
     pt: { now: "agora", min: "há {n}min", h: "há {n}h", d: "há {n}d" },
@@ -201,7 +201,7 @@ const TimelineCard = ({
     e.stopPropagation();
     const url = window.location.href;
     navigator.clipboard.writeText(url);
-    toast({ title: "🔗 Link copiado!", description: "Link com filtros atuais copiado." });
+    toast({ title: `🔗 ${t("linkCopied")}`, description: t("linkCopiedDesc") });
   };
 
 
@@ -218,7 +218,7 @@ const TimelineCard = ({
   const handleAlertClick = (e: React.MouseEvent) => {
     e.stopPropagation();
     if (!userId) {
-      toast({ title: "Faça login", description: "Login necessário para criar alertas." });
+      toast({ title: t("loginRequired"), description: t("loginRequiredDesc") });
       return;
     }
     setAlertOpen(true);
@@ -235,9 +235,9 @@ const TimelineCard = ({
       notification_method: input.notification_method,
     });
     if (error) {
-      toast({ title: "Erro", description: error.message, variant: "destructive" });
+      toast({ title: t("error"), description: error.message, variant: "destructive" });
     } else {
-      toast({ title: "🔔 Alerta criado!", description: `Monitorando: ${title.slice(0, 40)}` });
+      toast({ title: `🔔 ${t("alertCreated")}`, description: `${t("monitoring")}: ${title.slice(0, 40)}` });
     }
   };
 
@@ -253,13 +253,13 @@ const TimelineCard = ({
       setAiSummary(data);
     } catch (err: any) {
       console.error("Summarize error:", err);
-      toast({ title: "Erro ao resumir", description: "Tente novamente.", variant: "destructive" });
+      toast({ title: t("errorSummarize"), description: t("tryAgain"), variant: "destructive" });
     } finally {
       setSummarizing(false);
     }
   };
 
-  const sentiment = aiSummary ? sentimentConfig[aiSummary.sentiment as keyof typeof sentimentConfig] || sentimentConfig.neutral : null;
+  const sentiment = aiSummary ? sentimentKeys[aiSummary.sentiment as keyof typeof sentimentKeys] || sentimentKeys.neutral : null;
 
   return (
     <div className="timeline-card-wrapper">
@@ -277,7 +277,7 @@ const TimelineCard = ({
             className="w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold flex-shrink-0 mt-0.5 cursor-pointer hover:scale-110 transition-transform"
             style={{ background: `${pf.color}15`, color: pf.color }}
             onClick={handlePlatformClick}
-            title={`Filtrar por ${platform}`}
+            title={`${t("filterByPlatform")} ${platform}`}
           >
             {pf.emoji}
           </div>
@@ -294,23 +294,22 @@ const TimelineCard = ({
               {flag && <span className="text-xs flex-shrink-0" title={countryCode}>{flag}</span>}
               <span className="text-[11px] text-muted-foreground flex-shrink-0">{formattedDate || time}</span>
                {isPeak && <span className="peak-badge flex-shrink-0 whitespace-nowrap">🔥 {t("peak")}</span>}
-               {trustBadge && trustBadgeMap[trustBadge] && (
+               {trustBadge && trustBadgeKeys[trustBadge] && (
                  <span
-                   className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium whitespace-nowrap overflow-hidden text-ellipsis max-w-[120px] flex-shrink-0 cursor-help ${trustBadgeMap[trustBadge].className}`}
-                   title={trustBadgeMap[trustBadge].tooltip}
+                   className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium whitespace-nowrap overflow-hidden text-ellipsis max-w-[120px] flex-shrink-0 cursor-help ${trustBadgeKeys[trustBadge].className}`}
                  >
-                   {trustBadgeMap[trustBadge].icon}
-                   {trustBadgeMap[trustBadge].label}
+                   {trustBadgeKeys[trustBadge].icon}
+                   {t(trustBadgeKeys[trustBadge].labelKey as any)}
                  </span>
                )}
-               {isPeak && !trustBadge && trustBadgeMap.hot && (
-                 <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium whitespace-nowrap flex-shrink-0 ${trustBadgeMap.hot.className}`}>
-                   🔥 PAUTA QUENTE
+               {isPeak && !trustBadge && trustBadgeKeys.hot && (
+                 <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium whitespace-nowrap flex-shrink-0 ${trustBadgeKeys.hot.className}`}>
+                   🔥 {t("hotTopic")}
                  </span>
                 )}
                {trigger && (
                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium bg-accent text-accent-foreground border border-border whitespace-nowrap flex-shrink-0">
-                   {trigger.emoji} {trigger.label}
+                   {trigger.emoji} {t(trigger.labelKey as any)}
                  </span>
                )}
                {modeConfig.extraBadge && modeConfig.sortWeight({ title, category, change, trustBadge, sources, commentCount, likeRatio, platform }) > 20 && (
@@ -319,7 +318,7 @@ const TimelineCard = ({
                  </span>
                )}
                {sentiment && (
-                <span className={`text-xs flex-shrink-0 ${sentiment.color}`} title={sentiment.label}>
+                <span className={`text-xs flex-shrink-0 ${sentiment.color}`} title={t(sentiment.key)}>
                   {sentiment.icon}
                 </span>
               )}
@@ -393,10 +392,10 @@ const TimelineCard = ({
             <button onClick={handleShare} className="p-1 rounded-full opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-foreground" title={t("share")}>
               <Share2 className="w-3 h-3" />
             </button>
-            <button onClick={handleShareLink} className="p-1 rounded-full opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-foreground" title="Copiar link com filtros">
+            <button onClick={handleShareLink} className="p-1 rounded-full opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-foreground" title={t("copyLinkFilters")}>
               <Link2 className="w-3 h-3" />
             </button>
-            <button onClick={handleAlertClick} className="p-1 rounded-full opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-primary" title="Criar alerta">
+            <button onClick={handleAlertClick} className="p-1 rounded-full opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-primary" title={t("createAlert")}>
               <Bell className="w-3 h-3" />
             </button>
             <button onClick={handleExpand} className="p-1 rounded-full text-muted-foreground hover:text-foreground transition-colors">
@@ -419,7 +418,7 @@ const TimelineCard = ({
                   : "bg-muted text-muted-foreground hover:text-foreground"
               }`}
             >
-              📋 Detalhes
+              📋 {t("tabDetails")}
             </button>
             <button
               onClick={(e) => { e.stopPropagation(); setActiveTab("context"); }}
@@ -429,7 +428,7 @@ const TimelineCard = ({
                   : "bg-muted text-muted-foreground hover:text-foreground"
               }`}
             >
-              🔍 Contexto
+              🔍 {t("tabContext")}
             </button>
             <button
               onClick={(e) => { e.stopPropagation(); setActiveTab("history"); }}
@@ -439,7 +438,7 @@ const TimelineCard = ({
                   : "bg-muted text-muted-foreground hover:text-foreground"
               }`}
             >
-              📊 Histórico
+              📊 {t("tabHistory")}
             </button>
           </div>
 
@@ -488,7 +487,7 @@ const TimelineCard = ({
                     <span className="text-[10px] font-semibold text-primary uppercase tracking-wider">{t("aiSummary")}</span>
                     {sentiment && (
                       <span className={`text-xs ${sentiment.color} ml-auto`}>
-                        {sentiment.icon} {sentiment.label}
+                        {sentiment.icon} {t(sentiment.key)}
                       </span>
                     )}
                   </div>
