@@ -53,11 +53,33 @@ const categoryKeywords: Record<string, string[]> = {
     "经济", "経済", "경제", "اقتصاد", "अर्थव्यवस्था", "экономика",
   ],
   Ciência: [
-    "ciência", "cientista", "descoberta", "nasa", "espaço", "vacina", "saúde", "laboratório",
-    "science", "research", "study", "scientist", "discovery", "nasa", "space", "vaccine", "health", "medical", "biology", "physics", "climate", "environment",
+    "ciência", "cientista", "descoberta", "nasa", "espaço", "vacina", "laboratório",
+    "science", "research", "study", "scientist", "discovery", "nasa", "space", "biology", "physics", "chemistry", "arxiv", "preprint",
     "ciencia", "investigación",
     "wissenschaft", "forschung", "studie",
     "科学", "科學", "과학", "علوم", "विज्ञान", "наука",
+  ],
+  Saúde: [
+    "saúde", "doença", "epidemia", "pandemia", "hospital", "médico", "vacina", "oms", "surto",
+    "health", "disease", "epidemic", "pandemic", "hospital", "doctor", "vaccine", "who", "outbreak", "medical", "clinical", "pubmed", "patient", "therapy", "drug",
+    "salud", "santé", "gesundheit",
+    "健康", "건강", "صحة", "स्वास्थ्य", "здоровье",
+  ],
+  "Clima/Meio Ambiente": [
+    "clima", "aquecimento", "desmatamento", "queimada", "inundação", "furacão", "tempestade", "seca", "poluição", "emissões",
+    "climate", "warming", "deforestation", "wildfire", "flood", "hurricane", "storm", "drought", "pollution", "emissions", "weather", "noaa", "tornado", "blizzard",
+    "environnement", "klima", "umwelt",
+    "气候", "環境", "기후", "مناخ", "जलवायु", "климат",
+  ],
+  "Conflitos/Crises": [
+    "conflito", "guerra", "protesto", "crise", "refugiado", "sanção", "ataque", "bombardeio",
+    "conflict", "war", "protest", "crisis", "refugee", "sanction", "attack", "bombing", "gdelt", "acled", "violence", "militant",
+    "conflit", "krieg", "konflikt",
+    "冲突", "紛争", "분쟁", "صراع", "संघर्ष", "конфликт",
+  ],
+  Conhecimento: [
+    "wikipedia", "enciclopédia", "artigo mais acessado", "pageviews",
+    "encyclopedia", "most viewed", "trending article",
   ],
 };
 
@@ -126,8 +148,12 @@ export function categorizeTrend(
   }
 
   // Priority 5: Platform-based defaults
-  if (["World Bank", "IBGE"].includes(platform)) return "Negócios/Finanças";
-  if (platform === "OpenAlex") return "Ciência";
+  if (["World Bank", "IBGE", "IMF", "FRED"].includes(platform)) return "Negócios/Finanças";
+  if (["OpenAlex", "arXiv", "Crossref"].includes(platform)) return "Ciência";
+  if (platform === "PubMed") return "Saúde";
+  if (platform === "NOAA") return "Clima/Meio Ambiente";
+  if (platform === "GDELT") return "Conflitos/Crises";
+  if (platform === "Wikipedia") return "Conhecimento";
 
   return existingCategory || "Geral";
 }
@@ -141,6 +167,14 @@ const sourceCountryMap: Record<string, string> = {
   "IBGE": "BR",
   "World Bank": "GL",
   "OpenAlex": "GL",
+  "IMF": "GL",
+  "FRED": "US",
+  "NOAA": "US",
+  "GDELT": "GL",
+  "arXiv": "GL",
+  "PubMed": "GL",
+  "Crossref": "GL",
+  "Wikipedia": "GL",
 };
 
 const countryKeywordsMap: Record<string, string[]> = {
