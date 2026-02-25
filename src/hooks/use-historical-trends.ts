@@ -120,7 +120,8 @@ export function useHistoricalTrends() {
         const meta = (latest.metadata || {}) as Record<string, string>;
 
         // Re-categorize using the unified categorizer (snapshots may have raw categories)
-        const normalizedCategory = categorizeTrend(latest.title, latest.platform, latest.category || undefined);
+        const normalizedCategory = categorizeTrend(latest.title, latest.platform, latest.category || undefined) || "Geral";
+        const normalizedCountry = latest.country_code ? latest.country_code.toUpperCase().slice(0, 2) : undefined;
 
         historicalTrends.push({
           icon: getPlatformIcon(latest.platform),
@@ -133,7 +134,7 @@ export function useHistoricalTrends() {
           changePositive: (latest.change_percent || 0) >= 0,
           sparkData: snapshots.slice(-10).map((s) => s.volume_raw || 0),
           details: "",
-          countryCode: latest.country_code || undefined,
+          countryCode: normalizedCountry,
           sourceUrl: meta.sourceUrl || undefined,
           trustBadge: meta.trustBadge || undefined,
           historicalData,

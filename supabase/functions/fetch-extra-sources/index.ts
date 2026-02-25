@@ -51,7 +51,7 @@ async function fetchGuardian(): Promise<TrendItem[]> {
   if (!key) { console.log("GUARDIAN_API_KEY not set"); return []; }
   try {
     const res = await fetch(
-      `https://content.guardianapis.com/search?order-by=newest&page-size=5&show-fields=trailText&api-key=${key}`
+      `https://content.guardianapis.com/search?order-by=newest&page-size=12&show-fields=trailText&api-key=${key}`
     );
     if (!res.ok) { console.error("Guardian error:", res.status); return []; }
     const data = await res.json();
@@ -121,18 +121,18 @@ async function fetchWorldBank(): Promise<TrendItem[]> {
         }
       } catch { /* skip indicator */ }
     }
-    return results.slice(0, 5);
+    return results.slice(0, 12);
   } catch (e) { console.error("World Bank fetch error:", e); return []; }
 }
 
 // ── IBGE ──
 async function fetchIBGE(): Promise<TrendItem[]> {
   try {
-    const res = await fetch("https://servicodados.ibge.gov.br/api/v3/noticias/?qtd=5");
+    const res = await fetch("https://servicodados.ibge.gov.br/api/v3/noticias/?qtd=12");
     if (!res.ok) { console.error("IBGE error:", res.status); return []; }
     const data = await res.json();
     const items = data.items || data || [];
-    return (Array.isArray(items) ? items : []).slice(0, 5).map((n: any) => {
+    return (Array.isArray(items) ? items : []).slice(0, 12).map((n: any) => {
       const { historicalData, metricLabel } = generateHistorical(Math.floor(Math.random() * 8 + 2), "publicações");
       return {
         icon: "🇧🇷",
@@ -159,7 +159,7 @@ async function fetchIBGE(): Promise<TrendItem[]> {
 async function fetchOpenAlex(): Promise<TrendItem[]> {
   try {
     const res = await fetch(
-      "https://api.openalex.org/works?sort=cited_by_count:desc&per_page=5&filter=from_publication_date:2024-01-01&mailto=globaltalk@lovable.app"
+      "https://api.openalex.org/works?sort=cited_by_count:desc&per_page=12&filter=from_publication_date:2024-01-01&mailto=globaltalk@lovable.app"
     );
     if (!res.ok) { console.error("OpenAlex error:", res.status); return []; }
     const data = await res.json();

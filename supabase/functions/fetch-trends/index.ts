@@ -83,7 +83,7 @@ async function fetchYouTubeTrends(): Promise<TrendItem[]> {
 
   try {
     const res = await fetch(
-      `https://www.googleapis.com/youtube/v3/videos?part=snippet,statistics&chart=mostPopular&regionCode=BR&maxResults=5&key=${API_KEY}`
+      `https://www.googleapis.com/youtube/v3/videos?part=snippet,statistics&chart=mostPopular&regionCode=BR&maxResults=12&key=${API_KEY}`
     );
     if (!res.ok) {
       console.error("YouTube API error:", res.status, await res.text());
@@ -187,9 +187,9 @@ async function fetchGoogleTrendsForGeo(geo: string, region: string, maxItems = 3
 }
 
 async function fetchAllGoogleTrends(): Promise<TrendItem[]> {
-  // Fetch BR with more items (primary), others with fewer
+  // Fetch BR with more items (primary), others with wider coverage
   const promises = GOOGLE_TRENDS_GEOS.map(({ geo, region }) =>
-    fetchGoogleTrendsForGeo(geo, region, geo === "BR" ? 5 : 3)
+    fetchGoogleTrendsForGeo(geo, region, geo === "BR" ? 10 : 6)
   );
 
   const results = await Promise.allSettled(promises);
@@ -211,16 +211,16 @@ async function fetchNewsAPI(): Promise<TrendItem[]> {
   }
 
   try {
-    let url = `https://newsapi.org/v2/top-headlines?country=br&pageSize=5&apiKey=${API_KEY}`;
+    let url = `https://newsapi.org/v2/top-headlines?country=br&pageSize=12&apiKey=${API_KEY}`;
     let res = await fetch(url);
     let data = await res.json();
     if (!res.ok || !data.articles?.length) {
-      url = `https://newsapi.org/v2/top-headlines?language=pt&pageSize=5&apiKey=${API_KEY}`;
+      url = `https://newsapi.org/v2/top-headlines?language=pt&pageSize=12&apiKey=${API_KEY}`;
       res = await fetch(url);
       data = await res.json();
     }
     if (!res.ok || !data.articles?.length) {
-      url = `https://newsapi.org/v2/top-headlines?language=en&pageSize=5&apiKey=${API_KEY}`;
+      url = `https://newsapi.org/v2/top-headlines?language=en&pageSize=12&apiKey=${API_KEY}`;
       res = await fetch(url);
       data = await res.json();
     }

@@ -43,7 +43,7 @@ async function fetchNewsData(): Promise<TrendItem[]> {
   const key = Deno.env.get("NEWSDATA_API_KEY");
   if (!key) { console.log("NEWSDATA_API_KEY not set"); return []; }
   try {
-    const res = await fetch(`https://newsdata.io/api/1/latest?apikey=${key}&language=pt,en&size=5`);
+    const res = await fetch(`https://newsdata.io/api/1/latest?apikey=${key}&language=pt,en&size=12`);
     if (!res.ok) { console.error("NewsData error:", res.status); return []; }
     const data = await res.json();
     return (data.results || []).map((a: any) => {
@@ -77,10 +77,10 @@ async function fetchGNews(): Promise<TrendItem[]> {
   const key = Deno.env.get("GNEWS_API_KEY");
   if (!key) { console.log("GNEWS_API_KEY not set"); return []; }
   try {
-    const res = await fetch(`https://gnews.io/api/v4/top-headlines?lang=pt&max=5&apikey=${key}`);
+    const res = await fetch(`https://gnews.io/api/v4/top-headlines?lang=pt&max=12&apikey=${key}`);
     if (!res.ok) {
       // Fallback to English
-      const res2 = await fetch(`https://gnews.io/api/v4/top-headlines?lang=en&max=5&apikey=${key}`);
+      const res2 = await fetch(`https://gnews.io/api/v4/top-headlines?lang=en&max=12&apikey=${key}`);
       if (!res2.ok) return [];
       const data2 = await res2.json();
       return mapGNewsArticles(data2.articles || []);
@@ -121,12 +121,12 @@ async function fetchBingNews(): Promise<TrendItem[]> {
   const key = Deno.env.get("BING_NEWS_API_KEY");
   if (!key) { console.log("BING_NEWS_API_KEY not set"); return []; }
   try {
-    const res = await fetch("https://api.bing.microsoft.com/v7.0/news/trendingtopics?mkt=pt-BR&count=5", {
+    const res = await fetch("https://api.bing.microsoft.com/v7.0/news/trendingtopics?mkt=pt-BR&count=12", {
       headers: { "Ocp-Apim-Subscription-Key": key },
     });
     if (!res.ok) {
       // Fallback: try top news
-      const res2 = await fetch("https://api.bing.microsoft.com/v7.0/news?mkt=en-US&count=5", {
+      const res2 = await fetch("https://api.bing.microsoft.com/v7.0/news?mkt=en-US&count=12", {
         headers: { "Ocp-Apim-Subscription-Key": key },
       });
       if (!res2.ok) return [];
