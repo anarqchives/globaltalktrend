@@ -154,6 +154,10 @@ const Index = () => {
   const visibleTrends = filteredTrends.slice(0, visibleCount);
   const hasMore = visibleCount < filteredTrends.length;
 
+  useEffect(() => {
+    console.log("🖥️ Renderizando timeline com", visibleTrends.length, "itens");
+  }, [visibleTrends.length]);
+
   // Brief loading flash when filters change
   const [filterTransitioning, setFilterTransitioning] = useState(false);
   const prevFiltersRef = useRef(filters);
