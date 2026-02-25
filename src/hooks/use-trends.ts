@@ -47,6 +47,44 @@ function normalizeCategory(title: string, platform: string, category?: string): 
   return "Geral";
 }
 
+function inferTypeFromSource(source?: string): string {
+  const platform = (source || "").trim();
+  if (["Reddit", "Bluesky", "Mastodon", "X (Twitter)"].includes(platform)) return "Redes sociais";
+  if (["NewsAPI", "NewsData", "GNews", "Bing News", "The Guardian"].includes(platform)) return "Imprensa";
+  if (platform === "Google Trends") return "Buscas (Google)";
+  if (["World Bank", "IBGE", "IMF", "FRED", "NOAA"].includes(platform)) return "Dados oficiais";
+  if (["OpenAlex", "arXiv", "PubMed", "Crossref"].includes(platform)) return "Ciência";
+  if (["Hacker News", "GitHub", "Stack Overflow"].includes(platform)) return "Tech";
+  if (platform === "Wikipedia") return "Enciclopédia";
+  if (platform === "GDELT") return "Conflitos";
+  return "desconhecido";
+}
+
+type NormalizedTrendForFilter = TrendCardProps & {
+  source: string;
+  type: string;
+  normalizedCountry: string;
+  normalizedCategory: string;
+  hasExplicitCountry: boolean;
+};
+
+function normalizeTrendForFilter(trend: TrendCardProps): NormalizedTrendForFilter {
+  const source = (trend.platform || "desconhecido").trim() || "desconhecido";
+  const normalizedCountry = normalizeCountryCode(trend.countryCode) || "GL";
+  const normalizedCategory = normalizeText(trend.category || "Geral");
+
+  return {
+    ...trend,
+    source,
+    type: inferTypeFromSource(source),
+    category: trend.category || "Geral",
+    countryCode: trend.countryCode || "GL",
+    normalizedCountry,
+    normalizedCategory,
+    hasExplicitCountry: Boolean(normalizeCountryCode(trend.countryCode)),
+  };
+}
+
 function getCachedTrends(): TrendsCachePayload | null {
   try {
     const raw = sessionStorage.getItem(CACHE_KEY);
@@ -653,39 +691,52 @@ export function useTrends(filters: FilterState, onTrendCountsChange: (counts: Re
   }, [loading, trends.length]);
 
   const filteredTrends = useMemo(() => {
-    const countryFilter = normalizeCountryCode(filters.country);
+    const countryFilter = normalizeCountryCode(filters.country) || (filters.country === "global" ? "GL" : undefined);
     const filterCategory = normalizeText(filters.category);
 
-    const applyTypeFilter = (input: TrendCardProps[]) => {
-      if (filters.type === "Redes sociais") return input.filter((t) => ["Reddit", "Bluesky", "Mastodon", "X (Twitter)"].includes(t.platform));
-      if (filters.type === "Imprensa") return input.filter((t) => ["NewsAPI", "NewsData", "GNews", "Bing News", "The Guardian"].includes(t.platform));
-      if (filters.type === "Buscas (Google)") return input.filter((t) => t.platform === "Google Trends");
-      if (filters.type === "Dados oficiais") return input.filter((t) => ["World Bank", "IBGE", "IMF", "FRED", "NOAA"].includes(t.platform));
-      if (filters.type === "Ciência") return input.filter((t) => ["OpenAlex", "arXiv", "PubMed", "Crossref"].includes(t.platform));
-      if (filters.type === "Tech") return input.filter((t) => ["Hacker News", "GitHub", "Stack Overflow"].includes(t.platform));
-      if (filters.type === "Enciclopédia") return input.filter((t) => t.platform === "Wikipedia");
-      if (filters.type === "Conflitos") return input.filter((t) => ["GDELT"].includes(t.platform));
-      return input;
+    const normalizedTrends = trends.map(normalizeTrendForFilter);
+
+    const matchesType = (trend: NormalizedTrendForFilter) => {
+      if (filters.type === "Todas mídias") return true;
+      if (filters.type === "Redes sociais") return ["Reddit", "Bluesky", "Mastodon", "X (Twitter)"].includes(trend.source);
+      if (filters.type === "Imprensa") return ["NewsAPI", "NewsData", "GNews", "Bing News", "The Guardian"].includes(trend.source);
+      if (filters.type === "Buscas (Google)") return trend.source === "Google Trends";
+      if (filters.type === "Dados oficiais") return ["World Bank", "IBGE", "IMF", "FRED", "NOAA"].includes(trend.source);
+      if (filters.type === "Ciência") return ["OpenAlex", "arXiv", "PubMed", "Crossref"].includes(trend.source);
+      if (filters.type === "Tech") return ["Hacker News", "GitHub", "Stack Overflow"].includes(trend.source);
+      if (filters.type === "Enciclopédia") return trend.source === "Wikipedia";
+      if (filters.type === "Conflitos") return trend.source === "GDELT";
+      return true;
     };
 
-    const applyCategoryFilter = (input: TrendCardProps[]) => {
-      if (filters.category === "Todas") return input;
-      return input.filter((t) => {
-        const cat = normalizeText(t.category || "Geral");
-        return cat === filterCategory || cat.startsWith(filterCategory);
-      });
-    };
+    const filtered = normalizedTrends.filter((trend) => {
+      const matchCountry =
+        filters.country === "global" ||
+        !trend.hasExplicitCountry ||
+        trend.normalizedCountry === "GL" ||
+        trend.normalizedCountry === countryFilter;
 
-    const applyCountryFilter = (input: TrendCardProps[]) => {
-      if (!countryFilter || countryFilter === "GL") return input;
-      if (filters.country === "global") return input;
-      return input.filter((t) => normalizeCountryCode(t.countryCode) === countryFilter);
-    };
+      const matchCategory =
+        filters.category === "Todas" ||
+        trend.normalizedCategory === filterCategory ||
+        trend.normalizedCategory.startsWith(filterCategory);
 
-    // Primary filtering — strict, no silent fallbacks that drop country
-    const result = applyCountryFilter(applyCategoryFilter(applyTypeFilter(trends)));
+      const matchSource = matchesType(trend);
 
-    return [...result].sort((a, b) => (b.relevanceScore || 50) - (a.relevanceScore || 50));
+      if (!matchCountry) {
+        console.log("❌ País removido:", trend.title, "país:", trend.countryCode || "global");
+      }
+      if (!matchCategory) {
+        console.log("❌ Categoria removida:", trend.title, "cat:", trend.category || "geral");
+      }
+      if (!matchSource) {
+        console.log("❌ Fonte removida:", trend.title, "fonte:", trend.source || "desconhecido");
+      }
+
+      return matchCountry && matchCategory && matchSource;
+    });
+
+    return [...filtered].sort((a, b) => (b.relevanceScore || 50) - (a.relevanceScore || 50));
   }, [trends, filters]);
 
   useEffect(() => {

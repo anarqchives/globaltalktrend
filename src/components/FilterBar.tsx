@@ -18,6 +18,7 @@ export interface FilterState {
 interface FilterBarProps {
   filters: FilterState;
   onChange: (filters: FilterState) => void;
+  onForceReset?: () => void;
 }
 
 export const countries = [
@@ -94,7 +95,7 @@ export const countries = [
 
 const selectClass = "appearance-none bg-transparent text-foreground text-[13px] md:text-[13px] text-[12px] font-medium pl-3 pr-7 py-2 min-h-[44px] rounded-lg cursor-pointer min-w-0 hover:bg-muted/50 dark:hover:bg-white/5 transition-colors focus:outline-none focus:ring-0";
 
-const FilterBar = ({ filters, onChange }: FilterBarProps) => {
+const FilterBar = ({ filters, onChange, onForceReset }: FilterBarProps) => {
   const { t } = useLanguage();
 
   const update = (key: keyof FilterState, value: string) => {
@@ -199,6 +200,15 @@ const FilterBar = ({ filters, onChange }: FilterBarProps) => {
           </select>
           <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 w-3 h-3 text-muted-foreground pointer-events-none" />
         </div>
+
+        <button
+          onClick={() => onForceReset?.()}
+          className="flex items-center gap-1 px-3 py-2 rounded-lg text-[12px] font-medium text-primary hover:bg-muted/50 transition-colors flex-shrink-0 focus:outline-none"
+          title="Reset forçado"
+        >
+          <RotateCcw className="w-3 h-3" />
+          Reset forçado
+        </button>
 
         {isFiltered && (
           <button

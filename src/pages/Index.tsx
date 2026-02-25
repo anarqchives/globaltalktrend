@@ -398,7 +398,7 @@ const Index = () => {
         onDismissAnomaly={dismissAnomaly}
         onOpenTransparency={() => setTransparencyOpen(true)}
       />
-      <FilterBar filters={filters} onChange={setFilters} />
+      <FilterBar filters={filters} onChange={setFilters} onForceReset={() => setFilters(defaultFilters)} />
 
       <div className="flex-1 overflow-hidden">
         {isMobile ? (
