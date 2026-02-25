@@ -104,8 +104,8 @@ export function useTranslatedTrends(trends: TrendCardProps[], lang: string) {
   }, []);
 
   useEffect(() => {
-    // If language is default (pt) or trends empty, just pass through
-    if (lang === "pt" || trends.length === 0) {
+    // If trends empty, just pass through
+    if (trends.length === 0) {
       setTranslated(trends);
       return;
     }
