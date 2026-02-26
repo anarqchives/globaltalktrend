@@ -5,27 +5,191 @@ import { toast } from "@/hooks/use-toast";
 import { FilterState } from "../components/FilterBar";
 import { categorizeTrend, detectCountryFromContent } from "@/lib/categorize-trend";
 import { useHistoricalTrends } from "./use-historical-trends";
+
 const CACHE_KEY = "gtt_trends_cache";
 const CACHE_TTL = 5 * 60 * 1000; // 5 min
+const PREDICTIVE_CACHE_KEY = "gtt_predictive_cache";
+const SOURCE_HEALTH_KEY = "gtt_source_health";
+
 const STANDARD_CATEGORIES = new Set([
-  "Política",
-  "Entretenimento",
-  "Tecnologia",
-  "Esportes",
-  "Cultura",
-  "Negócios/Finanças",
-  "Ciência",
-  "Saúde",
-  "Clima/Meio Ambiente",
-  "Conflitos/Crises",
-  "Conhecimento",
-  "Geral",
+  "Política", "Entretenimento", "Tecnologia", "Esportes", "Cultura",
+  "Negócios/Finanças", "Ciência", "Saúde", "Clima/Meio Ambiente",
+  "Conflitos/Crises", "Conhecimento", "Geral",
 ]);
 
-type TrendsCachePayload = {
-  ts: number;
-  data: TrendCardProps[];
+// ─── Source Priority Groups ────────────────────────────────────────
+const SOURCE_GROUPS: Record<string, string[]> = {
+  imprensa: ["The Guardian", "NewsAPI", "NewsData", "GNews", "Bing News"],
+  social: ["Reddit", "Bluesky", "Mastodon", "X (Twitter)"],
+  dados: ["World Bank", "IBGE", "IMF", "FRED", "NOAA"],
+  ciencia: ["OpenAlex", "arXiv", "PubMed", "Crossref"],
+  tech: ["Hacker News", "GitHub", "Stack Overflow"],
+  busca: ["Google Trends"],
+  enciclopedia: ["Wikipedia"],
+  conflitos: ["GDELT"],
 };
+
+// ─── Source Health Tracker ──────────────────────────────────────────
+type SourceHealthEntry = { ok: boolean; count: number; lastOk: number; failures: number };
+type SourceHealthMap = Record<string, SourceHealthEntry>;
+
+function loadSourceHealth(): SourceHealthMap {
+  try {
+    const raw = localStorage.getItem(SOURCE_HEALTH_KEY);
+    return raw ? JSON.parse(raw) : {};
+  } catch { return {}; }
+}
+
+function saveSourceHealth(health: SourceHealthMap) {
+  try { localStorage.setItem(SOURCE_HEALTH_KEY, JSON.stringify(health)); } catch {}
+}
+
+function updateSourceHealth(health: SourceHealthMap, platform: string, ok: boolean, count: number): SourceHealthMap {
+  const prev = health[platform] || { ok: false, count: 0, lastOk: 0, failures: 0 };
+  return {
+    ...health,
+    [platform]: {
+      ok,
+      count,
+      lastOk: ok ? Date.now() : prev.lastOk,
+      failures: ok ? 0 : prev.failures + 1,
+    },
+  };
+}
+
+// ─── Predictive Cache ──────────────────────────────────────────────
+type PredictiveCacheEntry = { ts: number; data: TrendCardProps[] };
+type PredictiveCache = Record<string, PredictiveCacheEntry>;
+
+function getPredictiveCacheKey(filters: FilterState): string {
+  return `${filters.country}|${filters.category}|${filters.type}`;
+}
+
+function getTimeSlotKey(): string {
+  const now = new Date();
+  return `${now.getDay()}:${now.getHours()}`;
+}
+
+function loadPredictiveCache(): PredictiveCache {
+  try {
+    const raw = localStorage.getItem(PREDICTIVE_CACHE_KEY);
+    if (!raw) return {};
+    const parsed = JSON.parse(raw) as PredictiveCache;
+    // Prune entries older than 7 days
+    const cutoff = Date.now() - 7 * 24 * 60 * 60 * 1000;
+    const pruned: PredictiveCache = {};
+    for (const [key, entry] of Object.entries(parsed)) {
+      if (entry.ts > cutoff) pruned[key] = entry;
+    }
+    return pruned;
+  } catch { return {}; }
+}
+
+function savePredictiveCache(cache: PredictiveCache) {
+  try {
+    // Keep max 30 entries
+    const entries = Object.entries(cache).sort((a, b) => b[1].ts - a[1].ts).slice(0, 30);
+    localStorage.setItem(PREDICTIVE_CACHE_KEY, JSON.stringify(Object.fromEntries(entries)));
+  } catch {}
+}
+
+function saveToPredictiveCache(filters: FilterState, data: TrendCardProps[]) {
+  if (data.length === 0) return;
+  const cache = loadPredictiveCache();
+  const key = `${getPredictiveCacheKey(filters)}:${getTimeSlotKey()}`;
+  cache[key] = { ts: Date.now(), data: data.slice(0, 30) };
+  savePredictiveCache(cache);
+}
+
+function getFromPredictiveCache(filters: FilterState): TrendCardProps[] | null {
+  const cache = loadPredictiveCache();
+  const filterKey = getPredictiveCacheKey(filters);
+  const timeSlot = getTimeSlotKey();
+  
+  // 1. Try exact match (same filter + same time slot)
+  const exactKey = `${filterKey}:${timeSlot}`;
+  if (cache[exactKey]?.data?.length) return cache[exactKey].data;
+  
+  // 2. Try same filter, any time slot (most recent)
+  const candidates = Object.entries(cache)
+    .filter(([k]) => k.startsWith(filterKey + ":"))
+    .sort((a, b) => b[1].ts - a[1].ts);
+  if (candidates.length > 0) return candidates[0][1].data;
+  
+  return null;
+}
+
+// ─── Contextual Fallback Generator ─────────────────────────────────
+function generateContextualFallback(filters: FilterState): TrendCardProps[] {
+  const now = new Date();
+  const timeStr = `${now.getHours().toString().padStart(2, "0")}:${now.getMinutes().toString().padStart(2, "0")}`;
+  
+  const categoryFallbacks: Record<string, TrendCardProps[]> = {
+    "Política": [
+      { icon: "🏛️", platform: "The Guardian", title: "Eleições e decisões políticas movimentam a semana", category: "Política", time: "recente", volume: "Análise", change: "em alta", changePositive: true, sparkData: [30, 40, 50, 60, 70, 65, 75, 80, 85, 90], details: "Acompanhe os principais movimentos políticos globais.", countryCode: filters.country !== "global" ? filters.country.toUpperCase() : "GL" },
+    ],
+    "Tecnologia": [
+      { icon: "💻", platform: "Hacker News", title: "Novos avanços em IA e desenvolvimento de software", category: "Tecnologia", time: "recente", volume: "Trending", change: "+alto", changePositive: true, sparkData: [20, 35, 45, 55, 60, 70, 80, 85, 90, 95], details: "As principais tendências do mundo tech.", countryCode: "US" },
+    ],
+    "Esportes": [
+      { icon: "⚽", platform: "YouTube", title: "Destaques esportivos da semana", category: "Esportes", time: "recente", volume: "Popular", change: "+trending", changePositive: true, sparkData: [25, 40, 55, 50, 65, 70, 80, 90, 85, 95], details: "Os momentos mais comentados do esporte mundial.", countryCode: filters.country !== "global" ? filters.country.toUpperCase() : "GL" },
+    ],
+    "Ciência": [
+      { icon: "🔬", platform: "OpenAlex", title: "Pesquisas científicas em destaque", category: "Ciência", time: "recente", volume: "Publicações", change: "+novo", changePositive: true, sparkData: [10, 15, 20, 30, 40, 50, 55, 60, 70, 75], details: "Últimas publicações e descobertas científicas.", countryCode: "US", trustBadge: "scientific" as any },
+    ],
+    "Entretenimento": [
+      { icon: "🎬", platform: "YouTube", title: "Entretenimento: os conteúdos mais assistidos", category: "Entretenimento", time: "recente", volume: "Viral", change: "+trending", changePositive: true, sparkData: [30, 50, 60, 70, 75, 85, 90, 88, 92, 95], details: "O que está bombando no entretenimento.", countryCode: filters.country !== "global" ? filters.country.toUpperCase() : "GL" },
+    ],
+    "Saúde": [
+      { icon: "🏥", platform: "PubMed", title: "Saúde e bem-estar: tendências globais", category: "Saúde", time: "recente", volume: "Pesquisa", change: "+novo", changePositive: true, sparkData: [15, 20, 25, 35, 40, 50, 55, 60, 65, 70], details: "Acompanhe as últimas tendências em saúde.", countryCode: "US", trustBadge: "scientific" as any },
+    ],
+  };
+
+  const countryFallbacks: Record<string, TrendCardProps[]> = {
+    BR: [
+      { icon: "🇧🇷", platform: "Google Trends", title: "O que o Brasil está pesquisando agora", category: "Geral", time: timeStr, volume: "Alto", change: "+trending", changePositive: true, sparkData: [30, 45, 55, 60, 70, 80, 85, 90, 92, 95], details: "As buscas mais populares no Brasil neste momento.", countryCode: "BR" },
+    ],
+    US: [
+      { icon: "🇺🇸", platform: "Google Trends", title: "Top trending topics in the United States", category: "Geral", time: timeStr, volume: "High", change: "+trending", changePositive: true, sparkData: [25, 40, 50, 65, 70, 80, 85, 88, 92, 96], details: "What Americans are searching for right now.", countryCode: "US" },
+    ],
+  };
+
+  // Build fallback list based on active filters
+  const results: TrendCardProps[] = [];
+
+  // Add category-specific fallback
+  if (filters.category !== "Todas" && categoryFallbacks[filters.category]) {
+    results.push(...categoryFallbacks[filters.category]);
+  }
+
+  // Add country-specific fallback
+  const cc = filters.country !== "global" ? filters.country.toUpperCase() : "";
+  if (cc && countryFallbacks[cc]) {
+    results.push(...countryFallbacks[cc]);
+  }
+
+  // Always add generic fallbacks if we don't have enough
+  if (results.length < 3) {
+    const genericFallbacks: TrendCardProps[] = [
+      { icon: "🌍", platform: "Google Trends", title: "Tendências globais em tempo real", category: "Geral", time: timeStr, volume: "Global", change: "+ativo", changePositive: true, sparkData: [20, 30, 40, 50, 60, 70, 75, 80, 85, 90], details: "Fontes temporariamente limitadas. Mostrando dados contextuais. Atualize em breve para conteúdo ao vivo.", countryCode: "GL" },
+      { icon: "📰", platform: "The Guardian", title: "Notícias internacionais em destaque", category: "Política", time: timeStr, volume: "Destaque", change: "+novo", changePositive: true, sparkData: [15, 25, 35, 50, 55, 65, 75, 80, 85, 88], details: "Acompanhe as manchetes mais relevantes do momento.", countryCode: "GB", trustBadge: "verified" as any },
+      { icon: "💬", platform: "Reddit", title: "Discussões mais populares da comunidade", category: "Geral", time: timeStr, volume: "Popular", change: "+hot", changePositive: true, sparkData: [10, 20, 35, 45, 55, 60, 70, 80, 85, 90], details: "Os tópicos mais discutidos nas redes sociais.", countryCode: "US" },
+    ];
+    for (const fb of genericFallbacks) {
+      if (results.length >= 5) break;
+      results.push(fb);
+    }
+  }
+
+  // Add visual indicator that these are fallback
+  return results.map(t => ({
+    ...t,
+    details: `${t.details || ""}\n\n💡 Conteúdo contextual — dados ao vivo serão carregados na próxima atualização.`,
+  }));
+}
+
+// ─── Common types and helpers ──────────────────────────────────────
+type TrendsCachePayload = { ts: number; data: TrendCardProps[] };
 
 function normalizeText(value?: string): string {
   return (value || "").normalize("NFC").toLowerCase().trim();
@@ -49,12 +213,12 @@ function normalizeCategory(title: string, platform: string, category?: string): 
 
 function inferTypeFromSource(source?: string): string {
   const platform = (source || "").trim();
-  if (["Reddit", "Bluesky", "Mastodon", "X (Twitter)"].includes(platform)) return "Redes sociais";
-  if (["NewsAPI", "NewsData", "GNews", "Bing News", "The Guardian"].includes(platform)) return "Imprensa";
+  if (SOURCE_GROUPS.social.includes(platform)) return "Redes sociais";
+  if (SOURCE_GROUPS.imprensa.includes(platform)) return "Imprensa";
   if (platform === "Google Trends") return "Buscas (Google)";
-  if (["World Bank", "IBGE", "IMF", "FRED", "NOAA"].includes(platform)) return "Dados oficiais";
-  if (["OpenAlex", "arXiv", "PubMed", "Crossref"].includes(platform)) return "Ciência";
-  if (["Hacker News", "GitHub", "Stack Overflow"].includes(platform)) return "Tech";
+  if (SOURCE_GROUPS.dados.includes(platform)) return "Dados oficiais";
+  if (SOURCE_GROUPS.ciencia.includes(platform)) return "Ciência";
+  if (SOURCE_GROUPS.tech.includes(platform)) return "Tech";
   if (platform === "Wikipedia") return "Enciclopédia";
   if (platform === "GDELT") return "Conflitos";
   return "desconhecido";
@@ -92,13 +256,22 @@ function getCachedTrends(): TrendsCachePayload | null {
     const parsed = JSON.parse(raw) as TrendsCachePayload;
     if (!parsed?.ts || !Array.isArray(parsed?.data)) return null;
     if (Date.now() - parsed.ts > CACHE_TTL) {
-      sessionStorage.removeItem(CACHE_KEY);
+      // Don't remove — keep as stale fallback
       return null;
     }
     return parsed;
   } catch {
     return null;
   }
+}
+
+function getStaleCachedTrends(): TrendCardProps[] {
+  try {
+    const raw = sessionStorage.getItem(CACHE_KEY);
+    if (!raw) return [];
+    const parsed = JSON.parse(raw) as TrendsCachePayload;
+    return parsed?.data || [];
+  } catch { return []; }
 }
 
 function setCachedTrends(data: TrendCardProps[]) {
@@ -118,225 +291,18 @@ async function withTimeout<T>(promise: Promise<T>, timeoutMs: number, fallback: 
   return result;
 }
 
+// ─── Fallback Data ─────────────────────────────────────────────────
 const fallbackData: TrendCardProps[] = [
-  {
-    icon: "🔍",
-    platform: "Google Trends",
-    title: "Eleições 2026: pesquisas apontam novo cenário",
-    category: "Política",
-    time: "há 12 min",
-    volume: "1.2M buscas",
-    change: "+340%",
-    changePositive: true,
-    sparkData: [10, 15, 12, 25, 40, 65, 80, 95, 88, 92],
-    details: "Volume de buscas disparou nas últimas horas.",
-    countryCode: "BR",
-  },
-  {
-    icon: "▶",
-    platform: "YouTube",
-    title: "Nova descoberta científica surpreende pesquisadores",
-    category: "Ciência",
-    time: "há 25 min",
-    volume: "890K views",
-    change: "+180%",
-    changePositive: true,
-    sparkData: [20, 30, 25, 45, 60, 75, 85, 90, 88, 95],
-    details: "Vídeo viral sobre avanço na medicina genética.",
-    countryCode: "US",
-  },
-  {
-    icon: "💬",
-    platform: "Reddit",
-    title: "Inteligência artificial e o futuro do trabalho",
-    category: "Tecnologia",
-    time: "há 30 min",
-    volume: "45K upvotes",
-    change: "+92%",
-    changePositive: true,
-    sparkData: [15, 25, 35, 50, 55, 70, 80, 75, 85, 90],
-    details: "Discussão sobre impactos da IA no mercado de trabalho.",
-    countryCode: "US",
-  },
-  {
-    icon: "📰",
-    platform: "The Guardian",
-    title: "Climate summit reaches historic agreement",
-    category: "Meio Ambiente",
-    time: "há 45 min",
-    volume: "320K leituras",
-    change: "+210%",
-    changePositive: true,
-    sparkData: [5, 10, 20, 35, 55, 70, 80, 90, 88, 92],
-    details: "Líderes mundiais chegam a acordo histórico sobre clima.",
-    countryCode: "GB",
-  },
-  {
-    icon: "🔶",
-    platform: "Hacker News",
-    title: "Open source project breaks new ground in AI safety",
-    category: "Tecnologia",
-    time: "há 1h",
-    volume: "580 pts",
-    change: "+95 comments",
-    changePositive: true,
-    sparkData: [10, 20, 30, 40, 50, 60, 55, 70, 65, 80],
-    details: "Novo framework de segurança para modelos de linguagem.",
-    countryCode: "US",
-  },
-  {
-    icon: "📊",
-    platform: "World Bank",
-    title: "PIB global cresce 3.2% no primeiro trimestre",
-    category: "Economia",
-    time: "há 2h",
-    volume: "Relatório oficial",
-    change: "+0.4%",
-    changePositive: true,
-    sparkData: [40, 42, 45, 48, 50, 52, 55, 58, 60, 62],
-    details: "Dados preliminares indicam crescimento acima do esperado.",
-    countryCode: "US",
-    trustBadge: "official" as any,
-  },
-  {
-    icon: "🦋",
-    platform: "Bluesky",
-    title: "Debate sobre regulação de redes sociais ganha força",
-    category: "Política",
-    time: "há 1h",
-    volume: "12K likes",
-    change: "+trending",
-    changePositive: true,
-    sparkData: [15, 25, 30, 45, 55, 65, 70, 75, 80, 85],
-    details: "Usuários discutem propostas de regulamentação digital.",
-    countryCode: "US",
-  },
-  {
-    icon: "📚",
-    platform: "Wikipedia",
-    title: "Artigo sobre exploração espacial bate recorde de acessos",
-    category: "Ciência",
-    time: "há 3h",
-    volume: "2.1M views",
-    change: "+450%",
-    changePositive: true,
-    sparkData: [5, 10, 15, 30, 50, 70, 85, 90, 95, 98],
-    details: "Interesse público cresce após anúncio de missão lunar.",
-    countryCode: "US",
-  },
-  {
-    icon: "📱",
-    platform: "Google Trends",
-    title: "iPhone 18 Pro: rumores de design dominam buscas",
-    category: "Tecnologia",
-    time: "há 40 min",
-    volume: "528K buscas",
-    change: "+220%",
-    changePositive: true,
-    sparkData: [12, 18, 25, 35, 48, 62, 74, 86, 92, 96],
-    details: "Crescimento acelerado de interesse por vazamentos do novo modelo.",
-    countryCode: "US",
-  },
-  {
-    icon: "⚽",
-    platform: "YouTube",
-    title: "Final Champions League: números e melhores momentos",
-    category: "Esportes",
-    time: "há 55 min",
-    volume: "3.2M views",
-    change: "+310%",
-    changePositive: true,
-    sparkData: [18, 26, 40, 58, 70, 82, 88, 93, 96, 99],
-    details: "Pico global de visualizações após a grande final.",
-    countryCode: "GB",
-  },
-];
-
-const FORCED_FALLBACK_TRENDS: TrendCardProps[] = [
-  {
-    icon: "📰",
-    platform: "The Guardian",
-    title: "The Guardian - Teste Política UK",
-    category: "Política",
-    time: "agora",
-    volume: "12.4K",
-    change: "+22%",
-    changePositive: true,
-    sparkData: [10, 20, 28, 31, 40, 52, 60, 64, 70, 74],
-    details: "Fallback forçado de diagnóstico.",
-    countryCode: "GB",
-    sourceUrl: "https://www.theguardian.com",
-  },
-  {
-    icon: "📰",
-    platform: "The Guardian",
-    title: "The Guardian - Teste Economia UK",
-    category: "Negócios/Finanças",
-    time: "agora",
-    volume: "8.1K",
-    change: "+14%",
-    changePositive: true,
-    sparkData: [8, 14, 21, 24, 28, 33, 40, 48, 53, 59],
-    details: "Fallback forçado de diagnóstico.",
-    countryCode: "GB",
-    sourceUrl: "https://www.theguardian.com",
-  },
-  {
-    icon: "📰",
-    platform: "The Guardian",
-    title: "The Guardian - Teste Tecnologia UK",
-    category: "Tecnologia",
-    time: "agora",
-    volume: "15.7K",
-    change: "+35%",
-    changePositive: true,
-    sparkData: [7, 11, 18, 26, 31, 39, 47, 58, 66, 72],
-    details: "Fallback forçado de diagnóstico.",
-    countryCode: "GB",
-    sourceUrl: "https://www.theguardian.com",
-  },
-  {
-    icon: "📰",
-    platform: "The Guardian",
-    title: "The Guardian - Teste Ciência UK",
-    category: "Ciência",
-    time: "agora",
-    volume: "6.9K",
-    change: "+9%",
-    changePositive: true,
-    sparkData: [9, 12, 14, 16, 21, 26, 31, 36, 42, 49],
-    details: "Fallback forçado de diagnóstico.",
-    countryCode: "GB",
-    sourceUrl: "https://www.theguardian.com",
-  },
-  {
-    icon: "📰",
-    platform: "The Guardian",
-    title: "The Guardian - Teste Saúde UK",
-    category: "Saúde",
-    time: "agora",
-    volume: "9.3K",
-    change: "+17%",
-    changePositive: true,
-    sparkData: [6, 10, 13, 15, 19, 23, 29, 34, 39, 45],
-    details: "Fallback forçado de diagnóstico.",
-    countryCode: "GB",
-    sourceUrl: "https://www.theguardian.com",
-  },
-  {
-    icon: "📰",
-    platform: "The Guardian",
-    title: "The Guardian - Teste Clima UK",
-    category: "Clima/Meio Ambiente",
-    time: "agora",
-    volume: "11.0K",
-    change: "+20%",
-    changePositive: true,
-    sparkData: [11, 15, 18, 20, 25, 32, 37, 44, 51, 58],
-    details: "Fallback forçado de diagnóstico.",
-    countryCode: "GB",
-    sourceUrl: "https://www.theguardian.com",
-  },
+  { icon: "🔍", platform: "Google Trends", title: "Eleições 2026: pesquisas apontam novo cenário", category: "Política", time: "há 12 min", volume: "1.2M buscas", change: "+340%", changePositive: true, sparkData: [10, 15, 12, 25, 40, 65, 80, 95, 88, 92], details: "Volume de buscas disparou nas últimas horas.", countryCode: "BR" },
+  { icon: "▶", platform: "YouTube", title: "Nova descoberta científica surpreende pesquisadores", category: "Ciência", time: "há 25 min", volume: "890K views", change: "+180%", changePositive: true, sparkData: [20, 30, 25, 45, 60, 75, 85, 90, 88, 95], details: "Vídeo viral sobre avanço na medicina genética.", countryCode: "US" },
+  { icon: "💬", platform: "Reddit", title: "Inteligência artificial e o futuro do trabalho", category: "Tecnologia", time: "há 30 min", volume: "45K upvotes", change: "+92%", changePositive: true, sparkData: [15, 25, 35, 50, 55, 70, 80, 75, 85, 90], details: "Discussão sobre impactos da IA no mercado de trabalho.", countryCode: "US" },
+  { icon: "📰", platform: "The Guardian", title: "Climate summit reaches historic agreement", category: "Meio Ambiente", time: "há 45 min", volume: "320K leituras", change: "+210%", changePositive: true, sparkData: [5, 10, 20, 35, 55, 70, 80, 90, 88, 92], details: "Líderes mundiais chegam a acordo histórico sobre clima.", countryCode: "GB" },
+  { icon: "🔶", platform: "Hacker News", title: "Open source project breaks new ground in AI safety", category: "Tecnologia", time: "há 1h", volume: "580 pts", change: "+95 comments", changePositive: true, sparkData: [10, 20, 30, 40, 50, 60, 55, 70, 65, 80], details: "Novo framework de segurança para modelos de linguagem.", countryCode: "US" },
+  { icon: "📊", platform: "World Bank", title: "PIB global cresce 3.2% no primeiro trimestre", category: "Economia", time: "há 2h", volume: "Relatório oficial", change: "+0.4%", changePositive: true, sparkData: [40, 42, 45, 48, 50, 52, 55, 58, 60, 62], details: "Dados preliminares indicam crescimento acima do esperado.", countryCode: "US", trustBadge: "official" as any },
+  { icon: "🦋", platform: "Bluesky", title: "Debate sobre regulação de redes sociais ganha força", category: "Política", time: "há 1h", volume: "12K likes", change: "+trending", changePositive: true, sparkData: [15, 25, 30, 45, 55, 65, 70, 75, 80, 85], details: "Usuários discutem propostas de regulamentação digital.", countryCode: "US" },
+  { icon: "📚", platform: "Wikipedia", title: "Artigo sobre exploração espacial bate recorde de acessos", category: "Ciência", time: "há 3h", volume: "2.1M views", change: "+450%", changePositive: true, sparkData: [5, 10, 15, 30, 50, 70, 85, 90, 95, 98], details: "Interesse público cresce após anúncio de missão lunar.", countryCode: "US" },
+  { icon: "📱", platform: "Google Trends", title: "iPhone 18 Pro: rumores de design dominam buscas", category: "Tecnologia", time: "há 40 min", volume: "528K buscas", change: "+220%", changePositive: true, sparkData: [12, 18, 25, 35, 48, 62, 74, 86, 92, 96], details: "Crescimento acelerado de interesse por vazamentos do novo modelo.", countryCode: "US" },
+  { icon: "⚽", platform: "YouTube", title: "Final Champions League: números e melhores momentos", category: "Esportes", time: "há 55 min", volume: "3.2M views", change: "+310%", changePositive: true, sparkData: [18, 26, 40, 58, 70, 82, 88, 93, 96, 99], details: "Pico global de visualizações após a grande final.", countryCode: "GB" },
 ];
 
 function generateHistorical(baseValue: number, label: string) {
@@ -353,6 +319,7 @@ function generateHistorical(baseValue: number, label: string) {
   return { historicalData: data, metricLabel: label };
 }
 
+// ─── Client-side fetchers ──────────────────────────────────────────
 async function fetchRedditClientSide(): Promise<TrendCardProps[]> {
   try {
     const res = await fetch("https://www.reddit.com/r/all/hot.json?limit=8", {
@@ -365,15 +332,11 @@ async function fetchRedditClientSide(): Promise<TrendCardProps[]> {
       const ups = post.ups || 0;
       const comments = post.num_comments || 0;
       const { historicalData, metricLabel } = generateHistorical(ups / 24, "upvotes/hora");
-      // Extract Reddit thumbnail
       const rawThumb = post.thumbnail;
       const thumbnail = rawThumb && rawThumb.startsWith("http") ? rawThumb : "";
       return {
-        icon: "💬",
-        platform: "Reddit",
-        title: post.title?.slice(0, 100) || "Sem título",
-        category: `r/${post.subreddit}`,
-        time: "agora",
+        icon: "💬", platform: "Reddit", title: post.title?.slice(0, 100) || "Sem título",
+        category: `r/${post.subreddit}`, time: "agora",
         volume: ups >= 1000 ? `${(ups / 1000).toFixed(1)}K` : `${ups}`,
         change: `+${post.upvote_ratio ? Math.round(post.upvote_ratio * 100) : 0}%`,
         changePositive: true,
@@ -382,22 +345,17 @@ async function fetchRedditClientSide(): Promise<TrendCardProps[]> {
         description: post.selftext?.slice(0, 150) || "",
         commentCount: comments,
         sourceUrl: `https://www.reddit.com${post.permalink}`,
-        thumbnail,
-        publishedAt: post.created_utc ? new Date(post.created_utc * 1000).toISOString() : "",
-        historicalData,
-        metricLabel,
+        thumbnail, publishedAt: post.created_utc ? new Date(post.created_utc * 1000).toISOString() : "",
+        historicalData, metricLabel,
       };
     });
-  } catch {
-    return [];
-  }
+  } catch { return []; }
 }
 
 async function fetchBlueskyClientSide(): Promise<TrendCardProps[]> {
   try {
     const res = await fetch("https://public.api.bsky.app/xrpc/app.bsky.feed.getPopularFeedGenerators?limit=8");
     if (!res.ok) {
-      // Fallback: fetch from discover feed
       const res2 = await fetch("https://public.api.bsky.app/xrpc/app.bsky.unspecced.getPopularFeedGenerators?limit=8");
       if (!res2.ok) return [];
       const data2 = await res2.json();
@@ -405,20 +363,14 @@ async function fetchBlueskyClientSide(): Promise<TrendCardProps[]> {
         const likes = feed.likeCount || 0;
         const { historicalData, metricLabel } = generateHistorical(likes / 24, "likes/hora");
         return {
-          icon: "🦋",
-          platform: "Bluesky",
-          title: feed.displayName || "Feed popular",
-          category: "Social",
-          time: "agora",
+          icon: "🦋", platform: "Bluesky", title: feed.displayName || "Feed popular",
+          category: "Social", time: "agora",
           volume: likes >= 1000 ? `${(likes / 1000).toFixed(1)}K likes` : `${likes} likes`,
-          change: "+trending",
-          changePositive: true,
+          change: "+trending", changePositive: true,
           sparkData: Array.from({ length: 10 }, () => Math.floor(Math.random() * 80 + 20)),
           details: feed.description?.slice(0, 200) || "",
           sourceUrl: feed.uri ? `https://bsky.app/profile/${feed.creator?.handle || ""}` : "",
-          countryCode: "US",
-          historicalData,
-          metricLabel,
+          countryCode: "US", historicalData, metricLabel,
         };
       });
     }
@@ -427,25 +379,17 @@ async function fetchBlueskyClientSide(): Promise<TrendCardProps[]> {
       const likes = feed.likeCount || 0;
       const { historicalData, metricLabel } = generateHistorical(likes / 24, "likes/hora");
       return {
-        icon: "🦋",
-        platform: "Bluesky",
-        title: feed.displayName || "Feed popular",
-        category: "Social",
-        time: "agora",
+        icon: "🦋", platform: "Bluesky", title: feed.displayName || "Feed popular",
+        category: "Social", time: "agora",
         volume: likes >= 1000 ? `${(likes / 1000).toFixed(1)}K likes` : `${likes} likes`,
-        change: "+trending",
-        changePositive: true,
+        change: "+trending", changePositive: true,
         sparkData: Array.from({ length: 10 }, () => Math.floor(Math.random() * 80 + 20)),
         details: feed.description?.slice(0, 200) || "",
         sourceUrl: feed.uri ? `https://bsky.app/profile/${feed.creator?.handle || ""}` : "",
-        countryCode: "US",
-        historicalData,
-        metricLabel,
+        countryCode: "US", historicalData, metricLabel,
       };
     });
-  } catch {
-    return [];
-  }
+  } catch { return []; }
 }
 
 async function fetchMastodonClientSide(): Promise<TrendCardProps[]> {
@@ -457,30 +401,21 @@ async function fetchMastodonClientSide(): Promise<TrendCardProps[]> {
       const reblogs = status.reblogs_count || 0;
       const favs = status.favourites_count || 0;
       const { historicalData, metricLabel } = generateHistorical((reblogs + favs) / 24, "interações/hora");
-      // Strip HTML tags
       const content = (status.content || "").replace(/<[^>]*>/g, "").slice(0, 100);
       return {
-        icon: "🐘",
-        platform: "Mastodon",
-        title: content || "Post em alta",
-        category: "Fediverso",
-        time: "agora",
+        icon: "🐘", platform: "Mastodon", title: content || "Post em alta",
+        category: "Fediverso", time: "agora",
         volume: `${reblogs + favs >= 1000 ? `${((reblogs + favs) / 1000).toFixed(1)}K` : reblogs + favs} interações`,
-        change: `+${reblogs} boosts`,
-        changePositive: true,
+        change: `+${reblogs} boosts`, changePositive: true,
         sparkData: Array.from({ length: 10 }, () => Math.floor(Math.random() * 80 + 20)),
-        details: content,
-        sourceUrl: status.url || status.uri || "",
-        countryCode: "US",
-        historicalData,
-        metricLabel,
+        details: content, sourceUrl: status.url || status.uri || "",
+        countryCode: "US", historicalData, metricLabel,
       };
     });
-  } catch {
-    return [];
-  }
+  } catch { return []; }
 }
 
+// ─── Main Hook ─────────────────────────────────────────────────────
 export function useTrends(filters: FilterState, onTrendCountsChange: (counts: Record<string, number>) => void, lang: string = "pt") {
   const cached = getCachedTrends();
   const cacheAgeMs = cached ? Date.now() - cached.ts : Number.POSITIVE_INFINITY;
@@ -495,6 +430,7 @@ export function useTrends(filters: FilterState, onTrendCountsChange: (counts: Re
     try {
       console.log("📥 Iniciando carregamento de trends");
       setLoading(true);
+      let health = loadSourceHealth();
 
       const invokeFunctionWithLogs = async (
         sourceName: string,
@@ -509,6 +445,20 @@ export function useTrends(filters: FilterState, onTrendCountsChange: (counts: Re
         );
         const count = result.data?.trends?.length || 0;
         console.log(`✅ ${sourceName} retornou:`, count, "itens");
+        
+        // Track health per source
+        const platforms: string[] = (result.data?.trends || []).map((t: any) => String(t.platform || ""));
+        const uniquePlatforms = Array.from(new Set(platforms));
+        if (uniquePlatforms.length > 0) {
+          for (const p of uniquePlatforms) {
+            const pCount = platforms.filter((x: string) => x === p).length;
+            health = updateSourceHealth(health, p, pCount > 0, pCount);
+          }
+        } else {
+          // Mark function-level failure
+          health = updateSourceHealth(health, sourceName, false, 0);
+        }
+        
         return result;
       };
 
@@ -520,6 +470,7 @@ export function useTrends(filters: FilterState, onTrendCountsChange: (counts: Re
         console.log(`🔍 Buscando ${sourceName}...`);
         const result = await withTimeout(fetchPromise, timeoutMs, [] as TrendCardProps[]);
         console.log(`✅ ${sourceName} retornou:`, result.length, "itens");
+        health = updateSourceHealth(health, sourceName, result.length > 0, result.length);
         return result;
       };
 
@@ -534,48 +485,52 @@ export function useTrends(filters: FilterState, onTrendCountsChange: (counts: Re
         fetchClientSourceWithLogs("Mastodon", fetchMastodonClientSide()),
       ]);
 
+      // Save health state
+      saveSourceHealth(health);
+
       const edgeTrends: TrendCardProps[] = edgeResult.data?.trends || [];
       const extraTrends: TrendCardProps[] = extraResult.data?.trends || [];
       const extraSourcesTrends: TrendCardProps[] = extraSourcesResult.data?.trends || [];
       const socialTrends: TrendCardProps[] = socialTrendsResult.data?.trends || [];
       const openDataTrends: TrendCardProps[] = openDataResult.data?.trends || [];
       const rawTrends = [...edgeTrends, ...extraTrends, ...extraSourcesTrends, ...socialTrends, ...openDataTrends, ...redditItems, ...blueskyItems, ...mastodonItems];
+      
       console.log("📦 Total de trends combinadas:", rawTrends.length);
+
+      // If all live sources failed, try stale cache before fallback
+      if (rawTrends.length === 0) {
+        const stale = getStaleCachedTrends();
+        if (stale.length > 0) {
+          console.log("♻️ Usando cache expirado como fallback:", stale.length, "itens");
+          setTrends(stale);
+          setLoading(false);
+          setIsFirstLoad(false);
+          return;
+        }
+      }
+
       // Apply unified categorization, normalization and trust badges
       const allTrends = rawTrends.map((t) => {
         const category = normalizeCategory(t.title || "Sem título", t.platform || "Unknown", t.category);
-        // Multi-layer country detection: content keywords > source mapping > existing code
-        const detectedCountry = detectCountryFromContent(
-          t.title || "",
-          t.platform || "Unknown",
-          t.details || t.description || "",
-          t.countryCode
-        );
+        const detectedCountry = detectCountryFromContent(t.title || "", t.platform || "Unknown", t.details || t.description || "", t.countryCode);
         const countryCode = normalizeCountryCode(detectedCountry || t.countryCode);
 
-        // Assign trust badge based on platform
         let trustBadge = t.trustBadge;
-         if (!trustBadge) {
-          if (["World Bank", "IBGE", "IMF", "FRED", "NOAA"].includes(t.platform)) trustBadge = "official";
-          else if (["OpenAlex", "arXiv", "PubMed", "Crossref"].includes(t.platform)) trustBadge = "scientific";
+        if (!trustBadge) {
+          if (SOURCE_GROUPS.dados.includes(t.platform)) trustBadge = "official";
+          else if (SOURCE_GROUPS.ciencia.includes(t.platform)) trustBadge = "scientific";
           else if (["The Guardian", "BBC", "Reuters"].includes(t.platform)) trustBadge = "international";
           else if (["NewsAPI", "NewsData", "GNews", "Bing News"].includes(t.platform)) trustBadge = "press";
           else if (t.platform === "GDELT") trustBadge = "verified";
         }
 
-        return {
-          ...t,
-          title: (t.title || "Sem título").trim(),
-          platform: t.platform || "Unknown",
-          category,
-          countryCode,
-          trustBadge,
-        };
+        return { ...t, title: (t.title || "Sem título").trim(), platform: t.platform || "Unknown", category, countryCode, trustBadge };
       });
+
       // Merge with historical 24h trends from snapshots
       const historicalTrends = await withTimeout(fetchHistorical(), 5000, []);
-      
-      // Deduplicate: by normalized title (cross-source dedup)
+
+      // Deduplicate
       const seenTitles = new Set<string>();
       const deduped = allTrends.filter(t => {
         const key = t.title.toLowerCase().trim().slice(0, 80);
@@ -584,37 +539,29 @@ export function useTrends(filters: FilterState, onTrendCountsChange: (counts: Re
         return true;
       });
 
-      // Merge with historical, deduplicating those too
       const liveTitleSet = new Set(deduped.map(t => `${t.title}||${t.platform}`));
       const uniqueHistorical = historicalTrends.filter(h => !liveTitleSet.has(`${h.title}||${h.platform}`));
-      
-      // Add relevance scores to live trends (they get a boost for being current)
+
       const scoredLive = deduped.map(t => ({
         ...t,
-        relevanceScore: t.relevanceScore ?? 80 + Math.random() * 20, // Live trends get high scores
+        relevanceScore: t.relevanceScore ?? 80 + Math.random() * 20,
         firstSeenAt: t.firstSeenAt || new Date().toISOString(),
       }));
 
-      // Combine: live first, then historical fill
       const combinedTrends = [...scoredLive, ...uniqueHistorical];
 
-      const pressPlatforms = ["NewsAPI", "NewsData", "GNews", "Bing News", "The Guardian"];
+      // Check press availability
+      const pressPlatforms = SOURCE_GROUPS.imprensa;
       const imprensaData = combinedTrends.filter((trend) => pressPlatforms.includes(trend.platform));
       if (imprensaData.length === 0) {
         console.log("📰 Imprensa sem dados - mostrando aviso");
         combinedTrends.unshift({
-          icon: "📰",
-          platform: "The Guardian",
+          icon: "📰", platform: "The Guardian",
           title: "Fontes de imprensa temporariamente indisponíveis",
-          category: "Geral",
-          time: "agora",
-          volume: "Sistema",
-          change: "sem dados",
-          changePositive: false,
-          sparkData: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+          category: "Geral", time: "agora", volume: "Sistema", change: "sem dados",
+          changePositive: false, sparkData: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
           details: "The Guardian e outras fontes podem estar com limite de API. Tente novamente mais tarde.",
-          countryCode: "GL",
-          trustBadge: "verified",
+          countryCode: "GL", trustBadge: "verified",
         });
       }
 
@@ -624,19 +571,23 @@ export function useTrends(filters: FilterState, onTrendCountsChange: (counts: Re
         const now = new Date();
         setLastUpdated(now);
 
-        // Track source status for transparency panel
+        // Track source status
         const statusMap: Record<string, { ok: boolean; count: number; lastUpdate: Date }> = {};
         const platformCounts: Record<string, number> = {};
         for (const t of combinedTrends) {
           platformCounts[t.platform] = (platformCounts[t.platform] || 0) + 1;
         }
-        const allPlatforms = ["YouTube", "Google Trends", "Reddit", "Bluesky", "Mastodon", "The Guardian", "Hacker News", "Wikipedia", "Stack Overflow", "GitHub", "NewsAPI", "World Bank", "IBGE", "OpenAlex", "arXiv", "PubMed", "IMF", "FRED", "NOAA", "GDELT", "Crossref"];
+        const allPlatforms = [
+          ...SOURCE_GROUPS.imprensa, ...SOURCE_GROUPS.social, ...SOURCE_GROUPS.dados,
+          ...SOURCE_GROUPS.ciencia, ...SOURCE_GROUPS.tech, ...SOURCE_GROUPS.busca,
+          ...SOURCE_GROUPS.enciclopedia, ...SOURCE_GROUPS.conflitos,
+          "YouTube",
+        ];
         for (const p of allPlatforms) {
           statusMap[p] = { ok: (platformCounts[p] || 0) > 0, count: platformCounts[p] || 0, lastUpdate: now };
         }
         setSourcesStatus(statusMap);
 
-        // Console monitoring log
         console.log('🔄 Atualização:', {
           timestamp: now.toLocaleTimeString(),
           live: allTrends.length,
@@ -644,27 +595,29 @@ export function useTrends(filters: FilterState, onTrendCountsChange: (counts: Re
           total: combinedTrends.length,
           fontes: [...new Set(combinedTrends.map(t => t.platform))],
           porFonte: platformCounts,
+          healthSummary: Object.entries(health).filter(([, v]) => (v as SourceHealthEntry).failures > 0).map(([k, v]) => `${k}: ${(v as SourceHealthEntry).failures} falhas`),
         });
 
-        // Save snapshots for critical moment detection (fire & forget)
+        // Save snapshots
         supabase.functions.invoke("save-trend-snapshots", {
           body: { trends: allTrends.slice(0, 120) },
         }).catch(() => {});
+
         if (!isFirstLoad) {
           toast({ title: "✅ Atualizado", description: `${combinedTrends.length} trends (${allTrends.length} ao vivo + ${uniqueHistorical.length} históricas)` });
         }
         setIsFirstLoad(false);
       } else {
-        // If all APIs returned empty, use fallback data so timeline is never blank
         console.warn("All data sources returned empty, using fallback data");
         setTrends(fallbackData);
         setIsFirstLoad(false);
       }
     } catch (e) {
       console.error("Fetch error:", e);
-      // On error, ensure fallback data is shown
       if (trends.length <= 1) {
-        setTrends(fallbackData);
+        // Try stale cache before generic fallback
+        const stale = getStaleCachedTrends();
+        setTrends(stale.length > 0 ? stale : fallbackData);
       }
     } finally {
       setLoading(false);
@@ -679,7 +632,6 @@ export function useTrends(filters: FilterState, onTrendCountsChange: (counts: Re
       intervalId = window.setInterval(fetchTrends, 15 * 60 * 1000);
     };
 
-    // Listen for manual/countdown-triggered refreshes
     const handleTrendRefresh = () => fetchTrends();
     window.addEventListener("trend-refresh", handleTrendRefresh);
 
@@ -699,17 +651,18 @@ export function useTrends(filters: FilterState, onTrendCountsChange: (counts: Re
     };
   }, [fetchTrends, cacheAgeMs]);
 
+  // Forced fallback after 5s if still empty
   useEffect(() => {
     const timer = window.setTimeout(() => {
       if (!loading && trends.length === 0) {
         console.log("⚠️ Usando fallback - sem dados reais");
-        setTrends(FORCED_FALLBACK_TRENDS);
+        setTrends(fallbackData);
       }
     }, 5000);
-
     return () => window.clearTimeout(timer);
   }, [loading, trends.length]);
 
+  // ─── Filtered Trends with Smart Fallback ─────────────────────────
   const filteredTrends = useMemo(() => {
     const countryFilter = normalizeCountryCode(filters.country) || (filters.country === "global" ? "GL" : undefined);
     const filterCategory = normalizeText(filters.category);
@@ -718,12 +671,12 @@ export function useTrends(filters: FilterState, onTrendCountsChange: (counts: Re
 
     const matchesType = (trend: NormalizedTrendForFilter) => {
       if (filters.type === "Todas mídias") return true;
-      if (filters.type === "Redes sociais") return ["Reddit", "Bluesky", "Mastodon", "X (Twitter)"].includes(trend.source);
-      if (filters.type === "Imprensa") return ["NewsAPI", "NewsData", "GNews", "Bing News", "The Guardian"].includes(trend.source);
+      if (filters.type === "Redes sociais") return SOURCE_GROUPS.social.includes(trend.source);
+      if (filters.type === "Imprensa") return SOURCE_GROUPS.imprensa.includes(trend.source);
       if (filters.type === "Buscas (Google)") return trend.source === "Google Trends";
-      if (filters.type === "Dados oficiais") return ["World Bank", "IBGE", "IMF", "FRED", "NOAA"].includes(trend.source);
-      if (filters.type === "Ciência") return ["OpenAlex", "arXiv", "PubMed", "Crossref"].includes(trend.source);
-      if (filters.type === "Tech") return ["Hacker News", "GitHub", "Stack Overflow"].includes(trend.source);
+      if (filters.type === "Dados oficiais") return SOURCE_GROUPS.dados.includes(trend.source);
+      if (filters.type === "Ciência") return SOURCE_GROUPS.ciencia.includes(trend.source);
+      if (filters.type === "Tech") return SOURCE_GROUPS.tech.includes(trend.source);
       if (filters.type === "Enciclopédia") return trend.source === "Wikipedia";
       if (filters.type === "Conflitos") return trend.source === "GDELT";
       return true;
@@ -743,18 +696,47 @@ export function useTrends(filters: FilterState, onTrendCountsChange: (counts: Re
 
       const matchSource = matchesType(trend);
 
-      if (!matchCountry) {
-        console.log("❌ País removido:", trend.title, "país:", trend.countryCode || "global");
-      }
-      if (!matchCategory) {
-        console.log("❌ Categoria removida:", trend.title, "cat:", trend.category || "geral");
-      }
-      if (!matchSource) {
-        console.log("❌ Fonte removida:", trend.title, "fonte:", trend.source || "desconhecido");
-      }
-
       return matchCountry && matchCategory && matchSource;
     });
+
+    // ── SMART FALLBACK: Never return empty ──
+    if (filtered.length === 0 && trends.length > 0) {
+      console.log("🧠 Filtro resultou vazio — ativando fallback inteligente");
+      
+      // 1. Try predictive cache for this filter combo
+      const predicted = getFromPredictiveCache(filters);
+      if (predicted && predicted.length > 0) {
+        console.log("📊 Usando cache preditivo:", predicted.length, "itens");
+        return predicted.sort((a, b) => (b.relevanceScore || 50) - (a.relevanceScore || 50));
+      }
+
+      // 2. Relax country filter (show global + specific country)
+      const relaxedCountry = normalizedTrends.filter((trend) => {
+        const matchCategory = filters.category === "Todas" || trend.normalizedCategory === filterCategory || trend.normalizedCategory.startsWith(filterCategory);
+        const matchSource = matchesType(trend);
+        return matchCategory && matchSource;
+      });
+      if (relaxedCountry.length > 0) {
+        console.log("🌍 Relaxando filtro de país:", relaxedCountry.length, "itens");
+        return relaxedCountry.sort((a, b) => (b.relevanceScore || 50) - (a.relevanceScore || 50));
+      }
+
+      // 3. Relax category too (only keep source type)
+      const relaxedAll = normalizedTrends.filter(matchesType);
+      if (relaxedAll.length > 0) {
+        console.log("📂 Relaxando filtro de categoria:", relaxedAll.length, "itens");
+        return relaxedAll.sort((a, b) => (b.relevanceScore || 50) - (a.relevanceScore || 50));
+      }
+
+      // 4. Generate contextual fallback
+      console.log("🔄 Gerando fallback contextual");
+      return generateContextualFallback(filters);
+    }
+
+    // Save successful filter results to predictive cache
+    if (filtered.length > 0) {
+      saveToPredictiveCache(filters, filtered);
+    }
 
     return [...filtered].sort((a, b) => (b.relevanceScore || 50) - (a.relevanceScore || 50));
   }, [trends, filters]);
@@ -767,7 +749,6 @@ export function useTrends(filters: FilterState, onTrendCountsChange: (counts: Re
   const leftTrends = useMemo(() => filteredTrends.filter((_, i) => i % 2 === 0), [filteredTrends]);
   const rightTrends = useMemo(() => filteredTrends.filter((_, i) => i % 2 === 1), [filteredTrends]);
 
-  // Count countries
   const countriesCount = useMemo(() => {
     const codes = new Set(trends.map(t => t.countryCode).filter(Boolean));
     return codes.size;
@@ -784,14 +765,9 @@ export function useTrends(filters: FilterState, onTrendCountsChange: (counts: Re
       }
       const redditCount = filteredTrends.filter((t) => t.platform === "Reddit").length;
       counts["US"] = (counts["US"] || 0) + redditCount;
-      const baselineCountries = [
-        "CN", "NL", "SE", "NO", "UA", "CL", "PE", "VE", "PT",
-        "KE", "MA", "ET", "AE", "NZ", "VN", "PK",
-      ];
+      const baselineCountries = ["CN", "NL", "SE", "NO", "UA", "CL", "PE", "VE", "PT", "KE", "MA", "ET", "AE", "NZ", "VN", "PK"];
       for (const cc of baselineCountries) {
-        if (!counts[cc]) {
-          counts[cc] = 1;
-        }
+        if (!counts[cc]) counts[cc] = 1;
       }
     }
     onTrendCountsChange(counts);
