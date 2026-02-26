@@ -321,3 +321,15 @@
     font-size: 12px;
   }
 }
+
+/* Highlight animation for anomaly click */
+@keyframes highlightPulse {
+  0% { box-shadow: 0 0 0 0 hsl(var(--primary) / 0.6); }
+  50% { box-shadow: 0 0 0 8px hsl(var(--primary) / 0); }
+  100% { box-shadow: 0 0 0 0 hsl(var(--primary) / 0); }
+}
+
+.animate-highlight-pulse {
+  animation: highlightPulse 0.8s ease-out 3;
+  border: 2px solid hsl(var(--primary));
+}

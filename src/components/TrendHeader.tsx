@@ -25,7 +25,7 @@ import { useSavedFilters } from "@/hooks/use-saved-filters";
 import { useAlerts } from "@/hooks/use-alerts";
 // useGamification removed from header
 // AchievementsPanel removed
-import { useUserMode, userModes } from "@/contexts/UserModeContext";
+// User mode selector removed
 import type { AnomalyAlert } from "@/hooks/use-anomaly-alerts";
 import type { FilterState } from "@/components/FilterBar";
 
@@ -40,9 +40,10 @@ interface TrendHeaderProps {
   anomalies?: AnomalyAlert[];
   onDismissAnomaly?: (title: string) => void;
   onOpenTransparency?: () => void;
+  onAnomalyClick?: (trendId: string) => void;
 }
 
-const TrendHeader = ({ totalTrends = 0, countriesCount = 0, onRefresh, refreshing, filters, onApplyFilter, anomalyCount = 0, anomalies = [], onDismissAnomaly, onOpenTransparency }: TrendHeaderProps) => {
+const TrendHeader = ({ totalTrends = 0, countriesCount = 0, onRefresh, refreshing, filters, onApplyFilter, anomalyCount = 0, anomalies = [], onDismissAnomaly, onOpenTransparency, onAnomalyClick }: TrendHeaderProps) => {
   const { lang, setLang, t } = useLanguage();
   const [aboutOpen, setAboutOpen] = useState(false);
   const [loginOpen, setLoginOpen] = useState(false);
@@ -81,7 +82,6 @@ const TrendHeader = ({ totalTrends = 0, countriesCount = 0, onRefresh, refreshin
   const { alerts } = useAlerts(user?.id ?? null);
   // Gamification removed from header menu
   const [anomalyPanelOpen, setAnomalyPanelOpen] = useState(false);
-  const { mode, setMode } = useUserMode();
 
 
 
@@ -187,7 +187,7 @@ const TrendHeader = ({ totalTrends = 0, countriesCount = 0, onRefresh, refreshin
             <h1 className="text-base font-light tracking-tight whitespace-nowrap select-none flex items-center gap-2">
               <span className="font-semibold text-foreground hidden sm:inline">Global Talk Trends</span>
               <span className="font-semibold text-foreground sm:hidden">GTT</span>
-              <span className="text-muted-foreground hidden md:inline">Monitor Imparcial em Tempo Real</span>
+              <span className="text-muted-foreground hidden md:inline">Monitor em Tempo Real</span>
             </h1>
             {totalTrends > 1 && countriesCount > 0 ?
             <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-primary/10 text-primary text-[11px] font-bold tabular-nums flex-shrink-0 hidden sm:inline-flex">
@@ -273,48 +273,30 @@ const TrendHeader = ({ totalTrends = 0, countriesCount = 0, onRefresh, refreshin
                     </span>
                   </button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-72 max-h-64 overflow-y-auto">
+              <DropdownMenuContent align="end" className="w-72 max-h-64 overflow-y-auto">
                   <div className="px-2 py-1.5">
                     <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">🚨 Anomalias detectadas</span>
                   </div>
-                  {anomalies.map((a, i) =>
-                <DropdownMenuItem key={i} className="text-xs gap-2 justify-between" onSelect={(e) => e.preventDefault()}>
-                      <span className="truncate flex-1">{a.message.slice(0, 80)}</span>
-                      <button
-                    onClick={(e) => {e.stopPropagation();onDismissAnomaly?.(a.trend.title);}}
-                    className="text-muted-foreground hover:text-foreground p-0.5 shrink-0">
-
-                        <X className="w-3 h-3" />
-                      </button>
-                    </DropdownMenuItem>
-                )}
+                  {anomalies.map((a, i) => {
+                    const anomalyTrendId = `${a.trend.platform}-${a.trend.title.slice(0, 20)}`;
+                    return (
+                      <DropdownMenuItem key={i} className="text-xs gap-2 justify-between cursor-pointer" onSelect={() => {
+                        onAnomalyClick?.(anomalyTrendId);
+                      }}>
+                        <span className="truncate flex-1">{a.message.slice(0, 80)}</span>
+                        <button
+                          onClick={(e) => {e.stopPropagation();onDismissAnomaly?.(a.trend.title);}}
+                          className="text-muted-foreground hover:text-foreground p-0.5 shrink-0">
+                          <X className="w-3 h-3" />
+                        </button>
+                      </DropdownMenuItem>
+                    );
+                  })}
                 </DropdownMenuContent>
               </DropdownMenu>
             }
 
-            {/* User Mode selector */}
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <button className="px-1.5 py-0.5 rounded-full text-[10px] font-medium text-muted-foreground hover:bg-secondary transition-colors flex items-center gap-1 min-h-[36px]">
-                  {userModes.find((m) => m.key === mode)?.emoji} <span className="hidden sm:inline">{userModes.find((m) => m.key === mode)?.label}</span>
-                </button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-48">
-                {userModes.map((m) =>
-                <DropdownMenuItem
-                  key={m.key}
-                  className={`text-xs gap-2 ${mode === m.key ? "bg-primary/10 text-primary" : ""}`}
-                  onClick={() => setMode(m.key)}>
-
-                    <span>{m.emoji}</span>
-                    <div>
-                      <div className="font-medium">{m.label}</div>
-                      <div className="text-[10px] text-muted-foreground">{m.description}</div>
-                    </div>
-                  </DropdownMenuItem>
-                )}
-              </DropdownMenuContent>
-            </DropdownMenu>
+            {/* User Mode selector removed */}
 
 
             <button
