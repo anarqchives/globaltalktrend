@@ -270,6 +270,95 @@ async function fetchNPR(): Promise<TrendItem[]> {
   } catch (e) { console.error("NPR fetch error:", e); return []; }
 }
 
+// ── RSS Feeds (BBC, Reuters, AP, El País, Le Monde, France 24, DW) ──
+const RSS_FEEDS = [
+  { url: "http://feeds.bbci.co.uk/news/rss.xml", name: "BBC News", icon: "🇬🇧", country: "GB", category: "Notícias" },
+  { url: "http://feeds.bbci.co.uk/portuguese/rss.xml", name: "BBC Brasil", icon: "🇧🇷", country: "BR", category: "Notícias" },
+  { url: "http://feeds.bbci.co.uk/news/technology/rss.xml", name: "BBC News", icon: "🇬🇧", country: "GB", category: "Tecnologia" },
+  { url: "http://feeds.bbci.co.uk/news/science_and_environment/rss.xml", name: "BBC News", icon: "🇬🇧", country: "GB", category: "Ciência" },
+  { url: "https://feeds.reuters.com/reuters/worldnews", name: "Reuters", icon: "🌐", country: "US", category: "Política" },
+  { url: "https://feeds.reuters.com/reuters/technologyNews", name: "Reuters", icon: "🌐", country: "US", category: "Tecnologia" },
+  { url: "https://feeds.reuters.com/reuters/businessNews", name: "Reuters", icon: "🌐", country: "US", category: "Negócios/Finanças" },
+  { url: "https://rss.app/feeds/v1.1/ap-top-news.rss", name: "AP News", icon: "🇺🇸", country: "US", category: "Notícias" },
+  { url: "https://feeds.elpais.com/mrss-s/pages/ep/site/brasil.elpais.com/portada", name: "El País Brasil", icon: "🇧🇷", country: "BR", category: "Notícias" },
+  { url: "https://feeds.elpais.com/mrss-s/pages/ep/site/elpais.com/portada", name: "El País", icon: "🇪🇸", country: "ES", category: "Notícias" },
+  { url: "https://www.lemonde.fr/rss/une.xml", name: "Le Monde", icon: "🇫🇷", country: "FR", category: "Notícias" },
+  { url: "https://www.france24.com/fr/rss", name: "France 24", icon: "🇫🇷", country: "FR", category: "Notícias" },
+  { url: "https://rss.dw.com/rdf/rss-en-world", name: "Deutsche Welle", icon: "🇩🇪", country: "DE", category: "Notícias" },
+  { url: "https://rss.dw.com/rdf/rss-pt-br", name: "DW Brasil", icon: "🇧🇷", country: "BR", category: "Notícias" },
+];
+
+function inferCategoryFromContent(title: string, feedCategory: string): string {
+  const t = title.toLowerCase();
+  if (/tech|digital|cyber|ai |artificial|software|hardware|app\b|startup/i.test(t)) return "Tecnologia";
+  if (/scien|climat|environment|space|nasa|physics|biology/i.test(t)) return "Ciência";
+  if (/econom|business|market|stock|trade|finance|bank|gdp|inflation/i.test(t)) return "Negócios/Finanças";
+  if (/sport|football|soccer|olympic|nba|fifa|tennis/i.test(t)) return "Esportes";
+  if (/health|covid|virus|vaccine|hospital|medical|disease/i.test(t)) return "Saúde";
+  if (/politi|election|president|congress|senate|parliament|governo|trump|biden/i.test(t)) return "Política";
+  if (/cultur|movie|film|music|art|book|museum|festival/i.test(t)) return "Entretenimento";
+  return feedCategory;
+}
+
+async function fetchRSSFeeds(): Promise<TrendItem[]> {
+  const results: TrendItem[] = [];
+  const controller = new AbortController();
+  setTimeout(() => controller.abort(), 12000);
+
+  const fetches = RSS_FEEDS.map(async (feed) => {
+    try {
+      const res = await fetch(feed.url, {
+        signal: controller.signal,
+        headers: { "User-Agent": "Mozilla/5.0 (compatible; GlobalTalkTrend/1.0)" },
+      });
+      if (!res.ok) return [];
+      const xml = await res.text();
+
+      const items: TrendItem[] = [];
+      const itemRegex = /<item>([\s\S]*?)<\/item>/g;
+      let match;
+      let count = 0;
+      while ((match = itemRegex.exec(xml)) !== null && count < 3) {
+        const block = match[1];
+        const title = block.match(/<title><!\[CDATA\[(.*?)\]\]><\/title>/)?.[1]
+          || block.match(/<title>(.*?)<\/title>/)?.[1] || "";
+        const link = block.match(/<link>(.*?)<\/link>/)?.[1] || "";
+        const desc = block.match(/<description><!\[CDATA\[([\s\S]*?)\]\]>/)?.[1]
+          || block.match(/<description>([\s\S]*?)<\/description>/)?.[1] || "";
+        const pubDate = block.match(/<pubDate>(.*?)<\/pubDate>/)?.[1] || "";
+        const mediaUrl = block.match(/<media:thumbnail[^>]*url="([^"]+)"/)?.[1]
+          || block.match(/<media:content[^>]*url="([^"]+)"/)?.[1]
+          || block.match(/<enclosure[^>]*url="([^"]+)"/)?.[1] || "";
+
+        if (!title || title.length < 5) continue;
+
+        const cleanTitle = title.replace(/<[^>]*>/g, "").trim();
+        const cleanDesc = desc.replace(/<[^>]*>/g, "").trim();
+        const category = inferCategoryFromContent(cleanTitle, feed.category);
+        const { historicalData, metricLabel } = generateHistorical(Math.floor(Math.random() * 20 + 5), "artigos");
+
+        items.push({
+          icon: feed.icon, platform: feed.name, title: cleanTitle,
+          category, time: "agora", volume: feed.name,
+          change: "+novo", changePositive: true, sparkData: sparkRandom(),
+          details: cleanDesc.slice(0, 200), description: cleanDesc.slice(0, 150),
+          sourceUrl: link, thumbnail: mediaUrl, publishedAt: pubDate,
+          countryCode: feed.country, historicalData, metricLabel, trustBadge: "verified",
+        });
+        count++;
+      }
+      return items;
+    } catch {
+      return [];
+    }
+  });
+
+  const allResults = await Promise.all(fetches);
+  for (const r of allResults) results.push(...r);
+  console.log(`📡 RSS Feeds retornou: ${results.length} itens`);
+  return results;
+}
+
 // ── Guardian as primary fallback ──
 async function fetchGuardianFallback(): Promise<TrendItem[]> {
   const key = Deno.env.get("GUARDIAN_API_KEY");
@@ -318,16 +407,17 @@ serve(async (req) => {
     }
 
     // Fetch all sources in parallel
-    const [newsData, gnews, bing, nyt, npr] = await Promise.all([
+    const [newsData, gnews, bing, nyt, npr, rss] = await Promise.all([
       fetchNewsData(lang),
       fetchGNews(lang),
       fetchBingNews(lang),
       fetchNYTimes(lang),
       fetchNPR(),
+      fetchRSSFeeds(),
     ]);
     
-    let trends = [...newsData, ...gnews, ...bing, ...nyt, ...npr];
-    console.log(`fetch-news-extra [${lang}]: ${newsData.length} NewsData, ${gnews.length} GNews, ${bing.length} Bing, ${nyt.length} NYT, ${npr.length} NPR`);
+    let trends = [...newsData, ...gnews, ...bing, ...nyt, ...npr, ...rss];
+    console.log(`fetch-news-extra [${lang}]: ${newsData.length} NewsData, ${gnews.length} GNews, ${bing.length} Bing, ${nyt.length} NYT, ${npr.length} NPR, ${rss.length} RSS`);
     
     // If all primary APIs returned empty, use Guardian fallback
     if (trends.length === 0) {
