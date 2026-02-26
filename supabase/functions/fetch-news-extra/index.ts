@@ -270,22 +270,87 @@ async function fetchNPR(): Promise<TrendItem[]> {
   } catch (e) { console.error("NPR fetch error:", e); return []; }
 }
 
-// ── RSS Feeds (BBC, Reuters, AP, El País, Le Monde, France 24, DW) ──
+// ── RSS Feeds – Global sources organized by region ──
 const RSS_FEEDS = [
+  // ── AMÉRICA LATINA ──
+  { url: "https://feeds.folha.uol.com.br/emcimadahora/rss091.xml", name: "Folha de S.Paulo", icon: "🇧🇷", country: "BR", category: "Notícias" },
+  { url: "https://oglobo.globo.com/rss.xml", name: "O Globo", icon: "🇧🇷", country: "BR", category: "Notícias" },
+  { url: "https://www.estadao.com.br/feed", name: "Estadão", icon: "🇧🇷", country: "BR", category: "Notícias" },
+  { url: "https://www.clarin.com/rss/lo-ultimo/", name: "Clarín", icon: "🇦🇷", country: "AR", category: "Notícias" },
+  { url: "https://www.lanacion.com.ar/arc/outboundfeeds/rss/", name: "La Nación", icon: "🇦🇷", country: "AR", category: "Notícias" },
+  { url: "https://www.eluniversal.com.mx/arc/outboundfeeds/rss/", name: "El Universal", icon: "🇲🇽", country: "MX", category: "Notícias" },
+  { url: "https://www.eltiempo.com/rss.xml", name: "El Tiempo", icon: "🇨🇴", country: "CO", category: "Notícias" },
+  { url: "https://elcomercio.pe/feed", name: "El Comercio", icon: "🇵🇪", country: "PE", category: "Notícias" },
+
+  // ── EUROPA ──
   { url: "http://feeds.bbci.co.uk/news/rss.xml", name: "BBC News", icon: "🇬🇧", country: "GB", category: "Notícias" },
   { url: "http://feeds.bbci.co.uk/portuguese/rss.xml", name: "BBC Brasil", icon: "🇧🇷", country: "BR", category: "Notícias" },
   { url: "http://feeds.bbci.co.uk/news/technology/rss.xml", name: "BBC News", icon: "🇬🇧", country: "GB", category: "Tecnologia" },
   { url: "http://feeds.bbci.co.uk/news/science_and_environment/rss.xml", name: "BBC News", icon: "🇬🇧", country: "GB", category: "Ciência" },
+  { url: "https://www.telegraph.co.uk/rss.xml", name: "The Telegraph", icon: "🇬🇧", country: "GB", category: "Notícias" },
+  { url: "https://www.independent.co.uk/rss", name: "The Independent", icon: "🇬🇧", country: "GB", category: "Notícias" },
+  { url: "https://rss.dw.com/rdf/rss-en-world", name: "Deutsche Welle", icon: "🇩🇪", country: "DE", category: "Notícias" },
+  { url: "https://rss.dw.com/rdf/rss-pt-br", name: "DW Brasil", icon: "🇧🇷", country: "BR", category: "Notícias" },
+  { url: "https://www.spiegel.de/international/index.rss", name: "Der Spiegel", icon: "🇩🇪", country: "DE", category: "Notícias" },
+  { url: "https://www.lemonde.fr/rss/une.xml", name: "Le Monde", icon: "🇫🇷", country: "FR", category: "Notícias" },
+  { url: "https://www.lefigaro.fr/rss/figaro_actualites.xml", name: "Le Figaro", icon: "🇫🇷", country: "FR", category: "Notícias" },
+  { url: "https://www.france24.com/fr/rss", name: "France 24", icon: "🇫🇷", country: "FR", category: "Notícias" },
+  { url: "https://www.repubblica.it/rss/homepage/rss2.0.xml", name: "La Repubblica", icon: "🇮🇹", country: "IT", category: "Notícias" },
+  { url: "https://xml2.corrieredellasera.it/rss/homepage.xml", name: "Corriere della Sera", icon: "🇮🇹", country: "IT", category: "Notícias" },
+  { url: "https://feeds.elpais.com/mrss-s/pages/ep/site/elpais.com/portada", name: "El País", icon: "🇪🇸", country: "ES", category: "Notícias" },
+  { url: "https://feeds.elpais.com/mrss-s/pages/ep/site/brasil.elpais.com/portada", name: "El País Brasil", icon: "🇧🇷", country: "BR", category: "Notícias" },
+  { url: "https://e00-elmundo.uecdn.es/elmundo/rss/portada.xml", name: "El Mundo", icon: "🇪🇸", country: "ES", category: "Notícias" },
+  { url: "https://feeds.feedburner.com/PublicoRSS", name: "Público", icon: "🇵🇹", country: "PT", category: "Notícias" },
+  { url: "https://expresso.pt/feed", name: "Expresso", icon: "🇵🇹", country: "PT", category: "Notícias" },
+  { url: "https://nltimes.nl/feed", name: "NL Times", icon: "🇳🇱", country: "NL", category: "Notícias" },
+
+  // ── ÁSIA ──
+  { url: "https://www3.nhk.or.jp/rss/news/cat0.xml", name: "NHK", icon: "🇯🇵", country: "JP", category: "Notícias" },
+  { url: "https://www.japantimes.co.jp/feed", name: "The Japan Times", icon: "🇯🇵", country: "JP", category: "Notícias" },
+  { url: "https://www.scmp.com/rss/4/feed", name: "South China Morning Post", icon: "🇨🇳", country: "CN", category: "Notícias" },
+  { url: "https://timesofindia.indiatimes.com/rssfeedstopstories.cms", name: "Times of India", icon: "🇮🇳", country: "IN", category: "Notícias" },
+  { url: "https://www.thehindu.com/feeder/default.rss", name: "The Hindu", icon: "🇮🇳", country: "IN", category: "Notícias" },
+  { url: "http://www.koreaherald.com/rss_xml.php", name: "Korea Herald", icon: "🇰🇷", country: "KR", category: "Notícias" },
+  { url: "https://www.straitstimes.com/news/asia/rss.xml", name: "The Straits Times", icon: "🇸🇬", country: "SG", category: "Notícias" },
+  { url: "https://www.thejakartapost.com/rss", name: "The Jakarta Post", icon: "🇮🇩", country: "ID", category: "Notícias" },
+
+  // ── ORIENTE MÉDIO & ÁFRICA ──
+  { url: "https://www.haaretz.com/cmlink/1.4614869", name: "Haaretz", icon: "🇮🇱", country: "IL", category: "Notícias" },
+  { url: "https://www.jpost.com/Rss/RssFeedsHeadlines.aspx", name: "The Jerusalem Post", icon: "🇮🇱", country: "IL", category: "Notícias" },
+  { url: "http://english.ahram.org.eg/rss.aspx", name: "Ahram Online", icon: "🇪🇬", country: "EG", category: "Notícias" },
+  { url: "https://www.news24.com/rss", name: "News24", icon: "🇿🇦", country: "ZA", category: "Notícias" },
+  { url: "https://www.premiumtimesng.com/feed", name: "Premium Times", icon: "🇳🇬", country: "NG", category: "Notícias" },
+  { url: "https://www.nation.co.ke/feed", name: "Daily Nation", icon: "🇰🇪", country: "KE", category: "Notícias" },
+
+  // ── AGREGADORES GLOBAIS ──
   { url: "https://feeds.reuters.com/reuters/worldnews", name: "Reuters", icon: "🌐", country: "US", category: "Política" },
   { url: "https://feeds.reuters.com/reuters/technologyNews", name: "Reuters", icon: "🌐", country: "US", category: "Tecnologia" },
   { url: "https://feeds.reuters.com/reuters/businessNews", name: "Reuters", icon: "🌐", country: "US", category: "Negócios/Finanças" },
   { url: "https://rss.app/feeds/v1.1/ap-top-news.rss", name: "AP News", icon: "🇺🇸", country: "US", category: "Notícias" },
-  { url: "https://feeds.elpais.com/mrss-s/pages/ep/site/brasil.elpais.com/portada", name: "El País Brasil", icon: "🇧🇷", country: "BR", category: "Notícias" },
-  { url: "https://feeds.elpais.com/mrss-s/pages/ep/site/elpais.com/portada", name: "El País", icon: "🇪🇸", country: "ES", category: "Notícias" },
-  { url: "https://www.lemonde.fr/rss/une.xml", name: "Le Monde", icon: "🇫🇷", country: "FR", category: "Notícias" },
-  { url: "https://www.france24.com/fr/rss", name: "France 24", icon: "🇫🇷", country: "FR", category: "Notícias" },
-  { url: "https://rss.dw.com/rdf/rss-en-world", name: "Deutsche Welle", icon: "🇩🇪", country: "DE", category: "Notícias" },
-  { url: "https://rss.dw.com/rdf/rss-pt-br", name: "DW Brasil", icon: "🇧🇷", country: "BR", category: "Notícias" },
+
+  // ── ESPECIALIZADAS: TECNOLOGIA ──
+  { url: "https://techcrunch.com/feed", name: "TechCrunch", icon: "💻", country: "US", category: "Tecnologia" },
+  { url: "https://www.theverge.com/rss/index.xml", name: "The Verge", icon: "💻", country: "US", category: "Tecnologia" },
+  { url: "https://www.wired.com/feed/rss", name: "Wired", icon: "💻", country: "US", category: "Tecnologia" },
+  { url: "https://feeds.arstechnica.com/arstechnica/index", name: "Ars Technica", icon: "💻", country: "US", category: "Tecnologia" },
+  { url: "https://www.engadget.com/rss.xml", name: "Engadget", icon: "💻", country: "US", category: "Tecnologia" },
+
+  // ── ESPECIALIZADAS: CIÊNCIA ──
+  { url: "https://www.eurekalert.org/rss/technology_engineering.xml", name: "EurekAlert!", icon: "🔬", country: "US", category: "Ciência" },
+  { url: "https://www.sciencedaily.com/rss/all.xml", name: "ScienceDaily", icon: "🔬", country: "US", category: "Ciência" },
+  { url: "https://www.nature.com/nature.rss", name: "Nature", icon: "🔬", country: "GB", category: "Ciência" },
+
+  // ── ESPECIALIZADAS: NEGÓCIOS ──
+  { url: "https://www.forbes.com/real-time/feed2/", name: "Forbes", icon: "💰", country: "US", category: "Negócios/Finanças" },
+  { url: "https://www.businessinsider.com/rss", name: "Business Insider", icon: "💰", country: "US", category: "Negócios/Finanças" },
+
+  // ── ESPECIALIZADAS: ESPORTES ──
+  { url: "https://www.espn.com/espn/rss/news", name: "ESPN", icon: "⚽", country: "US", category: "Esportes" },
+  { url: "https://www.skysports.com/rss/12040", name: "Sky Sports", icon: "⚽", country: "GB", category: "Esportes" },
+
+  // ── ESPECIALIZADAS: ENTRETENIMENTO ──
+  { url: "https://variety.com/feed/", name: "Variety", icon: "🎬", country: "US", category: "Entretenimento" },
+  { url: "https://www.hollywoodreporter.com/feed/", name: "Hollywood Reporter", icon: "🎬", country: "US", category: "Entretenimento" },
 ];
 
 function inferCategoryFromContent(title: string, feedCategory: string): string {
@@ -301,11 +366,14 @@ function inferCategoryFromContent(title: string, feedCategory: string): string {
 }
 
 async function fetchRSSFeeds(): Promise<TrendItem[]> {
-  const results: TrendItem[] = [];
   const controller = new AbortController();
-  setTimeout(() => controller.abort(), 12000);
+  setTimeout(() => controller.abort(), 15000);
 
-  const fetches = RSS_FEEDS.map(async (feed) => {
+  // Shuffle and pick up to 30 feeds per invocation to stay fast
+  const shuffled = [...RSS_FEEDS].sort(() => Math.random() - 0.5);
+  const selected = shuffled.slice(0, 30);
+
+  const fetches = selected.map(async (feed) => {
     try {
       const res = await fetch(feed.url, {
         signal: controller.signal,
@@ -318,7 +386,7 @@ async function fetchRSSFeeds(): Promise<TrendItem[]> {
       const itemRegex = /<item>([\s\S]*?)<\/item>/g;
       let match;
       let count = 0;
-      while ((match = itemRegex.exec(xml)) !== null && count < 3) {
+      while ((match = itemRegex.exec(xml)) !== null && count < 2) {
         const block = match[1];
         const title = block.match(/<title><!\[CDATA\[(.*?)\]\]><\/title>/)?.[1]
           || block.match(/<title>(.*?)<\/title>/)?.[1] || "";
@@ -354,8 +422,8 @@ async function fetchRSSFeeds(): Promise<TrendItem[]> {
   });
 
   const allResults = await Promise.all(fetches);
-  for (const r of allResults) results.push(...r);
-  console.log(`📡 RSS Feeds retornou: ${results.length} itens`);
+  const results = allResults.flat();
+  console.log(`📡 RSS Feeds retornou: ${results.length} itens de ${selected.length} feeds (${RSS_FEEDS.length} total disponíveis)`);
   return results;
 }
 
