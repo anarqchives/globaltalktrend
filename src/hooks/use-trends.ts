@@ -4,7 +4,7 @@ import { TrendCardProps } from "../components/TrendCard";
 import { toast } from "@/hooks/use-toast";
 import { FilterState } from "../components/FilterBar";
 import { categorizeTrend, detectCountryFromContent } from "@/lib/categorize-trend";
-import { useHistoricalTrends } from "./use-historical-trends";
+import { useHistoricalTrends, saveToHistoricalCollector, getFromHistoricalCollector } from "./use-historical-trends";
 
 const CACHE_KEY = "gtt_trends_cache";
 const CACHE_TTL = 5 * 60 * 1000; // 5 min
@@ -424,7 +424,7 @@ export function useTrends(filters: FilterState, onTrendCountsChange: (counts: Re
   const [isFirstLoad, setIsFirstLoad] = useState(!cached);
   const [lastUpdated, setLastUpdated] = useState<Date | null>(cached ? new Date(cached.ts) : null);
   const [sourcesStatus, setSourcesStatus] = useState<Record<string, { ok: boolean; count: number; lastUpdate: Date }>>({});
-  const { fetchHistorical } = useHistoricalTrends();
+  const { fetchHistorical, fetchCategoryFallback } = useHistoricalTrends();
 
   const fetchTrends = useCallback(async () => {
     try {
@@ -566,6 +566,8 @@ export function useTrends(filters: FilterState, onTrendCountsChange: (counts: Re
       }
 
       if (combinedTrends.length > 0) {
+        // Save to localStorage historical collector for layered fallback
+        saveToHistoricalCollector(combinedTrends);
         setTrends(combinedTrends);
         setCachedTrends(combinedTrends);
         const now = new Date();
@@ -699,38 +701,73 @@ export function useTrends(filters: FilterState, onTrendCountsChange: (counts: Re
       return matchCountry && matchCategory && matchSource;
     });
 
-    // ── SMART FALLBACK: Never return empty ──
-    if (filtered.length === 0 && trends.length > 0) {
-      console.log("🧠 Filtro resultou vazio — ativando fallback inteligente");
+    // ── SMART FALLBACK: Layered approach to never return empty ──
+    const MIN_TRENDS = 5;
+
+    if (filtered.length < MIN_TRENDS && trends.length > 0) {
+      console.log(`🧠 Poucas trends (${filtered.length}) — ativando fallback em camadas`);
       
-      // 1. Try predictive cache for this filter combo
-      const predicted = getFromPredictiveCache(filters);
-      if (predicted && predicted.length > 0) {
-        console.log("📊 Usando cache preditivo:", predicted.length, "itens");
-        return predicted.sort((a, b) => (b.relevanceScore || 50) - (a.relevanceScore || 50));
+      // Use TrendCardProps[] for combined to accept all fallback sources
+      let combined: TrendCardProps[] = [...filtered];
+      const seenKeys = new Set(combined.map(t => t.title.toLowerCase().slice(0, 60)));
+
+      const addUnique = (items: TrendCardProps[]) => {
+        for (const item of items) {
+          const key = item.title.toLowerCase().slice(0, 60);
+          if (seenKeys.has(key)) continue;
+          seenKeys.add(key);
+          combined.push(item);
+        }
+      };
+
+      // Layer 1: localStorage historical collector (instant, local data)
+      if (combined.length < MIN_TRENDS) {
+        const localHistorical = getFromHistoricalCollector(filters.category, filters.country);
+        if (localHistorical.length > 0) {
+          console.log("📂 Camada 1 - Cache local:", localHistorical.length, "itens");
+          addUnique(localHistorical);
+        }
       }
 
-      // 2. Relax country filter (show global + specific country)
-      const relaxedCountry = normalizedTrends.filter((trend) => {
-        const matchCategory = filters.category === "Todas" || trend.normalizedCategory === filterCategory || trend.normalizedCategory.startsWith(filterCategory);
-        const matchSource = matchesType(trend);
-        return matchCategory && matchSource;
-      });
-      if (relaxedCountry.length > 0) {
-        console.log("🌍 Relaxando filtro de país:", relaxedCountry.length, "itens");
-        return relaxedCountry.sort((a, b) => (b.relevanceScore || 50) - (a.relevanceScore || 50));
+      // Layer 2: Predictive cache
+      if (combined.length < MIN_TRENDS) {
+        const predicted = getFromPredictiveCache(filters);
+        if (predicted && predicted.length > 0) {
+          console.log("📊 Camada 2 - Cache preditivo:", predicted.length, "itens");
+          addUnique(predicted);
+        }
       }
 
-      // 3. Relax category too (only keep source type)
-      const relaxedAll = normalizedTrends.filter(matchesType);
-      if (relaxedAll.length > 0) {
-        console.log("📂 Relaxando filtro de categoria:", relaxedAll.length, "itens");
-        return relaxedAll.sort((a, b) => (b.relevanceScore || 50) - (a.relevanceScore || 50));
+      // Layer 3: Relax country filter (show global + specific country)
+      if (combined.length < MIN_TRENDS) {
+        const relaxedCountry = normalizedTrends.filter((trend) => {
+          const matchCategory = filters.category === "Todas" || trend.normalizedCategory === filterCategory || trend.normalizedCategory.startsWith(filterCategory);
+          const matchSource = matchesType(trend);
+          return matchCategory && matchSource;
+        });
+        if (relaxedCountry.length > 0) {
+          console.log("🌍 Camada 3 - Relaxando país:", relaxedCountry.length, "itens");
+          addUnique(relaxedCountry);
+        }
       }
 
-      // 4. Generate contextual fallback
-      console.log("🔄 Gerando fallback contextual");
-      return generateContextualFallback(filters);
+      // Layer 4: Relax category too (only keep source type)
+      if (combined.length < MIN_TRENDS) {
+        const relaxedAll = normalizedTrends.filter(matchesType);
+        if (relaxedAll.length > 0) {
+          console.log("📂 Camada 4 - Relaxando categoria:", relaxedAll.length, "itens");
+          addUnique(relaxedAll);
+        }
+      }
+
+      // Layer 5: Generate contextual fallback
+      if (combined.length < MIN_TRENDS) {
+        console.log("🔄 Camada 5 - Fallback contextual");
+        addUnique(generateContextualFallback(filters));
+      }
+
+      console.log(`✅ Total após fallback em camadas: ${combined.length} itens`);
+      return combined.sort((a, b) => (b.relevanceScore || 50) - (a.relevanceScore || 50));
     }
 
     // Save successful filter results to predictive cache
