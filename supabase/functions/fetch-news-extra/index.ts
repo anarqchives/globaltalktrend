@@ -17,7 +17,12 @@ interface TrendItem {
   changePositive: boolean;
   sparkData: number[];
   details?: string;
+  description?: string;
   countryCode?: string;
+  sourceUrl?: string;
+  thumbnail?: string;
+  publishedAt?: string;
+  trustBadge?: string;
   historicalData?: { hour: string; value: number }[];
   metricLabel?: string;
 }
@@ -36,11 +41,16 @@ function generateHistorical(baseValue: number, label: string) {
   return { historicalData: data, metricLabel: label };
 }
 
+function sparkRandom() {
+  return Array.from({ length: 10 }, () => Math.floor(Math.random() * 70 + 30));
+}
+
 // Lang-aware caches
 let cachedResponses: Record<string, { data: string; timestamp: number }> = {};
 const CACHE_TTL = 60 * 60 * 1000;
 const langToGNewsLang: Record<string, string> = { pt: "pt", en: "en", es: "es", fr: "fr", de: "de", it: "it", ar: "ar", ru: "ru", zh: "zh", ja: "ja", ko: "ko", hi: "hi" };
 
+// ── NewsData ──
 async function fetchNewsData(lang = "pt"): Promise<TrendItem[]> {
   const key = Deno.env.get("NEWSDATA_API_KEY");
   if (!key) { console.log("NEWSDATA_API_KEY not set"); return []; }
@@ -55,29 +65,19 @@ async function fetchNewsData(lang = "pt"): Promise<TrendItem[]> {
       const src = a.source_name || a.source_id || "NewsData";
       const { historicalData, metricLabel } = generateHistorical(Math.floor(Math.random() * 15 + 5), "artigos");
       return {
-        icon: "📰",
-        platform: "NewsData",
-        title: a.title || "Sem título",
-        category: (a.category || ["Notícias"])[0] || "Notícias",
-        time: "agora",
-        volume: src,
-        change: "+novo",
-        changePositive: true,
-        sparkData: Array.from({ length: 10 }, () => Math.floor(Math.random() * 70 + 30)),
-        details: a.description?.slice(0, 200) || "",
-        description: a.description?.slice(0, 150) || "",
-        sourceUrl: a.link || "",
-        thumbnail: a.image_url || "",
-        publishedAt: a.pubDate || "",
+        icon: "📰", platform: "NewsData", title: a.title || "Sem título",
+        category: (a.category || ["Notícias"])[0] || "Notícias", time: "agora",
+        volume: src, change: "+novo", changePositive: true, sparkData: sparkRandom(),
+        details: a.description?.slice(0, 200) || "", description: a.description?.slice(0, 150) || "",
+        sourceUrl: a.link || "", thumbnail: a.image_url || "", publishedAt: a.pubDate || "",
         countryCode: (a.country || ["US"])[0]?.toUpperCase() || "US",
-        historicalData,
-        metricLabel,
-        trustBadge: "international",
+        historicalData, metricLabel, trustBadge: "international",
       };
     });
   } catch (e) { console.error("NewsData fetch error:", e); return []; }
 }
 
+// ── GNews ──
 async function fetchGNews(lang = "pt"): Promise<TrendItem[]> {
   const key = Deno.env.get("GNEWS_API_KEY");
   if (!key) { console.log("GNEWS_API_KEY not set"); return []; }
@@ -103,28 +103,17 @@ function mapGNewsArticles(articles: any[]): TrendItem[] {
     const src = a.source?.name || "GNews";
     const { historicalData, metricLabel } = generateHistorical(Math.floor(Math.random() * 12 + 3), "artigos");
     return {
-      icon: "🗞️",
-      platform: "GNews",
-      title: a.title || "Sem título",
-      category: "Notícias",
-      time: "agora",
-      volume: src,
-      change: "+novo",
-      changePositive: true,
-      sparkData: Array.from({ length: 10 }, () => Math.floor(Math.random() * 70 + 30)),
-      details: a.description?.slice(0, 200) || "",
-      description: a.description?.slice(0, 150) || "",
-      sourceUrl: a.url || "",
-      thumbnail: a.image || "",
-      publishedAt: a.publishedAt || "",
-      countryCode: "BR",
-      historicalData,
-      metricLabel,
-      trustBadge: "international",
+      icon: "🗞️", platform: "GNews", title: a.title || "Sem título",
+      category: "Notícias", time: "agora", volume: src, change: "+novo", changePositive: true,
+      sparkData: sparkRandom(), details: a.description?.slice(0, 200) || "",
+      description: a.description?.slice(0, 150) || "", sourceUrl: a.url || "",
+      thumbnail: a.image || "", publishedAt: a.publishedAt || "", countryCode: "BR",
+      historicalData, metricLabel, trustBadge: "international",
     };
   });
 }
 
+// ── Bing News ──
 async function fetchBingNews(lang = "pt"): Promise<TrendItem[]> {
   const key = Deno.env.get("BING_NEWS_API_KEY");
   if (!key) { console.log("BING_NEWS_API_KEY not set"); return []; }
@@ -146,21 +135,11 @@ async function fetchBingNews(lang = "pt"): Promise<TrendItem[]> {
       return (data2.value || []).map((a: any) => {
         const { historicalData, metricLabel } = generateHistorical(Math.floor(Math.random() * 10 + 5), "menções");
         return {
-          icon: "🔎",
-          platform: "Bing News",
-          title: a.name || "Sem título",
-          category: a.category || "Notícias",
-          time: "agora",
-          volume: a.provider?.[0]?.name || "Bing",
-          change: "+novo",
-          changePositive: true,
-          sparkData: Array.from({ length: 10 }, () => Math.floor(Math.random() * 70 + 30)),
-          details: a.description?.slice(0, 200) || "",
-          sourceUrl: a.url || "",
-          countryCode: "US",
-          historicalData,
-          metricLabel,
-          trustBadge: "international",
+          icon: "🔎", platform: "Bing News", title: a.name || "Sem título",
+          category: a.category || "Notícias", time: "agora",
+          volume: a.provider?.[0]?.name || "Bing", change: "+novo", changePositive: true,
+          sparkData: sparkRandom(), details: a.description?.slice(0, 200) || "",
+          sourceUrl: a.url || "", countryCode: "US", historicalData, metricLabel, trustBadge: "international",
         };
       });
     }
@@ -168,27 +147,130 @@ async function fetchBingNews(lang = "pt"): Promise<TrendItem[]> {
     return (data.value || []).map((topic: any) => {
       const { historicalData, metricLabel } = generateHistorical(Math.floor(Math.random() * 20 + 10), "buscas");
       return {
-        icon: "🔎",
-        platform: "Bing News",
-        title: topic.name || topic.query?.text || "Sem título",
-        category: "Trending",
-        time: "agora",
-        volume: topic.image?.url ? "com imagem" : "trending",
-        change: "+trending",
-        changePositive: true,
-        sparkData: Array.from({ length: 10 }, () => Math.floor(Math.random() * 80 + 20)),
+        icon: "🔎", platform: "Bing News", title: topic.name || topic.query?.text || "Sem título",
+        category: "Trending", time: "agora", volume: topic.image?.url ? "com imagem" : "trending",
+        change: "+trending", changePositive: true, sparkData: sparkRandom(),
         details: topic.newsSearchUrl ? `Pesquisar: ${topic.name}` : "",
-        sourceUrl: topic.webSearchUrl || topic.newsSearchUrl || "",
-        countryCode: "BR",
-        historicalData,
-        metricLabel,
-        trustBadge: "international",
+        sourceUrl: topic.webSearchUrl || topic.newsSearchUrl || "", countryCode: "BR",
+        historicalData, metricLabel, trustBadge: "international",
       };
     });
   } catch (e) { console.error("Bing News fetch error:", e); return []; }
 }
 
-// Guardian as primary fallback when other APIs hit quota
+// ── New York Times (Top Stories + Article Search) ──
+async function fetchNYTimes(lang = "pt"): Promise<TrendItem[]> {
+  const key = Deno.env.get("NYT_API_KEY");
+  if (!key) { console.log("NYT_API_KEY not set"); return []; }
+  try {
+    const controller = new AbortController();
+    setTimeout(() => controller.abort(), 8000);
+
+    // Fetch Top Stories from multiple sections
+    const sections = ["world", "technology", "science", "business", "health"];
+    const sectionToCategory: Record<string, string> = {
+      world: "Política", technology: "Tecnologia", science: "Ciência",
+      business: "Negócios/Finanças", health: "Saúde",
+    };
+
+    const results: TrendItem[] = [];
+
+    // Top Stories - pick 2 from each section
+    for (const section of sections) {
+      try {
+        const res = await fetch(
+          `https://api.nytimes.com/svc/topstories/v2/${section}.json?api-key=${key}`,
+          { signal: controller.signal }
+        );
+        if (res.status === 429) { console.warn("NYT quota exceeded"); break; }
+        if (!res.ok) continue;
+        const data = await res.json();
+        const articles = (data.results || []).slice(0, 2);
+        for (const a of articles) {
+          const { historicalData, metricLabel } = generateHistorical(Math.floor(Math.random() * 25 + 10), "leituras");
+          const multimedia = a.multimedia?.find((m: any) => m.format === "Large Thumbnail" || m.format === "threeByTwoSmallAt2X");
+          results.push({
+            icon: "🗽", platform: "New York Times", title: a.title || "Sem título",
+            category: sectionToCategory[section] || "Notícias", time: "agora",
+            volume: "NYT " + (section.charAt(0).toUpperCase() + section.slice(1)),
+            change: "+novo", changePositive: true, sparkData: sparkRandom(),
+            details: a.abstract?.slice(0, 200) || "", description: a.abstract?.slice(0, 150) || "",
+            sourceUrl: a.url || "", thumbnail: multimedia?.url || "",
+            publishedAt: a.published_date || "", countryCode: "US",
+            historicalData, metricLabel, trustBadge: "verified",
+          });
+        }
+      } catch { /* skip section */ }
+    }
+
+    console.log(`📰 NYT retornou: ${results.length} itens`);
+    return results.slice(0, 12);
+  } catch (e) { console.error("NYT fetch error:", e); return []; }
+}
+
+// ── NPR (RSS feed - no API key needed) ──
+async function fetchNPR(): Promise<TrendItem[]> {
+  try {
+    const controller = new AbortController();
+    setTimeout(() => controller.abort(), 8000);
+
+    // NPR provides RSS feeds for news
+    const feeds = [
+      { url: "https://feeds.npr.org/1001/rss.xml", category: "Notícias", name: "News" },
+      { url: "https://feeds.npr.org/1019/rss.xml", category: "Tecnologia", name: "Technology" },
+      { url: "https://feeds.npr.org/1007/rss.xml", category: "Ciência", name: "Science" },
+      { url: "https://feeds.npr.org/1006/rss.xml", category: "Saúde", name: "Health" },
+    ];
+
+    const results: TrendItem[] = [];
+
+    for (const feed of feeds) {
+      try {
+        const res = await fetch(feed.url, {
+          signal: controller.signal,
+          headers: { "User-Agent": "Mozilla/5.0 (compatible; GlobalTalkTrend/1.0)" },
+        });
+        if (!res.ok) continue;
+        const xml = await res.text();
+
+        // Parse RSS items
+        const itemRegex = /<item>([\s\S]*?)<\/item>/g;
+        let match;
+        let count = 0;
+        while ((match = itemRegex.exec(xml)) !== null && count < 3) {
+          const block = match[1];
+          const title = block.match(/<title><!\[CDATA\[(.*?)\]\]><\/title>/)?.[1]
+            || block.match(/<title>(.*?)<\/title>/)?.[1] || "";
+          const link = block.match(/<link>(.*?)<\/link>/)?.[1] || "";
+          const desc = block.match(/<description><!\[CDATA\[(.*?)\]\]>/)?.[1]
+            || block.match(/<description>(.*?)<\/description>/)?.[1] || "";
+          const pubDate = block.match(/<pubDate>(.*?)<\/pubDate>/)?.[1] || "";
+          const mediaUrl = block.match(/<media:content[^>]*url="([^"]+)"/)?.[1]
+            || block.match(/<enclosure[^>]*url="([^"]+)"/)?.[1] || "";
+
+          if (!title) continue;
+
+          const { historicalData, metricLabel } = generateHistorical(Math.floor(Math.random() * 15 + 5), "ouvintes");
+          results.push({
+            icon: "🎙️", platform: "NPR", title: title.replace(/<[^>]*>/g, ""),
+            category: feed.category, time: "agora", volume: `NPR ${feed.name}`,
+            change: "+novo", changePositive: true, sparkData: sparkRandom(),
+            details: desc.replace(/<[^>]*>/g, "").slice(0, 200),
+            description: desc.replace(/<[^>]*>/g, "").slice(0, 150),
+            sourceUrl: link, thumbnail: mediaUrl, publishedAt: pubDate, countryCode: "US",
+            historicalData, metricLabel, trustBadge: "verified",
+          });
+          count++;
+        }
+      } catch { /* skip feed */ }
+    }
+
+    console.log(`🎙️ NPR retornou: ${results.length} itens`);
+    return results;
+  } catch (e) { console.error("NPR fetch error:", e); return []; }
+}
+
+// ── Guardian as primary fallback ──
 async function fetchGuardianFallback(): Promise<TrendItem[]> {
   const key = Deno.env.get("GUARDIAN_API_KEY");
   if (!key) { console.log("📰 The Guardian: chave ausente (GUARDIAN_API_KEY)"); return []; }
@@ -200,54 +282,22 @@ async function fetchGuardianFallback(): Promise<TrendItem[]> {
       `https://content.guardianapis.com/search?api-key=${key}&page-size=15&order-by=newest&show-fields=trailText,thumbnail`,
       { signal: controller.signal }
     );
-    if (!res.ok) {
-      console.log("📰 The Guardian retornou: 0 itens");
-      console.log("❌ The Guardian falhou. Verificar:");
-      console.log("   - Chave da API válida?");
-      console.log("   - Cota excedida?");
-      console.log("   - Erro CORS?");
-      return [];
-    }
+    if (!res.ok) { console.log("📰 The Guardian retornou: 0 itens"); return []; }
     const data = await res.json();
-    const guardianItems = (data.response?.results || []).map((a: any) => {
+    const items = (data.response?.results || []).map((a: any) => {
       const { historicalData, metricLabel } = generateHistorical(Math.floor(Math.random() * 20 + 5), "artigos");
       return {
-        icon: "📰",
-        platform: "The Guardian",
-        title: a.webTitle || "Sem título",
-        category: a.sectionName || "Notícias",
-        time: "agora",
-        volume: "The Guardian",
-        change: "+novo",
-        changePositive: true,
-        sparkData: Array.from({ length: 10 }, () => Math.floor(Math.random() * 70 + 30)),
-        details: a.fields?.trailText?.slice(0, 200) || "",
-        sourceUrl: a.webUrl || "",
-        thumbnail: a.fields?.thumbnail || "",
-        publishedAt: a.webPublicationDate || "",
-        countryCode: "GB",
-        historicalData,
-        metricLabel,
-        trustBadge: "verified",
+        icon: "📰", platform: "The Guardian", title: a.webTitle || "Sem título",
+        category: a.sectionName || "Notícias", time: "agora", volume: "The Guardian",
+        change: "+novo", changePositive: true, sparkData: sparkRandom(),
+        details: a.fields?.trailText?.slice(0, 200) || "", sourceUrl: a.webUrl || "",
+        thumbnail: a.fields?.thumbnail || "", publishedAt: a.webPublicationDate || "",
+        countryCode: "GB", historicalData, metricLabel, trustBadge: "verified",
       };
     });
-    console.log("📰 The Guardian retornou:", guardianItems.length, "itens");
-    if (guardianItems.length === 0) {
-      console.log("❌ The Guardian falhou. Verificar:");
-      console.log("   - Chave da API válida?");
-      console.log("   - Cota excedida?");
-      console.log("   - Erro CORS?");
-    }
-    return guardianItems;
-  } catch (e) {
-    console.log("📰 The Guardian retornou: 0 itens");
-    console.log("❌ The Guardian falhou. Verificar:");
-    console.log("   - Chave da API válida?");
-    console.log("   - Cota excedida?");
-    console.log("   - Erro CORS?");
-    console.error("Guardian fallback error:", e);
-    return [];
-  }
+    console.log("📰 The Guardian retornou:", items.length, "itens");
+    return items;
+  } catch (e) { console.error("Guardian fallback error:", e); return []; }
 }
 
 serve(async (req) => {
@@ -259,7 +309,7 @@ serve(async (req) => {
     let lang = "pt";
     try { const body = await req.json(); lang = body?.lang || "pt"; } catch { /* no body */ }
 
-    const cacheKey = `news_extra_${lang}`;
+    const cacheKey = `news_extra_v2_${lang}`;
     const cached = cachedResponses[cacheKey];
     if (cached && Date.now() - cached.timestamp < CACHE_TTL) {
       return new Response(cached.data, {
@@ -267,19 +317,22 @@ serve(async (req) => {
       });
     }
 
-    const [newsData, gnews, bing] = await Promise.all([
+    // Fetch all sources in parallel
+    const [newsData, gnews, bing, nyt, npr] = await Promise.all([
       fetchNewsData(lang),
       fetchGNews(lang),
       fetchBingNews(lang),
+      fetchNYTimes(lang),
+      fetchNPR(),
     ]);
     
-    let trends = [...newsData, ...gnews, ...bing];
-    console.log(`fetch-news-extra [${lang}]: ${newsData.length} NewsData, ${gnews.length} GNews, ${bing.length} Bing`);
+    let trends = [...newsData, ...gnews, ...bing, ...nyt, ...npr];
+    console.log(`fetch-news-extra [${lang}]: ${newsData.length} NewsData, ${gnews.length} GNews, ${bing.length} Bing, ${nyt.length} NYT, ${npr.length} NPR`);
     
+    // If all primary APIs returned empty, use Guardian fallback
     if (trends.length === 0) {
       console.log("All news APIs returned empty, using Guardian fallback");
-      const guardianTrends = await fetchGuardianFallback();
-      trends = guardianTrends;
+      trends = await fetchGuardianFallback();
     }
 
     const responseData = JSON.stringify({ trends });
