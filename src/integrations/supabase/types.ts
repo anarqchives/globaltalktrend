@@ -119,6 +119,39 @@ export type Database = {
         }
         Relationships: []
       }
+      report_history: {
+        Row: {
+          created_at: string
+          filters: Json
+          id: string
+          report_data: Json
+          snapshot_count: number
+          stats: Json
+          title: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          filters?: Json
+          id?: string
+          report_data?: Json
+          snapshot_count?: number
+          stats?: Json
+          title?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          filters?: Json
+          id?: string
+          report_data?: Json
+          snapshot_count?: number
+          stats?: Json
+          title?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       saved_filters: {
         Row: {
           category: string | null
