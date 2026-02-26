@@ -131,6 +131,7 @@ const FilterBar = ({ filters, onChange, onForceReset }: FilterBarProps) => {
 
   const typeOptions = [
     { value: "Todas mídias", label: t("allMedia") },
+    { value: "Multiplataforma", label: "🔥 Multiplataforma" },
     { value: "Redes sociais", label: t("socialMedia") },
     { value: "Imprensa", label: t("press") },
     { value: "Buscas (Google)", label: t("searches") },

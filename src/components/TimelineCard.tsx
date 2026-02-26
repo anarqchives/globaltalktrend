@@ -10,6 +10,8 @@ import AlertModal from "./AlertModal";
 import TrendContextTab from "./TrendContextTab";
 import TrendHistoryTab from "./TrendHistoryTab";
 import TrendFeedback from "./TrendFeedback";
+import CrossPlatformTab from "./CrossPlatformTab";
+import { CrossPlatformCluster } from "@/hooks/use-cross-platform";
 
 const platformIcons: Record<string, { emoji: string; color: string }> = {
   YouTube: { emoji: "▶", color: "hsl(0, 72%, 51%)" },
@@ -74,6 +76,7 @@ interface TimelineCardProps extends TrendCardProps {
   onTrackAction?: (action: string, points: number, metadata?: Record<string, any>) => void;
   forceExpanded?: boolean;
   isMultiplatform?: boolean;
+  crossPlatformCluster?: CrossPlatformCluster | null;
 }
 
 const normalizeText = (value: string) => value.toLowerCase().normalize("NFD").replace(/\p{Diacritic}/gu, "").trim();
@@ -191,6 +194,7 @@ const TimelineCard = ({
   onTrackAction,
   forceExpanded,
   isMultiplatform,
+  crossPlatformCluster,
 }: TimelineCardProps) => {
   const { t, lang } = useLanguage();
   const [expanded, setExpanded] = useState(forceExpanded || false);
@@ -208,7 +212,7 @@ const TimelineCard = ({
   const gradientId = `tl-${title.replace(/[^a-zA-Z0-9]/g, "").slice(0, 8)}-${Math.random().toString(36).slice(2, 5)}`;
   const [imgError, setImgError] = useState(false);
   const trigger = useMemo(() => detectTriggerFromTitle(title), [title]);
-  const [activeTab, setActiveTab] = useState<"details" | "context" | "history">("details");
+  const [activeTab, setActiveTab] = useState<"details" | "context" | "history" | "crossplatform">("details");
   const temporal = useMemo(() => formatTemporalBadge(firstSeenAt, peakAt, t("startedAgo"), t("peakAt")), [firstSeenAt, peakAt, lang]);
 
   const relativeTimeFormats: Record<string, { now: string; min: string; h: string; d: string }> = {
@@ -500,7 +504,7 @@ const TimelineCard = ({
             >
               🔍 {t("tabContext")}
             </button>
-            <button
+             <button
               onClick={(e) => { e.stopPropagation(); setActiveTab("history"); }}
               className={`px-3 py-1 rounded-full text-[10px] font-semibold transition-colors ${
                 activeTab === "history"
@@ -510,6 +514,18 @@ const TimelineCard = ({
             >
               📊 {t("tabHistory")}
             </button>
+            {isMultiplatform && (
+              <button
+                onClick={(e) => { e.stopPropagation(); setActiveTab("crossplatform"); }}
+                className={`px-3 py-1 rounded-full text-[10px] font-semibold transition-colors ${
+                  activeTab === "crossplatform"
+                    ? "bg-primary text-primary-foreground"
+                    : "bg-muted text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                🔥 Visão Cruzada
+              </button>
+            )}
           </div>
 
           {activeTab === "details" ? (
@@ -634,14 +650,16 @@ const TimelineCard = ({
               category={category}
               sources={sources}
             />
-          ) : (
+          ) : activeTab === "history" ? (
             <TrendHistoryTab
               title={title}
               platform={platform}
               category={category}
               platformColor={pf.color}
             />
-          )}
+          ) : activeTab === "crossplatform" ? (
+            <CrossPlatformTab cluster={crossPlatformCluster || null} />
+          ) : null}
 
           {/* Feedback buttons */}
           <TrendFeedback title={title} platform={platform} userId={userId} />
