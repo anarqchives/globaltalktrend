@@ -3,10 +3,31 @@
  * Returns a standardized category that matches the filter options.
  */
 
+// Map common source categories (English) to standard categories
+const categoryAliasMap: Record<string, string> = {
+  "politics": "Política", "political": "Política", "us news": "Política", "uk news": "Política",
+  "world news": "Política", "us politics": "Política", "uk politics": "Política", "world": "Política",
+  "policy": "Política", "law": "Política", "diplomacy": "Política", "defense": "Política",
+  "news": "Política", "notícias": "Política", "noticias": "Política",
+  "technology": "Tecnologia", "tech": "Tecnologia", "digital": "Tecnologia",
+  "science": "Ciência", "environment": "Clima/Meio Ambiente", "climate": "Clima/Meio Ambiente",
+  "sport": "Esportes", "sports": "Esportes", "football": "Esportes", "soccer": "Esportes",
+  "culture": "Cultura", "arts": "Cultura", "books": "Cultura", "stage": "Cultura",
+  "film": "Entretenimento", "movies": "Entretenimento", "music": "Entretenimento", "tv": "Entretenimento",
+  "media": "Entretenimento", "television": "Entretenimento", "entertainment": "Entretenimento",
+  "business": "Negócios/Finanças", "economy": "Negócios/Finanças", "finance": "Negócios/Finanças", "money": "Negócios/Finanças",
+  "health": "Saúde", "society": "Cultura", "education": "Cultura",
+  "opinion": "Política", "editorial": "Política", "analysis": "Política",
+  "trending": "Geral", "social": "Geral", "fediverso": "Geral",
+};
+
 const categoryKeywords: Record<string, string[]> = {
   Política: [
     "eleição", "eleitoral", "governo", "presidente", "congresso", "senado", "deputado", "voto", "partido", "ministro", "prefeito", "governador", "câmara", "plenário",
     "election", "government", "president", "congress", "senate", "parliament", "minister", "political", "politics", "democrat", "republican", "byelection", "campaign",
+    "policy", "legislation", "lawmaker", "diplomat", "sanctions", "nuclear talks", "state of the union", "oversight", "committee", "deposition", "impeach",
+    "trump", "biden", "obama", "clinton", "starmer", "sunak", "macron", "putin", "zelensky", "xi jinping", "modi",
+    "pentagon", "nato", "eu summit", "un general assembly", "white house", "downing street", "capitol hill",
     "elección", "gobierno", "presidente",
     "élection", "gouvernement", "président",
     "wahl", "regierung", "präsident",
@@ -133,7 +154,13 @@ export function categorizeTrend(
     if (mapped) return mapped;
   }
 
-  // Priority 3: Keyword analysis on title (always re-classify via content)
+  // Priority 3: Category alias mapping (e.g., "Politics" → "Política", "US news" → "Política")
+  if (existingCategory) {
+    const alias = categoryAliasMap[existingCategory.toLowerCase().trim()];
+    if (alias) return alias;
+  }
+
+  // Priority 4: Keyword analysis on title (always re-classify via content)
   const searchText = `${title} ${existingCategory || ""}`.toLowerCase();
   for (const [category, keywords] of Object.entries(categoryKeywords)) {
     if (keywords.some((kw) => searchText.includes(kw))) {
@@ -141,13 +168,13 @@ export function categorizeTrend(
     }
   }
 
-  // Priority 4: If existing category already matches a standard one, keep it
+  // Priority 5: If existing category already matches a standard one, keep it
   const standardCategories = Object.keys(categoryKeywords);
   if (existingCategory && standardCategories.includes(existingCategory)) {
     return existingCategory;
   }
 
-  // Priority 5: Platform-based defaults
+  // Priority 6: Platform-based defaults
   if (["World Bank", "IBGE", "IMF", "FRED"].includes(platform)) return "Negócios/Finanças";
   if (["OpenAlex", "arXiv", "Crossref"].includes(platform)) return "Ciência";
   if (platform === "PubMed") return "Saúde";
