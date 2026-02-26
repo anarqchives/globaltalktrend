@@ -121,7 +121,7 @@ const Index = () => {
   const { filteredTrends: rawFilteredTrends, allTrends, loading, isFirstLoad, fetchTrends, countriesCount, lastUpdated, sourcesStatus } = useTrends(filters, setTrendCounts, lang);
   const criticalMoments = useCriticalMoments(rawFilteredTrends.length > 5 ? rawFilteredTrends : allTrends);
   const { anomalies, totalCount: anomalyCount, dismiss: dismissAnomaly } = useAnomalyAlerts(allTrends);
-  const { multiplatformTitles } = useCrossPlatform(allTrends);
+  const { multiplatformTitles, clusters } = useCrossPlatform(allTrends);
   const [transparencyOpen, setTransparencyOpen] = useState(false);
   const [criticalDismissed, setCriticalDismissed] = useState(false);
 
@@ -133,8 +133,16 @@ const Index = () => {
   // Translate trends content based on selected language
   const { translatedTrends, isTranslating } = useTranslatedTrends(rawFilteredTrends, lang);
 
-  // Mode-based sorting removed — all users see the same order
-  const filteredTrends = translatedTrends;
+  // Filter for multiplatform if selected
+  const filteredTrends = useMemo(() => {
+    if (filters.type === "Multiplataforma") {
+      return translatedTrends.filter(t => {
+        const key = t.title.toLowerCase().normalize("NFD").replace(/\p{Diacritic}/gu, "").replace(/[^a-z0-9\s]/g, "").trim().slice(0, 50);
+        return multiplatformTitles.has(key);
+      });
+    }
+    return translatedTrends;
+  }, [translatedTrends, filters.type, multiplatformTitles]);
 
   // Sync filters to URL
   useEffect(() => {
@@ -296,6 +304,9 @@ const Index = () => {
         ? Array.from({ length: 6 }).map((_, i) => <TrendCardSkeleton key={i} />)
         : visibleTrends.map((trend, i) => {
             const trendId = `${trend.platform}-${trend.title.slice(0, 20)}`;
+            const normalizedKey = trend.title.toLowerCase().normalize("NFD").replace(/\p{Diacritic}/gu, "").replace(/[^a-z0-9\s]/g, "").trim().slice(0, 50);
+            const isMulti = multiplatformTitles.has(normalizedKey);
+            const matchingCluster = isMulti ? clusters.find(c => c.trends.some(ct => ct.title.toLowerCase().normalize("NFD").replace(/\p{Diacritic}/gu, "").replace(/[^a-z0-9\s]/g, "").trim().slice(0, 50) === normalizedKey)) || null : null;
             return (
               <div key={`${trendId}-${i}`} id={`trend-card-${trendId}`} className={highlightedTrendId === trendId ? 'animate-highlight-pulse rounded-xl' : ''}>
               <TimelineCard
@@ -303,7 +314,8 @@ const Index = () => {
                 userId={user?.id}
                 onTrackAction={trackAction}
                 forceExpanded={expandedTrendId === trendId}
-                isMultiplatform={multiplatformTitles.has(trend.title.toLowerCase().normalize("NFD").replace(/\p{Diacritic}/gu, "").replace(/[^a-z0-9\s]/g, "").trim().slice(0, 50))}
+                isMultiplatform={isMulti}
+                crossPlatformCluster={matchingCluster}
                 onClick={() => {
                   trackAction("view", 1, { title: trend.title, platform: trend.platform, countryCode: trend.countryCode, category: trend.category });
                 }}
