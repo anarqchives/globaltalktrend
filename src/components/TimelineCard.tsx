@@ -3,7 +3,7 @@ import { Share2, ChevronDown, ChevronUp, Sparkles, Link2, Bell, ExternalLink, Sh
 import { AreaChart, Area, ResponsiveContainer, XAxis, YAxis, Tooltip, CartesianGrid } from "recharts";
 import { toast } from "@/hooks/use-toast";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { useUserMode } from "@/contexts/UserModeContext";
+// UserMode removed
 import { TrendCardProps } from "./TrendCard";
 import { supabase } from "@/integrations/supabase/client";
 import AlertModal from "./AlertModal";
@@ -73,6 +73,7 @@ interface TimelineCardProps extends TrendCardProps {
   userId?: string | null;
   onTrackAction?: (action: string, points: number, metadata?: Record<string, any>) => void;
   forceExpanded?: boolean;
+  isMultiplatform?: boolean;
 }
 
 const normalizeText = (value: string) => value.toLowerCase().normalize("NFD").replace(/\p{Diacritic}/gu, "").trim();
@@ -189,9 +190,9 @@ const TimelineCard = ({
   userId,
   onTrackAction,
   forceExpanded,
+  isMultiplatform,
 }: TimelineCardProps) => {
   const { t, lang } = useLanguage();
-  const { mode, config: modeConfig } = useUserMode();
   const [expanded, setExpanded] = useState(forceExpanded || false);
   const [alertOpen, setAlertOpen] = useState(false);
 
@@ -381,9 +382,9 @@ const TimelineCard = ({
                    {trigger.emoji} {t(trigger.labelKey as any)}
                  </span>
                )}
-               {modeConfig.extraBadge && modeConfig.sortWeight({ title, category, change, trustBadge, sources, commentCount, likeRatio, platform }) > 20 && (
-                 <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium bg-primary/10 text-primary border border-primary/20 whitespace-nowrap flex-shrink-0">
-                   {modeConfig.extraBadge.emoji} {modeConfig.extraBadge.label}
+               {isMultiplatform && (
+                 <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-orange-500/15 text-orange-600 dark:text-orange-400 border border-orange-500/20 whitespace-nowrap flex-shrink-0">
+                   🔥 MULTIPLATAFORMA
                  </span>
                )}
                {sentiment && (

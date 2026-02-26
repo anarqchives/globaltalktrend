@@ -10,9 +10,9 @@ import { useTrends } from "@/hooks/use-trends";
 import { useTranslatedTrends } from "@/hooks/use-translated-trends";
 import { useCriticalMoments } from "@/hooks/use-critical-moments";
 import { useAnomalyAlerts } from "@/hooks/use-anomaly-alerts";
+import { useCrossPlatform } from "@/hooks/use-cross-platform";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { useUserMode } from "@/contexts/UserModeContext";
 import { useHistory } from "@/hooks/use-history";
 import { useGamification } from "@/hooks/use-gamification";
 import { supabase } from "@/integrations/supabase/client";
@@ -99,7 +99,6 @@ function getInitialFilters(): FilterState {
 
 const Index = () => {
   const { t, lang } = useLanguage();
-  const { config: modeConfig, mode } = useUserMode();
   const [filters, setFilters] = useState<FilterState>(getInitialFilters);
   const [user, setUser] = useState<any>(null);
 
@@ -113,7 +112,7 @@ const Index = () => {
   const { trackAction } = useGamification(user?.id ?? null);
   const [trendCounts, setTrendCounts] = useState<Record<string, number>>({});
   const [expandedTrendId, setExpandedTrendId] = useState<string | null>(null);
-  const [_mobileTab, _setMobileTab] = useState<"timeline" | "map">("timeline"); // kept for compat
+  const [highlightedTrendId, setHighlightedTrendId] = useState<string | null>(null);
   const [visibleCount, setVisibleCount] = useState(INITIAL_COUNT);
   const isMobile = useIsMobile();
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -122,6 +121,7 @@ const Index = () => {
   const { filteredTrends: rawFilteredTrends, allTrends, loading, isFirstLoad, fetchTrends, countriesCount, lastUpdated, sourcesStatus } = useTrends(filters, setTrendCounts, lang);
   const criticalMoments = useCriticalMoments(rawFilteredTrends.length > 5 ? rawFilteredTrends : allTrends);
   const { anomalies, totalCount: anomalyCount, dismiss: dismissAnomaly } = useAnomalyAlerts(allTrends);
+  const { multiplatformTitles } = useCrossPlatform(allTrends);
   const [transparencyOpen, setTransparencyOpen] = useState(false);
   const [criticalDismissed, setCriticalDismissed] = useState(false);
 
@@ -133,11 +133,8 @@ const Index = () => {
   // Translate trends content based on selected language
   const { translatedTrends, isTranslating } = useTranslatedTrends(rawFilteredTrends, lang);
 
-  // Apply mode-based sorting
-  const filteredTrends = useMemo(() => {
-    if (mode === "cidadao") return translatedTrends;
-    return [...translatedTrends].sort((a, b) => modeConfig.sortWeight(b) - modeConfig.sortWeight(a));
-  }, [translatedTrends, mode, modeConfig]);
+  // Mode-based sorting removed — all users see the same order
+  const filteredTrends = translatedTrends;
 
   // Sync filters to URL
   useEffect(() => {
@@ -217,9 +214,22 @@ const Index = () => {
   const handleSelectTrend = useCallback((trend: TrendCardProps) => {
     const trendId = `${trend.platform}-${trend.title.slice(0, 20)}`;
     setExpandedTrendId(trendId);
-    if (isMobile) _setMobileTab("timeline");
     scrollRef.current?.scrollTo({ top: 0, behavior: "smooth" });
-  }, [isMobile]);
+  }, []);
+
+  const handleAnomalyClick = useCallback((trendId: string) => {
+    setExpandedTrendId(trendId);
+    setHighlightedTrendId(trendId);
+    // Scroll to the card after a brief delay to allow render
+    setTimeout(() => {
+      const el = document.getElementById(`trend-card-${trendId}`);
+      if (el) {
+        el.scrollIntoView({ behavior: "smooth", block: "center" });
+      }
+      // Clear highlight after animation
+      setTimeout(() => setHighlightedTrendId(null), 2500);
+    }, 100);
+  }, []);
 
   const handleCardExpand = useCallback((trend: TrendCardProps) => {
     const trendId = `${trend.platform}-${trend.title.slice(0, 20)}`;
@@ -287,12 +297,13 @@ const Index = () => {
         : visibleTrends.map((trend, i) => {
             const trendId = `${trend.platform}-${trend.title.slice(0, 20)}`;
             return (
+              <div key={`${trendId}-${i}`} id={`trend-card-${trendId}`} className={highlightedTrendId === trendId ? 'animate-highlight-pulse rounded-xl' : ''}>
               <TimelineCard
-                key={`${trendId}-${i}`}
                 {...trend}
                 userId={user?.id}
                 onTrackAction={trackAction}
                 forceExpanded={expandedTrendId === trendId}
+                isMultiplatform={multiplatformTitles.has(trend.title.toLowerCase().normalize("NFD").replace(/\p{Diacritic}/gu, "").replace(/[^a-z0-9\s]/g, "").trim().slice(0, 50))}
                 onClick={() => {
                   trackAction("view", 1, { title: trend.title, platform: trend.platform, countryCode: trend.countryCode, category: trend.category });
                 }}
@@ -322,6 +333,7 @@ const Index = () => {
                   setFilters((f) => ({ ...f, type: map[p] || "Todas mídias" }));
                 }}
               />
+              </div>
             );
           })}
       {hasMore && (
@@ -401,6 +413,7 @@ const Index = () => {
         anomalies={anomalies}
         onDismissAnomaly={dismissAnomaly}
         onOpenTransparency={() => setTransparencyOpen(true)}
+        onAnomalyClick={handleAnomalyClick}
       />
       <FilterBar filters={filters} onChange={setFilters} onForceReset={() => setFilters(defaultFilters)} />
 
