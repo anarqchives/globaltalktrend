@@ -127,21 +127,43 @@ function generateContextualFallback(filters: FilterState): TrendCardProps[] {
   const categoryFallbacks: Record<string, TrendCardProps[]> = {
     "Política": [
       { icon: "🏛️", platform: "The Guardian", title: "Eleições e decisões políticas movimentam a semana", category: "Política", time: "recente", volume: "Análise", change: "em alta", changePositive: true, sparkData: [30, 40, 50, 60, 70, 65, 75, 80, 85, 90], details: "Acompanhe os principais movimentos políticos globais.", countryCode: filters.country !== "global" ? filters.country.toUpperCase() : "GL" },
+      { icon: "📰", platform: "BBC News", title: "Líderes mundiais discutem novas sanções e acordos diplomáticos", category: "Política", time: "recente", volume: "Destaque", change: "+trending", changePositive: true, sparkData: [20, 35, 45, 55, 65, 70, 80, 85, 88, 92], details: "Diplomacia e relações internacionais em foco.", countryCode: "GB" },
+      { icon: "🗽", platform: "New York Times", title: "Congresso debate nova legislação sobre inteligência artificial", category: "Política", time: "recente", volume: "Alto", change: "+novo", changePositive: true, sparkData: [15, 25, 40, 50, 60, 70, 75, 82, 88, 90], details: "Regulamentação de IA avança no legislativo.", countryCode: "US" },
+      { icon: "🇧🇷", platform: "Folha de S.Paulo", title: "Pesquisa eleitoral revela novos cenários para 2026", category: "Política", time: "recente", volume: "Pesquisa", change: "+280%", changePositive: true, sparkData: [10, 20, 30, 50, 65, 78, 85, 90, 93, 96], details: "Novos dados de intenção de voto movimentam o cenário político.", countryCode: "BR" },
+      { icon: "🇪🇸", platform: "El País", title: "União Europeia anuncia pacote de medidas econômicas", category: "Política", time: "recente", volume: "Europa", change: "+120%", changePositive: true, sparkData: [25, 35, 42, 55, 60, 68, 75, 80, 85, 88], details: "Novas políticas econômicas impactam mercados europeus.", countryCode: "ES" },
     ],
     "Tecnologia": [
       { icon: "💻", platform: "Hacker News", title: "Novos avanços em IA e desenvolvimento de software", category: "Tecnologia", time: "recente", volume: "Trending", change: "+alto", changePositive: true, sparkData: [20, 35, 45, 55, 60, 70, 80, 85, 90, 95], details: "As principais tendências do mundo tech.", countryCode: "US" },
+      { icon: "🔍", platform: "Google Trends", title: "Busca por ferramentas de IA generativa bate recorde", category: "Tecnologia", time: "recente", volume: "1.5M", change: "+220%", changePositive: true, sparkData: [15, 30, 45, 55, 65, 75, 82, 88, 92, 96], details: "Crescimento acelerado no interesse por IA.", countryCode: "US" },
+      { icon: "💬", platform: "Reddit", title: "Comunidade debate privacidade e regulação de big tech", category: "Tecnologia", time: "recente", volume: "12K", change: "+hot", changePositive: true, sparkData: [18, 28, 38, 48, 58, 65, 72, 80, 85, 90], details: "Discussão intensa sobre privacidade digital.", countryCode: "US" },
     ],
     "Esportes": [
       { icon: "⚽", platform: "YouTube", title: "Destaques esportivos da semana", category: "Esportes", time: "recente", volume: "Popular", change: "+trending", changePositive: true, sparkData: [25, 40, 55, 50, 65, 70, 80, 90, 85, 95], details: "Os momentos mais comentados do esporte mundial.", countryCode: filters.country !== "global" ? filters.country.toUpperCase() : "GL" },
+      { icon: "📰", platform: "BBC News", title: "Transferências de jogadores agitam o mercado europeu", category: "Esportes", time: "recente", volume: "Alto", change: "+180%", changePositive: true, sparkData: [20, 35, 45, 60, 70, 78, 85, 90, 92, 95], details: "Janela de transferências movimenta clubes.", countryCode: "GB" },
+      { icon: "💬", platform: "Reddit", title: "Fãs debatem melhores jogadas da temporada", category: "Esportes", time: "recente", volume: "8K", change: "+hot", changePositive: true, sparkData: [15, 25, 40, 55, 65, 72, 80, 85, 90, 93], details: "As melhores jogadas e gols do período.", countryCode: "US" },
     ],
     "Ciência": [
       { icon: "🔬", platform: "OpenAlex", title: "Pesquisas científicas em destaque", category: "Ciência", time: "recente", volume: "Publicações", change: "+novo", changePositive: true, sparkData: [10, 15, 20, 30, 40, 50, 55, 60, 70, 75], details: "Últimas publicações e descobertas científicas.", countryCode: "US", trustBadge: "scientific" as any },
+      { icon: "📚", platform: "Wikipedia", title: "Artigo sobre nova descoberta espacial em alta", category: "Ciência", time: "recente", volume: "890K views", change: "+340%", changePositive: true, sparkData: [8, 15, 25, 40, 55, 68, 78, 85, 90, 95], details: "Interesse público em exploração espacial cresce.", countryCode: "US" },
+      { icon: "📰", platform: "The Guardian", title: "Estudo revela avanços na luta contra doenças raras", category: "Ciência", time: "recente", volume: "Destaque", change: "+novo", changePositive: true, sparkData: [12, 20, 30, 42, 52, 60, 68, 75, 82, 88], details: "Pesquisadores publicam resultados promissores.", countryCode: "GB", trustBadge: "scientific" as any },
     ],
     "Entretenimento": [
       { icon: "🎬", platform: "YouTube", title: "Entretenimento: os conteúdos mais assistidos", category: "Entretenimento", time: "recente", volume: "Viral", change: "+trending", changePositive: true, sparkData: [30, 50, 60, 70, 75, 85, 90, 88, 92, 95], details: "O que está bombando no entretenimento.", countryCode: filters.country !== "global" ? filters.country.toUpperCase() : "GL" },
+      { icon: "💬", platform: "Reddit", title: "Fãs reagem a novo trailer de série aguardada", category: "Entretenimento", time: "recente", volume: "25K", change: "+hot", changePositive: true, sparkData: [20, 35, 50, 62, 70, 78, 85, 90, 93, 96], details: "Discussão viral sobre nova produção.", countryCode: "US" },
+      { icon: "🔍", platform: "Google Trends", title: "Buscas por premiação de cinema disparam", category: "Entretenimento", time: "recente", volume: "2.1M", change: "+450%", changePositive: true, sparkData: [10, 20, 35, 50, 65, 78, 88, 92, 95, 98], details: "Temporada de prêmios gera pico de interesse.", countryCode: "US" },
     ],
     "Saúde": [
       { icon: "🏥", platform: "PubMed", title: "Saúde e bem-estar: tendências globais", category: "Saúde", time: "recente", volume: "Pesquisa", change: "+novo", changePositive: true, sparkData: [15, 20, 25, 35, 40, 50, 55, 60, 65, 70], details: "Acompanhe as últimas tendências em saúde.", countryCode: "US", trustBadge: "scientific" as any },
+      { icon: "📰", platform: "BBC News", title: "OMS alerta para aumento de casos de doença respiratória", category: "Saúde", time: "recente", volume: "Alto", change: "+180%", changePositive: true, sparkData: [12, 22, 35, 48, 58, 65, 72, 80, 85, 90], details: "Organização Mundial da Saúde emite comunicado.", countryCode: "GL", trustBadge: "official" as any },
+    ],
+    "Negócios/Finanças": [
+      { icon: "📊", platform: "World Bank", title: "Indicadores econômicos globais em atualização", category: "Negócios/Finanças", time: "recente", volume: "Relatório", change: "+novo", changePositive: true, sparkData: [40, 42, 45, 48, 50, 52, 55, 58, 60, 62], details: "Dados macroeconômicos atualizados.", countryCode: "GL", trustBadge: "official" as any },
+      { icon: "📰", platform: "Reuters", title: "Mercados reagem a decisões de bancos centrais", category: "Negócios/Finanças", time: "recente", volume: "Alto", change: "+150%", changePositive: true, sparkData: [25, 35, 45, 55, 62, 70, 78, 82, 88, 92], details: "Bolsas de valores apresentam volatilidade.", countryCode: "US" },
+      { icon: "💬", platform: "Reddit", title: "Investidores discutem estratégias para cenário atual", category: "Negócios/Finanças", time: "recente", volume: "5K", change: "+hot", changePositive: true, sparkData: [18, 28, 38, 48, 55, 62, 70, 78, 85, 88], details: "Comunidade financeira debate oportunidades.", countryCode: "US" },
+    ],
+    "Clima/Meio Ambiente": [
+      { icon: "🌍", platform: "The Guardian", title: "Relatório climático aponta recordes de temperatura", category: "Clima/Meio Ambiente", time: "recente", volume: "Destaque", change: "+novo", changePositive: false, sparkData: [30, 40, 50, 58, 65, 72, 78, 85, 90, 95], details: "Dados climáticos preocupam cientistas.", countryCode: "GB" },
+      { icon: "📊", platform: "NOAA", title: "Monitoramento de eventos climáticos extremos", category: "Clima/Meio Ambiente", time: "recente", volume: "Oficial", change: "+dados", changePositive: true, sparkData: [20, 25, 35, 45, 55, 60, 68, 75, 80, 85], details: "Acompanhamento em tempo real de fenômenos climáticos.", countryCode: "US", trustBadge: "official" as any },
     ],
   };
 
@@ -169,14 +191,14 @@ function generateContextualFallback(filters: FilterState): TrendCardProps[] {
   }
 
   // Always add generic fallbacks if we don't have enough
-  if (results.length < 3) {
+  if (results.length < 5) {
     const genericFallbacks: TrendCardProps[] = [
       { icon: "🌍", platform: "Google Trends", title: "Tendências globais em tempo real", category: "Geral", time: timeStr, volume: "Global", change: "+ativo", changePositive: true, sparkData: [20, 30, 40, 50, 60, 70, 75, 80, 85, 90], details: "Fontes temporariamente limitadas. Mostrando dados contextuais. Atualize em breve para conteúdo ao vivo.", countryCode: "GL" },
       { icon: "📰", platform: "The Guardian", title: "Notícias internacionais em destaque", category: "Política", time: timeStr, volume: "Destaque", change: "+novo", changePositive: true, sparkData: [15, 25, 35, 50, 55, 65, 75, 80, 85, 88], details: "Acompanhe as manchetes mais relevantes do momento.", countryCode: "GB", trustBadge: "verified" as any },
       { icon: "💬", platform: "Reddit", title: "Discussões mais populares da comunidade", category: "Geral", time: timeStr, volume: "Popular", change: "+hot", changePositive: true, sparkData: [10, 20, 35, 45, 55, 60, 70, 80, 85, 90], details: "Os tópicos mais discutidos nas redes sociais.", countryCode: "US" },
     ];
     for (const fb of genericFallbacks) {
-      if (results.length >= 5) break;
+      if (results.length >= 8) break;
       results.push(fb);
     }
   }
@@ -702,7 +724,7 @@ export function useTrends(filters: FilterState, onTrendCountsChange: (counts: Re
     });
 
     // ── SMART FALLBACK: Layered approach to never return empty ──
-    const MIN_TRENDS = 5;
+    const MIN_TRENDS = 8;
 
     if (filtered.length < MIN_TRENDS && trends.length > 0) {
       console.log(`🧠 Poucas trends (${filtered.length}) — ativando fallback em camadas`);
