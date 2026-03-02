@@ -244,6 +244,7 @@ const countryKeywordsMap: Record<string, string[]> = {
   RU: ["russia", "rússia", "moscow", "moscou", "putin", "kremlin"],
   UA: ["ukraine", "ucrânia", "kiev", "kyiv", "zelensky"],
   IL: ["israel", "tel aviv", "jerusalem", "jerusalém", "netanyahu"],
+  PS: ["palestina", "palestine", "palestinian", "palestino", "palestinos", "gaza", "cisjordânia", "west bank", "ramallah", "faixa de gaza", "hamas", "fatah", "al-quds", "nablus", "hebron"],
   SA: ["saudi", "arábia saudita", "riyadh"],
   AE: ["emirates", "emirados", "dubai", "abu dhabi"],
   EG: ["egypt", "egito", "cairo"],

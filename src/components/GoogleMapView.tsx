@@ -59,6 +59,7 @@ const countryPoints: CountryPoint[] = [
   { id: "SA", name: "Arábia Saudita", lat: 23.89, lng: 45.08 },
   { id: "AE", name: "Emirados Árabes", lat: 23.42, lng: 53.85 },
   { id: "PK", name: "Paquistão", lat: 30.38, lng: 69.35 },
+  { id: "PS", name: "Palestina", lat: 31.95, lng: 35.23 },
   // Oceania
   { id: "AU", name: "Austrália", lat: -25.27, lng: 133.78 },
   { id: "NZ", name: "Nova Zelândia", lat: -40.9, lng: 174.89 },

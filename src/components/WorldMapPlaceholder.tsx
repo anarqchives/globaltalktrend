@@ -53,6 +53,7 @@ const mapPoints: MapPoint[] = [
   { id: "SA", name: "Arábia Saudita", cx: 540, cy: 195 },
   { id: "AE", name: "Emirados Árabes", cx: 555, cy: 205 },
   { id: "PK", name: "Paquistão", cx: 585, cy: 188 },
+  { id: "PS", name: "Palestina", cx: 520, cy: 175 },
   // Oceania
   { id: "AU", name: "Austrália", cx: 695, cy: 318 },
   { id: "NZ", name: "Nova Zelândia", cx: 752, cy: 348 },
