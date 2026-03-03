@@ -35,46 +35,7 @@ const MapFallback = () => (
   </div>
 );
 
-// Mobile floating coffee button
-const MobileCoffeeButton = () => {
-  const [expanded, setExpanded] = useState(false);
-
-  useEffect(() => {
-    if (!expanded) return;
-    const handler = (e: MouseEvent) => {
-      if (!(e.target as HTMLElement).closest('[data-mobile-coffee]')) setExpanded(false);
-    };
-    document.addEventListener('click', handler);
-    return () => document.removeEventListener('click', handler);
-  }, [expanded]);
-
-  return (
-    <div className="fixed bottom-5 right-4 z-50 md:hidden" data-mobile-coffee>
-      {expanded && (
-        <div className="mb-2 p-4 rounded-2xl bg-white/95 dark:bg-card/95 backdrop-blur-[12px] border border-white/50 dark:border-white/10 shadow-[0_8px_24px_rgba(0,0,0,0.1)] w-56 animate-in fade-in slide-in-from-bottom-2">
-          <p className="text-[13px] font-medium text-foreground mb-3">
-            Apoie a melhoria contínua da ferramenta
-          </p>
-          <a
-            href="https://buy.stripe.com/fZu7sMgw6cHLeTnbWVdIA00"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex items-center justify-center gap-2 w-full py-2.5 px-4 rounded-full bg-primary hover:bg-primary/90 text-primary-foreground text-[13px] font-semibold transition-colors shadow-sm"
-          >
-            ☕ Apoie
-          </a>
-        </div>
-      )}
-      <button
-        onClick={(e) => { e.stopPropagation(); setExpanded(!expanded); }}
-        className="w-12 h-12 rounded-full bg-white/95 dark:bg-card/95 backdrop-blur-[12px] border border-white/50 dark:border-white/10 shadow-[0_4px_16px_rgba(0,0,0,0.12)] flex items-center justify-center text-xl hover:scale-105 active:scale-95 transition-transform focus:outline-none"
-        title="Apoie o projeto"
-      >
-        ☕
-      </button>
-    </div>
-  );
-};
+// MobileCoffeeButton removed — now in header
 
 const defaultFilters: FilterState = {
   country: "global",

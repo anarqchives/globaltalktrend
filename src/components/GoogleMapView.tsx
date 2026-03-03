@@ -713,8 +713,7 @@ const GoogleMapView = ({
         </div>
       )}
 
-      {/* Coffee donation floating button */}
-      <CoffeeDonationButton />
+      {/* Coffee donation button removed — now in header */}
 
       {/* Heatmap legend */}
       <AnimatePresence>
@@ -746,56 +745,6 @@ const GoogleMapView = ({
   );
 };
 
-// Coffee Donation Button Component
-const CoffeeDonationButton = () => {
-  const [expanded, setExpanded] = useState(false);
-
-  useEffect(() => {
-    if (!expanded) return;
-    const handleClickOutside = (e: MouseEvent) => {
-      const target = e.target as HTMLElement;
-      if (!target.closest('[data-coffee-popup]')) {
-        setExpanded(false);
-      }
-    };
-    document.addEventListener('click', handleClickOutside);
-    return () => document.removeEventListener('click', handleClickOutside);
-  }, [expanded]);
-
-  return (
-    <div className="absolute bottom-16 left-4 z-20" data-coffee-popup>
-      <AnimatePresence>
-        {expanded && (
-          <motion.div
-            initial={{ opacity: 0, scale: 0.9, y: 8 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.9, y: 8 }}
-            transition={{ duration: 0.2 }}
-            className="mb-2 p-4 rounded-2xl bg-white/95 dark:bg-card/95 backdrop-blur-[12px] border border-white/50 dark:border-white/10 shadow-[0_8px_24px_rgba(0,0,0,0.1)] w-56"
-          >
-            <p className="text-[13px] font-medium text-foreground mb-3">
-              Apoie a melhoria contínua da ferramenta
-            </p>
-            <a
-              href="https://buy.stripe.com/fZu7sMgw6cHLeTnbWVdIA00"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center justify-center gap-2 w-full py-2 px-4 rounded-full bg-primary hover:bg-primary/90 text-primary-foreground text-[13px] font-semibold transition-colors shadow-sm"
-            >
-              ☕ Apoie
-            </a>
-          </motion.div>
-        )}
-      </AnimatePresence>
-      <button
-        onClick={(e) => { e.stopPropagation(); setExpanded(!expanded); }}
-        className="w-10 h-10 rounded-[20px] bg-white/95 dark:bg-card/95 backdrop-blur-[12px] border border-white/50 dark:border-white/10 shadow-[0_4px_16px_rgba(0,0,0,0.08)] flex items-center justify-center text-lg hover:scale-105 transition-transform focus:outline-none"
-        title="Apoie o projeto"
-      >
-        ☕
-      </button>
-    </div>
-  );
-};
+// CoffeeDonationButton removed — moved to TrendHeader
 
 export default GoogleMapView;
