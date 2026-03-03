@@ -170,53 +170,124 @@ function generateContextualFallback(filters: FilterState): TrendCardProps[] {
   const countryFallbacks: Record<string, TrendCardProps[]> = {
     BR: [
       { icon: "🇧🇷", platform: "Google Trends", title: "O que o Brasil está pesquisando agora", category: "Geral", time: timeStr, volume: "Alto", change: "+trending", changePositive: true, sparkData: [30, 45, 55, 60, 70, 80, 85, 90, 92, 95], details: "As buscas mais populares no Brasil neste momento.", countryCode: "BR" },
+      { icon: "🇧🇷", platform: "Folha de S.Paulo", title: "Pesquisa eleitoral revela novos cenários para 2026", category: "Política", time: timeStr, volume: "Pesquisa", change: "+280%", changePositive: true, sparkData: [10, 20, 30, 50, 65, 78, 85, 90, 93, 96], details: "Novos dados de intenção de voto movimentam o cenário político.", countryCode: "BR" },
+      { icon: "📊", platform: "IBGE", title: "IBGE divulga novos indicadores econômicos", category: "Negócios/Finanças", time: timeStr, volume: "Oficial", change: "+novo", changePositive: true, sparkData: [20, 25, 30, 40, 50, 55, 60, 65, 70, 75], details: "Dados oficiais do Instituto Brasileiro de Geografia e Estatística.", countryCode: "BR", trustBadge: "official" as any },
     ],
     US: [
       { icon: "🇺🇸", platform: "Google Trends", title: "Top trending topics in the United States", category: "Geral", time: timeStr, volume: "High", change: "+trending", changePositive: true, sparkData: [25, 40, 50, 65, 70, 80, 85, 88, 92, 96], details: "What Americans are searching for right now.", countryCode: "US" },
+      { icon: "🗽", platform: "New York Times", title: "Congress debates new legislation on AI regulation", category: "Política", time: timeStr, volume: "Alto", change: "+novo", changePositive: true, sparkData: [15, 25, 40, 50, 60, 70, 75, 82, 88, 90], details: "Regulamentação de IA avança no legislativo americano.", countryCode: "US" },
     ],
     PS: [
       { icon: "🇵🇸", platform: "Al Jazeera", title: "Últimas notícias sobre Gaza e o conflito na Palestina", category: "Conflitos/Crises", time: timeStr, volume: "Alto", change: "+trending", changePositive: false, sparkData: [40, 55, 65, 75, 80, 85, 90, 92, 95, 98], details: "Acompanhe a cobertura em tempo real do conflito na região.", countryCode: "PS" },
       { icon: "📰", platform: "Reuters", title: "Negociações de cessar-fogo em Gaza avançam", category: "Política", time: timeStr, volume: "Destaque", change: "+280%", changePositive: true, sparkData: [20, 35, 50, 60, 70, 78, 85, 90, 93, 96], details: "Mediadores internacionais pressionam por acordo.", countryCode: "PS" },
+      { icon: "📰", platform: "BBC News", title: "Crise humanitária em Gaza: ONU pede acesso para ajuda", category: "Conflitos/Crises", time: timeStr, volume: "Destaque", change: "+350%", changePositive: false, sparkData: [45, 55, 65, 72, 80, 85, 90, 93, 96, 98], details: "Agências humanitárias relatam situação crítica na Faixa de Gaza.", countryCode: "PS" },
     ],
     RU: [
       { icon: "🇷🇺", platform: "Reuters", title: "Situação na Rússia e impacto das sanções internacionais", category: "Política", time: timeStr, volume: "Destaque", change: "+150%", changePositive: false, sparkData: [35, 45, 55, 60, 68, 75, 80, 85, 88, 92], details: "Análise do cenário geopolítico russo.", countryCode: "RU" },
+      { icon: "📰", platform: "BBC News", title: "Economia russa enfrenta desafios com sanções ocidentais", category: "Negócios/Finanças", time: timeStr, volume: "Análise", change: "+120%", changePositive: false, sparkData: [30, 40, 50, 55, 62, 68, 75, 80, 85, 88], details: "Impacto das sanções no comércio e indústria da Rússia.", countryCode: "RU" },
     ],
     UA: [
       { icon: "🇺🇦", platform: "BBC News", title: "Conflito na Ucrânia: últimas atualizações", category: "Conflitos/Crises", time: timeStr, volume: "Alto", change: "+200%", changePositive: false, sparkData: [30, 45, 55, 65, 72, 80, 85, 90, 93, 96], details: "Cobertura contínua do conflito no leste europeu.", countryCode: "UA" },
+      { icon: "📰", platform: "Reuters", title: "Zelensky discursa na ONU pedindo apoio internacional", category: "Política", time: timeStr, volume: "Destaque", change: "+180%", changePositive: true, sparkData: [25, 40, 55, 65, 72, 80, 85, 88, 92, 95], details: "Líder ucraniano reforça pedidos de ajuda militar e humanitária.", countryCode: "UA" },
+    ],
+    VE: [
+      { icon: "🇻🇪", platform: "Telesur", title: "Crise política na Venezuela: oposição pressiona por eleições", category: "Política", time: timeStr, volume: "Destaque", change: "+250%", changePositive: false, sparkData: [35, 48, 58, 68, 75, 82, 88, 92, 95, 97], details: "Tensões políticas crescem com disputas entre governo e oposição.", countryCode: "VE" },
+      { icon: "📰", platform: "Reuters", title: "Venezuela enfrenta desafios econômicos e crise migratória", category: "Negócios/Finanças", time: timeStr, volume: "Alto", change: "+180%", changePositive: false, sparkData: [30, 42, 52, 60, 68, 75, 80, 85, 90, 93], details: "Inflação e escassez afetam milhões de venezuelanos.", countryCode: "VE" },
+      { icon: "📰", platform: "BBC News", title: "Maduro anuncia novas medidas econômicas na Venezuela", category: "Política", time: timeStr, volume: "Destaque", change: "+200%", changePositive: false, sparkData: [28, 38, 48, 58, 65, 72, 78, 84, 88, 92], details: "Governo venezuelano tenta estabilizar economia em meio a sanções.", countryCode: "VE" },
+      { icon: "🌐", platform: "EFE News", title: "Diáspora venezuelana cresce: impacto na América Latina", category: "Política", time: timeStr, volume: "Análise", change: "+150%", changePositive: false, sparkData: [20, 30, 42, 52, 60, 68, 75, 80, 85, 88], details: "Milhões de venezuelanos emigraram nos últimos anos.", countryCode: "VE" },
+    ],
+    GB: [
+      { icon: "🇬🇧", platform: "BBC News", title: "UK politics: latest developments in Parliament", category: "Política", time: timeStr, volume: "Alto", change: "+trending", changePositive: true, sparkData: [25, 38, 48, 58, 68, 75, 82, 88, 92, 95], details: "As últimas notícias do parlamento britânico.", countryCode: "GB" },
+      { icon: "📰", platform: "The Guardian", title: "Economy and public services dominate UK debate", category: "Negócios/Finanças", time: timeStr, volume: "Destaque", change: "+120%", changePositive: true, sparkData: [20, 32, 42, 52, 60, 68, 75, 80, 85, 88], details: "Economia britânica em foco no debate público.", countryCode: "GB" },
+    ],
+    FR: [
+      { icon: "🇫🇷", platform: "Le Monde", title: "France: actualités politiques et sociales", category: "Política", time: timeStr, volume: "Alto", change: "+trending", changePositive: true, sparkData: [22, 35, 45, 55, 65, 72, 80, 85, 90, 93], details: "Dernières nouvelles de la politique française.", countryCode: "FR" },
+    ],
+    DE: [
+      { icon: "🇩🇪", platform: "Der Spiegel", title: "Deutschland: aktuelle Nachrichten und Analysen", category: "Política", time: timeStr, volume: "Alto", change: "+trending", changePositive: true, sparkData: [20, 32, 42, 55, 62, 70, 78, 84, 90, 93], details: "As últimas notícias e análises da Alemanha.", countryCode: "DE" },
+    ],
+    AR: [
+      { icon: "🇦🇷", platform: "Clarín", title: "Argentina: Milei anuncia novas reformas econômicas", category: "Política", time: timeStr, volume: "Alto", change: "+200%", changePositive: true, sparkData: [25, 38, 50, 60, 70, 78, 85, 90, 93, 96], details: "Presidente argentino avança com agenda de reformas.", countryCode: "AR" },
+    ],
+    MX: [
+      { icon: "🇲🇽", platform: "El Universal MX", title: "México: economia e segurança dominam a agenda", category: "Política", time: timeStr, volume: "Alto", change: "+150%", changePositive: true, sparkData: [22, 35, 45, 55, 65, 72, 78, 84, 88, 92], details: "Principais temas em discussão no cenário mexicano.", countryCode: "MX" },
+    ],
+    CO: [
+      { icon: "🇨🇴", platform: "El Tiempo", title: "Colômbia: processo de paz e reformas sociais avançam", category: "Política", time: timeStr, volume: "Destaque", change: "+130%", changePositive: true, sparkData: [20, 30, 42, 52, 60, 68, 75, 80, 85, 88], details: "Governo colombiano prossegue com agenda de reformas.", countryCode: "CO" },
+    ],
+    IL: [
+      { icon: "🇮🇱", platform: "Haaretz", title: "Israel: tensões regionais e política doméstica", category: "Política", time: timeStr, volume: "Alto", change: "+200%", changePositive: false, sparkData: [35, 48, 58, 68, 75, 82, 88, 92, 95, 97], details: "Análise das dinâmicas políticas e de segurança em Israel.", countryCode: "IL" },
+    ],
+    CN: [
+      { icon: "🇨🇳", platform: "South China Morning Post", title: "China: economia e relações internacionais em foco", category: "Negócios/Finanças", time: timeStr, volume: "Destaque", change: "+150%", changePositive: true, sparkData: [25, 38, 48, 58, 65, 72, 78, 84, 88, 92], details: "As últimas notícias sobre a economia e geopolítica chinesa.", countryCode: "CN" },
+    ],
+    IN: [
+      { icon: "🇮🇳", platform: "Times of India", title: "India: technology boom and political developments", category: "Tecnologia", time: timeStr, volume: "Alto", change: "+180%", changePositive: true, sparkData: [22, 35, 48, 58, 68, 75, 82, 88, 92, 95], details: "Índia se destaca como potência tecnológica emergente.", countryCode: "IN" },
+    ],
+    JP: [
+      { icon: "🇯🇵", platform: "NHK", title: "Japan: economic recovery and innovation drive", category: "Negócios/Finanças", time: timeStr, volume: "Destaque", change: "+120%", changePositive: true, sparkData: [20, 30, 40, 50, 58, 65, 72, 78, 84, 88], details: "Japão investe em inovação e recuperação econômica.", countryCode: "JP" },
+    ],
+    EG: [
+      { icon: "🇪🇬", platform: "Ahram Online", title: "Egito: economia do Canal de Suez e diplomacia regional", category: "Negócios/Finanças", time: timeStr, volume: "Destaque", change: "+100%", changePositive: true, sparkData: [18, 28, 38, 48, 55, 62, 68, 75, 80, 85], details: "Egito mantém papel central na diplomacia do Oriente Médio.", countryCode: "EG" },
+    ],
+    NG: [
+      { icon: "🇳🇬", platform: "Premium Times", title: "Nigéria: economia e política em transformação", category: "Política", time: timeStr, volume: "Destaque", change: "+130%", changePositive: true, sparkData: [20, 30, 40, 50, 58, 65, 72, 78, 84, 88], details: "Maior economia da África passa por reformas estruturais.", countryCode: "NG" },
+    ],
+    ZA: [
+      { icon: "🇿🇦", platform: "News24", title: "África do Sul: desafios energéticos e crescimento econômico", category: "Negócios/Finanças", time: timeStr, volume: "Análise", change: "+110%", changePositive: false, sparkData: [22, 32, 42, 50, 58, 64, 70, 76, 82, 86], details: "Crise energética impacta o desenvolvimento sul-africano.", countryCode: "ZA" },
+    ],
+    TR: [
+      { icon: "🇹🇷", platform: "Reuters", title: "Turquia: economia e geopolítica na encruzilhada", category: "Política", time: timeStr, volume: "Destaque", change: "+140%", changePositive: false, sparkData: [25, 35, 45, 55, 62, 70, 76, 82, 86, 90], details: "Turquia navega entre influência regional e desafios econômicos.", countryCode: "TR" },
+    ],
+    KR: [
+      { icon: "🇰🇷", platform: "Korea Herald", title: "Coreia do Sul: tecnologia e cultura K-pop em alta", category: "Tecnologia", time: timeStr, volume: "Alto", change: "+200%", changePositive: true, sparkData: [25, 38, 50, 60, 70, 78, 85, 90, 93, 96], details: "Inovação tecnológica e exportações culturais em crescimento.", countryCode: "KR" },
+    ],
+    AU: [
+      { icon: "🇦🇺", platform: "BBC News", title: "Austrália: clima extremo e política energética", category: "Clima/Meio Ambiente", time: timeStr, volume: "Destaque", change: "+120%", changePositive: false, sparkData: [20, 30, 42, 52, 60, 68, 75, 80, 85, 88], details: "Eventos climáticos extremos impactam economia australiana.", countryCode: "AU" },
+    ],
+    CA: [
+      { icon: "🇨🇦", platform: "Reuters", title: "Canadá: imigração e economia dominam debate público", category: "Política", time: timeStr, volume: "Alto", change: "+130%", changePositive: true, sparkData: [22, 34, 44, 54, 62, 70, 76, 82, 86, 90], details: "Políticas de imigração e mercado de trabalho em discussão.", countryCode: "CA" },
     ],
   };
 
   // Build fallback list based on active filters
   const results: TrendCardProps[] = [];
 
-  // Add category-specific fallback
-  if (filters.category !== "Todas" && categoryFallbacks[filters.category]) {
-    results.push(...categoryFallbacks[filters.category]);
-  }
-
-  // Add country-specific fallback
+  // Add country-specific fallback FIRST (highest priority)
   const cc = filters.country !== "global" ? filters.country.toUpperCase() : "";
   if (cc && countryFallbacks[cc]) {
     results.push(...countryFallbacks[cc]);
   }
 
+  // Add category-specific fallback
+  if (filters.category !== "Todas" && categoryFallbacks[filters.category]) {
+    // Only add category items that match the country filter (or if global)
+    const catItems = categoryFallbacks[filters.category].filter(item => {
+      if (filters.country === "global") return true;
+      return normalizeCountryCode(item.countryCode) === cc;
+    });
+    for (const item of catItems) {
+      if (!results.some(r => r.title === item.title)) results.push(item);
+    }
+  }
+
   // Always add generic fallbacks if we don't have enough
   if (results.length < 5) {
     const genericFallbacks: TrendCardProps[] = [
-      { icon: "🌍", platform: "Google Trends", title: "Tendências globais em tempo real", category: "Geral", time: timeStr, volume: "Global", change: "+ativo", changePositive: true, sparkData: [20, 30, 40, 50, 60, 70, 75, 80, 85, 90], details: "Fontes temporariamente limitadas. Mostrando dados contextuais. Atualize em breve para conteúdo ao vivo.", countryCode: "GL" },
-      { icon: "📰", platform: "The Guardian", title: "Notícias internacionais em destaque", category: "Política", time: timeStr, volume: "Destaque", change: "+novo", changePositive: true, sparkData: [15, 25, 35, 50, 55, 65, 75, 80, 85, 88], details: "Acompanhe as manchetes mais relevantes do momento.", countryCode: "GB", trustBadge: "verified" as any },
+      { icon: "🌍", platform: "Google Trends", title: "Tendências globais em tempo real", category: "Geral", time: timeStr, volume: "Global", change: "+ativo", changePositive: true, sparkData: [20, 30, 40, 50, 60, 70, 75, 80, 85, 90], details: "Fontes temporariamente limitadas. Mostrando dados contextuais. Atualize em breve para conteúdo ao vivo.", countryCode: cc || "GL" },
+      { icon: "📰", platform: "Reuters", title: "Notícias internacionais em destaque", category: "Política", time: timeStr, volume: "Destaque", change: "+novo", changePositive: true, sparkData: [15, 25, 35, 50, 55, 65, 75, 80, 85, 88], details: "Acompanhe as manchetes mais relevantes do momento.", countryCode: cc || "GL", trustBadge: "verified" as any },
       { icon: "💬", platform: "Reddit", title: "Discussões mais populares da comunidade", category: "Geral", time: timeStr, volume: "Popular", change: "+hot", changePositive: true, sparkData: [10, 20, 35, 45, 55, 60, 70, 80, 85, 90], details: "Os tópicos mais discutidos nas redes sociais.", countryCode: "US" },
     ];
     for (const fb of genericFallbacks) {
       if (results.length >= 8) break;
-      results.push(fb);
+      if (!results.some(r => r.title === fb.title)) results.push(fb);
     }
   }
 
   // Add visual indicator that these are fallback
   return results.map(t => ({
     ...t,
-    details: `${t.details || ""}\n\n💡 Conteúdo contextual — dados ao vivo serão carregados na próxima atualização.`,
+    details: `${t.details || ""}\n\n⏰ Conteúdo contextual — dados ao vivo serão carregados na próxima atualização.`,
   }));
 }
 
