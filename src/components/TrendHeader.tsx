@@ -296,8 +296,15 @@ const TrendHeader = ({ totalTrends = 0, countriesCount = 0, onRefresh, refreshin
               </DropdownMenu>
             }
 
-            {/* User Mode selector removed */}
-
+            {/* Support button */}
+            <a
+              href="https://buy.stripe.com/fZu7sMgw6cHLeTnbWVdIA00"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="px-3 py-1 rounded-full bg-primary/10 text-primary text-[11px] font-semibold hover:bg-primary/20 transition-colors whitespace-nowrap min-h-[28px] flex items-center"
+            >
+              Apoie
+            </a>
 
             <button
               onClick={() => setAboutOpen(true)}
