@@ -872,9 +872,9 @@ export function useTrends(filters: FilterState, onTrendCountsChange: (counts: Re
       return matchCountry && matchCategory && matchSource;
     });
 
-    // ── SMART FALLBACK: Only add same-country data from cache, NEVER relax country ──
+    // ── SMART FALLBACK: Hierarchical data recovery ──
     if (filtered.length === 0 && filters.country !== "global" && trends.length > 0) {
-      console.log(`🧠 Zero trends para país ${countryFilter} — buscando cache histórico (sem relaxar país)`);
+      console.log(`🧠 Zero trends para país ${countryFilter} — iniciando fallback hierárquico`);
 
       let combined: TrendCardProps[] = [];
       const seenKeys = new Set<string>();
@@ -899,11 +899,44 @@ export function useTrends(filters: FilterState, onTrendCountsChange: (counts: Re
       }
 
       // Layer 2: Predictive cache (same country only)
-      if (combined.length === 0) {
+      if (combined.length < 3) {
         const predicted = getFromPredictiveCache(filters);
         if (predicted && predicted.length > 0) {
           console.log("📊 Camada 2 - Cache preditivo (mesmo país):", predicted.length, "itens");
           addUnique(predicted);
+        }
+      }
+
+      // Layer 3: Search ALL trends for keyword matches related to the country
+      if (combined.length < 3) {
+        console.log("🔍 Camada 3 - Busca por palavras-chave do país em trends globais");
+        const countryKeywords: Record<string, string[]> = {
+          VE: ["venezuela", "maduro", "caracas", "guaidó", "pdvsa", "chavismo"],
+          PS: ["gaza", "palestina", "palestine", "hamas", "cisjordânia", "west bank"],
+          UA: ["ucrânia", "ukraine", "kyiv", "zelensky", "kharkiv"],
+          RU: ["rússia", "russia", "putin", "kremlin", "moscou"],
+          BR: ["brasil", "lula", "bolsonaro", "ibge", "são paulo", "brasília"],
+          IL: ["israel", "netanyahu", "tel aviv", "jerusalém", "idf"],
+          AR: ["argentina", "milei", "buenos aires"],
+          MX: ["méxico", "mexico"],
+          CO: ["colômbia", "colombia", "bogotá"],
+        };
+        const keywords = countryKeywords[countryFilter || ""] || [];
+        if (keywords.length > 0) {
+          const keywordMatches = normalizedTrends.filter(t => {
+            const text = `${t.title} ${t.details || ""}`.toLowerCase();
+            return keywords.some(k => text.includes(k));
+          });
+          for (const match of keywordMatches) {
+            const key = match.title.toLowerCase().slice(0, 60);
+            if (!seenKeys.has(key)) {
+              seenKeys.add(key);
+              combined.push({ ...match, countryCode: countryFilter || "GL" });
+            }
+          }
+          if (keywordMatches.length > 0) {
+            console.log("🔍 Camada 3 - Encontradas por palavras-chave:", keywordMatches.length);
+          }
         }
       }
 
@@ -912,9 +945,23 @@ export function useTrends(filters: FilterState, onTrendCountsChange: (counts: Re
         return combined.sort((a, b) => (b.relevanceScore || 50) - (a.relevanceScore || 50));
       }
 
-      // No data at all for this country — return empty so the UI shows the empty-state message
-      console.log(`ℹ️ Nenhuma trend encontrada para ${countryFilter} — exibindo estado vazio`);
+      // Layer 4: Contextual fallback (generated data with clear indicator)
+      console.log(`📋 Camada 4 - Fallback contextualizado para ${countryFilter}`);
+      const contextual = generateContextualFallback(filters);
+      if (contextual.length > 0) {
+        return contextual;
+      }
+
+      // No data at all for this country — show empty state
+      console.log(`ℹ️ Nenhuma trend encontrada para ${countryFilter}`);
       return [];
+    }
+
+    // Same for category-only filters with no results
+    if (filtered.length === 0 && filters.category !== "Todas" && trends.length > 0) {
+      console.log(`🧠 Zero trends para categoria ${filterCategory} — usando fallback contextualizado`);
+      const contextual = generateContextualFallback(filters);
+      if (contextual.length > 0) return contextual;
     }
 
     // Save successful filter results to predictive cache
