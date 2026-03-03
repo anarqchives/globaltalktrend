@@ -11,6 +11,7 @@ import TrendContextTab from "./TrendContextTab";
 import TrendHistoryTab from "./TrendHistoryTab";
 import TrendFeedback from "./TrendFeedback";
 import CrossPlatformTab from "./CrossPlatformTab";
+import NarrativeRadarTab from "./NarrativeRadarTab";
 import { CrossPlatformCluster } from "@/hooks/use-cross-platform";
 
 const platformIcons: Record<string, { emoji: string; color: string }> = {
