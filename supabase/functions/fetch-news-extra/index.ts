@@ -278,9 +278,16 @@ const RSS_FEEDS = [
   { url: "https://www.estadao.com.br/feed", name: "Estadão", icon: "🇧🇷", country: "BR", category: "Notícias" },
   { url: "https://www.clarin.com/rss/lo-ultimo/", name: "Clarín", icon: "🇦🇷", country: "AR", category: "Notícias" },
   { url: "https://www.lanacion.com.ar/arc/outboundfeeds/rss/", name: "La Nación", icon: "🇦🇷", country: "AR", category: "Notícias" },
-  { url: "https://www.eluniversal.com.mx/arc/outboundfeeds/rss/", name: "El Universal", icon: "🇲🇽", country: "MX", category: "Notícias" },
+  { url: "https://www.eluniversal.com.mx/arc/outboundfeeds/rss/", name: "El Universal MX", icon: "🇲🇽", country: "MX", category: "Notícias" },
   { url: "https://www.eltiempo.com/rss.xml", name: "El Tiempo", icon: "🇨🇴", country: "CO", category: "Notícias" },
   { url: "https://elcomercio.pe/feed", name: "El Comercio", icon: "🇵🇪", country: "PE", category: "Notícias" },
+  // Venezuela
+  { url: "https://www.telesurtv.net/news/feed", name: "Telesur", icon: "🇻🇪", country: "VE", category: "Notícias" },
+  { url: "https://efe.com/feed", name: "EFE News", icon: "🌐", country: "ES", category: "Notícias" },
+  { url: "https://www.prensa-latina.cu/feed", name: "Prensa Latina", icon: "🇨🇺", country: "CU", category: "Notícias" },
+  // Cobertura internacional em espanhol
+  { url: "https://www.france24.com/es/rss", name: "France 24 ES", icon: "🇫🇷", country: "FR", category: "Notícias" },
+  { url: "https://rss.dw.com/rdf/rss-es-all", name: "DW Español", icon: "🇩🇪", country: "DE", category: "Notícias" },
 
   // ── EUROPA ──
   { url: "http://feeds.bbci.co.uk/news/rss.xml", name: "BBC News", icon: "🇬🇧", country: "GB", category: "Notícias" },
