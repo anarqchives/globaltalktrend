@@ -670,6 +670,17 @@ const TimelineCard = ({
             />
           ) : activeTab === "crossplatform" ? (
             <CrossPlatformTab cluster={crossPlatformCluster || null} />
+          ) : activeTab === "narrative" ? (
+            <NarrativeRadarTab
+              title={title}
+              details={details}
+              description={description}
+              platform={platform}
+              volume={volume}
+              category={category}
+              sources={sources}
+              thumbnail={thumbnail}
+            />
           ) : null}
 
           {/* Feedback buttons */}
