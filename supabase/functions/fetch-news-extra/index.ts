@@ -273,16 +273,20 @@ async function fetchNPR(): Promise<TrendItem[]> {
 // ── RSS Feeds – Global sources organized by region ──
 const RSS_FEEDS = [
   // ── AMÉRICA LATINA ──
-  { url: "https://feeds.folha.uol.com.br/emcimadahora/rss091.xml", name: "Folha de S.Paulo", icon: "🇧🇷", country: "BR", category: "Notícias" },
+  { url: "https://feeds.folha.uol.com.br/emcimadahora/rss.xml", name: "Folha de S.Paulo", icon: "🇧🇷", country: "BR", category: "Notícias" },
   { url: "https://oglobo.globo.com/rss.xml", name: "O Globo", icon: "🇧🇷", country: "BR", category: "Notícias" },
   { url: "https://www.estadao.com.br/feed", name: "Estadão", icon: "🇧🇷", country: "BR", category: "Notícias" },
+  { url: "https://g1.globo.com/rss/g1", name: "G1", icon: "🇧🇷", country: "BR", category: "Notícias" },
   { url: "https://www.clarin.com/rss/lo-ultimo/", name: "Clarín", icon: "🇦🇷", country: "AR", category: "Notícias" },
   { url: "https://www.lanacion.com.ar/arc/outboundfeeds/rss/", name: "La Nación", icon: "🇦🇷", country: "AR", category: "Notícias" },
   { url: "https://www.eluniversal.com.mx/arc/outboundfeeds/rss/", name: "El Universal MX", icon: "🇲🇽", country: "MX", category: "Notícias" },
   { url: "https://www.eltiempo.com/rss.xml", name: "El Tiempo", icon: "🇨🇴", country: "CO", category: "Notícias" },
   { url: "https://elcomercio.pe/feed", name: "El Comercio", icon: "🇵🇪", country: "PE", category: "Notícias" },
+  // Chile
+  { url: "https://www.elmercurio.com/Home/FeedRss", name: "El Mercurio", icon: "🇨🇱", country: "CL", category: "Notícias" },
   // Venezuela
   { url: "https://www.telesurtv.net/news/feed", name: "Telesur", icon: "🇻🇪", country: "VE", category: "Notícias" },
+  { url: "https://www.eluniversal.com/venezuela/feed", name: "El Universal VE", icon: "🇻🇪", country: "VE", category: "Notícias" },
   { url: "https://efe.com/feed", name: "EFE News", icon: "🌐", country: "ES", category: "Notícias" },
   { url: "https://www.prensa-latina.cu/feed", name: "Prensa Latina", icon: "🇨🇺", country: "CU", category: "Notícias" },
   // Cobertura internacional em espanhol
@@ -302,7 +306,7 @@ const RSS_FEEDS = [
   { url: "https://www.lemonde.fr/rss/une.xml", name: "Le Monde", icon: "🇫🇷", country: "FR", category: "Notícias" },
   { url: "https://www.lefigaro.fr/rss/figaro_actualites.xml", name: "Le Figaro", icon: "🇫🇷", country: "FR", category: "Notícias" },
   { url: "https://www.france24.com/fr/rss", name: "France 24", icon: "🇫🇷", country: "FR", category: "Notícias" },
-  { url: "https://www.repubblica.it/rss/homepage/rss2.0.xml", name: "La Repubblica", icon: "🇮🇹", country: "IT", category: "Notícias" },
+  { url: "https://www.repubblica.it/rss", name: "La Repubblica", icon: "🇮🇹", country: "IT", category: "Notícias" },
   { url: "https://xml2.corrieredellasera.it/rss/homepage.xml", name: "Corriere della Sera", icon: "🇮🇹", country: "IT", category: "Notícias" },
   { url: "https://feeds.elpais.com/mrss-s/pages/ep/site/elpais.com/portada", name: "El País", icon: "🇪🇸", country: "ES", category: "Notícias" },
   { url: "https://feeds.elpais.com/mrss-s/pages/ep/site/brasil.elpais.com/portada", name: "El País Brasil", icon: "🇧🇷", country: "BR", category: "Notícias" },
@@ -322,8 +326,9 @@ const RSS_FEEDS = [
   { url: "https://www.thejakartapost.com/rss", name: "The Jakarta Post", icon: "🇮🇩", country: "ID", category: "Notícias" },
 
   // ── ORIENTE MÉDIO & ÁFRICA ──
-  { url: "https://www.haaretz.com/cmlink/1.4614869", name: "Haaretz", icon: "🇮🇱", country: "IL", category: "Notícias" },
+  { url: "https://www.haaretz.com/cmlink/haaretz-en-rss-1.0", name: "Haaretz", icon: "🇮🇱", country: "IL", category: "Notícias" },
   { url: "https://www.jpost.com/Rss/RssFeedsHeadlines.aspx", name: "The Jerusalem Post", icon: "🇮🇱", country: "IL", category: "Notícias" },
+  { url: "https://www.aljazeera.com/xml/rss/all.xml", name: "Al Jazeera", icon: "🇶🇦", country: "QA", category: "Notícias" },
   { url: "http://english.ahram.org.eg/rss.aspx", name: "Ahram Online", icon: "🇪🇬", country: "EG", category: "Notícias" },
   { url: "https://www.news24.com/rss", name: "News24", icon: "🇿🇦", country: "ZA", category: "Notícias" },
   { url: "https://www.premiumtimesng.com/feed", name: "Premium Times", icon: "🇳🇬", country: "NG", category: "Notícias" },
@@ -343,7 +348,7 @@ const RSS_FEEDS = [
   { url: "https://www.engadget.com/rss.xml", name: "Engadget", icon: "💻", country: "US", category: "Tecnologia" },
 
   // ── ESPECIALIZADAS: CIÊNCIA ──
-  { url: "https://www.eurekalert.org/rss/technology_engineering.xml", name: "EurekAlert!", icon: "🔬", country: "US", category: "Ciência" },
+  { url: "https://www.eurekalert.org/rss.xml", name: "EurekAlert!", icon: "🔬", country: "US", category: "Ciência" },
   { url: "https://www.sciencedaily.com/rss/all.xml", name: "ScienceDaily", icon: "🔬", country: "US", category: "Ciência" },
   { url: "https://www.nature.com/nature.rss", name: "Nature", icon: "🔬", country: "GB", category: "Ciência" },
 
@@ -358,6 +363,10 @@ const RSS_FEEDS = [
   // ── ESPECIALIZADAS: ENTRETENIMENTO ──
   { url: "https://variety.com/feed/", name: "Variety", icon: "🎬", country: "US", category: "Entretenimento" },
   { url: "https://www.hollywoodreporter.com/feed/", name: "Hollywood Reporter", icon: "🎬", country: "US", category: "Entretenimento" },
+
+  // ── AGREGADORES ──
+  { url: "https://news.google.com/rss", name: "Google News", icon: "🌐", country: "GL", category: "Geral" },
+  { url: "https://www.reddit.com/r/all/.rss", name: "Reddit", icon: "🟠", country: "GL", category: "Geral" },
 ];
 
 function inferCategoryFromContent(title: string, feedCategory: string): string {

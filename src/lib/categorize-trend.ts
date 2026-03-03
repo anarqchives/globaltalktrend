@@ -213,12 +213,14 @@ const sourceCountryMap: Record<string, string> = {
   "AP News": "US",
   "Associated Press": "US",
   "IBGE": "BR",
+  "G1": "BR",
   "Folha de S.Paulo": "BR",
   "O Globo": "BR",
   "Estadão": "BR",
   "El País Brasil": "BR",
   "DW Brasil": "BR",
   "Telesur": "VE",
+  "El Universal VE": "VE",
   "EFE News": "ES",
   "Prensa Latina": "CU",
   "France 24 ES": "FR",
@@ -282,6 +284,9 @@ const sourceCountryMap: Record<string, string> = {
   "Nature": "GB",
   "ScienceDaily": "US",
   "Engadget": "US",
+  "El Mercurio": "CL",
+  "Google News": "GL",
+  "Reddit": "GL",
 };
 
 const countryKeywordsMap: Record<string, string[]> = {
