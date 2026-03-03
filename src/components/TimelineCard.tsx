@@ -399,6 +399,33 @@ const TimelineCard = ({
               )}
             </div>
 
+            {/* Auto-narrative: always visible compact insight */}
+            {(() => {
+              const narrativeParts: string[] = [];
+              if (isMultiplatform && crossPlatformCluster) {
+                narrativeParts.push(`🔥 Em ${crossPlatformCluster.platformCount} plataformas: ${crossPlatformCluster.platforms.slice(0, 3).join(', ')}`);
+              }
+              const countries = crossPlatformCluster?.trends
+                ? [...new Set(crossPlatformCluster.trends.map(ct => ct.countryCode).filter(Boolean))]
+                : [];
+              if (countries.length > 1) {
+                const flags = countries.slice(0, 4).map(c => countryCodeToFlag(c)).filter(Boolean).join(' ');
+                narrativeParts.push(`🌍 ${countries.length} países ${flags}`);
+              }
+              if (firstSeenAt) {
+                const diffH = Math.floor((Date.now() - new Date(firstSeenAt).getTime()) / 3600000);
+                if (diffH > 0 && diffH < 48) narrativeParts.push(`🕒 Em discussão há ${diffH}h`);
+              }
+              if (narrativeParts.length === 0) return null;
+              return (
+                <div className="mt-1 mb-1 flex flex-wrap gap-1.5">
+                  {narrativeParts.map((part, idx) => (
+                    <span key={idx} className="text-[10px] text-muted-foreground/80 bg-muted/50 px-1.5 py-0.5 rounded-full">{part}</span>
+                  ))}
+                </div>
+              );
+            })()}
+
             {/* Title + Thumbnail row */}
             <div className="flex gap-2.5 mb-1">
               <div className="flex-1 min-w-0">

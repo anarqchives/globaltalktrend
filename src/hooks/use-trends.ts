@@ -174,6 +174,16 @@ function generateContextualFallback(filters: FilterState): TrendCardProps[] {
     US: [
       { icon: "🇺🇸", platform: "Google Trends", title: "Top trending topics in the United States", category: "Geral", time: timeStr, volume: "High", change: "+trending", changePositive: true, sparkData: [25, 40, 50, 65, 70, 80, 85, 88, 92, 96], details: "What Americans are searching for right now.", countryCode: "US" },
     ],
+    PS: [
+      { icon: "🇵🇸", platform: "Al Jazeera", title: "Últimas notícias sobre Gaza e o conflito na Palestina", category: "Conflitos/Crises", time: timeStr, volume: "Alto", change: "+trending", changePositive: false, sparkData: [40, 55, 65, 75, 80, 85, 90, 92, 95, 98], details: "Acompanhe a cobertura em tempo real do conflito na região.", countryCode: "PS" },
+      { icon: "📰", platform: "Reuters", title: "Negociações de cessar-fogo em Gaza avançam", category: "Política", time: timeStr, volume: "Destaque", change: "+280%", changePositive: true, sparkData: [20, 35, 50, 60, 70, 78, 85, 90, 93, 96], details: "Mediadores internacionais pressionam por acordo.", countryCode: "PS" },
+    ],
+    RU: [
+      { icon: "🇷🇺", platform: "Reuters", title: "Situação na Rússia e impacto das sanções internacionais", category: "Política", time: timeStr, volume: "Destaque", change: "+150%", changePositive: false, sparkData: [35, 45, 55, 60, 68, 75, 80, 85, 88, 92], details: "Análise do cenário geopolítico russo.", countryCode: "RU" },
+    ],
+    UA: [
+      { icon: "🇺🇦", platform: "BBC News", title: "Conflito na Ucrânia: últimas atualizações", category: "Conflitos/Crises", time: timeStr, volume: "Alto", change: "+200%", changePositive: false, sparkData: [30, 45, 55, 65, 72, 80, 85, 90, 93, 96], details: "Cobertura contínua do conflito no leste europeu.", countryCode: "UA" },
+    ],
   };
 
   // Build fallback list based on active filters
