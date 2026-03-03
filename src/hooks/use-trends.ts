@@ -224,6 +224,54 @@ function normalizeCountryCode(code?: string): string | undefined {
   return undefined;
 }
 
+// ─── Ensure every trend has a country code ─────────────────────────
+const SOURCE_COUNTRY_MAP: Record<string, string> = {
+  "IBGE": "BR", "Folha de S.Paulo": "BR", "O Globo": "BR", "Estadão": "BR",
+  "Google Trends Brasil": "BR", "Google Trends Brazil": "BR",
+  "Google Trends Portugal": "PT", "Google Trends EUA": "US", "Google Trends USA": "US",
+  "Google Trends UK": "GB", "Google Trends France": "FR", "Google Trends Deutschland": "DE",
+  "Google Trends India": "IN", "Google Trends Japan": "JP", "Google Trends España": "ES",
+  "Google Trends Italia": "IT", "Google Trends México": "MX", "Google Trends Argentina": "AR",
+  "Google Trends Colombia": "CO", "Google Trends Chile": "CL",
+  "BBC": "GB", "BBC News": "GB", "BBC Sports": "GB", "BBC Tech": "GB", "BBC Science": "GB",
+  "The Guardian": "GB", "Sky Sports": "GB",
+  "NPR": "US", "TechCrunch": "US", "The Verge": "US", "Wired": "US", "Ars Technica": "US",
+  "New York Times": "US", "Washington Post": "US", "CNN": "US", "Forbes": "US",
+  "Business Insider": "US", "ESPN": "US", "NOAA": "US", "FRED": "US",
+  "Hacker News": "US", "GitHub": "US", "Stack Overflow": "US",
+  "Reuters": "GB", "Associated Press": "US", "AP News": "US",
+  "El País": "ES", "Le Monde": "FR", "Der Spiegel": "DE",
+  "Al Jazeera": "QA", "NHK": "JP", "Times of India": "IN",
+};
+
+function ensureTrendCountry(trend: TrendCardProps): TrendCardProps {
+  // If already has a valid 2-letter country code, keep it
+  const existing = normalizeCountryCode(trend.countryCode);
+  if (existing && existing !== "GL" && existing.length === 2) {
+    return { ...trend, countryCode: existing };
+  }
+
+  // Try to detect from content
+  const detected = detectCountryFromContent(
+    trend.title || "", trend.platform || "",
+    trend.details || trend.description || "", trend.countryCode
+  );
+  const detectedNorm = normalizeCountryCode(detected);
+  if (detectedNorm && detectedNorm !== "GL") {
+    return { ...trend, countryCode: detectedNorm };
+  }
+
+  // Assign based on source/platform
+  const platform = (trend.platform || "").trim();
+  const mapped = SOURCE_COUNTRY_MAP[platform];
+  if (mapped) {
+    return { ...trend, countryCode: mapped };
+  }
+
+  // Default to GL (global) — these will NOT match specific country filters
+  return { ...trend, countryCode: "GL" };
+}
+
 function normalizeCategory(title: string, platform: string, category?: string): string {
   const normalized = categorizeTrend(title, platform, category);
   if (STANDARD_CATEGORIES.has(normalized)) return normalized;
@@ -531,7 +579,7 @@ export function useTrends(filters: FilterState, onTrendCountsChange: (counts: Re
         }
       }
 
-      // Apply unified categorization, normalization and trust badges
+      // Apply unified categorization, normalization, trust badges, AND ensure country
       const allTrends = rawTrends.map((t) => {
         const category = normalizeCategory(t.title || "Sem título", t.platform || "Unknown", t.category);
         const detectedCountry = detectCountryFromContent(t.title || "", t.platform || "Unknown", t.details || t.description || "", t.countryCode);
@@ -546,7 +594,9 @@ export function useTrends(filters: FilterState, onTrendCountsChange: (counts: Re
           else if (t.platform === "GDELT") trustBadge = "verified";
         }
 
-        return { ...t, title: (t.title || "Sem título").trim(), platform: t.platform || "Unknown", category, countryCode, trustBadge };
+        const normalized = { ...t, title: (t.title || "Sem título").trim(), platform: t.platform || "Unknown", category, countryCode, trustBadge };
+        // CRITICAL: Ensure every trend has a valid country code
+        return ensureTrendCountry(normalized);
       });
 
       // Merge with historical 24h trends from snapshots
@@ -707,10 +757,11 @@ export function useTrends(filters: FilterState, onTrendCountsChange: (counts: Re
     };
 
     const filtered = normalizedTrends.filter((trend) => {
+      // STRICT country filter: when a specific country is selected,
+      // ONLY show trends that match that exact country.
+      // Trends with GL (global/unknown) are excluded from specific country filters.
       const matchCountry =
         filters.country === "global" ||
-        !trend.hasExplicitCountry ||
-        trend.normalizedCountry === "GL" ||
         trend.normalizedCountry === countryFilter;
 
       const matchCategory =
