@@ -618,20 +618,6 @@ const GoogleMapView = ({
           >
             <Map className="w-3.5 h-3.5" />
           </button>
-          <button
-            onClick={() => setMapViewType("satellite")}
-            className={controlBtnClass(mapViewType === "satellite")}
-            title={t("satellite")}
-          >
-            <Layers className="w-3.5 h-3.5" />
-          </button>
-          <button
-            onClick={() => setMapViewType("terrain")}
-            className={controlBtnClass(mapViewType === "terrain")}
-            title={t("terrain")}
-          >
-            <Mountain className="w-3.5 h-3.5" />
-          </button>
 
           <div className="w-px h-5 bg-border/40 mx-0.5" />
 

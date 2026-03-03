@@ -745,6 +745,7 @@ export function useTrends(filters: FilterState, onTrendCountsChange: (counts: Re
 
     const matchesType = (trend: NormalizedTrendForFilter) => {
       if (filters.type === "Todas mídias") return true;
+      if (filters.type === "Multiplataforma") return true; // handled in Index.tsx
       if (filters.type === "Redes sociais") return SOURCE_GROUPS.social.includes(trend.source);
       if (filters.type === "Imprensa") return SOURCE_GROUPS.imprensa.includes(trend.source);
       if (filters.type === "Buscas (Google)") return trend.source === "Google Trends";
