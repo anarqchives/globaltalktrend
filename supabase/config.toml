@@ -23,3 +23,15 @@ verify_jwt = false
 
 [functions.translate-trends]
 verify_jwt = false
+
+[functions.analyze-trend-context]
+verify_jwt = false
+
+[functions.analyze-narrative]
+verify_jwt = false
+
+[functions.generate-report]
+verify_jwt = false
+
+[functions.save-trend-snapshots]
+verify_jwt = false

@@ -11,6 +11,7 @@ import TrendContextTab from "./TrendContextTab";
 import TrendHistoryTab from "./TrendHistoryTab";
 import TrendFeedback from "./TrendFeedback";
 import CrossPlatformTab from "./CrossPlatformTab";
+import NarrativeRadarTab from "./NarrativeRadarTab";
 import { CrossPlatformCluster } from "@/hooks/use-cross-platform";
 
 const platformIcons: Record<string, { emoji: string; color: string }> = {
@@ -212,7 +213,7 @@ const TimelineCard = ({
   const gradientId = `tl-${title.replace(/[^a-zA-Z0-9]/g, "").slice(0, 8)}-${Math.random().toString(36).slice(2, 5)}`;
   const [imgError, setImgError] = useState(false);
   const trigger = useMemo(() => detectTriggerFromTitle(title), [title]);
-  const [activeTab, setActiveTab] = useState<"details" | "context" | "history" | "crossplatform">("details");
+  const [activeTab, setActiveTab] = useState<"details" | "context" | "history" | "crossplatform" | "narrative">("details");
   const temporal = useMemo(() => formatTemporalBadge(firstSeenAt, peakAt, t("startedAgo"), t("peakAt")), [firstSeenAt, peakAt, lang]);
 
   const relativeTimeFormats: Record<string, { now: string; min: string; h: string; d: string }> = {
@@ -526,6 +527,16 @@ const TimelineCard = ({
                 🔥 Visão Cruzada
               </button>
             )}
+            <button
+              onClick={(e) => { e.stopPropagation(); setActiveTab("narrative"); }}
+              className={`px-3 py-1 rounded-full text-[10px] font-semibold transition-colors ${
+                activeTab === "narrative"
+                  ? "bg-primary text-primary-foreground"
+                  : "bg-muted text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              📡 Narrativas
+            </button>
           </div>
 
           {activeTab === "details" ? (
@@ -659,6 +670,17 @@ const TimelineCard = ({
             />
           ) : activeTab === "crossplatform" ? (
             <CrossPlatformTab cluster={crossPlatformCluster || null} />
+          ) : activeTab === "narrative" ? (
+            <NarrativeRadarTab
+              title={title}
+              details={details}
+              description={description}
+              platform={platform}
+              volume={volume}
+              category={category}
+              sources={sources}
+              thumbnail={thumbnail}
+            />
           ) : null}
 
           {/* Feedback buttons */}
