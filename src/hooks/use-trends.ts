@@ -774,73 +774,49 @@ export function useTrends(filters: FilterState, onTrendCountsChange: (counts: Re
       return matchCountry && matchCategory && matchSource;
     });
 
-    // ── SMART FALLBACK: Layered approach to never return empty ──
-    const MIN_TRENDS = 8;
+    // ── SMART FALLBACK: Only add same-country data from cache, NEVER relax country ──
+    if (filtered.length === 0 && filters.country !== "global" && trends.length > 0) {
+      console.log(`🧠 Zero trends para país ${countryFilter} — buscando cache histórico (sem relaxar país)`);
 
-    if (filtered.length < MIN_TRENDS && trends.length > 0) {
-      console.log(`🧠 Poucas trends (${filtered.length}) — ativando fallback em camadas`);
-      
-      // Use TrendCardProps[] for combined to accept all fallback sources
-      let combined: TrendCardProps[] = [...filtered];
-      const seenKeys = new Set(combined.map(t => t.title.toLowerCase().slice(0, 60)));
+      let combined: TrendCardProps[] = [];
+      const seenKeys = new Set<string>();
 
       const addUnique = (items: TrendCardProps[]) => {
         for (const item of items) {
           const key = item.title.toLowerCase().slice(0, 60);
           if (seenKeys.has(key)) continue;
+          // CRITICAL: only add items that match the selected country
+          const itemCountry = normalizeCountryCode(item.countryCode) || "GL";
+          if (itemCountry !== countryFilter) continue;
           seenKeys.add(key);
           combined.push(item);
         }
       };
 
-      // Layer 1: localStorage historical collector (instant, local data)
-      if (combined.length < MIN_TRENDS) {
-        const localHistorical = getFromHistoricalCollector(filters.category, filters.country);
-        if (localHistorical.length > 0) {
-          console.log("📂 Camada 1 - Cache local:", localHistorical.length, "itens");
-          addUnique(localHistorical);
-        }
+      // Layer 1: localStorage historical collector (same country only)
+      const localHistorical = getFromHistoricalCollector(filters.category, filters.country);
+      if (localHistorical.length > 0) {
+        console.log("📂 Camada 1 - Cache local (mesmo país):", localHistorical.length, "itens");
+        addUnique(localHistorical);
       }
 
-      // Layer 2: Predictive cache
-      if (combined.length < MIN_TRENDS) {
+      // Layer 2: Predictive cache (same country only)
+      if (combined.length === 0) {
         const predicted = getFromPredictiveCache(filters);
         if (predicted && predicted.length > 0) {
-          console.log("📊 Camada 2 - Cache preditivo:", predicted.length, "itens");
+          console.log("📊 Camada 2 - Cache preditivo (mesmo país):", predicted.length, "itens");
           addUnique(predicted);
         }
       }
 
-      // Layer 3: Relax country filter (show global + specific country)
-      if (combined.length < MIN_TRENDS) {
-        const relaxedCountry = normalizedTrends.filter((trend) => {
-          const matchCategory = filters.category === "Todas" || trend.normalizedCategory === filterCategory || trend.normalizedCategory.startsWith(filterCategory);
-          const matchSource = matchesType(trend);
-          return matchCategory && matchSource;
-        });
-        if (relaxedCountry.length > 0) {
-          console.log("🌍 Camada 3 - Relaxando país:", relaxedCountry.length, "itens");
-          addUnique(relaxedCountry);
-        }
+      if (combined.length > 0) {
+        console.log(`✅ Fallback com ${combined.length} itens do mesmo país`);
+        return combined.sort((a, b) => (b.relevanceScore || 50) - (a.relevanceScore || 50));
       }
 
-      // Layer 4: Relax category too (only keep source type)
-      if (combined.length < MIN_TRENDS) {
-        const relaxedAll = normalizedTrends.filter(matchesType);
-        if (relaxedAll.length > 0) {
-          console.log("📂 Camada 4 - Relaxando categoria:", relaxedAll.length, "itens");
-          addUnique(relaxedAll);
-        }
-      }
-
-      // Layer 5: Generate contextual fallback
-      if (combined.length < MIN_TRENDS) {
-        console.log("🔄 Camada 5 - Fallback contextual");
-        addUnique(generateContextualFallback(filters));
-      }
-
-      console.log(`✅ Total após fallback em camadas: ${combined.length} itens`);
-      return combined.sort((a, b) => (b.relevanceScore || 50) - (a.relevanceScore || 50));
+      // No data at all for this country — return empty so the UI shows the empty-state message
+      console.log(`ℹ️ Nenhuma trend encontrada para ${countryFilter} — exibindo estado vazio`);
+      return [];
     }
 
     // Save successful filter results to predictive cache
