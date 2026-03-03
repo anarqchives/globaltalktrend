@@ -75,6 +75,11 @@ export const countries = [
     { value: "AE", label: "🇦🇪 Emirados Árabes" },
     { value: "IL", label: "🇮🇱 Israel" },
     { value: "PS", label: "🇵🇸 Palestina" },
+    { value: "IR", label: "🇮🇷 Irã" },
+    { value: "IQ", label: "🇮🇶 Iraque" },
+    { value: "SY", label: "🇸🇾 Síria" },
+    { value: "LB", label: "🇱🇧 Líbano" },
+    { value: "JO", label: "🇯🇴 Jordânia" },
   ]},
   { group: "África", items: [
     { value: "ZA", label: "🇿🇦 África do Sul" },
