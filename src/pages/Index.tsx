@@ -435,8 +435,7 @@ const Index = () => {
         )}
       </div>
 
-      {/* Mobile floating coffee button */}
-      {isMobile && <MobileCoffeeButton />}
+      {/* Mobile coffee button removed — now in header */}
 
       {/* Transparency Panel */}
       <TransparencyPanel
