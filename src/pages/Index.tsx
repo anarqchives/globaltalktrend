@@ -336,14 +336,20 @@ const Index = () => {
           <span className="text-4xl">🔍</span>
           <p className="text-sm font-medium text-foreground">
             {filters.country !== "global"
-              ? `${t("noTrends")} — ${countries.flatMap(g => g.items).find(c => c.value === filters.country)?.label?.replace(/^.{2}\s?/, '') || filters.country}`
+              ? `Nenhuma tendência encontrada para ${countries.flatMap(g => g.items).find(c => c.value === filters.country)?.label?.replace(/^.{2}\s?/, '') || filters.country}`
               : t("noTrends")}
           </p>
-           <p className="text-xs text-muted-foreground max-w-[260px]">
-             {filters.country !== "global"
-               ? t("tryChangingFilters")
-               : t("noTrendsCurrentFilters")}
-           </p>
+          <p className="text-xs text-muted-foreground max-w-[280px]">
+            {filters.country !== "global"
+              ? "As fontes disponíveis podem não estar cobrindo este país no momento. Tente ampliar o período, selecionar outra categoria ou escolher outro país."
+              : t("noTrendsCurrentFilters")}
+          </p>
+          <button
+            onClick={() => setFilters(defaultFilters)}
+            className="mt-2 px-4 py-1.5 rounded-full bg-primary text-primary-foreground text-xs font-medium hover:bg-primary/90 transition-colors"
+          >
+            Limpar todos os filtros
+          </button>
         </div>
       )}
 
