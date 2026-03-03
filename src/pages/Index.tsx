@@ -97,13 +97,47 @@ const Index = () => {
   // Filter for multiplatform if selected
   const filteredTrends = useMemo(() => {
     if (filters.type === "Multiplataforma") {
-      return translatedTrends.filter(t => {
-        const key = t.title.toLowerCase().normalize("NFD").replace(/\p{Diacritic}/gu, "").replace(/[^a-z0-9\s]/g, "").trim().slice(0, 50);
-        return multiplatformTitles.has(key);
-      });
+      // Use cross-platform clusters to identify multiplatform trends
+      // If no clusters found, use similarity-based fallback on allTrends
+      if (multiplatformTitles.size > 0) {
+        return translatedTrends.filter(t => {
+          const key = t.title.toLowerCase().normalize("NFD").replace(/\p{Diacritic}/gu, "").replace(/[^a-z0-9\s]/g, "").trim().slice(0, 50);
+          return multiplatformTitles.has(key);
+        });
+      }
+      // Fallback: find trends whose platform type appears >=2 times for similar titles
+      // Group all trends (not just filtered) by similarity to find cross-platform ones
+      const allNormTitles = allTrends.map(t => ({
+        norm: t.title.toLowerCase().normalize("NFD").replace(/\p{Diacritic}/gu, "").replace(/[^a-z0-9\s]/g, "").trim().slice(0, 50),
+        platform: t.platform,
+      }));
+      const multiKeys = new Set<string>();
+      for (let i = 0; i < allNormTitles.length; i++) {
+        const platforms = new Set<string>();
+        platforms.add(allNormTitles[i].platform);
+        const wordsI = new Set(allNormTitles[i].norm.split(/\s+/).filter(w => w.length > 3));
+        for (let j = 0; j < allNormTitles.length; j++) {
+          if (i === j) continue;
+          const wordsJ = new Set(allNormTitles[j].norm.split(/\s+/).filter(w => w.length > 3));
+          let common = 0;
+          for (const w of wordsI) if (wordsJ.has(w)) common++;
+          if (wordsI.size > 0 && common / Math.max(wordsI.size, wordsJ.size) > 0.4) {
+            platforms.add(allNormTitles[j].platform);
+          }
+        }
+        if (platforms.size >= 2) multiKeys.add(allNormTitles[i].norm);
+      }
+      if (multiKeys.size > 0) {
+        return translatedTrends.filter(t => {
+          const key = t.title.toLowerCase().normalize("NFD").replace(/\p{Diacritic}/gu, "").replace(/[^a-z0-9\s]/g, "").trim().slice(0, 50);
+          return multiKeys.has(key);
+        });
+      }
+      // Still empty — return all trends with a note
+      return translatedTrends;
     }
     return translatedTrends;
-  }, [translatedTrends, filters.type, multiplatformTitles]);
+  }, [translatedTrends, filters.type, multiplatformTitles, allTrends]);
 
   // Sync filters to URL
   useEffect(() => {
