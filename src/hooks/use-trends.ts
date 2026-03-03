@@ -237,6 +237,7 @@ function normalizeCountryCode(code?: string): string | undefined {
 // ─── Ensure every trend has a country code ─────────────────────────
 const SOURCE_COUNTRY_MAP: Record<string, string> = {
   "IBGE": "BR", "Folha de S.Paulo": "BR", "O Globo": "BR", "Estadão": "BR",
+  "El País Brasil": "BR", "DW Brasil": "BR", "BBC Brasil": "BR",
   "Google Trends Brasil": "BR", "Google Trends Brazil": "BR",
   "Google Trends Portugal": "PT", "Google Trends EUA": "US", "Google Trends USA": "US",
   "Google Trends UK": "GB", "Google Trends France": "FR", "Google Trends Deutschland": "DE",
@@ -244,14 +245,29 @@ const SOURCE_COUNTRY_MAP: Record<string, string> = {
   "Google Trends Italia": "IT", "Google Trends México": "MX", "Google Trends Argentina": "AR",
   "Google Trends Colombia": "CO", "Google Trends Chile": "CL",
   "BBC": "GB", "BBC News": "GB", "BBC Sports": "GB", "BBC Tech": "GB", "BBC Science": "GB",
-  "The Guardian": "GB", "Sky Sports": "GB",
+  "The Guardian": "GB", "Sky Sports": "GB", "The Telegraph": "GB", "The Independent": "GB",
   "NPR": "US", "TechCrunch": "US", "The Verge": "US", "Wired": "US", "Ars Technica": "US",
   "New York Times": "US", "Washington Post": "US", "CNN": "US", "Forbes": "US",
   "Business Insider": "US", "ESPN": "US", "NOAA": "US", "FRED": "US",
-  "Hacker News": "US", "GitHub": "US", "Stack Overflow": "US",
+  "Hacker News": "US", "GitHub": "US", "Stack Overflow": "US", "Engadget": "US",
+  "Variety": "US", "Hollywood Reporter": "US", "ScienceDaily": "US",
   "Reuters": "GB", "Associated Press": "US", "AP News": "US",
-  "El País": "ES", "Le Monde": "FR", "Der Spiegel": "DE",
-  "Al Jazeera": "QA", "NHK": "JP", "Times of India": "IN",
+  "El País": "ES", "El Mundo": "ES",
+  "Le Monde": "FR", "Le Figaro": "FR", "France 24": "FR", "France 24 ES": "FR",
+  "Der Spiegel": "DE", "Deutsche Welle": "DE", "DW Español": "DE",
+  "La Repubblica": "IT", "Corriere della Sera": "IT",
+  "Público": "PT", "Expresso": "PT",
+  "Al Jazeera": "QA", "NHK": "JP", "The Japan Times": "JP",
+  "Times of India": "IN", "The Hindu": "IN",
+  "South China Morning Post": "CN", "Korea Herald": "KR",
+  "The Straits Times": "SG", "The Jakarta Post": "ID",
+  "Haaretz": "IL", "The Jerusalem Post": "IL", "Ahram Online": "EG",
+  "News24": "ZA", "Premium Times": "NG", "Daily Nation": "KE",
+  "NL Times": "NL", "Nature": "GB",
+  // Latin America
+  "Telesur": "VE", "EFE News": "ES", "Prensa Latina": "CU",
+  "Clarín": "AR", "La Nación": "AR",
+  "El Universal MX": "MX", "El Tiempo": "CO", "El Comercio": "PE",
 };
 
 function ensureTrendCountry(trend: TrendCardProps): TrendCardProps {
