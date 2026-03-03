@@ -213,7 +213,7 @@ const TimelineCard = ({
   const gradientId = `tl-${title.replace(/[^a-zA-Z0-9]/g, "").slice(0, 8)}-${Math.random().toString(36).slice(2, 5)}`;
   const [imgError, setImgError] = useState(false);
   const trigger = useMemo(() => detectTriggerFromTitle(title), [title]);
-  const [activeTab, setActiveTab] = useState<"details" | "context" | "history" | "crossplatform">("details");
+  const [activeTab, setActiveTab] = useState<"details" | "context" | "history" | "crossplatform" | "narrative">("details");
   const temporal = useMemo(() => formatTemporalBadge(firstSeenAt, peakAt, t("startedAgo"), t("peakAt")), [firstSeenAt, peakAt, lang]);
 
   const relativeTimeFormats: Record<string, { now: string; min: string; h: string; d: string }> = {
