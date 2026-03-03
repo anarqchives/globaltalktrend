@@ -527,6 +527,16 @@ const TimelineCard = ({
                 🔥 Visão Cruzada
               </button>
             )}
+            <button
+              onClick={(e) => { e.stopPropagation(); setActiveTab("narrative"); }}
+              className={`px-3 py-1 rounded-full text-[10px] font-semibold transition-colors ${
+                activeTab === "narrative"
+                  ? "bg-primary text-primary-foreground"
+                  : "bg-muted text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              📡 Narrativas
+            </button>
           </div>
 
           {activeTab === "details" ? (
