@@ -300,19 +300,21 @@ const GoogleMapView = ({
       const heatmap = new viz.HeatmapLayer({
         data: heatmapData,
         map: heatmapEnabled ? map : null,
-        radius: 80,
-        opacity: 0.65,
+        radius: 90,
+        opacity: 0.7,
         dissipating: true,
-        maxIntensity: 100,
+        maxIntensity: 80,
         gradient: [
           "rgba(0, 0, 0, 0)",
-          "rgba(0, 150, 255, 0.15)",
-          "rgba(0, 200, 255, 0.3)",
-          "rgba(0, 255, 200, 0.45)",
-          "rgba(100, 255, 100, 0.5)",
-          "rgba(255, 255, 0, 0.6)",
-          "rgba(255, 170, 0, 0.7)",
+          "rgba(70, 130, 200, 0.1)",
+          "rgba(100, 180, 255, 0.25)",
+          "rgba(0, 200, 255, 0.4)",
+          "rgba(0, 255, 200, 0.5)",
+          "rgba(100, 255, 100, 0.55)",
+          "rgba(255, 255, 0, 0.65)",
+          "rgba(255, 150, 0, 0.75)",
           "rgba(255, 50, 0, 0.85)",
+          "rgba(200, 0, 50, 0.95)",
         ],
       });
       heatmapRef.current = heatmap;
@@ -423,17 +425,46 @@ const GoogleMapView = ({
       const hoverScale = scale * 1.4;
       const flag = cp.id.length === 2 ? String.fromCodePoint(...[...cp.id.toUpperCase()].map(c => 0x1F1E6 + c.charCodeAt(0) - 65)) : "";
 
-      // Hover: only animate scale, no tooltip
+      // Hover: show lightweight preview tooltip
       marker.addListener("mouseover", () => {
         animateMarkerScale(scale, hoverScale);
+        // Don't show hover tooltip if click tooltip is already open for this country
+        if (openInfoCountry === cp.id) return;
+        if (!hoverInfoRef.current) return;
+        const hBg = isDark ? "rgba(19,22,32,0.95)" : "rgba(255,255,255,0.95)";
+        const hText = isDark ? "#e2e8f0" : "#111827";
+        const hSub = isDark ? "#6b7280" : "#9ca3af";
+        const { tag: hTag, color: hColor } = getIntensityLabel(intensity);
+        hoverInfoRef.current.setContent(`
+          <div style="font-family:Inter,system-ui,sans-serif;padding:10px 12px;min-width:180px;max-width:220px;background:${hBg};color:${hText};border-radius:12px;backdrop-filter:blur(12px);border:1px solid ${isDark ? 'rgba(45,51,72,0.4)' : 'rgba(0,0,0,0.06)'};">
+            <div style="display:flex;align-items:center;gap:6px;margin-bottom:6px;">
+              <span style="font-size:18px;">${flag}</span>
+              <div>
+                <div style="font-size:13px;font-weight:600;">${cp.name}</div>
+                <div style="font-size:10px;color:${hSub};">${count} trends</div>
+              </div>
+            </div>
+            <div style="display:flex;align-items:center;gap:6px;">
+              <span style="background:${hColor};color:#fff;padding:2px 8px;border-radius:12px;font-size:9px;font-weight:600;letter-spacing:0.3px;">${hTag}</span>
+            </div>
+            <div style="margin-top:8px;font-size:10px;color:${hSub};text-align:center;font-style:italic;">Clique para ver detalhes</div>
+          </div>
+        `);
+        hoverInfoRef.current.open({ anchor: marker, map });
       });
 
       marker.addListener("mouseout", () => {
         animateMarkerScale(hoverScale, scale);
+        // Close hover tooltip (but not click tooltip)
+        if (openInfoCountry !== cp.id && hoverInfoRef.current) {
+          hoverInfoRef.current.close();
+        }
       });
 
-      // Click: open persistent tooltip or filter if already open
+      // Click: close hover tooltip, open persistent detail tooltip or filter
       marker.addListener("click", () => {
+        // Close hover tooltip first
+        if (hoverInfoRef.current) hoverInfoRef.current.close();
         // If this country's info is already open, filter instead
         if (openInfoCountry === cp.id) {
           infoWindowRef.current?.close();
