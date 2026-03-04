@@ -493,6 +493,9 @@ const TimelineCard = ({
           </div>
 
           <div className="flex flex-col items-center gap-1">
+            <button onClick={(e) => { e.stopPropagation(); onSaveCard?.({ title, platform, category, country_code: countryCode, source_url: sourceUrl, thumbnail, description: displayDescription }); }} className="p-1 rounded-full opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-primary" title="Salvar no painel">
+              <Bookmark className="w-3 h-3" />
+            </button>
             <button onClick={handleShare} className="p-1 rounded-full opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-foreground" title={t("share")}>
               <Share2 className="w-3 h-3" />
             </button>
