@@ -430,7 +430,7 @@ const GoogleMapView = ({
       marker.addListener("mouseover", () => {
         animateMarkerScale(scale, hoverScale);
         // Don't show hover tooltip if click tooltip is already open for this country
-        if (openInfoCountry === cp.id) return;
+        if (openInfoCountryRef.current === cp.id) return;
         if (!hoverInfoRef.current) return;
         const hBg = isDark ? "rgba(19,22,32,0.95)" : "rgba(255,255,255,0.95)";
         const hText = isDark ? "#e2e8f0" : "#111827";
@@ -457,7 +457,7 @@ const GoogleMapView = ({
       marker.addListener("mouseout", () => {
         animateMarkerScale(hoverScale, scale);
         // Close hover tooltip (but not click tooltip)
-        if (openInfoCountry !== cp.id && hoverInfoRef.current) {
+        if (openInfoCountryRef.current !== cp.id && hoverInfoRef.current) {
           hoverInfoRef.current.close();
         }
       });
@@ -467,8 +467,9 @@ const GoogleMapView = ({
         // Close hover tooltip first
         if (hoverInfoRef.current) hoverInfoRef.current.close();
         // If this country's info is already open, filter instead
-        if (openInfoCountry === cp.id) {
+        if (openInfoCountryRef.current === cp.id) {
           infoWindowRef.current?.close();
+          openInfoCountryRef.current = null;
           setOpenInfoCountry(null);
           onSelectCountry(cp.id === selectedCountry ? "global" : cp.id);
           map.panTo({ lat: cp.lat, lng: cp.lng });
@@ -567,6 +568,7 @@ const GoogleMapView = ({
           </div>
         `);
         infoWindowRef.current.open({ anchor: marker, map });
+        openInfoCountryRef.current = cp.id;
         setOpenInfoCountry(cp.id);
         map.panTo({ lat: cp.lat, lng: cp.lng });
 
@@ -590,6 +592,7 @@ const GoogleMapView = ({
             item.addEventListener('click', () => {
               if (onSelectTrend) onSelectTrend(trend);
               infoWindowRef.current?.close();
+              openInfoCountryRef.current = null;
               setOpenInfoCountry(null);
             });
           });
@@ -597,13 +600,14 @@ const GoogleMapView = ({
 
         // Close listener to reset state
         google.maps.event.addListenerOnce(infoWindowRef.current, 'closeclick', () => {
+          openInfoCountryRef.current = null;
           setOpenInfoCountry(null);
         });
       });
 
       markersRef.current.push(marker);
     });
-  }, [trendCounts, maxCount, avgCount, selectedCountry, mapLoaded, onSelectCountry, t, trends, isDark, openInfoCountry]);
+  }, [trendCounts, maxCount, avgCount, selectedCountry, mapLoaded, onSelectCountry, t, trends, isDark]);
 
   // Pan to selected/highlighted country
   useEffect(() => {
