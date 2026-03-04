@@ -523,7 +523,7 @@ const GoogleMapView = ({
 
       markersRef.current.push(marker);
     });
-  }, [trendCounts, maxCount, avgCount, selectedCountry, mapLoaded, onSelectCountry, t, trends, isDark]);
+  }, [trendCounts, maxCount, avgCount, selectedCountry, mapLoaded, onSelectCountry, t, trends, isDark, openInfoCountry]);
 
   // Pan to selected/highlighted country
   useEffect(() => {
