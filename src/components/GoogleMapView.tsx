@@ -432,8 +432,18 @@ const GoogleMapView = ({
         animateMarkerScale(hoverScale, scale);
       });
 
-      // Click: open persistent tooltip with close button
+      // Click: open persistent tooltip or filter if already open
       marker.addListener("click", () => {
+        // If this country's info is already open, filter instead
+        if (openInfoCountry === cp.id) {
+          infoWindowRef.current?.close();
+          setOpenInfoCountry(null);
+          onSelectCountry(cp.id === selectedCountry ? "global" : cp.id);
+          map.panTo({ lat: cp.lat, lng: cp.lng });
+          map.setZoom(cp.id === selectedCountry ? 2.5 : 5);
+          return;
+        }
+
         if (!infoWindowRef.current) return;
         const countryTrends = trends.filter((tr) => tr.countryCode === cp.id).slice(0, 4);
         const platformColors: Record<string, string> = { YouTube: "#FF0000", Reddit: "#FF4500", "Google Trends": "#3b82f6", NewsAPI: "#22C55E", Bluesky: "#0085FF" };
@@ -459,7 +469,6 @@ const GoogleMapView = ({
           critReason = `ℹ️ Atividade normal com ${count} trend${count > 1 ? 's' : ''} registrada${count > 1 ? 's' : ''}`;
         }
 
-        // Criticality section background
         const critSectionBg = isDark
           ? intensity > 0.6 ? "rgba(127,29,29,0.3)" : "rgba(30,41,59,0.5)"
           : intensity > 0.6 ? "rgba(254,242,242,0.9)" : "rgba(241,245,249,0.9)";
@@ -498,12 +507,18 @@ const GoogleMapView = ({
             </div>
             <div style="max-height:150px;overflow-y:auto;">${trendsList}</div>
             <div style="text-align:center;padding-top:8px;margin-top:8px;border-top:1px solid ${border};">
-              <span style="font-size:10px;color:${subtext};font-style:italic;">Clique no país novamente para filtrar</span>
+              <span style="font-size:10px;color:${subtext};font-style:italic;">Clique novamente para filtrar a timeline</span>
             </div>
           </div>
         `);
         infoWindowRef.current.open({ anchor: marker, map });
+        setOpenInfoCountry(cp.id);
         map.panTo({ lat: cp.lat, lng: cp.lng });
+
+        // Close listener to reset state
+        google.maps.event.addListenerOnce(infoWindowRef.current, 'closeclick', () => {
+          setOpenInfoCountry(null);
+        });
       });
 
       markersRef.current.push(marker);
