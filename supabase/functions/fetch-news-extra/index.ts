@@ -319,11 +319,20 @@ const RSS_FEEDS = [
   { url: "https://www3.nhk.or.jp/rss/news/cat0.xml", name: "NHK", icon: "🇯🇵", country: "JP", category: "Notícias" },
   { url: "https://www.japantimes.co.jp/feed", name: "The Japan Times", icon: "🇯🇵", country: "JP", category: "Notícias" },
   { url: "https://www.scmp.com/rss/4/feed", name: "South China Morning Post", icon: "🇨🇳", country: "CN", category: "Notícias" },
+  { url: "http://www.xinhuanet.com/english/rss/worldrss.xml", name: "Xinhua", icon: "🇨🇳", country: "CN", category: "Notícias" },
+  { url: "https://www.chinadaily.com.cn/rss/world_rss.xml", name: "China Daily", icon: "🇨🇳", country: "CN", category: "Notícias" },
   { url: "https://timesofindia.indiatimes.com/rssfeedstopstories.cms", name: "Times of India", icon: "🇮🇳", country: "IN", category: "Notícias" },
   { url: "https://www.thehindu.com/feeder/default.rss", name: "The Hindu", icon: "🇮🇳", country: "IN", category: "Notícias" },
+  { url: "https://www.ndtv.com/rss/top-stories", name: "NDTV", icon: "🇮🇳", country: "IN", category: "Notícias" },
   { url: "http://www.koreaherald.com/rss_xml.php", name: "Korea Herald", icon: "🇰🇷", country: "KR", category: "Notícias" },
   { url: "https://www.straitstimes.com/news/asia/rss.xml", name: "The Straits Times", icon: "🇸🇬", country: "SG", category: "Notícias" },
   { url: "https://www.thejakartapost.com/rss", name: "The Jakarta Post", icon: "🇮🇩", country: "ID", category: "Notícias" },
+
+  // ── RÚSSIA / EURÁSIA ──
+  { url: "https://tass.com/rss/v2.xml", name: "TASS", icon: "🇷🇺", country: "RU", category: "Notícias" },
+  { url: "https://www.rt.com/rss/news/", name: "RT", icon: "🇷🇺", country: "RU", category: "Notícias" },
+  { url: "https://www.themoscowtimes.com/rss/news", name: "Moscow Times", icon: "🇷🇺", country: "RU", category: "Notícias" },
+  { url: "https://www.rbth.com/rss", name: "Russia Beyond", icon: "🇷🇺", country: "RU", category: "Notícias" },
 
   // ── ORIENTE MÉDIO & ÁFRICA ──
   { url: "https://www.haaretz.com/cmlink/haaretz-en-rss-1.0", name: "Haaretz", icon: "🇮🇱", country: "IL", category: "Notícias" },
