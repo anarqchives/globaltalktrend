@@ -5,6 +5,7 @@ import { toast } from "@/hooks/use-toast";
 import { FilterState } from "../components/FilterBar";
 import { categorizeTrend, detectCountryFromContent } from "@/lib/categorize-trend";
 import { useHistoricalTrends, saveToHistoricalCollector, getFromHistoricalCollector } from "./use-historical-trends";
+import { getSourceInfo, matchesFilterType } from "@/lib/source-map";
 
 const CACHE_KEY = "gtt_trends_cache";
 const CACHE_TTL = 5 * 60 * 1000; // 5 min
@@ -379,16 +380,18 @@ function normalizeCategory(title: string, platform: string, category?: string): 
 }
 
 function inferTypeFromSource(source?: string): string {
-  const platform = (source || "").trim();
-  if (SOURCE_GROUPS.social.includes(platform)) return "Redes sociais";
-  if (SOURCE_GROUPS.imprensa.includes(platform)) return "Imprensa";
-  if (platform === "Google Trends") return "Buscas (Google)";
-  if (SOURCE_GROUPS.dados.includes(platform)) return "Dados oficiais";
-  if (SOURCE_GROUPS.ciencia.includes(platform)) return "Ciência";
-  if (SOURCE_GROUPS.tech.includes(platform)) return "Tech";
-  if (platform === "Wikipedia") return "Enciclopédia";
-  if (platform === "GDELT") return "Conflitos";
-  return "desconhecido";
+  const info = getSourceInfo(source || "");
+  const typeMap: Record<string, string> = {
+    "imprensa": "Imprensa",
+    "redes-sociais": "Redes sociais",
+    "buscas": "Buscas (Google)",
+    "dados-oficiais": "Dados oficiais",
+    "ciencia": "Ciência",
+    "tech": "Tech",
+    "enciclopedia": "Enciclopédia",
+    "conflitos": "Conflitos",
+  };
+  return typeMap[info.mediaType] || "Imprensa";
 }
 
 type NormalizedTrendForFilter = TrendCardProps & {
@@ -679,19 +682,30 @@ export function useTrends(filters: FilterState, onTrendCountsChange: (counts: Re
       // Apply unified categorization, normalization, trust badges, AND ensure country
       const allTrends = rawTrends.map((t) => {
         const category = normalizeCategory(t.title || "Sem título", t.platform || "Unknown", t.category);
+        const sourceInfo = getSourceInfo(t.platform || "Unknown");
         const detectedCountry = detectCountryFromContent(t.title || "", t.platform || "Unknown", t.details || t.description || "", t.countryCode);
-        const countryCode = normalizeCountryCode(detectedCountry || t.countryCode);
+        // Priority: detected from content > existing > source map default
+        const countryCode = normalizeCountryCode(detectedCountry || t.countryCode || sourceInfo.country);
 
         let trustBadge = t.trustBadge;
         if (!trustBadge) {
-          if (SOURCE_GROUPS.dados.includes(t.platform)) trustBadge = "official";
-          else if (SOURCE_GROUPS.ciencia.includes(t.platform)) trustBadge = "scientific";
-          else if (["The Guardian", "BBC", "Reuters"].includes(t.platform)) trustBadge = "international";
-          else if (["NewsAPI", "NewsData", "GNews", "Bing News"].includes(t.platform)) trustBadge = "press";
-          else if (t.platform === "GDELT") trustBadge = "verified";
+          const mt = sourceInfo.mediaType;
+          if (mt === "dados-oficiais") trustBadge = "official";
+          else if (mt === "ciencia") trustBadge = "scientific";
+          else if (["The Guardian", "BBC", "Reuters", "BBC News"].includes(t.platform)) trustBadge = "international";
+          else if (mt === "imprensa") trustBadge = "press";
+          else if (mt === "conflitos") trustBadge = "verified";
         }
 
-        const normalized = { ...t, title: (t.title || "Sem título").trim(), platform: t.platform || "Unknown", category, countryCode, trustBadge };
+        const normalized = {
+          ...t,
+          title: (t.title || "Sem título").trim(),
+          platform: t.platform || "Unknown",
+          category: category || sourceInfo.category || "Geral",
+          countryCode,
+          trustBadge,
+          reliability: sourceInfo.reliability,
+        };
         // CRITICAL: Ensure every trend has a valid country code
         return ensureTrendCountry(normalized);
       });
@@ -800,7 +814,7 @@ export function useTrends(filters: FilterState, onTrendCountsChange: (counts: Re
     let initialFetchTimer: number | undefined;
 
     const startPolling = () => {
-      intervalId = window.setInterval(fetchTrends, 15 * 60 * 1000);
+      intervalId = window.setInterval(fetchTrends, 10 * 60 * 1000);
     };
 
     const handleTrendRefresh = () => fetchTrends();
@@ -841,17 +855,7 @@ export function useTrends(filters: FilterState, onTrendCountsChange: (counts: Re
     const normalizedTrends = trends.map(normalizeTrendForFilter);
 
     const matchesType = (trend: NormalizedTrendForFilter) => {
-      if (filters.type === "Todas mídias") return true;
-      if (filters.type === "Multiplataforma") return true; // handled in Index.tsx
-      if (filters.type === "Redes sociais") return SOURCE_GROUPS.social.includes(trend.source);
-      if (filters.type === "Imprensa") return SOURCE_GROUPS.imprensa.includes(trend.source);
-      if (filters.type === "Buscas (Google)") return trend.source === "Google Trends";
-      if (filters.type === "Dados oficiais") return SOURCE_GROUPS.dados.includes(trend.source);
-      if (filters.type === "Ciência") return SOURCE_GROUPS.ciencia.includes(trend.source);
-      if (filters.type === "Tech") return SOURCE_GROUPS.tech.includes(trend.source);
-      if (filters.type === "Enciclopédia") return trend.source === "Wikipedia";
-      if (filters.type === "Conflitos") return trend.source === "GDELT";
-      return true;
+      return matchesFilterType(trend.source, filters.type);
     };
 
     const filtered = normalizedTrends.filter((trend) => {
