@@ -682,19 +682,30 @@ export function useTrends(filters: FilterState, onTrendCountsChange: (counts: Re
       // Apply unified categorization, normalization, trust badges, AND ensure country
       const allTrends = rawTrends.map((t) => {
         const category = normalizeCategory(t.title || "Sem título", t.platform || "Unknown", t.category);
+        const sourceInfo = getSourceInfo(t.platform || "Unknown");
         const detectedCountry = detectCountryFromContent(t.title || "", t.platform || "Unknown", t.details || t.description || "", t.countryCode);
-        const countryCode = normalizeCountryCode(detectedCountry || t.countryCode);
+        // Priority: detected from content > existing > source map default
+        const countryCode = normalizeCountryCode(detectedCountry || t.countryCode || sourceInfo.country);
 
         let trustBadge = t.trustBadge;
         if (!trustBadge) {
-          if (SOURCE_GROUPS.dados.includes(t.platform)) trustBadge = "official";
-          else if (SOURCE_GROUPS.ciencia.includes(t.platform)) trustBadge = "scientific";
-          else if (["The Guardian", "BBC", "Reuters"].includes(t.platform)) trustBadge = "international";
-          else if (["NewsAPI", "NewsData", "GNews", "Bing News"].includes(t.platform)) trustBadge = "press";
-          else if (t.platform === "GDELT") trustBadge = "verified";
+          const mt = sourceInfo.mediaType;
+          if (mt === "dados-oficiais") trustBadge = "official";
+          else if (mt === "ciencia") trustBadge = "scientific";
+          else if (["The Guardian", "BBC", "Reuters", "BBC News"].includes(t.platform)) trustBadge = "international";
+          else if (mt === "imprensa") trustBadge = "press";
+          else if (mt === "conflitos") trustBadge = "verified";
         }
 
-        const normalized = { ...t, title: (t.title || "Sem título").trim(), platform: t.platform || "Unknown", category, countryCode, trustBadge };
+        const normalized = {
+          ...t,
+          title: (t.title || "Sem título").trim(),
+          platform: t.platform || "Unknown",
+          category: category || sourceInfo.category || "Geral",
+          countryCode,
+          trustBadge,
+          reliability: sourceInfo.reliability,
+        };
         // CRITICAL: Ensure every trend has a valid country code
         return ensureTrendCountry(normalized);
       });
