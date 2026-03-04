@@ -183,6 +183,7 @@ const GoogleMapView = ({
   const heatmapRef = useRef<any>(null);
   const prevCountsRef = useRef<Record<string, number>>({});
   const [mapLoaded, setMapLoaded] = useState(false);
+  const [openInfoCountry, setOpenInfoCountry] = useState<string | null>(null);
   const [mapError, setMapError] = useState<string | null>(null);
   const [mapViewType, setMapViewType] = useState<MapViewType>("roadmap");
   const [heatmapEnabled, setHeatmapEnabled] = useState(true);
@@ -422,25 +423,64 @@ const GoogleMapView = ({
       const hoverScale = scale * 1.4;
       const flag = cp.id.length === 2 ? String.fromCodePoint(...[...cp.id.toUpperCase()].map(c => 0x1F1E6 + c.charCodeAt(0) - 65)) : "";
 
+      // Hover: only animate scale, no tooltip
       marker.addListener("mouseover", () => {
         animateMarkerScale(scale, hoverScale);
-        if (!hoverInfoRef.current) return;
+      });
+
+      marker.addListener("mouseout", () => {
+        animateMarkerScale(hoverScale, scale);
+      });
+
+      // Click: open persistent tooltip or filter if already open
+      marker.addListener("click", () => {
+        // If this country's info is already open, filter instead
+        if (openInfoCountry === cp.id) {
+          infoWindowRef.current?.close();
+          setOpenInfoCountry(null);
+          onSelectCountry(cp.id === selectedCountry ? "global" : cp.id);
+          map.panTo({ lat: cp.lat, lng: cp.lng });
+          map.setZoom(cp.id === selectedCountry ? 2.5 : 5);
+          return;
+        }
+
+        if (!infoWindowRef.current) return;
         const countryTrends = trends.filter((tr) => tr.countryCode === cp.id).slice(0, 4);
         const platformColors: Record<string, string> = { YouTube: "#FF0000", Reddit: "#FF4500", "Google Trends": "#3b82f6", NewsAPI: "#22C55E", Bluesky: "#0085FF" };
-        const bg = isDark ? "rgba(19,22,32,0.96)" : "rgba(255,255,255,0.96)";
+        const bg = isDark ? "rgba(19,22,32,0.97)" : "rgba(255,255,255,0.97)";
         const text = isDark ? "#e2e8f0" : "#111827";
         const subtext = isDark ? "#6b7280" : "#9ca3af";
         const border = isDark ? "rgba(45,51,72,0.5)" : "rgba(0,0,0,0.06)";
         const badgeBg = isDark ? "rgba(30,41,59,0.8)" : "rgba(241,245,249,0.8)";
-        const { label: intensityLabel, tag: critTag, color: critColor } = getIntensityLabel(intensity);
+        const { tag: critTag, color: critColor } = getIntensityLabel(intensity);
+
+        // Contextual criticality reason
+        let critReason = "";
+        if (intensity > 0.8) {
+          critReason = `🔥 Pico de atividade: ${count} trends simultâneas, volume ${Math.round(intensity * 100)}% acima da média global`;
+        } else if (intensity > 0.6) {
+          critReason = `⚡ Crescimento acelerado: ${count} trends ativas com volume crescente nas últimas horas`;
+        } else if (intensity > 0.4) {
+          const platforms = [...new Set(countryTrends.map(t => t.platform))];
+          critReason = `📊 Atividade moderada em ${platforms.length} plataforma${platforms.length > 1 ? 's' : ''}: ${platforms.join(', ')}`;
+        } else if (intensity > 0.2) {
+          critReason = `📈 ${count} tendência${count > 1 ? 's' : ''} em monitoramento, abaixo do limiar crítico`;
+        } else {
+          critReason = `ℹ️ Atividade normal com ${count} trend${count > 1 ? 's' : ''} registrada${count > 1 ? 's' : ''}`;
+        }
+
+        const critSectionBg = isDark
+          ? intensity > 0.6 ? "rgba(127,29,29,0.3)" : "rgba(30,41,59,0.5)"
+          : intensity > 0.6 ? "rgba(254,242,242,0.9)" : "rgba(241,245,249,0.9)";
+        const critBorderLeft = critColor;
 
         const trendsList = countryTrends.length > 0
           ? countryTrends.map((tr) => {
               const pColor = platformColors[tr.platform] || "#888";
-              return `<div style="display:flex;align-items:center;gap:6px;padding:5px 0;border-bottom:1px dashed ${border};">
+              return `<div style="display:flex;align-items:center;gap:6px;padding:6px 0;border-bottom:1px dashed ${border};">
                 <div style="width:3px;height:20px;border-radius:2px;background:${pColor};flex-shrink:0;"></div>
                 <div style="flex:1;min-width:0;">
-                  <div style="font-size:11px;color:${text};white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:180px;font-weight:500;">${tr.title.slice(0, 40)}${tr.title.length > 40 ? '…' : ''}</div>
+                  <div style="font-size:12px;color:${text};white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:180px;font-weight:500;">${tr.title.slice(0, 40)}${tr.title.length > 40 ? '…' : ''}</div>
                   <div style="display:flex;align-items:center;gap:4px;margin-top:2px;">
                     <span style="font-size:9px;background:${badgeBg};color:${subtext};padding:1px 6px;border-radius:6px;font-weight:600;">${tr.volume}</span>
                     <span style="font-size:9px;color:${subtext};">${tr.platform}</span>
@@ -450,43 +490,40 @@ const GoogleMapView = ({
             }).join('')
           : `<div style="font-size:11px;color:${subtext};padding:8px 0;text-align:center;">${t("noTrends")}</div>`;
 
-        hoverInfoRef.current.setContent(`
-          <div style="font-family:Inter,system-ui,-apple-system,sans-serif;padding:12px 8px;min-width:240px;max-width:280px;background:${bg};color:${text};border-radius:16px;backdrop-filter:blur(20px);border:1px solid ${border};">
-            <div style="display:flex;align-items:center;gap:8px;padding-bottom:8px;border-bottom:1px solid ${border};">
-              <span style="font-size:22px;line-height:1;">${flag}</span>
-              <div style="flex:1;">
-                <div style="font-size:14px;font-weight:600;color:${text};letter-spacing:-0.02em;">${cp.name}</div>
-                <div style="font-size:11px;color:${subtext};margin-top:1px;">${count} trends</div>
+        infoWindowRef.current.setContent(`
+          <div style="font-family:Inter,system-ui,-apple-system,sans-serif;padding:14px 10px;min-width:260px;max-width:300px;background:${bg};color:${text};border-radius:16px;backdrop-filter:blur(20px);border:1px solid ${border};">
+            <div style="display:flex;align-items:center;justify-content:space-between;padding-bottom:8px;border-bottom:1px solid ${border};">
+              <div style="display:flex;align-items:center;gap:8px;">
+                <span style="font-size:22px;line-height:1;">${flag}</span>
+                <div>
+                  <div style="font-size:14px;font-weight:600;color:${text};letter-spacing:-0.02em;">${cp.name}</div>
+                  <div style="font-size:11px;color:${subtext};margin-top:1px;">${count} trends</div>
+                </div>
               </div>
             </div>
-            <div style="margin:8px 0;">
-              <span style="display:inline-block;background:${critColor};color:#fff;padding:3px 10px;border-radius:20px;font-weight:600;font-size:10px;letter-spacing:0.5px;text-transform:uppercase;">${critTag}</span>
+            <div style="margin:10px 0;background:${critSectionBg};border-radius:10px;padding:10px 12px;border-left:4px solid ${critBorderLeft};">
+              <span style="display:inline-block;background:${critColor};color:#fff;padding:3px 10px;border-radius:20px;font-weight:600;font-size:10px;letter-spacing:0.5px;text-transform:uppercase;margin-bottom:6px;">${critTag}</span>
+              <p style="font-size:12px;color:${isDark ? '#94a3b8' : '#475569'};line-height:1.5;margin:0;">${critReason}</p>
             </div>
-            <div style="font-size:12px;color:${isDark ? '#94a3b8' : '#475569'};margin-bottom:8px;line-height:1.5;">Volume de discussão ${intensityLabel.toLowerCase()}</div>
-            <div style="max-height:120px;overflow-y:auto;">${trendsList}</div>
+            <div style="max-height:150px;overflow-y:auto;">${trendsList}</div>
             <div style="text-align:center;padding-top:8px;margin-top:8px;border-top:1px solid ${border};">
-              <span style="font-size:10px;color:${subtext};font-style:italic;">Clique para filtrar</span>
+              <span style="font-size:10px;color:${subtext};font-style:italic;">Clique novamente para filtrar a timeline</span>
             </div>
           </div>
         `);
-        hoverInfoRef.current.open({ anchor: marker, map });
-      });
-
-      marker.addListener("mouseout", () => {
-        animateMarkerScale(hoverScale, scale);
-        hoverInfoRef.current?.close();
-      });
-
-      marker.addListener("click", () => {
-        hoverInfoRef.current?.close();
-        onSelectCountry(cp.id === selectedCountry ? "global" : cp.id);
+        infoWindowRef.current.open({ anchor: marker, map });
+        setOpenInfoCountry(cp.id);
         map.panTo({ lat: cp.lat, lng: cp.lng });
-        map.setZoom(cp.id === selectedCountry ? 2.5 : 5);
+
+        // Close listener to reset state
+        google.maps.event.addListenerOnce(infoWindowRef.current, 'closeclick', () => {
+          setOpenInfoCountry(null);
+        });
       });
 
       markersRef.current.push(marker);
     });
-  }, [trendCounts, maxCount, avgCount, selectedCountry, mapLoaded, onSelectCountry, t, trends, isDark]);
+  }, [trendCounts, maxCount, avgCount, selectedCountry, mapLoaded, onSelectCountry, t, trends, isDark, openInfoCountry]);
 
   // Pan to selected/highlighted country
   useEffect(() => {
