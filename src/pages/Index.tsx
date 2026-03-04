@@ -15,6 +15,7 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useHistory } from "@/hooks/use-history";
 import { useGamification } from "@/hooks/use-gamification";
+import { useSavedCards } from "@/hooks/use-saved-cards";
 import { supabase } from "@/integrations/supabase/client";
 import { ChevronRight, X } from "lucide-react";
 import {
@@ -71,6 +72,7 @@ const Index = () => {
 
   const { trackView } = useHistory(user?.id ?? null);
   const { trackAction } = useGamification(user?.id ?? null);
+  const { saveCard } = useSavedCards(user?.id ?? null);
   const [trendCounts, setTrendCounts] = useState<Record<string, number>>({});
   const [expandedTrendId, setExpandedTrendId] = useState<string | null>(null);
   const [highlightedTrendId, setHighlightedTrendId] = useState<string | null>(null);
