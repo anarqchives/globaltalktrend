@@ -152,6 +152,48 @@ export type Database = {
         }
         Relationships: []
       }
+      saved_cards: {
+        Row: {
+          category: string | null
+          country_code: string | null
+          created_at: string
+          description: string | null
+          id: string
+          metadata: Json | null
+          platform: string
+          source_url: string | null
+          thumbnail: string | null
+          title: string
+          user_id: string
+        }
+        Insert: {
+          category?: string | null
+          country_code?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          metadata?: Json | null
+          platform: string
+          source_url?: string | null
+          thumbnail?: string | null
+          title: string
+          user_id: string
+        }
+        Update: {
+          category?: string | null
+          country_code?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          metadata?: Json | null
+          platform?: string
+          source_url?: string | null
+          thumbnail?: string | null
+          title?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       saved_filters: {
         Row: {
           category: string | null

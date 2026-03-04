@@ -15,6 +15,7 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useHistory } from "@/hooks/use-history";
 import { useGamification } from "@/hooks/use-gamification";
+import { useSavedCards } from "@/hooks/use-saved-cards";
 import { supabase } from "@/integrations/supabase/client";
 import { ChevronRight, X } from "lucide-react";
 import {
@@ -71,6 +72,7 @@ const Index = () => {
 
   const { trackView } = useHistory(user?.id ?? null);
   const { trackAction } = useGamification(user?.id ?? null);
+  const { saveCard } = useSavedCards(user?.id ?? null);
   const [trendCounts, setTrendCounts] = useState<Record<string, number>>({});
   const [expandedTrendId, setExpandedTrendId] = useState<string | null>(null);
   const [highlightedTrendId, setHighlightedTrendId] = useState<string | null>(null);
@@ -303,7 +305,7 @@ const Index = () => {
             const isMulti = multiplatformTitles.has(normalizedKey);
             const matchingCluster = isMulti ? clusters.find(c => c.trends.some(ct => ct.title.toLowerCase().normalize("NFD").replace(/\p{Diacritic}/gu, "").replace(/[^a-z0-9\s]/g, "").trim().slice(0, 50) === normalizedKey)) || null : null;
             return (
-              <div key={`${trendId}-${i}`} id={`trend-card-${trendId}`} className={highlightedTrendId === trendId ? 'animate-highlight-pulse rounded-xl' : ''}>
+              <div key={`${trendId}-${i}`} id={`trend-card-${trendId}`} className={`animate-fade-in ${highlightedTrendId === trendId ? 'animate-highlight-pulse rounded-xl' : ''}`} style={{ animationDelay: `${i * 30}ms` }}>
               <TimelineCard
                 {...trend}
                 userId={user?.id}
@@ -311,6 +313,7 @@ const Index = () => {
                 forceExpanded={expandedTrendId === trendId}
                 isMultiplatform={isMulti}
                 crossPlatformCluster={matchingCluster}
+                onSaveCard={saveCard}
                 onClick={() => {
                   trackAction("view", 1, { title: trend.title, platform: trend.platform, countryCode: trend.countryCode, category: trend.category });
                 }}
@@ -366,7 +369,7 @@ const Index = () => {
         </div>
       )}
       {!loading && !isFirstLoad && filteredTrends.length === 0 && (
-        <div className="flex flex-col items-center justify-center py-16 px-4 text-center gap-3">
+        <div className="flex flex-col items-center justify-center py-16 px-4 text-center gap-3 animate-fade-in">
           <span className="text-4xl">🔍</span>
           <p className="text-sm font-medium text-foreground">
             {filters.country !== "global"
@@ -374,9 +377,18 @@ const Index = () => {
               : t("noTrends")}
           </p>
           <p className="text-xs text-muted-foreground max-w-[280px]">
-            {filters.country !== "global"
-              ? "As fontes disponíveis podem não estar cobrindo este país no momento. Tente ampliar o período, selecionar outra categoria ou escolher outro país."
-              : t("noTrendsCurrentFilters")}
+            {(() => {
+              const cc = filters.country.toUpperCase();
+              const limitedCountries: Record<string, string> = {
+                CN: "A China possui plataformas próprias (WeChat, Weibo). Mostrando cobertura via SCMP, Xinhua e China Daily.",
+                RU: "A Rússia possui plataformas próprias (VK, Yandex). Mostrando cobertura via TASS, RT e Moscow Times.",
+                KP: "Cobertura extremamente limitada. Fontes: KCNA via agregadores internacionais.",
+                IR: "Cobertura limitada. Mostrando menções em fontes internacionais.",
+              };
+              if (filters.country !== "global" && limitedCountries[cc]) return limitedCountries[cc];
+              if (filters.country !== "global") return "As fontes disponíveis podem não estar cobrindo este país no momento. Tente ampliar o período, selecionar outra categoria ou escolher outro país.";
+              return t("noTrendsCurrentFilters");
+            })()}
           </p>
           <button
             onClick={() => setFilters(defaultFilters)}

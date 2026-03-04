@@ -3,23 +3,25 @@ import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   ArrowLeft, Star, Bell, Clock, BarChart3, Settings, Trash2, Edit2,
-  Play, BellOff, BellRing, Plus, Sun, Moon, Monitor, Mail, AlertTriangle, Globe, FileText
+  Play, BellOff, BellRing, Plus, Sun, Moon, Monitor, Mail, AlertTriangle, Globe, FileText, LayoutGrid
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useSavedFilters, type SavedFilter } from "@/hooks/use-saved-filters";
 import { useAlerts, type Alert, type CreateAlertInput } from "@/hooks/use-alerts";
 import { useHistory } from "@/hooks/use-history";
 import { useGamification } from "@/hooks/use-gamification";
+import { useSavedCards } from "@/hooks/use-saved-cards";
 import { useLanguage, languages, type LangCode } from "@/contexts/LanguageContext";
-// UserMode removed from profile
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Switch } from "@/components/ui/switch";
 import { toast } from "@/hooks/use-toast";
 import { format } from "date-fns";
 import { countries } from "@/components/FilterBar";
 import ReportsTab from "@/components/ReportsTab";
+import BentoDashboard from "@/components/BentoDashboard";
 
 const tabs = [
+  { key: "dashboard", label: "Meu Painel", icon: LayoutGrid },
   { key: "filters", label: "Meus Filtros", icon: Star },
   { key: "reports", label: "Relatórios", icon: FileText },
   { key: "alerts", label: "Meus Alertas", icon: Bell },
@@ -39,7 +41,7 @@ const Profile = () => {
     const params = new URLSearchParams(window.location.search);
     const tab = params.get("tab");
     if (tab && tabs.some(t => t.key === tab)) return tab as TabKey;
-    return "filters";
+    return "dashboard";
   });
   const [dark, setDark] = useState(() => localStorage.getItem("theme") === "dark");
 
@@ -68,6 +70,7 @@ const Profile = () => {
   const { alerts, toggleAlert, deleteAlert, createAlert, loading: alertsLoading } = useAlerts(userId);
   const { history, clearHistory, deleteItem, loading: historyLoading } = useHistory(userId);
   const { totalPoints, achievements, unlocked, loading: gamLoading } = useGamification(userId);
+  const { cards: savedCards, loading: cardsLoading, removeCard } = useSavedCards(userId);
 
   if (authLoading) {
     return (
@@ -165,6 +168,7 @@ const Profile = () => {
             exit={{ opacity: 0, x: -20 }}
             transition={{ duration: 0.25, ease: "easeInOut" }}
           >
+            {activeTab === "dashboard" && <BentoDashboard cards={savedCards} loading={cardsLoading} onRemove={removeCard} />}
             {activeTab === "filters" && <FiltersTab filters={savedFilters} loading={filtersLoading} onDelete={deleteFilter} onApply={handleApplyFilter} countryLabel={countryLabel} />}
             {activeTab === "reports" && <ReportsTab userId={user.id} />}
             {activeTab === "alerts" && <AlertsTab alerts={alerts} loading={alertsLoading} onToggle={toggleAlert} onDelete={deleteAlert} onCreate={createAlert} countryLabel={countryLabel} />}

@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect } from "react";
-import { Share2, ChevronDown, ChevronUp, Sparkles, Link2, Bell, ExternalLink, Shield, CheckCircle2, FlaskConical, Globe, Newspaper, Search } from "lucide-react";
+import { Share2, ChevronDown, ChevronUp, Sparkles, Link2, Bell, ExternalLink, Shield, CheckCircle2, FlaskConical, Globe, Newspaper, Search, Bookmark, Flag } from "lucide-react";
 import { AreaChart, Area, ResponsiveContainer, XAxis, YAxis, Tooltip, CartesianGrid } from "recharts";
 import { toast } from "@/hooks/use-toast";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -78,6 +78,7 @@ interface TimelineCardProps extends TrendCardProps {
   forceExpanded?: boolean;
   isMultiplatform?: boolean;
   crossPlatformCluster?: CrossPlatformCluster | null;
+  onSaveCard?: (card: { title: string; platform: string; category?: string; country_code?: string; source_url?: string; thumbnail?: string; description?: string }) => void;
 }
 
 const normalizeText = (value: string) => value.toLowerCase().normalize("NFD").replace(/\p{Diacritic}/gu, "").trim();
@@ -196,6 +197,7 @@ const TimelineCard = ({
   forceExpanded,
   isMultiplatform,
   crossPlatformCluster,
+  onSaveCard,
 }: TimelineCardProps) => {
   const { t, lang } = useLanguage();
   const [expanded, setExpanded] = useState(forceExpanded || false);
@@ -491,6 +493,9 @@ const TimelineCard = ({
           </div>
 
           <div className="flex flex-col items-center gap-1">
+            <button onClick={(e) => { e.stopPropagation(); onSaveCard?.({ title, platform, category, country_code: countryCode, source_url: sourceUrl, thumbnail, description: displayDescription }); }} className="p-1 rounded-full opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-primary" title="Salvar no painel">
+              <Bookmark className="w-3 h-3" />
+            </button>
             <button onClick={handleShare} className="p-1 rounded-full opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-foreground" title={t("share")}>
               <Share2 className="w-3 h-3" />
             </button>
