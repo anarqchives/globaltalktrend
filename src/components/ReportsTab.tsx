@@ -54,6 +54,8 @@ const periodOptions = [
   { value: "today", label: "Hoje" },
   { value: "7d", label: "Esta semana" },
   { value: "30d", label: "Este mês" },
+  { value: "90d", label: "Trimestral" },
+  { value: "365d", label: "Anual" },
 ];
 
 const categoryOptions = [
@@ -111,6 +113,8 @@ export default function ReportsTab({ userId }: ReportsTabProps) {
       case "1h": since = new Date(now.getTime() - 3600000); break;
       case "7d": since = new Date(now.getTime() - 7 * 86400000); break;
       case "30d": since = new Date(now.getTime() - 30 * 86400000); break;
+      case "90d": since = new Date(now.getTime() - 90 * 86400000); break;
+      case "365d": since = new Date(now.getTime() - 365 * 86400000); break;
       default: since = new Date(now); since.setHours(0, 0, 0, 0); break;
     }
     return { since, now: new Date() };

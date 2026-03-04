@@ -38,6 +38,7 @@ export function useSavedCards(userId: string | null) {
   const saveCard = useCallback(async (card: {
     title: string; platform: string; category?: string; country_code?: string;
     source_url?: string; thumbnail?: string; description?: string; metadata?: any;
+    volume?: string; change?: string; changePositive?: boolean; historicalData?: any; platformColor?: string; sources?: string[];
   }) => {
     if (!userId) return;
     // Check if already saved
@@ -55,7 +56,15 @@ export function useSavedCards(userId: string | null) {
       source_url: card.source_url || null,
       thumbnail: card.thumbnail || null,
       description: card.description || null,
-      metadata: card.metadata || {},
+      metadata: {
+        ...(card.metadata || {}),
+        volume: card.volume,
+        change: card.change,
+        changePositive: card.changePositive,
+        historicalData: card.historicalData,
+        platformColor: card.platformColor,
+        sources: card.sources,
+      },
     });
     if (error) {
       toast({ title: "Erro", description: error.message, variant: "destructive" });
