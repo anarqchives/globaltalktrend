@@ -259,10 +259,12 @@ const OnlineUsersCount = () => {
 };
 
 // Countdown Timer Component
+const REFRESH_INTERVAL_SECONDS = 10 * 60; // 10 minutes
+
 const CountdownTimer = () => {
   const [seconds, setSeconds] = useState(() => {
     const now = Date.now();
-    const interval = 15 * 60 * 1000;
+    const interval = REFRESH_INTERVAL_SECONDS * 1000;
     const remaining = interval - (now % interval);
     return Math.floor(remaining / 1000);
   });
@@ -281,7 +283,7 @@ const CountdownTimer = () => {
             setFading(false);
             onRefresh();
           }, 300);
-          return 15 * 60;
+          return REFRESH_INTERVAL_SECONDS;
         }
         return prev - 1;
       });
@@ -291,11 +293,18 @@ const CountdownTimer = () => {
 
   const mins = Math.floor(seconds / 60);
   const secs = seconds % 60;
+  const progress = ((REFRESH_INTERVAL_SECONDS - seconds) / REFRESH_INTERVAL_SECONDS) * 100;
 
   return (
     <span
-      className={`text-[11px] font-mono text-muted-foreground tabular-nums transition-opacity duration-300 ${fading ? 'opacity-0' : 'opacity-100'}`}
+      className={`flex items-center gap-1.5 text-[11px] font-mono text-muted-foreground tabular-nums transition-opacity duration-300 ${fading ? 'opacity-0' : 'opacity-100'}`}
     >
+      <span className="relative w-[60px] h-1 rounded-full bg-muted overflow-hidden">
+        <span
+          className="absolute inset-y-0 left-0 rounded-full bg-primary transition-[width] duration-1000 ease-linear"
+          style={{ width: `${progress}%` }}
+        />
+      </span>
       ⏱️ {String(mins).padStart(2, '0')}:{String(secs).padStart(2, '0')}
     </span>
   );

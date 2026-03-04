@@ -123,12 +123,12 @@ function getMarkerColor(intensity: number): { fill: string; glow: string; ring: 
   return { fill: "#00a6ff", glow: "rgba(0,166,255,0.3)", ring: "#38bdf8" };
 }
 
-function getIntensityLabel(intensity: number): string {
-  if (intensity > 0.8) return "Crítica";
-  if (intensity > 0.6) return "Alta";
-  if (intensity > 0.4) return "Média";
-  if (intensity > 0.2) return "Baixa";
-  return "Mínima";
+function getIntensityLabel(intensity: number): { label: string; tag: string; color: string } {
+  if (intensity > 0.8) return { label: "Crítica", tag: "🔥 CRÍTICO", color: "#ef4444" };
+  if (intensity > 0.6) return { label: "Alta", tag: "⚡ ALTO", color: "#f97316" };
+  if (intensity > 0.4) return { label: "Média", tag: "📊 MODERADO", color: "#eab308" };
+  if (intensity > 0.2) return { label: "Baixa", tag: "📈 ATENÇÃO", color: "#3b82f6" };
+  return { label: "Mínima", tag: "ℹ️ NORMAL", color: "#94a3b8" };
 }
 
 interface GoogleMapViewProps {
@@ -432,13 +432,12 @@ const GoogleMapView = ({
         const subtext = isDark ? "#6b7280" : "#9ca3af";
         const border = isDark ? "rgba(45,51,72,0.5)" : "rgba(0,0,0,0.06)";
         const badgeBg = isDark ? "rgba(30,41,59,0.8)" : "rgba(241,245,249,0.8)";
-        const intensityLabel = getIntensityLabel(intensity);
-        const intensityColor = fill;
+        const { label: intensityLabel, tag: critTag, color: critColor } = getIntensityLabel(intensity);
 
         const trendsList = countryTrends.length > 0
           ? countryTrends.map((tr) => {
               const pColor = platformColors[tr.platform] || "#888";
-              return `<div style="display:flex;align-items:center;gap:6px;padding:5px 0;border-bottom:1px solid ${border};">
+              return `<div style="display:flex;align-items:center;gap:6px;padding:5px 0;border-bottom:1px dashed ${border};">
                 <div style="width:3px;height:20px;border-radius:2px;background:${pColor};flex-shrink:0;"></div>
                 <div style="flex:1;min-width:0;">
                   <div style="font-size:11px;color:${text};white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:180px;font-weight:500;">${tr.title.slice(0, 40)}${tr.title.length > 40 ? '…' : ''}</div>
@@ -452,20 +451,21 @@ const GoogleMapView = ({
           : `<div style="font-size:11px;color:${subtext};padding:8px 0;text-align:center;">${t("noTrends")}</div>`;
 
         hoverInfoRef.current.setContent(`
-          <div style="font-family:Inter,system-ui,-apple-system,sans-serif;padding:10px 6px;min-width:220px;max-width:260px;background:${bg};color:${text};border-radius:14px;backdrop-filter:blur(20px);border:1px solid ${border};">
+          <div style="font-family:Inter,system-ui,-apple-system,sans-serif;padding:12px 8px;min-width:240px;max-width:280px;background:${bg};color:${text};border-radius:16px;backdrop-filter:blur(20px);border:1px solid ${border};">
             <div style="display:flex;align-items:center;gap:8px;padding-bottom:8px;border-bottom:1px solid ${border};">
               <span style="font-size:22px;line-height:1;">${flag}</span>
               <div style="flex:1;">
-                <div style="font-size:13px;font-weight:700;color:${text};letter-spacing:-0.02em;">${cp.name}</div>
-                <div style="display:flex;align-items:center;gap:6px;margin-top:3px;">
-                  <span style="display:inline-block;background:${fill};color:#fff;padding:2px 10px;border-radius:8px;font-weight:700;font-size:11px;">${count}</span>
-                  <span style="font-size:10px;color:${intensityColor};font-weight:600;">${intensityLabel}</span>
-                </div>
+                <div style="font-size:14px;font-weight:600;color:${text};letter-spacing:-0.02em;">${cp.name}</div>
+                <div style="font-size:11px;color:${subtext};margin-top:1px;">${count} trends</div>
               </div>
             </div>
-            <div style="padding-top:4px;">${trendsList}</div>
-            <div style="text-align:center;padding-top:6px;">
-              <span style="font-size:9px;color:${subtext};font-style:italic;">Clique para filtrar</span>
+            <div style="margin:8px 0;">
+              <span style="display:inline-block;background:${critColor};color:#fff;padding:3px 10px;border-radius:20px;font-weight:600;font-size:10px;letter-spacing:0.5px;text-transform:uppercase;">${critTag}</span>
+            </div>
+            <div style="font-size:12px;color:${isDark ? '#94a3b8' : '#475569'};margin-bottom:8px;line-height:1.5;">Volume de discussão ${intensityLabel.toLowerCase()}</div>
+            <div style="max-height:120px;overflow-y:auto;">${trendsList}</div>
+            <div style="text-align:center;padding-top:8px;margin-top:8px;border-top:1px solid ${border};">
+              <span style="font-size:10px;color:${subtext};font-style:italic;">Clique para filtrar</span>
             </div>
           </div>
         `);
@@ -616,14 +616,29 @@ const GoogleMapView = ({
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 10 }}
             transition={{ duration: 0.25, ease: "easeOut" }}
-            className="absolute bottom-4 right-5 z-20 bg-white/95 dark:bg-card/95 backdrop-blur-[12px] border border-white/50 dark:border-white/10 rounded-2xl shadow-[0_8px_24px_rgba(0,0,0,0.08)] dark:shadow-[0_8px_24px_rgba(0,0,0,0.3)] px-4 py-3 min-w-[240px]"
+            className="absolute bottom-[30px] right-5 z-20 bg-white/95 dark:bg-card/95 backdrop-blur-[12px] border border-white/50 dark:border-white/10 rounded-2xl shadow-[0_4px_20px_rgba(0,0,0,0.08)] dark:shadow-[0_4px_20px_rgba(0,0,0,0.25)] px-3 py-2.5 min-w-[200px]"
           >
-            <p className="text-[10px] font-semibold text-foreground mb-2 tracking-wide flex items-center gap-1.5">
+            <p className="text-[11px] font-medium text-foreground mb-1.5 tracking-wide flex items-center gap-1.5">
               🌡️ Densidade de Trends
             </p>
-            {/* Gradient bar with marker */}
-            <div className="relative h-5 rounded-full overflow-hidden shadow-inner mb-1.5">
-              <div className="w-full h-full" style={{ background: "linear-gradient(90deg, #00a6ff, #00ff9d, #facc15, #ffaa00, #ff3300)" }} />
+            {/* Animated gradient bar with shine */}
+            <div className="relative h-5 rounded-[10px] overflow-hidden mb-1.5" style={{ boxShadow: "inset 0 1px 3px rgba(0,0,0,0.1)" }}>
+              <div
+                className="w-full h-full"
+                style={{
+                  background: "linear-gradient(90deg, #00a6ff, #00ff9d, #ffff00, #ffaa00, #ff3300)",
+                  backgroundSize: "200% 100%",
+                  animation: "gradientFlow 8s ease infinite",
+                }}
+              />
+              {/* Shine overlay */}
+              <div
+                className="absolute inset-0 pointer-events-none"
+                style={{
+                  background: "linear-gradient(90deg, rgba(255,255,255,0) 0%, rgba(255,255,255,0.3) 50%, rgba(255,255,255,0) 100%)",
+                  animation: "legendShine 3s infinite",
+                }}
+              />
               {/* Current intensity marker */}
               <motion.div
                 className="absolute top-[-3px] w-1 h-[26px] bg-white border-2 border-foreground/70 rounded-sm"
@@ -634,7 +649,7 @@ const GoogleMapView = ({
                 <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-3 h-3 rounded-full bg-white/50 animate-pulse" />
               </motion.div>
             </div>
-            <div className="flex justify-between text-[9px] text-muted-foreground font-medium mb-2">
+            <div className="flex justify-between text-[9px] text-muted-foreground uppercase tracking-wider mb-2">
               <span>Baixa</span>
               <span>Média</span>
               <span>Alta</span>
@@ -644,15 +659,15 @@ const GoogleMapView = ({
             <div className="flex justify-between pt-2 border-t border-border/30">
               <div className="flex flex-col items-center">
                 <span className="text-[9px] text-muted-foreground uppercase tracking-wider">Máxima</span>
-                <span className="text-sm font-bold text-foreground">{maxCount}</span>
+                <span className="text-sm font-medium text-foreground">{maxCount}</span>
               </div>
               <div className="flex flex-col items-center">
                 <span className="text-[9px] text-muted-foreground uppercase tracking-wider">Países</span>
-                <span className="text-sm font-bold text-foreground">{activeCountries}</span>
+                <span className="text-sm font-medium text-foreground">{activeCountries}</span>
               </div>
               <div className="flex flex-col items-center">
                 <span className="text-[9px] text-muted-foreground uppercase tracking-wider">Total</span>
-                <span className="text-sm font-bold text-foreground">{totalTrends}</span>
+                <span className="text-sm font-medium text-foreground">{totalTrends}</span>
               </div>
             </div>
           </motion.div>

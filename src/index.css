@@ -333,3 +333,16 @@
   animation: highlightPulse 0.8s ease-out 3;
   border: 2px solid hsl(var(--primary));
 }
+
+/* Map legend gradient animations */
+@keyframes gradientFlow {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+@keyframes legendShine {
+  0% { transform: translateX(-100%); }
+  20% { transform: translateX(100%); }
+  100% { transform: translateX(100%); }
+}
