@@ -168,7 +168,7 @@ const Profile = () => {
             exit={{ opacity: 0, x: -20 }}
             transition={{ duration: 0.25, ease: "easeInOut" }}
           >
-            {activeTab === "dashboard" && <BentoDashboard cards={savedCards} loading={cardsLoading} onRemove={removeCard} />}
+            {activeTab === "dashboard" && <BentoDashboard cards={savedCards} loading={cardsLoading} onRemove={removeCard} onReorder={() => {}} />}
             {activeTab === "filters" && <FiltersTab filters={savedFilters} loading={filtersLoading} onDelete={deleteFilter} onApply={handleApplyFilter} countryLabel={countryLabel} />}
             {activeTab === "reports" && <ReportsTab userId={user.id} />}
             {activeTab === "alerts" && <AlertsTab alerts={alerts} loading={alertsLoading} onToggle={toggleAlert} onDelete={deleteAlert} onCreate={createAlert} countryLabel={countryLabel} />}
