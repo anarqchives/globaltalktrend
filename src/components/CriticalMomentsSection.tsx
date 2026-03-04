@@ -156,7 +156,7 @@ export default function CriticalMomentsSection({ moments, onSelectTrend, onClose
                   </div>
 
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-semibold text-foreground line-clamp-2 leading-snug group-hover/card:text-red-600 dark:group-hover/card:text-red-400 transition-colors">
+                    <p className="text-sm font-medium text-red-600 dark:text-red-400 line-clamp-2 leading-snug">
                       {m.trend.title}
                     </p>
 
