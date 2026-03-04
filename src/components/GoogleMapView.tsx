@@ -476,75 +476,123 @@ const GoogleMapView = ({
         }
 
         if (!infoWindowRef.current) return;
-        const countryTrends = trends.filter((tr) => tr.countryCode === cp.id).slice(0, 4);
+        const countryTrends = trends.filter((tr) => tr.countryCode === cp.id).slice(0, 5);
         const platformColors: Record<string, string> = { YouTube: "#FF0000", Reddit: "#FF4500", "Google Trends": "#3b82f6", NewsAPI: "#22C55E", Bluesky: "#0085FF" };
         const bg = isDark ? "rgba(19,22,32,0.97)" : "rgba(255,255,255,0.97)";
         const text = isDark ? "#e2e8f0" : "#111827";
         const subtext = isDark ? "#6b7280" : "#9ca3af";
         const border = isDark ? "rgba(45,51,72,0.5)" : "rgba(0,0,0,0.06)";
         const badgeBg = isDark ? "rgba(30,41,59,0.8)" : "rgba(241,245,249,0.8)";
+        const hoverBg = isDark ? "rgba(30,41,59,0.5)" : "rgba(248,250,252,1)";
         const { tag: critTag, color: critColor } = getIntensityLabel(intensity);
 
-        // Contextual criticality reason
+        // Calculate criticality from real trend data
+        const totalVolume = countryTrends.reduce((acc, tr) => {
+          const v = parseInt(String(tr.volume).replace(/[^0-9]/g, '')) || 0;
+          return acc + v;
+        }, 0);
+        const platforms = [...new Set(countryTrends.map(t => t.platform))];
+        const avgChange = countryTrends.length > 0
+          ? countryTrends.reduce((acc, tr) => acc + (parseFloat(String(tr.change).replace(/[^0-9.-]/g, '')) || 0), 0) / countryTrends.length
+          : 0;
+
         let critReason = "";
-        if (intensity > 0.8) {
-          critReason = `🔥 Pico de atividade: ${count} trends simultâneas, volume ${Math.round(intensity * 100)}% acima da média global`;
-        } else if (intensity > 0.6) {
-          critReason = `⚡ Crescimento acelerado: ${count} trends ativas com volume crescente nas últimas horas`;
-        } else if (intensity > 0.4) {
-          const platforms = [...new Set(countryTrends.map(t => t.platform))];
-          critReason = `📊 Atividade moderada em ${platforms.length} plataforma${platforms.length > 1 ? 's' : ''}: ${platforms.join(', ')}`;
-        } else if (intensity > 0.2) {
-          critReason = `📈 ${count} tendência${count > 1 ? 's' : ''} em monitoramento, abaixo do limiar crítico`;
+        if (totalVolume > 10000) {
+          critReason = `🔥 Volume excepcionalmente alto: ${totalVolume.toLocaleString()} menções detectadas`;
+        } else if (avgChange > 100) {
+          critReason = `⚡ Crescimento acelerado: +${Math.round(avgChange)}% de variação média`;
+        } else if (platforms.length > 3) {
+          critReason = `📊 Multiplataforma: presente em ${platforms.join(', ')}`;
+        } else if (count > 15) {
+          critReason = `📈 ${count} tendências ativas simultaneamente neste país`;
+        } else if (count > 0) {
+          critReason = `ℹ️ ${count} tendência${count > 1 ? 's' : ''} em monitoramento — atividade dentro da média`;
         } else {
-          critReason = `ℹ️ Atividade normal com ${count} trend${count > 1 ? 's' : ''} registrada${count > 1 ? 's' : ''}`;
+          critReason = `ℹ️ Nenhuma tendência ativa no momento`;
         }
 
         const critSectionBg = isDark
           ? intensity > 0.6 ? "rgba(127,29,29,0.3)" : "rgba(30,41,59,0.5)"
           : intensity > 0.6 ? "rgba(254,242,242,0.9)" : "rgba(241,245,249,0.9)";
-        const critBorderLeft = critColor;
 
         const trendsList = countryTrends.length > 0
-          ? countryTrends.map((tr) => {
+          ? countryTrends.map((tr, idx) => {
               const pColor = platformColors[tr.platform] || "#888";
-              return `<div style="display:flex;align-items:center;gap:6px;padding:6px 0;border-bottom:1px dashed ${border};">
-                <div style="width:3px;height:20px;border-radius:2px;background:${pColor};flex-shrink:0;"></div>
+              const changeVal = parseFloat(String(tr.change).replace(/[^0-9.-]/g, '')) || 0;
+              const growthBadge = changeVal > 50
+                ? `<span style="position:absolute;top:8px;right:8px;background:#ef4444;color:#fff;font-size:9px;font-weight:600;padding:2px 6px;border-radius:10px;">+${Math.round(changeVal)}%</span>`
+                : '';
+              return `<div class="map-tooltip-trend" data-trend-idx="${idx}" style="position:relative;display:flex;align-items:center;gap:8px;padding:10px 12px;border-radius:10px;cursor:pointer;margin-bottom:6px;background:transparent;border:1px solid ${border};transition:all 0.15s ease;">
+                <div style="width:3px;height:24px;border-radius:2px;background:${pColor};flex-shrink:0;"></div>
                 <div style="flex:1;min-width:0;">
-                  <div style="font-size:12px;color:${text};white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:180px;font-weight:500;">${tr.title.slice(0, 40)}${tr.title.length > 40 ? '…' : ''}</div>
-                  <div style="display:flex;align-items:center;gap:4px;margin-top:2px;">
-                    <span style="font-size:9px;background:${badgeBg};color:${subtext};padding:1px 6px;border-radius:6px;font-weight:600;">${tr.volume}</span>
+                  <div style="font-size:12px;color:${text};overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:200px;font-weight:500;">${tr.title.slice(0, 45)}${tr.title.length > 45 ? '…' : ''}</div>
+                  <div style="display:flex;align-items:center;gap:6px;margin-top:3px;">
+                    <span style="font-size:9px;background:${badgeBg};color:${subtext};padding:2px 6px;border-radius:6px;font-weight:600;">${tr.volume}</span>
                     <span style="font-size:9px;color:${subtext};">${tr.platform}</span>
+                    <span style="font-size:9px;color:${subtext};">${tr.time || ''}</span>
                   </div>
                 </div>
+                ${growthBadge}
               </div>`;
             }).join('')
-          : `<div style="font-size:11px;color:${subtext};padding:8px 0;text-align:center;">${t("noTrends")}</div>`;
+          : `<div style="font-size:11px;color:${subtext};padding:12px 0;text-align:center;">${t("noTrends")}</div>`;
+
+        const moreCount = trends.filter(tr => tr.countryCode === cp.id).length - 5;
+        const moreSection = moreCount > 0
+          ? `<div style="text-align:center;font-size:10px;color:${subtext};padding:6px;background:${badgeBg};border-radius:8px;margin-bottom:10px;">+ ${moreCount} outras tendências</div>`
+          : '';
 
         infoWindowRef.current.setContent(`
-          <div style="font-family:Inter,system-ui,-apple-system,sans-serif;padding:14px 10px;min-width:260px;max-width:300px;background:${bg};color:${text};border-radius:16px;backdrop-filter:blur(20px);border:1px solid ${border};">
-            <div style="display:flex;align-items:center;justify-content:space-between;padding-bottom:8px;border-bottom:1px solid ${border};">
+          <div style="font-family:Inter,system-ui,-apple-system,sans-serif;padding:16px 14px;min-width:280px;max-width:340px;background:${bg};color:${text};border-radius:20px;backdrop-filter:blur(20px);border:1px solid ${border};">
+            <div style="display:flex;align-items:center;justify-content:space-between;padding-bottom:10px;border-bottom:1px solid ${border};">
               <div style="display:flex;align-items:center;gap:8px;">
-                <span style="font-size:22px;line-height:1;">${flag}</span>
+                <span style="font-size:24px;line-height:1;">${flag}</span>
                 <div>
-                  <div style="font-size:14px;font-weight:600;color:${text};letter-spacing:-0.02em;">${cp.name}</div>
-                  <div style="font-size:11px;color:${subtext};margin-top:1px;">${count} trends</div>
+                  <div style="font-size:16px;font-weight:600;color:${text};letter-spacing:-0.02em;">${cp.name}</div>
+                  <div style="font-size:11px;color:${subtext};margin-top:2px;">${count} trends ativas</div>
                 </div>
               </div>
             </div>
-            <div style="margin:10px 0;background:${critSectionBg};border-radius:10px;padding:10px 12px;border-left:4px solid ${critBorderLeft};">
+            <div style="margin:12px 0;background:${critSectionBg};border-radius:12px;padding:12px 14px;border-left:4px solid ${critColor};">
               <span style="display:inline-block;background:${critColor};color:#fff;padding:3px 10px;border-radius:20px;font-weight:600;font-size:10px;letter-spacing:0.5px;text-transform:uppercase;margin-bottom:6px;">${critTag}</span>
               <p style="font-size:12px;color:${isDark ? '#94a3b8' : '#475569'};line-height:1.5;margin:0;">${critReason}</p>
             </div>
-            <div style="max-height:150px;overflow-y:auto;">${trendsList}</div>
-            <div style="text-align:center;padding-top:8px;margin-top:8px;border-top:1px solid ${border};">
-              <span style="font-size:10px;color:${subtext};font-style:italic;">Clique novamente para filtrar a timeline</span>
+            ${countryTrends.length > 0 ? `<div style="font-size:11px;font-weight:600;color:${text};text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px;">Principais tendências</div>` : ''}
+            <div style="max-height:200px;overflow-y:auto;">${trendsList}</div>
+            ${moreSection}
+            <div style="text-align:center;padding-top:10px;border-top:1px solid ${border};">
+              <span style="font-size:10px;color:${subtext};font-style:italic;">Clique em uma tendência para ver detalhes</span>
             </div>
           </div>
         `);
         infoWindowRef.current.open({ anchor: marker, map });
         setOpenInfoCountry(cp.id);
         map.panTo({ lat: cp.lat, lng: cp.lng });
+
+        // Attach click handlers to trend items after InfoWindow DOM is ready
+        google.maps.event.addListenerOnce(infoWindowRef.current, 'domready', () => {
+          const items = document.querySelectorAll('.map-tooltip-trend');
+          items.forEach((item) => {
+            const idx = parseInt(item.getAttribute('data-trend-idx') || '0');
+            const trend = countryTrends[idx];
+            if (!trend) return;
+            // Hover effect
+            (item as HTMLElement).addEventListener('mouseenter', () => {
+              (item as HTMLElement).style.background = hoverBg;
+              (item as HTMLElement).style.transform = 'translateX(4px)';
+            });
+            (item as HTMLElement).addEventListener('mouseleave', () => {
+              (item as HTMLElement).style.background = 'transparent';
+              (item as HTMLElement).style.transform = 'translateX(0)';
+            });
+            // Click to select trend
+            item.addEventListener('click', () => {
+              if (onSelectTrend) onSelectTrend(trend);
+              infoWindowRef.current?.close();
+              setOpenInfoCountry(null);
+            });
+          });
+        });
 
         // Close listener to reset state
         google.maps.event.addListenerOnce(infoWindowRef.current, 'closeclick', () => {
