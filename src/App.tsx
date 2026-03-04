@@ -14,6 +14,7 @@ import Profile from "./pages/Profile";
 import AuthCallback from "./pages/AuthCallback";
 import NotFound from "./pages/NotFound";
 import Teste from "./pages/Teste";
+import Admin from "./pages/Admin";
 
 const queryClient = new QueryClient({ defaultOptions: { queries: { retry: 1 } } });
 
@@ -60,6 +61,7 @@ const App = () => {
                 <Route path="/historico" element={<History />} />
                 <Route path="/perfil" element={<Profile />} />
                 <Route path="/teste" element={<Teste />} />
+                <Route path="/admin" element={<Admin />} />
                 <Route path="*" element={<NotFound />} />
               </Routes>
             </BrowserRouter>
