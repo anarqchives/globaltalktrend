@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect } from "react";
-import { Share2, ChevronDown, ChevronUp, Sparkles, Link2, Bell, ExternalLink, Shield, CheckCircle2, FlaskConical, Globe, Newspaper, Search } from "lucide-react";
+import { Share2, ChevronDown, ChevronUp, Sparkles, Link2, Bell, ExternalLink, Shield, CheckCircle2, FlaskConical, Globe, Newspaper, Search, Bookmark, Flag } from "lucide-react";
 import { AreaChart, Area, ResponsiveContainer, XAxis, YAxis, Tooltip, CartesianGrid } from "recharts";
 import { toast } from "@/hooks/use-toast";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -78,6 +78,7 @@ interface TimelineCardProps extends TrendCardProps {
   forceExpanded?: boolean;
   isMultiplatform?: boolean;
   crossPlatformCluster?: CrossPlatformCluster | null;
+  onSaveCard?: (card: { title: string; platform: string; category?: string; country_code?: string; source_url?: string; thumbnail?: string; description?: string }) => void;
 }
 
 const normalizeText = (value: string) => value.toLowerCase().normalize("NFD").replace(/\p{Diacritic}/gu, "").trim();
@@ -196,6 +197,7 @@ const TimelineCard = ({
   forceExpanded,
   isMultiplatform,
   crossPlatformCluster,
+  onSaveCard,
 }: TimelineCardProps) => {
   const { t, lang } = useLanguage();
   const [expanded, setExpanded] = useState(forceExpanded || false);
