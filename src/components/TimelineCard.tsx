@@ -418,6 +418,17 @@ const TimelineCard = ({
                 const diffH = Math.floor((Date.now() - new Date(firstSeenAt).getTime()) / 3600000);
                 if (diffH > 0 && diffH < 48) narrativeParts.push(`🕒 Em discussão há ${diffH}h`);
               }
+              // Always show at least volume/platform context
+              if (narrativeParts.length === 0) {
+                if (volume && volume !== "0") narrativeParts.push(`📊 ${volume}`);
+                if (countryCode && countryCode !== "GL") {
+                  const f = countryCodeToFlag(countryCode);
+                  if (f) narrativeParts.push(`📍 ${f}`);
+                }
+                if (sources && sources.length > 1) {
+                  narrativeParts.push(`📰 ${sources.length} fontes`);
+                }
+              }
               if (narrativeParts.length === 0) return null;
               return (
                 <div className="mt-1 mb-1 flex flex-wrap gap-1.5">

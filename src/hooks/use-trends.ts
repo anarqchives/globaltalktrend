@@ -813,8 +813,32 @@ export function useTrends(filters: FilterState, onTrendCountsChange: (counts: Re
     let intervalId: number | undefined;
     let initialFetchTimer: number | undefined;
 
+    // Smart refresh: track user activity to defer refresh during interaction
+    let lastActivity = Date.now();
+    const IDLE_THRESHOLD = 30_000; // 30s of inactivity before auto-refresh
+
+    const trackActivity = () => { lastActivity = Date.now(); };
+    window.addEventListener("mousemove", trackActivity, { passive: true });
+    window.addEventListener("scroll", trackActivity, { passive: true });
+    window.addEventListener("keydown", trackActivity, { passive: true });
+    window.addEventListener("click", trackActivity, { passive: true });
+
+    const smartFetch = () => {
+      const idle = Date.now() - lastActivity > IDLE_THRESHOLD;
+      if (idle) {
+        console.log("🔄 Usuário inativo, atualizando trends...");
+        fetchTrends();
+      } else {
+        console.log("⏳ Usuário ativo, adiando atualização por 30s...");
+        // Retry in 30s
+        window.setTimeout(() => {
+          if (Date.now() - lastActivity > IDLE_THRESHOLD) fetchTrends();
+        }, IDLE_THRESHOLD);
+      }
+    };
+
     const startPolling = () => {
-      intervalId = window.setInterval(fetchTrends, 10 * 60 * 1000);
+      intervalId = window.setInterval(smartFetch, 10 * 60 * 1000);
     };
 
     const handleTrendRefresh = () => fetchTrends();
@@ -833,6 +857,10 @@ export function useTrends(filters: FilterState, onTrendCountsChange: (counts: Re
       if (initialFetchTimer) window.clearTimeout(initialFetchTimer);
       if (intervalId) window.clearInterval(intervalId);
       window.removeEventListener("trend-refresh", handleTrendRefresh);
+      window.removeEventListener("mousemove", trackActivity);
+      window.removeEventListener("scroll", trackActivity);
+      window.removeEventListener("keydown", trackActivity);
+      window.removeEventListener("click", trackActivity);
     };
   }, [fetchTrends, cacheAgeMs]);
 
