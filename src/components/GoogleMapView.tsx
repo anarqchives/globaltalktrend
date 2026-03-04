@@ -184,6 +184,7 @@ const GoogleMapView = ({
   const prevCountsRef = useRef<Record<string, number>>({});
   const [mapLoaded, setMapLoaded] = useState(false);
   const [openInfoCountry, setOpenInfoCountry] = useState<string | null>(null);
+  const openInfoCountryRef = useRef<string | null>(null);
   const [mapError, setMapError] = useState<string | null>(null);
   const [mapViewType, setMapViewType] = useState<MapViewType>("roadmap");
   const [heatmapEnabled, setHeatmapEnabled] = useState(true);
