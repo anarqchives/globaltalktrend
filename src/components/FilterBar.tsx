@@ -297,14 +297,8 @@ const CountdownTimer = () => {
 
   return (
     <span
-      className={`flex items-center gap-1.5 text-[11px] font-mono text-muted-foreground tabular-nums transition-opacity duration-300 ${fading ? 'opacity-0' : 'opacity-100'}`}
+      className={`text-[11px] font-mono text-muted-foreground tabular-nums transition-opacity duration-300 ${fading ? 'opacity-0' : 'opacity-100'}`}
     >
-      <span className="relative w-[60px] h-1 rounded-full bg-muted overflow-hidden">
-        <span
-          className="absolute inset-y-0 left-0 rounded-full bg-primary transition-[width] duration-1000 ease-linear"
-          style={{ width: `${progress}%` }}
-        />
-      </span>
       ⏱️ {String(mins).padStart(2, '0')}:{String(secs).padStart(2, '0')}
     </span>
   );
