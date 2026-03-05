@@ -349,7 +349,7 @@ const TimelineCard = ({
         delay: Math.min(staggerIndex * 0.06, 0.5),
       }}
     >
-      <div className={`timeline-card group ${expanded ? 'timeline-card-expanded' : ''}`}>
+      <div className={`timeline-card group ${expanded ? 'timeline-card-expanded' : ''} ${compact ? 'py-2 px-3' : ''}`}>
         <div className="flex items-start gap-3 cursor-pointer" onClick={(e) => {
           e.stopPropagation();
           const newExpanded = !expanded;
