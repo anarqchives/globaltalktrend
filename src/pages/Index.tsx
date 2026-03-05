@@ -332,7 +332,7 @@ const Index = () => {
     setFilters(f => ({ ...f, [key]: defaultFilters[key] }));
   };
 
-  const gridStyle = { gridTemplateColumns: `repeat(${gridColumns}, 1fr)` };
+  const gridStyle = { gridTemplateColumns: `repeat(${gridColumns}, 1fr)`, gap: compactMode ? '8px' : '16px' };
 
   const renderTimeline = () => (
     <div ref={(el) => { (scrollRef as any).current = el; (gridRef as any).current = el; }} className={`flex flex-col gap-1 p-2 h-full overflow-y-auto overflow-x-hidden scrollbar-thin relative transition-opacity duration-200 w-full max-w-full ${filterTransitioning ? 'opacity-60' : 'opacity-100'}`}>
