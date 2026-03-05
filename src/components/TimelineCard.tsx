@@ -396,61 +396,8 @@ const TimelineCard = ({
             
             </div>
 
-            {/* Auto-narrative: always visible */}
-            {(() => {
-              const narrativeParts: string[] = [];
-              const ch = parseFloat(change?.replace(/[^0-9.\-]/g, "") || "0");
-              if (ch > 200) narrativeParts.push(`🔥 +${Math.round(ch)}%`);
-              else if (ch > 100) narrativeParts.push(`📈 +${Math.round(ch)}%`);
-              if (isMultiplatform && crossPlatformCluster) {
-                narrativeParts.push(`📱 ${crossPlatformCluster.platformCount} plataformas`);
-              }
-              const countries = crossPlatformCluster?.trends
-                ? [...new Set(crossPlatformCluster.trends.map(ct => ct.countryCode).filter(Boolean))]
-                : [];
-              if (countries.length > 1) {
-                const flags = countries.slice(0, 3).map(c => countryCodeToFlag(c)).filter(Boolean).join(' ');
-                narrativeParts.push(`🌍 ${countries.length} países ${flags}`);
-              }
-              if (sources && sources.length > 1) narrativeParts.push(`📰 ${sources.length} fontes`);
-              if (narrativeParts.length === 0) {
-                if (volume && volume !== "0") narrativeParts.push(`📊 ${volume}`);
-                if (countryCode && countryCode !== "GL") {
-                  const f = countryCodeToFlag(countryCode);
-                  if (f) narrativeParts.push(`📍 ${f}`);
-                }
-              }
-              const narrativeText = narrativeParts.length > 0 ? narrativeParts.join(' · ') : 'Em discussão';
-              return (
-                <div className="mt-1 mb-1 text-[11px] py-1.5 px-2.5 rounded-lg bg-primary/5 border-l-2 border-primary/40 text-primary/80">
-                  {narrativeText}
-                </div>
-              );
-            })()}
-
-            {/* Auto-context: always visible */}
-            {(() => {
-              const cat = (category || "").toLowerCase().normalize("NFD").replace(/\p{Diacritic}/gu, "");
-              let ctx = "";
-              if (cat.includes("politic")) ctx = `Discussão política${countryCode ? ` (${countryCodeToFlag(countryCode) || countryCode})` : ""}, com destaque em ${sources?.slice(0, 2).join(", ") || platform}`;
-              else if (cat.includes("tecnologi") || cat.includes("technolog")) ctx = `Tópico tecnológico em alta, mencionado por ${sources?.slice(0, 2).join(", ") || platform}`;
-              else if (cat.includes("economi") || cat.includes("business") || cat.includes("negocio")) ctx = `Movimento econômico com repercussão em ${sources?.slice(0, 2).join(", ") || "mercados"}`;
-              else if (cat.includes("ciencia") || cat.includes("science")) ctx = `Avanço científico com repercussão em ${sources?.length || 1} publicações`;
-              else if (cat.includes("esporte") || cat.includes("sport")) ctx = `Evento esportivo em destaque via ${platform}`;
-              else if (cat.includes("entretenimento") || cat.includes("entertainment")) ctx = `Entretenimento em alta via ${platform}`;
-              else {
-                const diffH = firstSeenAt ? Math.floor((Date.now() - new Date(firstSeenAt).getTime()) / 3600000) : null;
-                ctx = diffH && diffH > 0 && diffH < 48 ? `Assunto em destaque nas últimas ${diffH}h` : `Em discussão via ${platform}`;
-              }
-              return (
-                <div className="mb-1 text-[10px] py-1 px-2.5 rounded-lg bg-muted/60 border-l-2 border-muted-foreground/30 text-muted-foreground">
-                  {ctx}
-                </div>
-              );
-            })()}
-
-            {/* Title + Thumbnail row */}
-            <div className="flex gap-2.5 mb-1">
+            {/* TITLE + Thumbnail row */}
+            <div className="flex gap-2.5 mb-1.5">
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-medium text-foreground line-clamp-2 leading-snug">
                   {title}
@@ -461,20 +408,9 @@ const TimelineCard = ({
                   </span>
                   <span className="text-[9px] text-muted-foreground">{trendScoreLabel.text}</span>
                 </div>
-                {displayDescription && (
-                  <p className="text-[11px] text-muted-foreground/80 line-clamp-2 leading-relaxed mt-0.5">
-                    {displayDescription}
-                  </p>
-                )}
               </div>
               {thumbnail && !imgError && !expanded && (
-                <img
-                  src={thumbnail}
-                  alt=""
-                  className="w-16 h-12 rounded-lg object-cover flex-shrink-0 bg-secondary"
-                  loading="lazy"
-                  onError={() => setImgError(true)}
-                />
+                <img src={thumbnail} alt="" className="w-16 h-12 rounded-lg object-cover flex-shrink-0 bg-secondary" loading="lazy" onError={() => setImgError(true)} />
               )}
               {!thumbnail && !expanded && (
                 <div className="w-16 h-12 rounded-lg bg-secondary flex items-center justify-center flex-shrink-0">
@@ -483,27 +419,83 @@ const TimelineCard = ({
               )}
             </div>
 
-            {/* Thumbnail - full width when expanded, shown AFTER title */}
+            {/* Expanded thumbnail */}
             {expanded && (
               <div className="mb-2">
                 {thumbnail && !imgError ? (
-                  <img
-                    src={thumbnail}
-                    alt=""
-                    className="w-full aspect-video rounded-lg object-cover bg-secondary transition-all duration-200"
-                    loading="lazy"
-                    onError={() => setImgError(true)}
-                  />
+                  <img src={thumbnail} alt="" className="w-full aspect-video rounded-lg object-cover bg-secondary transition-all duration-200" loading="lazy" onError={() => setImgError(true)} />
                 ) : (
-                  <div
-                    className="w-full aspect-video rounded-lg flex items-center justify-center bg-gradient-to-br from-secondary to-muted transition-all duration-200"
-                  >
+                  <div className="w-full aspect-video rounded-lg flex items-center justify-center bg-gradient-to-br from-secondary to-muted transition-all duration-200">
                     <span className="text-4xl opacity-60" style={{ color: pf.color }}>{pf.emoji}</span>
                   </div>
                 )}
               </div>
             )}
 
+            {/* SUMMARY — always visible, from real description */}
+            {displayDescription && (
+              <p className="text-[12px] text-foreground/80 leading-relaxed mt-0.5 mb-1.5 line-clamp-3">
+                {displayDescription}
+              </p>
+            )}
+
+            {/* NARRATIVE — always visible, real data */}
+            {(() => {
+              const narrativeParts: string[] = [];
+              const ch = parseFloat(change?.replace(/[^0-9.\-]/g, "") || "0");
+              if (ch > 200) narrativeParts.push(`🔥 +${Math.round(ch)}% na última hora`);
+              else if (ch > 100) narrativeParts.push(`📈 +${Math.round(ch)}%`);
+              else if (ch > 0) narrativeParts.push(`📊 +${Math.round(ch)}%`);
+              if (isMultiplatform && crossPlatformCluster) {
+                narrativeParts.push(`📱 ${crossPlatformCluster.platformCount} plataformas`);
+              }
+              const countries = crossPlatformCluster?.trends
+                ? [...new Set(crossPlatformCluster.trends.map(ct => ct.countryCode).filter(Boolean))]
+                : [];
+              if (countries.length > 1) {
+                const flags = countries.slice(0, 3).map(c => countryCodeToFlag(c)).filter(Boolean).join(' ');
+                narrativeParts.push(`🌍 ${countries.length} países ${flags}`);
+              } else if (countryCode && countryCode !== "GL") {
+                const f = countryCodeToFlag(countryCode);
+                if (f) narrativeParts.push(`📍 ${f}`);
+              }
+              if (volume && volume !== "0") narrativeParts.push(`💬 ${volume}`);
+              if (sources && sources.length > 1) narrativeParts.push(`📰 ${sources.length} fontes`);
+              const narrativeText = narrativeParts.length > 0 ? narrativeParts.join(' · ') : null;
+              if (!narrativeText) return null;
+              return (
+                <div className="mb-1.5 text-[11px] py-1.5 px-2.5 rounded-lg bg-primary/5 border-l-2 border-primary/40 text-primary/80">
+                  {narrativeText}
+                </div>
+              );
+            })()}
+
+            {/* CONTEXT — always visible, category-specific */}
+            {(() => {
+              const cat = (category || "").toLowerCase().normalize("NFD").replace(/\p{Diacritic}/gu, "");
+              let ctx = "";
+              if (cat.includes("politic")) ctx = `Discussão política${countryCode ? ` (${countryCodeToFlag(countryCode) || countryCode})` : ""}, com destaque em ${sources?.slice(0, 2).join(", ") || platform}`;
+              else if (cat.includes("tecnologi") || cat.includes("technolog")) ctx = `Tópico tecnológico em alta, mencionado por ${sources?.slice(0, 2).join(", ") || platform}`;
+              else if (cat.includes("economi") || cat.includes("business") || cat.includes("negocio") || cat.includes("financ")) ctx = `Movimento econômico com repercussão em ${sources?.slice(0, 2).join(", ") || "mercados globais"}`;
+              else if (cat.includes("ciencia") || cat.includes("science")) ctx = `Avanço científico com repercussão em ${sources?.length || 1} publicações`;
+              else if (cat.includes("esporte") || cat.includes("sport")) ctx = `Evento esportivo em destaque via ${sources?.slice(0, 2).join(", ") || platform}`;
+              else if (cat.includes("entretenimento") || cat.includes("entertainment")) ctx = `Entretenimento em alta via ${sources?.slice(0, 2).join(", ") || platform}`;
+              else if (cat.includes("cultura") || cat.includes("culture")) ctx = `Cultura em destaque via ${sources?.slice(0, 2).join(", ") || platform}`;
+              else if (cat.includes("saude") || cat.includes("health")) ctx = `Saúde em destaque via ${sources?.slice(0, 2).join(", ") || platform}`;
+              else {
+                const diffH = firstSeenAt ? Math.floor((Date.now() - new Date(firstSeenAt).getTime()) / 3600000) : null;
+                if (diffH && diffH > 0 && diffH < 48) ctx = `Assunto em destaque nas últimas ${diffH}h via ${platform}`;
+                else if (sources && sources.length > 0) ctx = `Cobertura por ${sources.slice(0, 2).join(", ")}`;
+                else ctx = `Assunto em destaque via ${platform}`;
+              }
+              return (
+                <div className="mb-1.5 text-[11px] py-1.5 px-2.5 rounded-lg bg-muted/60 border-l-2 border-muted-foreground/30 text-muted-foreground">
+                  {ctx}
+                </div>
+              );
+            })()}
+
+            {/* METRICS — always visible */}
             <div className="flex items-center gap-2 text-[11px] flex-wrap min-h-[18px]">
               <span className="text-muted-foreground whitespace-nowrap">{localizedCategory}</span>
               <span className="volume-badge text-[10px] py-0 whitespace-nowrap">{volume}</span>
