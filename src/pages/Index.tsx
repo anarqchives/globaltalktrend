@@ -161,9 +161,56 @@ const Index = () => {
   const visibleTrends = filteredTrends.slice(0, visibleCount);
   const hasMore = visibleCount < filteredTrends.length;
 
-  useEffect(() => {
-    console.log("🖥️ Renderizando timeline com", visibleTrends.length, "itens");
-  }, [visibleTrends.length]);
+  // Group visible trends by recency sections
+  const SOURCE_PRIORITY: Record<string, number> = {
+    "The Guardian": 1, "NPR": 1, "NewsAPI": 2, "GNews": 2, "Bing News": 2, "NewsData": 2,
+    "Google Trends": 3, "YouTube": 4, "Reddit": 5, "Bluesky": 5, "Mastodon": 5,
+    "World Bank": 6, "IBGE": 6, "OpenAlex": 6, "Wikipedia": 7,
+  };
+
+  const groupedTrends = useMemo(() => {
+    const now = Date.now();
+    const ONE_HOUR = 60 * 60 * 1000;
+    const TWO_HOURS = 2 * ONE_HOUR;
+
+    const getTimestamp = (trend: TrendCardProps) => {
+      if (trend.publishedAt) return new Date(trend.publishedAt).getTime();
+      if (trend.firstSeenAt) return new Date(trend.firstSeenAt).getTime();
+      // Parse relative time from trend.time
+      const m = trend.time?.match?.(/(\d+)\s*(min|h|hora)/i);
+      if (m) {
+        const val = parseInt(m[1]);
+        const unit = m[2].toLowerCase();
+        if (unit === "min") return now - val * 60 * 1000;
+        return now - val * ONE_HOUR;
+      }
+      return now - 12 * ONE_HOUR; // default to 12h ago
+    };
+
+    const sortByPriority = (a: TrendCardProps, b: TrendCardProps) => {
+      const pa = SOURCE_PRIORITY[a.platform] || 4;
+      const pb = SOURCE_PRIORITY[b.platform] || 4;
+      return pa - pb;
+    };
+
+    const agora: TrendCardProps[] = [];
+    const ultimas2h: TrendCardProps[] = [];
+    const ultimas24h: TrendCardProps[] = [];
+
+    for (const trend of visibleTrends) {
+      const ts = getTimestamp(trend);
+      const diff = now - ts;
+      if (diff < ONE_HOUR) agora.push(trend);
+      else if (diff < TWO_HOURS) ultimas2h.push(trend);
+      else ultimas24h.push(trend);
+    }
+
+    agora.sort(sortByPriority);
+    ultimas2h.sort(sortByPriority);
+    ultimas24h.sort(sortByPriority);
+
+    return { agora, ultimas2h, ultimas24h };
+  }, [visibleTrends]);
 
   // Brief loading flash when filters change
   const [filterTransitioning, setFilterTransitioning] = useState(false);
