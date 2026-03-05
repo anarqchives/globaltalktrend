@@ -1,5 +1,5 @@
 import { useState, useRef, useCallback, useEffect, useMemo, lazy, Suspense } from "react";
-import { AnimatePresence } from "framer-motion";
+import { AnimatePresence, motion } from "framer-motion";
 import { useTimelineColumns } from "@/hooks/use-timeline-columns";
 import TrendHeader from "@/components/TrendHeader";
 import FilterBar, { FilterState, countries } from "@/components/FilterBar";
@@ -362,7 +362,7 @@ const Index = () => {
       )}
 
       {(loading && isFirstLoad && filteredTrends.length === 0)
-        ? Array.from({ length: 6 }).map((_, i) => <TrendCardSkeleton key={i} />)
+        ? Array.from({ length: 6 }).map((_, i) => <TrendCardSkeleton key={i} index={i} />)
         : (() => {
             const renderCard = (trend: TrendCardProps, i: number) => {
               const trendId = `${trend.platform}-${trend.title.slice(0, 20)}`;
@@ -370,9 +370,10 @@ const Index = () => {
               const isMulti = multiplatformTitles.has(normalizedKey);
               const matchingCluster = isMulti ? clusters.find(c => c.trends.some(ct => ct.title.toLowerCase().normalize("NFD").replace(/\p{Diacritic}/gu, "").replace(/[^a-z0-9\s]/g, "").trim().slice(0, 50) === normalizedKey)) || null : null;
               return (
-                <div key={`${trendId}-${i}`} id={`trend-card-${trendId}`} className={highlightedTrendId === trendId ? 'animate-highlight-pulse rounded-xl' : ''}>
+                <motion.div layout key={`${trendId}-${i}`} id={`trend-card-${trendId}`} className={highlightedTrendId === trendId ? 'animate-highlight-pulse rounded-xl' : ''}>
                 <TimelineCard
                   {...trend}
+                  staggerIndex={i}
                   userId={user?.id}
                   onTrackAction={trackAction}
                   forceExpanded={expandedTrendId === trendId}
@@ -408,7 +409,7 @@ const Index = () => {
                     setFilters((f) => ({ ...f, type: map[p] || "Todas mídias" }));
                   }}
                 />
-                </div>
+                </motion.div>
               );
             };
 
