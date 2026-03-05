@@ -583,210 +583,79 @@ const TimelineCard = ({
         </div>
       </div>
 
-      {/* EXPANDED CONTENT — rendered OUTSIDE timeline-card to prevent layout overlap */}
+      {/* EXPANDED CONTENT — no tabs, all inline */}
       {expanded && (
         <div className="timeline-card-expanded-content">
-          {/* Tab switcher */}
-          <div className="flex gap-1 mb-3 pt-2">
-            <button
-              onClick={(e) => { e.stopPropagation(); setActiveTab("details"); }}
-              className={`px-3 py-1 rounded-full text-[10px] font-semibold transition-colors ${
-                activeTab === "details"
-                  ? "bg-primary text-primary-foreground"
-                  : "bg-muted text-muted-foreground hover:text-foreground"
-              }`}
+          {/* Details */}
+          {details && <p className="text-xs text-muted-foreground mb-3 pt-2">{details}</p>}
+
+          {sourceUrl && (
+            <a
+              href={sourceUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={(e) => e.stopPropagation()}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-medium bg-primary/10 text-primary hover:bg-primary/20 transition-colors mb-3 group"
             >
-              📋 {t("tabDetails")}
-            </button>
-            <button
-              onClick={(e) => { e.stopPropagation(); setActiveTab("context"); }}
-              className={`px-3 py-1 rounded-full text-[10px] font-semibold transition-colors ${
-                activeTab === "context"
-                  ? "bg-primary text-primary-foreground"
-                  : "bg-muted text-muted-foreground hover:text-foreground"
-              }`}
-            >
-              🔍 {t("tabContext")}
-            </button>
-             <button
-              onClick={(e) => { e.stopPropagation(); setActiveTab("history"); }}
-              className={`px-3 py-1 rounded-full text-[10px] font-semibold transition-colors ${
-                activeTab === "history"
-                  ? "bg-primary text-primary-foreground"
-                  : "bg-muted text-muted-foreground hover:text-foreground"
-              }`}
-            >
-              📊 {t("tabHistory")}
-            </button>
-            {isMultiplatform && (
-              <button
-                onClick={(e) => { e.stopPropagation(); setActiveTab("crossplatform"); }}
-                className={`px-3 py-1 rounded-full text-[10px] font-semibold transition-colors ${
-                  activeTab === "crossplatform"
-                    ? "bg-primary text-primary-foreground"
-                    : "bg-muted text-muted-foreground hover:text-foreground"
-                }`}
-              >
-                🔥 Visão Cruzada
-              </button>
+              <span className="text-sm flex-shrink-0" style={{ color: pf.color }}>{pf.emoji}</span>
+              <ExternalLink className="w-3 h-3 group-hover:translate-x-0.5 transition-transform" />
+              {t("viewSource")}
+            </a>
+          )}
+
+          {/* Platform-specific metrics */}
+          <div className="flex flex-wrap gap-2 mb-3 text-[11px]">
+            {platform === "YouTube" && likeRatio !== undefined && likeRatio > 0 && (
+              <span className="source-tag text-[10px] py-0.5 px-2 whitespace-nowrap">👍 {likeRatio}% {t("likes")}</span>
             )}
-            <button
-              onClick={(e) => { e.stopPropagation(); setActiveTab("narrative"); }}
-              className={`px-3 py-1 rounded-full text-[10px] font-semibold transition-colors ${
-                activeTab === "narrative"
-                  ? "bg-primary text-primary-foreground"
-                  : "bg-muted text-muted-foreground hover:text-foreground"
-              }`}
-            >
-              📡 Narrativas
-            </button>
+            {platform === "Reddit" && commentCount !== undefined && (
+              <span className="source-tag text-[10px] py-0.5 px-2 whitespace-nowrap">💬 {commentCount >= 1000 ? `${(commentCount / 1000).toFixed(1)}K` : commentCount} {t("comments")}</span>
+            )}
+            {platform === "Google Trends" && region && (
+              <span className="source-tag text-[10px] py-0.5 px-2 whitespace-nowrap">📍 {region}</span>
+            )}
+            {platform === "NewsAPI" && sources && sources.length > 0 && (
+              <div className="flex flex-wrap gap-1">
+                {sources.slice(0, 3).map((s) => (
+                  <span key={s} className="source-tag text-[10px] py-0.5 px-2 whitespace-nowrap">📰 {s}</span>
+                ))}
+              </div>
+            )}
           </div>
 
-          {activeTab === "details" ? (
-            <>
-              {details && <p className="text-xs text-muted-foreground mb-3">{details}</p>}
-
-              {sourceUrl && (
-                <a
-                  href={sourceUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  onClick={(e) => e.stopPropagation()}
-                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-medium bg-primary/10 text-primary hover:bg-primary/20 transition-colors mb-3 group"
-                >
-                  <span className="text-sm flex-shrink-0" style={{ color: pf.color }} title={platform}>{pf.emoji}</span>
-                  <ExternalLink className="w-3 h-3 group-hover:translate-x-0.5 transition-transform" />
-                  {platform === "YouTube" ? `${t("watchOn")} YouTube` :
-                   platform === "Reddit" ? `${t("viewOn")} Reddit` :
-                   platform === "Google Trends" ? `${t("viewOn")} Google Trends` :
-                   platform === "Bluesky" ? `${t("viewOn")} Bluesky` :
-                   platform === "Mastodon" ? `${t("viewOn")} Mastodon` :
-                   platform === "The Guardian" ? `${t("readOn")} The Guardian` :
-                   platform === "World Bank" ? `${t("viewOn")} World Bank` :
-                   platform === "IBGE" ? `${t("viewOn")} IBGE` :
-                   platform === "OpenAlex" ? `${t("viewSource")}` :
-                   t("viewSource")}
-                </a>
-              )}
-
-              {!aiSummary && (
-                <button
-                  onClick={handleSummarize}
-                  disabled={summarizing}
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-medium bg-primary/10 text-primary hover:bg-primary/20 transition-colors mb-3 disabled:opacity-50"
-                >
-                  <Sparkles className={`w-3 h-3 ${summarizing ? "animate-spin" : ""}`} />
-                  {summarizing ? t("analyzing") : `✨ ${t("summarizeAI")}`}
-                </button>
-              )}
-
-              {aiSummary && (
-                <div className="mb-3 p-2.5 rounded-lg bg-primary/5 border border-primary/10">
-                  <div className="flex items-center gap-2 mb-1.5">
-                    <Sparkles className="w-3 h-3 text-primary" />
-                    <span className="text-[10px] font-semibold text-primary uppercase tracking-wider">{t("aiSummary")}</span>
-                    {sentiment && (
-                      <span className={`text-xs ${sentiment.color} ml-auto`}>
-                        {sentiment.icon} {t(sentiment.key)}
-                      </span>
-                    )}
-                  </div>
-                  <p className="text-xs text-foreground leading-relaxed">{aiSummary.summary}</p>
-                  {aiSummary.impact && (
-                    <span className={`inline-block mt-1.5 text-[10px] font-medium px-2 py-0.5 rounded-full ${
-                      aiSummary.impact === "high" ? "bg-red-500/10 text-red-500" :
-                      aiSummary.impact === "medium" ? "bg-yellow-500/10 text-yellow-600" :
-                      "bg-green-500/10 text-green-600"
-                    }`}>
-                      {aiSummary.impact === "high" ? t("impactHigh") : aiSummary.impact === "medium" ? t("impactMedium") : t("impactLow")}
-                    </span>
-                  )}
-                </div>
-              )}
-
-              <div className="flex flex-wrap gap-2 mb-3 text-[11px]">
-                {platform === "YouTube" && likeRatio !== undefined && likeRatio > 0 && (
-                  <span className="source-tag text-[10px] py-0.5 px-2 whitespace-nowrap">👍 {likeRatio}% {t("likes")}</span>
-                )}
-                {platform === "Reddit" && commentCount !== undefined && (
-                  <span className="source-tag text-[10px] py-0.5 px-2 whitespace-nowrap">💬 {commentCount >= 1000 ? `${(commentCount / 1000).toFixed(1)}K` : commentCount} {t("comments")}</span>
-                )}
-                {platform === "Google Trends" && region && (
-                  <span className="source-tag text-[10px] py-0.5 px-2 whitespace-nowrap">📍 {region}</span>
-                )}
-                {platform === "NewsAPI" && sources && sources.length > 0 && (
-                  <div className="flex flex-wrap gap-1">
-                    {sources.slice(0, 3).map((s) => (
-                      <span key={s} className="source-tag text-[10px] py-0.5 px-2 whitespace-nowrap">📰 {s}</span>
-                    ))}
-                  </div>
-                )}
+          {/* 24h Chart */}
+          {historicalData && historicalData.length > 0 && (
+            <div className="mb-3">
+              <div className="flex items-center justify-between mb-1.5">
+                <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">
+                  {t("evolution24h")}
+                </span>
+                <span className="text-[10px] text-muted-foreground">{metricLabel}</span>
               </div>
+              <div className="h-28 -mx-1">
+                <ResponsiveContainer width="100%" height="100%">
+                  <AreaChart data={historicalData}>
+                    <defs>
+                      <linearGradient id={gradientId} x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0%" stopColor={pf.color} stopOpacity={0.2} />
+                        <stop offset="100%" stopColor={pf.color} stopOpacity={0} />
+                      </linearGradient>
+                    </defs>
+                    <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                    <XAxis dataKey="hour" tick={{ fontSize: 9, fill: "hsl(var(--muted-foreground))" }} tickLine={false} axisLine={false} interval={5} />
+                    <YAxis tick={{ fontSize: 9, fill: "hsl(var(--muted-foreground))" }} tickLine={false} axisLine={false} width={30} tickFormatter={(v) => v >= 1000 ? `${(v / 1000).toFixed(0)}K` : v} />
+                    <Tooltip
+                      contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: "8px", fontSize: 11 }}
+                      formatter={(value: number) => [value >= 1000 ? `${(value / 1000).toFixed(1)}K` : value, metricLabel || "valor"]}
+                    />
+                    <Area type="monotone" dataKey="value" stroke={pf.color} strokeWidth={1.5} fill={`url(#${gradientId})`} />
+                  </AreaChart>
+                </ResponsiveContainer>
+              </div>
+            </div>
+          )}
 
-              {historicalData && historicalData.length > 0 && (
-                <div>
-                  <div className="flex items-center justify-between mb-1.5">
-                    <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">
-                      {t("evolution24h")}
-                    </span>
-                    <span className="text-[10px] text-muted-foreground">{metricLabel}</span>
-                  </div>
-                  <div className="h-28 -mx-1">
-                    <ResponsiveContainer width="100%" height="100%">
-                      <AreaChart data={historicalData}>
-                        <defs>
-                          <linearGradient id={gradientId} x1="0" y1="0" x2="0" y2="1">
-                            <stop offset="0%" stopColor={pf.color} stopOpacity={0.2} />
-                            <stop offset="100%" stopColor={pf.color} stopOpacity={0} />
-                          </linearGradient>
-                        </defs>
-                        <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                        <XAxis dataKey="hour" tick={{ fontSize: 9, fill: "hsl(var(--muted-foreground))" }} tickLine={false} axisLine={false} interval={5} />
-                        <YAxis tick={{ fontSize: 9, fill: "hsl(var(--muted-foreground))" }} tickLine={false} axisLine={false} width={30} tickFormatter={(v) => v >= 1000 ? `${(v / 1000).toFixed(0)}K` : v} />
-                        <Tooltip
-                          contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: "8px", fontSize: 11 }}
-                          formatter={(value: number) => [value >= 1000 ? `${(value / 1000).toFixed(1)}K` : value, metricLabel || "valor"]}
-                        />
-                        <Area type="monotone" dataKey="value" stroke={pf.color} strokeWidth={1.5} fill={`url(#${gradientId})`} />
-                      </AreaChart>
-                    </ResponsiveContainer>
-                  </div>
-                </div>
-              )}
-            </>
-          ) : activeTab === "context" ? (
-            <TrendContextTab
-              title={title}
-              details={details}
-              description={description}
-              platform={platform}
-              volume={volume}
-              category={category}
-              sources={sources}
-            />
-          ) : activeTab === "history" ? (
-            <TrendHistoryTab
-              title={title}
-              platform={platform}
-              category={category}
-              platformColor={pf.color}
-            />
-          ) : activeTab === "crossplatform" ? (
-            <CrossPlatformTab cluster={crossPlatformCluster || null} />
-          ) : activeTab === "narrative" ? (
-            <NarrativeRadarTab
-              title={title}
-              details={details}
-              description={description}
-              platform={platform}
-              volume={volume}
-              category={category}
-              sources={sources}
-              thumbnail={thumbnail}
-            />
-          ) : null}
-
-          {/* Feedback buttons */}
+          {/* Feedback */}
           <TrendFeedback title={title} platform={platform} userId={userId} />
         </div>
       )}
