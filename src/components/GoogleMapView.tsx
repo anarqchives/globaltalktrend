@@ -645,7 +645,7 @@ const GoogleMapView = ({
   }, [mapViewType, mapLoaded, isDark]);
 
   const controlBtnClass = (active: boolean) =>
-    `p-2 rounded-xl transition-all duration-200 outline-none ring-0 focus:outline-none focus:ring-0 focus-visible:ring-1 focus-visible:ring-primary/30 ${
+    `h-9 min-h-[36px] max-h-[36px] px-3 rounded-full transition-all duration-200 outline-none ring-0 focus:outline-none focus:ring-0 focus-visible:ring-1 focus-visible:ring-primary/30 inline-flex items-center gap-1 text-[11px] font-medium ${
       active ? "bg-primary text-primary-foreground shadow-sm" : "text-muted-foreground hover:text-foreground hover:bg-white/60 dark:hover:bg-white/10"
     }`;
 
@@ -660,17 +660,17 @@ const GoogleMapView = ({
     <div className="w-full h-full relative" style={{ isolation: "isolate" }}>
       {/* Map controls + Top Trends */}
       <div className="absolute top-3 left-3 z-[5] flex items-start gap-2">
-        <div className="flex items-center gap-1 p-1 rounded-2xl bg-white/95 dark:bg-card/95 backdrop-blur-[12px] border border-white/50 dark:border-white/10 shadow-[0_8px_24px_rgba(0,0,0,0.08)] dark:shadow-[0_8px_24px_rgba(0,0,0,0.3)]">
+        <div className="flex items-center gap-1 p-1 rounded-full bg-white/95 dark:bg-card/95 backdrop-blur-[12px] border border-white/50 dark:border-white/10 shadow-[0_8px_24px_rgba(0,0,0,0.08)] dark:shadow-[0_8px_24px_rgba(0,0,0,0.3)]">
           <button onClick={() => setHeatmapEnabled(!heatmapEnabled)} className={controlBtnClass(heatmapEnabled)} title="Heatmap">
             <Flame className="w-3.5 h-3.5" />
-            <span className="text-[10px] font-medium ml-0.5 hidden sm:inline">Heatmap</span>
+            <span className="hidden sm:inline">Heatmap</span>
           </button>
           {selectedCountry !== "global" && (
             <>
               <div className="w-px h-5 bg-border/40 mx-0.5" />
               <button
                 onClick={() => { onSelectCountry("global"); googleMapRef.current?.panTo({ lat: 20, lng: 0 }); googleMapRef.current?.setZoom(2.5); }}
-                className="p-2 rounded-xl text-muted-foreground hover:text-foreground hover:bg-white/60 dark:hover:bg-white/10 transition-all duration-200"
+                className={controlBtnClass(false)}
                 title={t("global")}
               >
                 <Globe className="w-3.5 h-3.5" />
