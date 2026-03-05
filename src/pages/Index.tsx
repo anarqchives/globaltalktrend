@@ -427,7 +427,9 @@ const Index = () => {
                       </span>
                     </div>
                     <div className="grid gap-4" style={gridStyle}>
-                      {agora.map((trend) => renderCard(trend, globalIndex++))}
+                      <AnimatePresence mode="popLayout">
+                        {agora.map((trend) => renderCard(trend, globalIndex++))}
+                      </AnimatePresence>
                     </div>
                   </>
                 )}
@@ -440,7 +442,9 @@ const Index = () => {
                       </span>
                     </div>
                     <div className="grid gap-4" style={gridStyle}>
-                      {ultimas2h.map((trend) => renderCard(trend, globalIndex++))}
+                      <AnimatePresence mode="popLayout">
+                        {ultimas2h.map((trend) => renderCard(trend, globalIndex++))}
+                      </AnimatePresence>
                     </div>
                   </>
                 )}
@@ -453,7 +457,9 @@ const Index = () => {
                       </span>
                     </div>
                     <div className="grid gap-4" style={gridStyle}>
-                      {ultimas24h.map((trend) => renderCard(trend, globalIndex++))}
+                      <AnimatePresence mode="popLayout">
+                        {ultimas24h.map((trend) => renderCard(trend, globalIndex++))}
+                      </AnimatePresence>
                     </div>
                   </>
                 )}
