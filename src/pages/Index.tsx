@@ -75,6 +75,7 @@ const Index = () => {
   const { trackView } = useHistory(user?.id ?? null);
   const { trackAction } = useGamification(user?.id ?? null);
   const { saveCard } = useSavedCards(user?.id ?? null);
+  const { saveFilter } = useSavedFilters(user?.id ?? null);
   const [trendCounts, setTrendCounts] = useState<Record<string, number>>({});
   const [expandedTrendId, setExpandedTrendId] = useState<string | null>(null);
   const [highlightedTrendId, setHighlightedTrendId] = useState<string | null>(null);
