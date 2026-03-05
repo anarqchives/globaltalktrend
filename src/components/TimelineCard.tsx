@@ -204,8 +204,7 @@ const TimelineCard = ({
   useEffect(() => {
     setExpanded(!!forceExpanded);
   }, [forceExpanded]);
-  const [aiSummary, setAiSummary] = useState<{ summary: string; sentiment: string; impact: string } | null>(null);
-  const [summarizing, setSummarizing] = useState(false);
+  
   const pf = platformIcons[platform] || platformIcons["Google Trends"];
   const isPeak = change && parseInt(change.replace(/[^0-9]/g, "")) > 100;
   const flag = countryCodeToFlag(countryCode);
