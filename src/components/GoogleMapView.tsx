@@ -661,12 +661,9 @@ const GoogleMapView = ({
       {/* Map controls + Top Trends */}
       <div className="absolute top-3 left-3 z-[5] flex items-start gap-2">
         <div className="flex items-center gap-1 p-1 rounded-2xl bg-white/95 dark:bg-card/95 backdrop-blur-[12px] border border-white/50 dark:border-white/10 shadow-[0_8px_24px_rgba(0,0,0,0.08)] dark:shadow-[0_8px_24px_rgba(0,0,0,0.3)]">
-          <button onClick={() => setMapViewType("roadmap")} className={controlBtnClass(mapViewType === "roadmap")} title={t("map")}>
-            <Map className="w-3.5 h-3.5" />
-          </button>
-          <div className="w-px h-5 bg-border/40 mx-0.5" />
           <button onClick={() => setHeatmapEnabled(!heatmapEnabled)} className={controlBtnClass(heatmapEnabled)} title="Heatmap">
             <Flame className="w-3.5 h-3.5" />
+            <span className="text-[10px] font-medium ml-0.5 hidden sm:inline">Heatmap</span>
           </button>
           {selectedCountry !== "global" && (
             <>
