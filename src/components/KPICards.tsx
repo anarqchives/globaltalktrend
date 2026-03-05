@@ -88,7 +88,7 @@ export default function KPICards({ trends, countriesCount, loading }: KPICardsPr
       icon: <BarChart3 className="w-4 h-4" />,
       label: "Tendências ativas",
       value: kpis.total.toString(),
-      sub: `${countriesCount} ${t("countries") || "países"}`,
+      sub: `${countriesCount} países`,
       color: "text-primary",
       bg: "bg-primary/10",
     },
