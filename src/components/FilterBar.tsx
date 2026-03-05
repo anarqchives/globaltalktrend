@@ -226,7 +226,17 @@ const FilterBar = ({ filters, onChange, onForceReset, onSaveFilter, isLoggedIn }
           <RotateCcw className="w-3 h-3" />
         </button>
 
-        <div className="flex items-center gap-1.5 ml-auto flex-shrink-0 whitespace-nowrap">
+        {isLoggedIn && onSaveFilter && (
+          <button
+            onClick={onSaveFilter}
+            className="flex items-center gap-1 px-3 py-2 rounded-lg text-[12px] font-medium text-primary hover:bg-primary/10 transition-colors flex-shrink-0 focus:outline-none"
+            title="Salvar filtros atuais"
+          >
+            <Star className="w-3 h-3" />
+            💾 Salvar
+          </button>
+        )}
+
           <span className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ background: "hsl(142, 72%, 45%)" }} />
           <span className="text-[11px] font-medium text-foreground">{t("live")}</span>
           <OnlineUsersCount />
