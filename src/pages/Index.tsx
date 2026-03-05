@@ -1,5 +1,5 @@
 import { useState, useRef, useCallback, useEffect, useMemo, lazy, Suspense } from "react";
-import { AnimatePresence, motion } from "framer-motion";
+import { AnimatePresence, motion, useScroll, useTransform } from "framer-motion";
 import { useTimelineColumns } from "@/hooks/use-timeline-columns";
 import TrendHeader from "@/components/TrendHeader";
 import FilterBar, { FilterState, countries } from "@/components/FilterBar";
@@ -20,7 +20,7 @@ import { useGamification } from "@/hooks/use-gamification";
 import { useSavedCards } from "@/hooks/use-saved-cards";
 import { useSavedFilters } from "@/hooks/use-saved-filters";
 import { supabase } from "@/integrations/supabase/client";
-import { ChevronRight, X, Map, Newspaper } from "lucide-react";
+import { ChevronRight, X, Map, Newspaper, LayoutList, LayoutGrid } from "lucide-react";
 import {
   ResizablePanelGroup,
   ResizablePanel,
@@ -67,6 +67,7 @@ const Index = () => {
   const [filters, setFilters] = useState<FilterState>(getInitialFilters);
   const [user, setUser] = useState<any>(null);
   const [viewMode, setViewMode] = useState<"timeline" | "map">("timeline");
+  const [compactMode, setCompactMode] = useState(false);
   const timelinePanelRef = useRef<HTMLDivElement>(null);
   const { timelineRef: gridRef, columns: gridColumns } = useTimelineColumns();
 
@@ -331,7 +332,7 @@ const Index = () => {
     setFilters(f => ({ ...f, [key]: defaultFilters[key] }));
   };
 
-  const gridStyle = { gridTemplateColumns: `repeat(${gridColumns}, 1fr)` };
+  const gridStyle = { gridTemplateColumns: `repeat(${gridColumns}, 1fr)`, gap: compactMode ? '8px' : '16px' };
 
   const renderTimeline = () => (
     <div ref={(el) => { (scrollRef as any).current = el; (gridRef as any).current = el; }} className={`flex flex-col gap-1 p-2 h-full overflow-y-auto overflow-x-hidden scrollbar-thin relative transition-opacity duration-200 w-full max-w-full ${filterTransitioning ? 'opacity-60' : 'opacity-100'}`}>
@@ -339,6 +340,13 @@ const Index = () => {
         <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-widest">
           {t("timeline")}
         </span>
+        <button
+          onClick={() => setCompactMode(c => !c)}
+          className="h-6 w-6 flex items-center justify-center rounded-md hover:bg-secondary transition-colors text-muted-foreground hover:text-foreground"
+          title={compactMode ? "Modo expandido" : "Modo compacto"}
+        >
+          {compactMode ? <LayoutGrid className="w-3.5 h-3.5" /> : <LayoutList className="w-3.5 h-3.5" />}
+        </button>
       </div>
 
       {breadcrumbs.length > 0 && (
@@ -373,6 +381,7 @@ const Index = () => {
                 <motion.div layout key={`${trendId}-${i}`} id={`trend-card-${trendId}`} className={highlightedTrendId === trendId ? 'animate-highlight-pulse rounded-xl' : ''}>
                 <TimelineCard
                   {...trend}
+                  compact={compactMode}
                   staggerIndex={i}
                   userId={user?.id}
                   onTrackAction={trackAction}
@@ -420,13 +429,19 @@ const Index = () => {
               <>
                 {agora.length > 0 && (
                   <>
-                    <div className="px-2 py-1.5 mt-1">
+                    <motion.div
+                      className="px-2 py-1.5 mt-1"
+                      initial={{ opacity: 0, x: -8 }}
+                      whileInView={{ opacity: 1, x: 0 }}
+                      viewport={{ once: true }}
+                      transition={{ duration: 0.4, ease: "easeOut" }}
+                    >
                       <span className="text-[11px] font-bold text-destructive uppercase tracking-wide flex items-center gap-1.5">
                         <span className="w-1.5 h-1.5 rounded-full bg-destructive animate-pulse" />
                         🔥 Agora
                         <span className="text-[10px] font-normal text-muted-foreground ml-1">({agora.length})</span>
                       </span>
-                    </div>
+                    </motion.div>
                     <div className="grid gap-4" style={gridStyle}>
                       <AnimatePresence mode="popLayout">
                         {agora.map((trend) => renderCard(trend, globalIndex++))}
@@ -436,12 +451,18 @@ const Index = () => {
                 )}
                 {ultimas2h.length > 0 && (
                   <>
-                    <div className="px-2 py-1.5 mt-2">
+                    <motion.div
+                      className="px-2 py-1.5 mt-2"
+                      initial={{ opacity: 0, x: -8 }}
+                      whileInView={{ opacity: 1, x: 0 }}
+                      viewport={{ once: true }}
+                      transition={{ duration: 0.4, ease: "easeOut", delay: 0.1 }}
+                    >
                       <span className="text-[11px] font-bold text-amber-600 dark:text-amber-400 uppercase tracking-wide flex items-center gap-1.5">
                         ⏳ Últimas 2 horas
                         <span className="text-[10px] font-normal text-muted-foreground ml-1">({ultimas2h.length})</span>
                       </span>
-                    </div>
+                    </motion.div>
                     <div className="grid gap-4" style={gridStyle}>
                       <AnimatePresence mode="popLayout">
                         {ultimas2h.map((trend) => renderCard(trend, globalIndex++))}
@@ -451,12 +472,18 @@ const Index = () => {
                 )}
                 {ultimas24h.length > 0 && (
                   <>
-                    <div className="px-2 py-1.5 mt-2">
+                    <motion.div
+                      className="px-2 py-1.5 mt-2"
+                      initial={{ opacity: 0, x: -8 }}
+                      whileInView={{ opacity: 1, x: 0 }}
+                      viewport={{ once: true }}
+                      transition={{ duration: 0.4, ease: "easeOut", delay: 0.15 }}
+                    >
                       <span className="text-[11px] font-bold text-muted-foreground uppercase tracking-wide flex items-center gap-1.5">
                         📅 Últimas 24 horas
                         <span className="text-[10px] font-normal text-muted-foreground ml-1">({ultimas24h.length})</span>
                       </span>
-                    </div>
+                    </motion.div>
                     <div className="grid gap-4" style={gridStyle}>
                       <AnimatePresence mode="popLayout">
                         {ultimas24h.map((trend) => renderCard(trend, globalIndex++))}
