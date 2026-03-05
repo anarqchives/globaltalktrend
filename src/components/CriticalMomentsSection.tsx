@@ -6,7 +6,6 @@ import {
 } from "lucide-react";
 import { useLanguage, type LangCode } from "@/contexts/LanguageContext";
 import type { CriticalMoment } from "@/hooks/use-critical-moments";
-import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 
 /* ── i18n ─────────────────────────────────────── */
@@ -48,20 +47,6 @@ const countryCodeToFlag = (code?: string) => {
   return String.fromCodePoint(...[...code.toUpperCase()].map(c => 0x1F1E6 + c.charCodeAt(0) - 65));
 };
 
-const normalizeText = (v: string) => v.toLowerCase().normalize("NFD").replace(/\p{Diacritic}/gu, "").trim();
-
-const localizeCategory = (category: string, t: (k: any) => string) => {
-  const n = normalizeText(category || "");
-  const map: Record<string, string> = {
-    politica: "politics", politics: "politics", entretenimento: "entertainment", entertainment: "entertainment",
-    tecnologia: "technology", technology: "technology", esportes: "sports", sports: "sports",
-    cultura: "culture", culture: "culture", negocios: "business", business: "business",
-    ciencia: "science", science: "science", geral: "general", general: "general", social: "socialMedia",
-  };
-  const key = map[n];
-  return key ? t(key as any) : category;
-};
-
 function getTimeWindow(firstSeenAt?: string, peakAt?: string): string | null {
   if (!firstSeenAt) return null;
   const start = new Date(firstSeenAt).getTime();
@@ -91,13 +76,13 @@ function detectTrigger(title: string, reasons: string[]): string | null {
   return null;
 }
 
-/* ── CriticalCard (individual expanded card) ──── */
+/* ── CriticalSquare (compact square card) ──────── */
 
-function CriticalCard({ m, i, lang, t, onSelectTrend }: {
+function CriticalSquare({ m, i, lang, t, isExpanded, onToggle, onSelectTrend }: {
   m: CriticalMoment; i: number; lang: LangCode;
-  t: (k: any) => string; onSelectTrend?: (trend: any) => void;
+  t: (k: any) => string; isExpanded: boolean;
+  onToggle: () => void; onSelectTrend?: (trend: any) => void;
 }) {
-  const [expanded, setExpanded] = useState(false);
   const trend = m.trend;
   const hasLink = !!trend.sourceUrl;
   const timeWindow = getTimeWindow(trend.firstSeenAt, trend.peakAt);
@@ -106,23 +91,15 @@ function CriticalCard({ m, i, lang, t, onSelectTrend }: {
   const peakTime = formatTime(trend.peakAt);
   const sources = trend.sources || [];
 
-  // Build contextual explanation sentence
+  // Explanation sentence
   const explParts: string[] = [];
   if (m.changePercent > 500) explParts.push(`crescimento explosivo de ${Math.round(m.changePercent)}%`);
   else if (m.changePercent > 200) explParts.push(`alta aceleração de ${Math.round(m.changePercent)}%`);
   else if (m.changePercent > 50) explParts.push(`crescimento de ${Math.round(m.changePercent)}%`);
   if (timeWindow) explParts.push(`em ${timeWindow}`);
-  if (m.reasons.includes("multiSource")) explParts.push("reportado por múltiplas fontes");
+  if (m.reasons.includes("multiSource")) explParts.push("múltiplas fontes");
   if (m.reasons.includes("geographicSpread")) explParts.push("repercussão internacional");
-  if (m.reasons.includes("verifiedSource")) explParts.push("confirmado por fonte verificada");
   if (explParts.length === 0) explParts.push("atividade anômala detectada");
-
-  const explanation = explParts.join(" · ");
-
-  const handleClick = () => {
-    if (hasLink) window.open(trend.sourceUrl, "_blank", "noopener,noreferrer");
-    else onSelectTrend?.(trend);
-  };
 
   const handleShare = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -131,86 +108,57 @@ function CriticalCard({ m, i, lang, t, onSelectTrend }: {
 
   return (
     <motion.div
-      key={`${trend.title}-${i}`}
       initial={{ opacity: 0, y: -8 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0 }}
       transition={{ delay: i * 0.04 }}
-      className="rounded-2xl bg-destructive/5 border border-destructive/20 overflow-hidden transition-shadow hover:shadow-lg hover:shadow-destructive/10"
+      className={`rounded-2xl border overflow-hidden transition-all duration-200 cursor-pointer ${
+        isExpanded
+          ? "border-destructive shadow-lg shadow-destructive/10 bg-destructive/5"
+          : "border-destructive/20 bg-background hover:border-destructive hover:shadow-md hover:shadow-destructive/10 hover:-translate-y-0.5"
+      }`}
+      onClick={onToggle}
     >
-      {/* Header */}
-      <div className="flex items-start gap-3 p-4 pb-2 cursor-pointer" onClick={handleClick}>
-        <div className="w-8 h-8 rounded-full bg-destructive/10 flex items-center justify-center flex-shrink-0 mt-0.5">
-          <Flame className="w-4 h-4 text-destructive" />
-        </div>
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2 mb-1">
-            <h3 className="text-sm font-medium text-destructive dark:text-red-400 line-clamp-2 leading-snug flex-1">
-              {trend.title}
-            </h3>
-            <Badge variant="destructive" className="text-[10px] px-2 py-0.5 flex-shrink-0 uppercase tracking-wider">
-              🔥 {t("critical")}
-            </Badge>
-          </div>
-          {/* Contextual explanation */}
-          <p className="text-xs text-muted-foreground leading-relaxed border-l-2 border-destructive/30 pl-2 bg-background/60 rounded-r py-1">
-            {explanation}
-          </p>
-        </div>
-      </div>
-
-      {/* Metrics grid – always visible */}
-      <div className="grid grid-cols-4 gap-2 px-4 py-2">
-        <div className="bg-background rounded-xl p-2 text-center">
-          <span className="block text-[10px] text-muted-foreground uppercase tracking-wide">Crescimento</span>
-          <span className="block text-base font-bold text-destructive">+{Math.round(m.changePercent)}%</span>
-          {timeWindow && <span className="block text-[10px] text-muted-foreground">em {timeWindow}</span>}
-        </div>
-        <div className="bg-background rounded-xl p-2 text-center">
-          <span className="block text-[10px] text-muted-foreground uppercase tracking-wide">Volume</span>
-          <span className="block text-base font-bold text-foreground">{trend.volume || "—"}</span>
-          <span className="block text-[10px] text-muted-foreground">menções</span>
-        </div>
-        <div className="bg-background rounded-xl p-2 text-center">
-          <span className="block text-[10px] text-muted-foreground uppercase tracking-wide">Plataforma</span>
-          <span className="block text-base font-bold text-foreground">{trend.platform}</span>
-          <span className="block text-[10px] text-muted-foreground">{localizeCategory(trend.category, t)}</span>
-        </div>
-        <div className="bg-background rounded-xl p-2 text-center">
-          <span className="block text-[10px] text-muted-foreground uppercase tracking-wide">País</span>
-          <span className="block text-base font-bold text-foreground">
-            {trend.countryCode ? `${countryCodeToFlag(trend.countryCode)} ${trend.countryCode}` : "🌐 GL"}
+      {/* ─── Minimized view (always visible) ─── */}
+      <div className="p-4">
+        {/* Header: title + badge */}
+        <div className="flex items-start justify-between gap-2 mb-3">
+          <h3 className="text-sm font-semibold text-foreground leading-snug line-clamp-2 flex-1">
+            {trend.title}
+          </h3>
+          <span className="w-6 h-6 rounded-full bg-destructive flex items-center justify-center flex-shrink-0 text-sm">
+            🔥
           </span>
-          {trend.region && <span className="block text-[10px] text-muted-foreground">{trend.region}</span>}
+        </div>
+
+        {/* Growth + time preview */}
+        <div className="flex items-baseline justify-between mb-3 py-2 border-y border-dashed border-destructive/20">
+          <span className="text-xl font-bold text-destructive">
+            +{Math.round(m.changePercent)}%
+          </span>
+          {timeWindow && (
+            <span className="text-[11px] text-muted-foreground bg-secondary px-2 py-0.5 rounded-full">
+              {timeWindow}
+            </span>
+          )}
+        </div>
+
+        {/* Quick metrics */}
+        <div className="flex gap-3 text-[11px] text-muted-foreground">
+          <span className="inline-flex items-center gap-1">
+            📱 {trend.platform}
+          </span>
+          {trend.countryCode && (
+            <span className="inline-flex items-center gap-1">
+              {countryCodeToFlag(trend.countryCode)} {trend.countryCode}
+            </span>
+          )}
         </div>
       </div>
 
-      {/* Reason badges */}
-      <div className="flex flex-wrap gap-1 px-4 pb-2">
-        {m.reasons.map((r) => {
-          const icon = reasonIcons[r];
-          const label = reasonLabelsByLang[lang]?.[r] || reasonLabelsByLang.pt[r] || r;
-          if (!icon) return null;
-          return (
-            <span key={r} className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-destructive/10 text-destructive text-[10px] font-medium">
-              {icon} {label}
-            </span>
-          );
-        })}
-      </div>
-
-      {/* Expand toggle */}
-      <button
-        onClick={(e) => { e.stopPropagation(); setExpanded(!expanded); }}
-        className="w-full flex items-center justify-center gap-1 py-1.5 text-[11px] text-muted-foreground hover:text-foreground transition-colors border-t border-border/50"
-      >
-        {expanded ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
-        {expanded ? "Menos detalhes" : "Mais detalhes"}
-      </button>
-
-      {/* Expanded details */}
+      {/* ─── Expanded view ─── */}
       <AnimatePresence>
-        {expanded && (
+        {isExpanded && (
           <motion.div
             initial={{ height: 0, opacity: 0 }}
             animate={{ height: "auto", opacity: 1 }}
@@ -218,18 +166,54 @@ function CriticalCard({ m, i, lang, t, onSelectTrend }: {
             transition={{ duration: 0.2 }}
             className="overflow-hidden"
           >
-            <div className="px-4 pb-4 space-y-3">
+            <div className="px-4 pb-4 space-y-3 border-t border-destructive/20">
+              {/* Explanation */}
+              <p className="text-xs text-muted-foreground leading-relaxed border-l-2 border-destructive/30 pl-2 mt-3 bg-background/60 rounded-r py-1">
+                {explParts.join(" · ")}
+              </p>
+
+              {/* Detailed metrics */}
+              <div className="grid grid-cols-2 gap-2">
+                <div className="bg-background rounded-xl p-2 text-center">
+                  <span className="block text-[10px] text-muted-foreground uppercase tracking-wide">Crescimento</span>
+                  <span className="block text-base font-bold text-destructive">+{Math.round(m.changePercent)}%</span>
+                  {timeWindow && <span className="block text-[10px] text-muted-foreground">em {timeWindow}</span>}
+                </div>
+                <div className="bg-background rounded-xl p-2 text-center">
+                  <span className="block text-[10px] text-muted-foreground uppercase tracking-wide">Volume</span>
+                  <span className="block text-base font-bold text-foreground">{trend.volume || "—"}</span>
+                  <span className="block text-[10px] text-muted-foreground">menções</span>
+                </div>
+              </div>
+
+              {/* Sources breakdown */}
+              {sources.length > 0 && (
+                <div className="bg-background rounded-xl p-3">
+                  <h4 className="text-[11px] font-semibold text-foreground flex items-center gap-1.5 mb-2 uppercase tracking-wide">
+                    <BarChart3 className="w-3 h-3 text-muted-foreground" /> Onde está sendo discutido
+                  </h4>
+                  <div className="space-y-1.5">
+                    {sources.slice(0, 4).map((src, idx) => (
+                      <div key={idx} className="flex items-center gap-2 text-[11px]">
+                        <span className="text-muted-foreground flex-shrink-0 w-20 truncate">{src}</span>
+                        <Progress value={100 - idx * 20} className="h-1.5 flex-1" />
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
               {/* Peak timeline */}
               {(startTime || peakTime) && (
                 <div className="bg-background rounded-xl p-3">
-                  <h4 className="text-xs font-semibold text-foreground flex items-center gap-1.5 mb-2">
-                    <Clock className="w-3.5 h-3.5 text-muted-foreground" /> Evolução do pico
+                  <h4 className="text-[11px] font-semibold text-foreground flex items-center gap-1.5 mb-2">
+                    <Clock className="w-3 h-3 text-muted-foreground" /> Evolução do pico
                   </h4>
                   <div className="flex items-center gap-2">
                     {startTime && (
                       <div className="text-center">
-                        <span className="block text-[10px] text-muted-foreground">Início</span>
-                        <span className="block text-xs font-semibold text-foreground">{startTime}</span>
+                        <span className="block text-[9px] text-muted-foreground">Início</span>
+                        <span className="block text-[11px] font-semibold text-foreground">{startTime}</span>
                       </div>
                     )}
                     <div className="flex-1 h-0.5 bg-border rounded-full relative">
@@ -237,16 +221,16 @@ function CriticalCard({ m, i, lang, t, onSelectTrend }: {
                     </div>
                     {peakTime && (
                       <div className="text-center">
-                        <span className="block text-[10px] text-destructive font-semibold">Pico</span>
-                        <span className="block text-xs font-semibold text-foreground">{peakTime}</span>
+                        <span className="block text-[9px] text-destructive font-semibold">Pico</span>
+                        <span className="block text-[11px] font-semibold text-foreground">{peakTime}</span>
                       </div>
                     )}
                     <div className="flex-1 h-0.5 bg-border rounded-full relative">
                       <div className="absolute inset-y-0 left-0 w-1/3 bg-gradient-to-r from-destructive/40 to-border rounded-full" />
                     </div>
                     <div className="text-center">
-                      <span className="block text-[10px] text-primary font-semibold">Agora</span>
-                      <span className="block text-xs font-semibold text-foreground">
+                      <span className="block text-[9px] text-primary font-semibold">Agora</span>
+                      <span className="block text-[11px] font-semibold text-foreground">
                         {new Date().toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}
                       </span>
                     </div>
@@ -254,38 +238,35 @@ function CriticalCard({ m, i, lang, t, onSelectTrend }: {
                 </div>
               )}
 
-              {/* Sources breakdown */}
-              {sources.length > 0 && (
-                <div className="bg-background rounded-xl p-3">
-                  <h4 className="text-xs font-semibold text-foreground flex items-center gap-1.5 mb-2">
-                    <BarChart3 className="w-3.5 h-3.5 text-muted-foreground" /> Fontes reportando
-                  </h4>
-                  <div className="space-y-1.5">
-                    {sources.slice(0, 5).map((src, idx) => (
-                      <div key={idx} className="flex items-center gap-2 text-xs">
-                        <span className="text-muted-foreground flex-shrink-0 w-24 truncate">{src}</span>
-                        <Progress value={100 - idx * 18} className="h-1.5 flex-1" />
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-
               {/* Trigger */}
               {trigger && (
                 <div className="bg-primary/5 border border-primary/20 rounded-xl p-3">
-                  <h4 className="text-xs font-semibold text-primary flex items-center gap-1.5 mb-1">
-                    <Zap className="w-3.5 h-3.5" /> Possível gatilho
-                  </h4>
+                  <strong className="block text-[11px] text-primary flex items-center gap-1.5 mb-1">
+                    <Zap className="w-3 h-3" /> Possível gatilho
+                  </strong>
                   <p className="text-xs text-foreground">{trigger}</p>
                 </div>
               )}
 
-              {/* Historical mini-chart placeholder using sparkData */}
+              {/* Reason badges */}
+              <div className="flex flex-wrap gap-1">
+                {m.reasons.map((r) => {
+                  const icon = reasonIcons[r];
+                  const label = reasonLabelsByLang[lang]?.[r] || reasonLabelsByLang.pt[r] || r;
+                  if (!icon) return null;
+                  return (
+                    <span key={r} className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-destructive/10 text-destructive text-[10px] font-medium">
+                      {icon} {label}
+                    </span>
+                  );
+                })}
+              </div>
+
+              {/* Sparkline */}
               {trend.historicalData && trend.historicalData.length > 0 && (
                 <div className="bg-background rounded-xl p-3">
-                  <h4 className="text-xs font-semibold text-foreground mb-2">📈 Últimas 24h</h4>
-                  <div className="flex items-end gap-px h-10">
+                  <h4 className="text-[11px] font-semibold text-foreground mb-2">📈 Últimas 24h</h4>
+                  <div className="flex items-end gap-px h-8">
                     {trend.historicalData.slice(-24).map((d, idx) => {
                       const max = Math.max(...trend.historicalData!.slice(-24).map(x => x.value));
                       const h = max > 0 ? (d.value / max) * 100 : 10;
@@ -302,13 +283,12 @@ function CriticalCard({ m, i, lang, t, onSelectTrend }: {
               )}
 
               {/* Actions */}
-              <div className="flex items-center gap-2 pt-1">
+              <div className="flex items-center gap-2 pt-1" onClick={e => e.stopPropagation()}>
                 {hasLink && (
                   <a
                     href={trend.sourceUrl}
                     target="_blank"
                     rel="noopener noreferrer"
-                    onClick={e => e.stopPropagation()}
                     className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-background border border-border text-xs font-medium hover:bg-secondary transition-colors"
                   >
                     <ExternalLink className="w-3 h-3" /> Ver fonte
@@ -321,7 +301,6 @@ function CriticalCard({ m, i, lang, t, onSelectTrend }: {
                   <Share2 className="w-3 h-3" /> Compartilhar
                 </button>
                 <button
-                  onClick={(e) => { e.stopPropagation(); }}
                   className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-background border border-border text-xs font-medium hover:bg-secondary transition-colors"
                 >
                   <Bell className="w-3 h-3" /> Alerta
@@ -346,6 +325,7 @@ interface Props {
 
 export default function CriticalMomentsSection({ moments, onSelectTrend, onClose, horizontal }: Props) {
   const { t, lang } = useLanguage();
+  const [expandedIdx, setExpandedIdx] = useState<number | null>(null);
 
   if (!moments.length) return null;
 
@@ -355,8 +335,8 @@ export default function CriticalMomentsSection({ moments, onSelectTrend, onClose
         {/* Section header */}
         <div className="flex items-center gap-2 mb-3">
           <Flame className="w-4 h-4 text-destructive animate-pulse" />
-          <h2 className="text-xs font-bold text-foreground flex-1">
-            {t("critical")} ({moments.length})
+          <h2 className="text-xs font-bold text-foreground flex-1 uppercase tracking-wider">
+            🔥 {t("critical")} ({moments.length})
           </h2>
           {onClose && (
             <motion.button
@@ -371,13 +351,24 @@ export default function CriticalMomentsSection({ moments, onSelectTrend, onClose
           )}
         </div>
 
-        {/* Cards list */}
-        <div className={`space-y-3 overflow-y-auto scrollbar-thin pr-1 ${horizontal ? "flex-1 min-h-0" : "max-h-[60vh] md:max-h-none md:overflow-visible md:pr-0"}`}>
-          <AnimatePresence>
-            {moments.map((m, i) => (
-              <CriticalCard key={`${m.trend.title}-${i}`} m={m} i={i} lang={lang} t={t} onSelectTrend={onSelectTrend} />
-            ))}
-          </AnimatePresence>
+        {/* Square grid */}
+        <div className={`overflow-y-auto scrollbar-thin pr-1 ${horizontal ? "flex-1 min-h-0" : "max-h-[60vh] md:max-h-none md:overflow-visible md:pr-0"}`}>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3" style={{ gridAutoRows: "min-content" }}>
+            <AnimatePresence>
+              {moments.map((m, i) => (
+                <CriticalSquare
+                  key={`${m.trend.title}-${i}`}
+                  m={m}
+                  i={i}
+                  lang={lang}
+                  t={t}
+                  isExpanded={expandedIdx === i}
+                  onToggle={() => setExpandedIdx(expandedIdx === i ? null : i)}
+                  onSelectTrend={onSelectTrend}
+                />
+              ))}
+            </AnimatePresence>
+          </div>
         </div>
       </div>
     </div>

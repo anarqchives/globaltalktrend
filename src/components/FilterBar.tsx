@@ -101,7 +101,7 @@ export const countries = [
   ]},
 ];
 
-const selectClass = "appearance-none bg-transparent text-foreground text-[13px] font-medium pl-3 pr-7 h-9 rounded-lg cursor-pointer min-w-0 hover:bg-muted/50 dark:hover:bg-white/5 transition-colors focus:outline-none focus:ring-0";
+const selectClass = "appearance-none bg-transparent text-foreground text-[13px] font-medium pl-3 pr-7 h-9 min-h-[36px] max-h-[36px] rounded-full cursor-pointer min-w-0 hover:bg-muted/50 dark:hover:bg-white/5 transition-colors focus:outline-none focus:ring-0 box-border";
 
 const FilterBar = ({ filters, onChange, onForceReset, onSaveFilter, isLoggedIn }: FilterBarProps) => {
   const { t } = useLanguage();
@@ -210,7 +210,7 @@ const FilterBar = ({ filters, onChange, onForceReset, onSaveFilter, isLoggedIn }
         {isFiltered && (
           <button
             onClick={() => onChange(defaultFilters)}
-            className="flex items-center gap-1 px-3 h-9 rounded-full text-[12px] font-medium text-primary hover:bg-muted/50 transition-colors flex-shrink-0 focus:outline-none"
+            className="flex items-center gap-1 px-3 h-9 min-h-[36px] max-h-[36px] rounded-full text-[12px] font-medium text-primary hover:bg-muted/50 transition-colors flex-shrink-0 focus:outline-none"
             title="Limpar filtros"
           >
             <RotateCcw className="w-3 h-3" />
@@ -220,7 +220,7 @@ const FilterBar = ({ filters, onChange, onForceReset, onSaveFilter, isLoggedIn }
 
         <button
           onClick={() => onForceReset?.()}
-          className="flex items-center gap-1 px-3 h-9 rounded-full text-[12px] font-medium text-muted-foreground hover:bg-muted/50 transition-colors flex-shrink-0 focus:outline-none"
+          className="flex items-center gap-1 px-3 h-9 min-h-[36px] max-h-[36px] rounded-full text-[12px] font-medium text-muted-foreground hover:bg-muted/50 transition-colors flex-shrink-0 focus:outline-none"
           title="Reset forçado"
         >
           <RotateCcw className="w-3 h-3" />
@@ -229,7 +229,7 @@ const FilterBar = ({ filters, onChange, onForceReset, onSaveFilter, isLoggedIn }
         {isLoggedIn && onSaveFilter && (
           <button
             onClick={onSaveFilter}
-            className="flex items-center gap-1.5 px-4 h-9 rounded-full text-[12px] font-medium border-[1.5px] border-primary text-primary bg-transparent hover:bg-primary hover:text-primary-foreground transition-all flex-shrink-0 focus:outline-none"
+            className="flex items-center gap-1.5 px-4 h-9 min-h-[36px] max-h-[36px] rounded-full text-[12px] font-medium border-[1.5px] border-primary text-primary bg-transparent hover:bg-primary hover:text-primary-foreground transition-all flex-shrink-0 focus:outline-none"
             title="Criar alerta personalizado"
           >
             <Bell className="w-3 h-3" />
