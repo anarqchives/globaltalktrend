@@ -237,6 +237,7 @@ const FilterBar = ({ filters, onChange, onForceReset, onSaveFilter, isLoggedIn }
           </button>
         )}
 
+        <div className="flex items-center gap-1.5 ml-auto flex-shrink-0 whitespace-nowrap">
           <span className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ background: "hsl(142, 72%, 45%)" }} />
           <span className="text-[11px] font-medium text-foreground">{t("live")}</span>
           <OnlineUsersCount />
