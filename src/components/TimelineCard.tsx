@@ -397,11 +397,7 @@ const TimelineCard = ({
                    🔥 MULTIPLATAFORMA
                  </span>
                )}
-               {sentiment && (
-                <span className={`text-xs flex-shrink-0 ${sentiment.color}`} title={t(sentiment.key)}>
-                  {sentiment.icon}
-                </span>
-              )}
+            
             </div>
 
             {/* Auto-narrative: always visible */}
