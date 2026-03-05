@@ -550,10 +550,7 @@ const Index = () => {
         onSaveFilter={() => {
           const name = prompt("Nome do filtro:");
           if (name?.trim()) {
-            import("@/hooks/use-saved-filters").then(() => {
-              // Dispatch custom event for header to pick up
-              window.dispatchEvent(new CustomEvent("save-filter-inline", { detail: { name: name.trim(), filters } }));
-            });
+            saveFilter(name.trim(), filters);
           }
         }}
       />
