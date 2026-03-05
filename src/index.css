@@ -160,13 +160,18 @@
 
   .timeline-card-wrapper {
     width: 100%;
-    margin-bottom: 0.25rem;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
   }
 
   .timeline-card {
     @apply bg-card rounded-xl px-3 py-2.5 border border-transparent transition-all duration-150 cursor-pointer;
     min-height: 72px;
     position: relative;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+    min-width: 0;
   }
 
   .timeline-card-expanded {

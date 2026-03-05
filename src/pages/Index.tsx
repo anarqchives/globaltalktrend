@@ -1,4 +1,5 @@
 import { useState, useRef, useCallback, useEffect, useMemo, lazy, Suspense } from "react";
+import { useTimelineColumns } from "@/hooks/use-timeline-columns";
 import TrendHeader from "@/components/TrendHeader";
 import FilterBar, { FilterState, countries } from "@/components/FilterBar";
 import TimelineCard from "@/components/TimelineCard";
@@ -66,6 +67,7 @@ const Index = () => {
   const [user, setUser] = useState<any>(null);
   const [viewMode, setViewMode] = useState<"timeline" | "map">("timeline");
   const timelinePanelRef = useRef<HTMLDivElement>(null);
+  const { timelineRef: gridRef, columns: gridColumns } = useTimelineColumns();
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => setUser(session?.user ?? null));
@@ -328,8 +330,10 @@ const Index = () => {
     setFilters(f => ({ ...f, [key]: defaultFilters[key] }));
   };
 
+  const gridStyle = { gridTemplateColumns: `repeat(${gridColumns}, 1fr)` };
+
   const renderTimeline = () => (
-    <div ref={scrollRef} className={`flex flex-col gap-1 p-2 h-full overflow-y-auto overflow-x-hidden scrollbar-thin relative transition-opacity duration-200 w-full max-w-full ${filterTransitioning ? 'opacity-60' : 'opacity-100'}`}>
+    <div ref={(el) => { (scrollRef as any).current = el; (gridRef as any).current = el; }} className={`flex flex-col gap-1 p-2 h-full overflow-y-auto overflow-x-hidden scrollbar-thin relative transition-opacity duration-200 w-full max-w-full ${filterTransitioning ? 'opacity-60' : 'opacity-100'}`}>
       <div className="px-2 py-1.5 flex items-center justify-between sticky top-0 bg-background/90 backdrop-blur-sm z-10">
         <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-widest">
           {t("timeline")}
@@ -421,7 +425,7 @@ const Index = () => {
                         <span className="text-[10px] font-normal text-muted-foreground ml-1">({agora.length})</span>
                       </span>
                     </div>
-                    <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-2">
+                    <div className="grid gap-4" style={gridStyle}>
                       {agora.map((trend) => renderCard(trend, globalIndex++))}
                     </div>
                   </>
@@ -434,7 +438,7 @@ const Index = () => {
                         <span className="text-[10px] font-normal text-muted-foreground ml-1">({ultimas2h.length})</span>
                       </span>
                     </div>
-                    <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-2">
+                    <div className="grid gap-4" style={gridStyle}>
                       {ultimas2h.map((trend) => renderCard(trend, globalIndex++))}
                     </div>
                   </>
@@ -447,7 +451,7 @@ const Index = () => {
                         <span className="text-[10px] font-normal text-muted-foreground ml-1">({ultimas24h.length})</span>
                       </span>
                     </div>
-                    <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-2">
+                    <div className="grid gap-4" style={gridStyle}>
                       {ultimas24h.map((trend) => renderCard(trend, globalIndex++))}
                     </div>
                   </>
