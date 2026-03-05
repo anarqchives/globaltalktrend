@@ -1,4 +1,5 @@
 import { useState, useRef, useCallback, useEffect, useMemo, lazy, Suspense } from "react";
+import { AnimatePresence } from "framer-motion";
 import { useTimelineColumns } from "@/hooks/use-timeline-columns";
 import TrendHeader from "@/components/TrendHeader";
 import FilterBar, { FilterState, countries } from "@/components/FilterBar";
@@ -426,7 +427,9 @@ const Index = () => {
                       </span>
                     </div>
                     <div className="grid gap-4" style={gridStyle}>
-                      {agora.map((trend) => renderCard(trend, globalIndex++))}
+                      <AnimatePresence mode="popLayout">
+                        {agora.map((trend) => renderCard(trend, globalIndex++))}
+                      </AnimatePresence>
                     </div>
                   </>
                 )}
@@ -439,7 +442,9 @@ const Index = () => {
                       </span>
                     </div>
                     <div className="grid gap-4" style={gridStyle}>
-                      {ultimas2h.map((trend) => renderCard(trend, globalIndex++))}
+                      <AnimatePresence mode="popLayout">
+                        {ultimas2h.map((trend) => renderCard(trend, globalIndex++))}
+                      </AnimatePresence>
                     </div>
                   </>
                 )}
@@ -452,7 +457,9 @@ const Index = () => {
                       </span>
                     </div>
                     <div className="grid gap-4" style={gridStyle}>
-                      {ultimas24h.map((trend) => renderCard(trend, globalIndex++))}
+                      <AnimatePresence mode="popLayout">
+                        {ultimas24h.map((trend) => renderCard(trend, globalIndex++))}
+                      </AnimatePresence>
                     </div>
                   </>
                 )}
