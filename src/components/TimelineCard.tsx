@@ -396,41 +396,31 @@ const TimelineCard = ({
             
             </div>
 
-            {/* TITLE + Thumbnail row */}
-            <div className="flex gap-2.5 mb-1.5">
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-foreground line-clamp-2 leading-snug">
-                  {title}
-                </p>
-                <div className="flex items-center gap-1.5 mt-0.5">
-                  <span className={`inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full text-[9px] font-bold ${trendScoreLabel.cls}`}>
-                    {trendScoreLabel.emoji} {trendScore}
-                  </span>
-                  <span className="text-[9px] text-muted-foreground">{trendScoreLabel.text}</span>
-                </div>
-              </div>
-              {thumbnail && !imgError && !expanded && (
-                <img src={thumbnail} alt="" className="w-16 h-12 rounded-lg object-cover flex-shrink-0 bg-secondary" loading="lazy" onError={() => setImgError(true)} />
-              )}
-              {!thumbnail && !expanded && (
-                <div className="w-16 h-12 rounded-lg bg-secondary flex items-center justify-center flex-shrink-0">
-                  <span className="text-lg" style={{ color: pf.color }}>{pf.emoji}</span>
-                </div>
-              )}
-            </div>
-
-            {/* Expanded thumbnail */}
-            {expanded && (
-              <div className="mb-2">
-                {thumbnail && !imgError ? (
-                  <img src={thumbnail} alt="" className="w-full aspect-video rounded-lg object-cover bg-secondary transition-all duration-200" loading="lazy" onError={() => setImgError(true)} />
-                ) : (
-                  <div className="w-full aspect-video rounded-lg flex items-center justify-center bg-gradient-to-br from-secondary to-muted transition-all duration-200">
-                    <span className="text-4xl opacity-60" style={{ color: pf.color }}>{pf.emoji}</span>
-                  </div>
-                )}
+            {/* IMAGE — always visible */}
+            {thumbnail && !imgError && (
+              <div className="relative w-full mb-2 rounded-xl overflow-hidden bg-secondary aspect-video">
+                <img
+                  src={thumbnail}
+                  alt=""
+                  className="w-full h-full object-cover transition-transform duration-300 hover:scale-105"
+                  loading="lazy"
+                  onError={() => setImgError(true)}
+                />
               </div>
             )}
+
+            {/* TITLE + Score */}
+            <div className="mb-1.5">
+              <p className="text-sm font-medium text-foreground line-clamp-2 leading-snug">
+                {title}
+              </p>
+              <div className="flex items-center gap-1.5 mt-0.5">
+                <span className={`inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full text-[9px] font-bold ${trendScoreLabel.cls}`}>
+                  {trendScoreLabel.emoji} {trendScore}
+                </span>
+                <span className="text-[9px] text-muted-foreground">{trendScoreLabel.text}</span>
+              </div>
+            </div>
 
             {/* SUMMARY — always visible, real description */}
             {displayDescription && (

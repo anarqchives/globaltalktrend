@@ -65,6 +65,9 @@ const Index = () => {
   const [filters, setFilters] = useState<FilterState>(getInitialFilters);
   const [user, setUser] = useState<any>(null);
   const [viewMode, setViewMode] = useState<"timeline" | "map">("timeline");
+  const [mapOverlay, setMapOverlay] = useState(false);
+  const [timelineWide, setTimelineWide] = useState(false);
+  const timelinePanelRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => setUser(session?.user ?? null));
@@ -333,6 +336,15 @@ const Index = () => {
         <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-widest">
           {t("timeline")}
         </span>
+        {!isMobile && (
+          <button
+            onClick={() => setMapOverlay(true)}
+            className="flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-medium border border-primary/30 text-primary hover:bg-primary hover:text-primary-foreground transition-all"
+          >
+            <Map className="w-3 h-3" />
+            🗺️ Mapa
+          </button>
+        )}
       </div>
 
       {breadcrumbs.length > 0 && (
@@ -585,35 +597,46 @@ const Index = () => {
             </button>
           </div>
         ) : (
-          <ResizablePanelGroup direction="horizontal" className="h-full">
-            <ResizablePanel defaultSize={!loading && criticalMoments.length > 0 && !criticalDismissed ? 28 : 38} minSize={25} maxSize={55}>
-              {renderTimeline()}
-            </ResizablePanel>
-            <ResizableHandle withHandle />
-            {/* Critical Moments as horizontal panel on desktop */}
+          <div className="h-full flex flex-col">
+            {/* Critical Moments inline on desktop too */}
             {!loading && criticalMoments.length > 0 && filteredTrends.length > 1 && !criticalDismissed && (
-              <>
-                <ResizablePanel defaultSize={20} minSize={14} maxSize={30}>
-                  <CriticalMomentsSection
-                    moments={criticalMoments}
-                    onSelectTrend={handleSelectTrend}
-                    onClose={() => setCriticalDismissed(true)}
-                    horizontal
-                  />
-                </ResizablePanel>
-                <ResizableHandle withHandle />
-              </>
+              <CriticalMomentsSection
+                moments={criticalMoments}
+                onSelectTrend={handleSelectTrend}
+                onClose={() => setCriticalDismissed(true)}
+              />
             )}
-            <ResizablePanel defaultSize={!loading && criticalMoments.length > 0 && !criticalDismissed ? 52 : 62}>
-              <div className="h-full bg-secondary/10">
-                {renderMap()}
-              </div>
-            </ResizablePanel>
-          </ResizablePanelGroup>
+            {/* Timeline takes full width */}
+            <div className="flex-1 min-h-0 overflow-hidden" ref={timelinePanelRef}>
+              {renderTimeline()}
+            </div>
+          </div>
         )}
       </div>
 
       {/* Mobile coffee button removed — now in header */}
+
+      {/* Map Overlay */}
+      {mapOverlay && (
+        <div className="fixed inset-0 z-[100] bg-black/90 backdrop-blur-md flex flex-col animate-in fade-in duration-300">
+          <div className="flex items-center justify-between px-6 py-4 border-b border-white/10">
+            <h2 className="text-lg font-semibold text-white flex items-center gap-2">
+              <Map className="w-5 h-5" /> Mapa Global
+            </h2>
+            <button
+              onClick={() => setMapOverlay(false)}
+              className="w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center transition-all hover:rotate-90"
+            >
+              <X className="w-5 h-5" />
+            </button>
+          </div>
+          <div className="flex-1 p-4 min-h-0">
+            <div className="w-full h-full rounded-2xl overflow-hidden shadow-2xl">
+              {renderMap()}
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Transparency Panel */}
       <TransparencyPanel
