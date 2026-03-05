@@ -513,7 +513,19 @@ interface LanguageContextType {
 const LanguageContext = createContext<LanguageContextType | null>(null);
 
 export const LanguageProvider = ({ children }: { children: ReactNode }) => {
-  const [lang, setLang] = useState<LangCode>("pt");
+  const [lang, setLangState] = useState<LangCode>(() => {
+    if (typeof window !== "undefined") {
+      const saved = localStorage.getItem("preferred-language") as LangCode | null;
+      if (saved && translations[saved]) return saved;
+    }
+    return "pt";
+  });
+
+  const setLang = useCallback((newLang: LangCode) => {
+    setLangState(newLang);
+    localStorage.setItem("preferred-language", newLang);
+  }, []);
+
   const t = useCallback((key: TranslationKey) => translations[lang]?.[key] || translations.pt[key] || key, [lang]);
 
   return (

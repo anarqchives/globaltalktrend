@@ -17,7 +17,7 @@ import { useHistory } from "@/hooks/use-history";
 import { useGamification } from "@/hooks/use-gamification";
 import { useSavedCards } from "@/hooks/use-saved-cards";
 import { supabase } from "@/integrations/supabase/client";
-import { ChevronRight, X } from "lucide-react";
+import { ChevronRight, X, Map, Newspaper } from "lucide-react";
 import {
   ResizablePanelGroup,
   ResizablePanel,
@@ -63,6 +63,7 @@ const Index = () => {
   const { t, lang } = useLanguage();
   const [filters, setFilters] = useState<FilterState>(getInitialFilters);
   const [user, setUser] = useState<any>(null);
+  const [viewMode, setViewMode] = useState<"timeline" | "map">("timeline");
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => setUser(session?.user ?? null));
@@ -160,9 +161,56 @@ const Index = () => {
   const visibleTrends = filteredTrends.slice(0, visibleCount);
   const hasMore = visibleCount < filteredTrends.length;
 
-  useEffect(() => {
-    console.log("🖥️ Renderizando timeline com", visibleTrends.length, "itens");
-  }, [visibleTrends.length]);
+  // Group visible trends by recency sections
+  const SOURCE_PRIORITY: Record<string, number> = {
+    "The Guardian": 1, "NPR": 1, "NewsAPI": 2, "GNews": 2, "Bing News": 2, "NewsData": 2,
+    "Google Trends": 3, "YouTube": 4, "Reddit": 5, "Bluesky": 5, "Mastodon": 5,
+    "World Bank": 6, "IBGE": 6, "OpenAlex": 6, "Wikipedia": 7,
+  };
+
+  const groupedTrends = useMemo(() => {
+    const now = Date.now();
+    const ONE_HOUR = 60 * 60 * 1000;
+    const TWO_HOURS = 2 * ONE_HOUR;
+
+    const getTimestamp = (trend: TrendCardProps) => {
+      if (trend.publishedAt) return new Date(trend.publishedAt).getTime();
+      if (trend.firstSeenAt) return new Date(trend.firstSeenAt).getTime();
+      // Parse relative time from trend.time
+      const m = trend.time?.match?.(/(\d+)\s*(min|h|hora)/i);
+      if (m) {
+        const val = parseInt(m[1]);
+        const unit = m[2].toLowerCase();
+        if (unit === "min") return now - val * 60 * 1000;
+        return now - val * ONE_HOUR;
+      }
+      return now - 12 * ONE_HOUR; // default to 12h ago
+    };
+
+    const sortByPriority = (a: TrendCardProps, b: TrendCardProps) => {
+      const pa = SOURCE_PRIORITY[a.platform] || 4;
+      const pb = SOURCE_PRIORITY[b.platform] || 4;
+      return pa - pb;
+    };
+
+    const agora: TrendCardProps[] = [];
+    const ultimas2h: TrendCardProps[] = [];
+    const ultimas24h: TrendCardProps[] = [];
+
+    for (const trend of visibleTrends) {
+      const ts = getTimestamp(trend);
+      const diff = now - ts;
+      if (diff < ONE_HOUR) agora.push(trend);
+      else if (diff < TWO_HOURS) ultimas2h.push(trend);
+      else ultimas24h.push(trend);
+    }
+
+    agora.sort(sortByPriority);
+    ultimas2h.sort(sortByPriority);
+    ultimas24h.sort(sortByPriority);
+
+    return { agora, ultimas2h, ultimas24h };
+  }, [visibleTrends]);
 
   // Brief loading flash when filters change
   const [filterTransitioning, setFilterTransitioning] = useState(false);
@@ -307,53 +355,97 @@ const Index = () => {
 
       {(loading && isFirstLoad && filteredTrends.length === 0)
         ? Array.from({ length: 6 }).map((_, i) => <TrendCardSkeleton key={i} />)
-        : visibleTrends.map((trend, i) => {
-            const trendId = `${trend.platform}-${trend.title.slice(0, 20)}`;
-            const normalizedKey = trend.title.toLowerCase().normalize("NFD").replace(/\p{Diacritic}/gu, "").replace(/[^a-z0-9\s]/g, "").trim().slice(0, 50);
-            const isMulti = multiplatformTitles.has(normalizedKey);
-            const matchingCluster = isMulti ? clusters.find(c => c.trends.some(ct => ct.title.toLowerCase().normalize("NFD").replace(/\p{Diacritic}/gu, "").replace(/[^a-z0-9\s]/g, "").trim().slice(0, 50) === normalizedKey)) || null : null;
+        : (() => {
+            const renderCard = (trend: TrendCardProps, i: number) => {
+              const trendId = `${trend.platform}-${trend.title.slice(0, 20)}`;
+              const normalizedKey = trend.title.toLowerCase().normalize("NFD").replace(/\p{Diacritic}/gu, "").replace(/[^a-z0-9\s]/g, "").trim().slice(0, 50);
+              const isMulti = multiplatformTitles.has(normalizedKey);
+              const matchingCluster = isMulti ? clusters.find(c => c.trends.some(ct => ct.title.toLowerCase().normalize("NFD").replace(/\p{Diacritic}/gu, "").replace(/[^a-z0-9\s]/g, "").trim().slice(0, 50) === normalizedKey)) || null : null;
+              return (
+                <div key={`${trendId}-${i}`} id={`trend-card-${trendId}`} className={`animate-fade-in ${highlightedTrendId === trendId ? 'animate-highlight-pulse rounded-xl' : ''}`} style={{ animationDelay: `${i * 30}ms` }}>
+                <TimelineCard
+                  {...trend}
+                  userId={user?.id}
+                  onTrackAction={trackAction}
+                  forceExpanded={expandedTrendId === trendId}
+                  isMultiplatform={isMulti}
+                  crossPlatformCluster={matchingCluster}
+                  onSaveCard={saveCard}
+                  onClick={() => {
+                    trackAction("view", 1, { title: trend.title, platform: trend.platform, countryCode: trend.countryCode, category: trend.category });
+                  }}
+                  onExpand={(title, platform, metadata) => {
+                    trackView(title, platform, metadata);
+                    if (trend.countryCode) {
+                      const cc = trend.countryCode.slice(0, 2).toUpperCase();
+                      window.dispatchEvent(new CustomEvent('trend-expand-country', { detail: cc }));
+                    }
+                  }}
+                  onFilterPlatform={(p) => {
+                    const map: Record<string, string> = {
+                      "Reddit": "Redes sociais",
+                      "Bluesky": "Redes sociais",
+                      "Mastodon": "Redes sociais",
+                      "NewsAPI": "Imprensa",
+                      "NewsData": "Imprensa",
+                      "GNews": "Imprensa",
+                      "Bing News": "Imprensa",
+                      "The Guardian": "Imprensa",
+                      "Google Trends": "Buscas (Google)",
+                      "YouTube": "Todas mídias",
+                      "World Bank": "Dados oficiais",
+                      "IBGE": "Dados oficiais",
+                      "OpenAlex": "Dados oficiais",
+                    };
+                    setFilters((f) => ({ ...f, type: map[p] || "Todas mídias" }));
+                  }}
+                />
+                </div>
+              );
+            };
+
+            const { agora, ultimas2h, ultimas24h } = groupedTrends;
+            let globalIndex = 0;
+
             return (
-              <div key={`${trendId}-${i}`} id={`trend-card-${trendId}`} className={`animate-fade-in ${highlightedTrendId === trendId ? 'animate-highlight-pulse rounded-xl' : ''}`} style={{ animationDelay: `${i * 30}ms` }}>
-              <TimelineCard
-                {...trend}
-                userId={user?.id}
-                onTrackAction={trackAction}
-                forceExpanded={expandedTrendId === trendId}
-                isMultiplatform={isMulti}
-                crossPlatformCluster={matchingCluster}
-                onSaveCard={saveCard}
-                onClick={() => {
-                  trackAction("view", 1, { title: trend.title, platform: trend.platform, countryCode: trend.countryCode, category: trend.category });
-                }}
-                onExpand={(title, platform, metadata) => {
-                  trackView(title, platform, metadata);
-                  if (trend.countryCode) {
-                    const cc = trend.countryCode.slice(0, 2).toUpperCase();
-                    window.dispatchEvent(new CustomEvent('trend-expand-country', { detail: cc }));
-                  }
-                }}
-                onFilterPlatform={(p) => {
-                  const map: Record<string, string> = {
-                    "Reddit": "Redes sociais",
-                    "Bluesky": "Redes sociais",
-                    "Mastodon": "Redes sociais",
-                    "NewsAPI": "Imprensa",
-                    "NewsData": "Imprensa",
-                    "GNews": "Imprensa",
-                    "Bing News": "Imprensa",
-                    "The Guardian": "Imprensa",
-                    "Google Trends": "Buscas (Google)",
-                    "YouTube": "Todas mídias",
-                    "World Bank": "Dados oficiais",
-                    "IBGE": "Dados oficiais",
-                    "OpenAlex": "Ciência",
-                  };
-                  setFilters((f) => ({ ...f, type: map[p] || "Todas mídias" }));
-                }}
-              />
-              </div>
+              <>
+                {agora.length > 0 && (
+                  <>
+                    <div className="px-2 py-1.5 mt-1">
+                      <span className="text-[11px] font-bold text-destructive uppercase tracking-wide flex items-center gap-1.5">
+                        <span className="w-1.5 h-1.5 rounded-full bg-destructive animate-pulse" />
+                        🔥 Agora
+                        <span className="text-[10px] font-normal text-muted-foreground ml-1">({agora.length})</span>
+                      </span>
+                    </div>
+                    {agora.map((trend) => renderCard(trend, globalIndex++))}
+                  </>
+                )}
+                {ultimas2h.length > 0 && (
+                  <>
+                    <div className="px-2 py-1.5 mt-2">
+                      <span className="text-[11px] font-bold text-amber-600 dark:text-amber-400 uppercase tracking-wide flex items-center gap-1.5">
+                        ⏳ Últimas 2 horas
+                        <span className="text-[10px] font-normal text-muted-foreground ml-1">({ultimas2h.length})</span>
+                      </span>
+                    </div>
+                    {ultimas2h.map((trend) => renderCard(trend, globalIndex++))}
+                  </>
+                )}
+                {ultimas24h.length > 0 && (
+                  <>
+                    <div className="px-2 py-1.5 mt-2">
+                      <span className="text-[11px] font-bold text-muted-foreground uppercase tracking-wide flex items-center gap-1.5">
+                        📅 Últimas 24 horas
+                        <span className="text-[10px] font-normal text-muted-foreground ml-1">({ultimas24h.length})</span>
+                      </span>
+                    </div>
+                    {ultimas24h.map((trend) => renderCard(trend, globalIndex++))}
+                  </>
+                )}
+              </>
             );
-          })}
+          })()}
       {hasMore && (
         <div ref={sentinelRef} className="h-10" />
       )}
@@ -452,7 +544,7 @@ const Index = () => {
 
       <div className="flex-1 overflow-hidden">
         {isMobile ? (
-          <div className="h-full min-h-0 flex flex-col">
+          <div className="h-full min-h-0 flex flex-col relative">
             {/* Critical Moments inline on mobile */}
             {!loading && criticalMoments.length > 0 && filteredTrends.length > 1 && !criticalDismissed && (
               <CriticalMomentsSection
@@ -461,10 +553,23 @@ const Index = () => {
                 onClose={() => setCriticalDismissed(true)}
               />
             )}
-            {/* Mobile: timeline only, no map */}
+            {/* Mobile: toggle between timeline and map */}
             <div className="flex-1 min-h-0 overflow-hidden">
-              {renderTimeline()}
+              {viewMode === "timeline" ? renderTimeline() : (
+                <div className="h-full">{renderMap()}</div>
+              )}
             </div>
+            {/* Floating toggle button */}
+            <button
+              onClick={() => setViewMode(v => v === "timeline" ? "map" : "timeline")}
+              className="absolute bottom-4 right-4 z-30 flex items-center gap-1.5 px-3 py-2 rounded-full bg-primary text-primary-foreground text-xs font-semibold shadow-lg hover:bg-primary/90 transition-all"
+            >
+              {viewMode === "timeline" ? (
+                <><Map className="w-3.5 h-3.5" /> {t("map")}</>
+              ) : (
+                <><Newspaper className="w-3.5 h-3.5" /> {t("timeline")}</>
+              )}
+            </button>
           </div>
         ) : (
           <ResizablePanelGroup direction="horizontal" className="h-full">
