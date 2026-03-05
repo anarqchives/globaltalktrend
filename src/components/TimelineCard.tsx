@@ -432,81 +432,113 @@ const TimelineCard = ({
               </div>
             )}
 
-            {/* SUMMARY — always visible, from real description */}
+            {/* SUMMARY — always visible, real description */}
             {displayDescription && (
-              <p className="text-[12px] text-foreground/80 leading-relaxed mt-0.5 mb-1.5 line-clamp-3">
+              <p className="text-[13px] text-foreground/80 leading-relaxed mt-1 mb-2 line-clamp-3 border-b border-dashed border-border pb-2">
                 {displayDescription}
               </p>
             )}
 
-            {/* NARRATIVE — always visible, real data */}
+            {/* NARRATIVE — quantitative data, always visible */}
             {(() => {
               const narrativeParts: string[] = [];
               const ch = parseFloat(change?.replace(/[^0-9.\-]/g, "") || "0");
               if (ch > 200) narrativeParts.push(`🔥 +${Math.round(ch)}% na última hora`);
-              else if (ch > 100) narrativeParts.push(`📈 +${Math.round(ch)}%`);
+              else if (ch > 100) narrativeParts.push(`📈 +${Math.round(ch)}% em crescimento`);
               else if (ch > 0) narrativeParts.push(`📊 +${Math.round(ch)}%`);
               if (isMultiplatform && crossPlatformCluster) {
                 narrativeParts.push(`📱 ${crossPlatformCluster.platformCount} plataformas`);
               }
-              const countries = crossPlatformCluster?.trends
+              const countriesList = crossPlatformCluster?.trends
                 ? [...new Set(crossPlatformCluster.trends.map(ct => ct.countryCode).filter(Boolean))]
                 : [];
-              if (countries.length > 1) {
-                const flags = countries.slice(0, 3).map(c => countryCodeToFlag(c)).filter(Boolean).join(' ');
-                narrativeParts.push(`🌍 ${countries.length} países ${flags}`);
+              if (countriesList.length > 1) {
+                const flags = countriesList.slice(0, 3).map(c => countryCodeToFlag(c)).filter(Boolean).join(" ");
+                narrativeParts.push(`🌍 ${countriesList.length} países ${flags}`);
               } else if (countryCode && countryCode !== "GL") {
                 const f = countryCodeToFlag(countryCode);
                 if (f) narrativeParts.push(`📍 ${f}`);
               }
               if (volume && volume !== "0") narrativeParts.push(`💬 ${volume}`);
               if (sources && sources.length > 1) narrativeParts.push(`📰 ${sources.length} fontes`);
-              const narrativeText = narrativeParts.length > 0 ? narrativeParts.join(' · ') : null;
+              const narrativeText = narrativeParts.length > 0 ? narrativeParts.join(" · ") : null;
               if (!narrativeText) return null;
               return (
-                <div className="mb-1.5 text-[11px] py-1.5 px-2.5 rounded-lg bg-primary/5 border-l-2 border-primary/40 text-primary/80">
-                  {narrativeText}
+                <div className="flex items-center gap-2 mb-2 py-2 px-3 rounded-xl bg-primary/5 border-l-[3px] border-primary/50">
+                  <span className="text-[12px] font-medium text-primary/90 leading-snug">{narrativeText}</span>
                 </div>
               );
             })()}
 
-            {/* CONTEXT — always visible, category-specific */}
+            {/* CONTEXT — category-specific insight, always visible */}
             {(() => {
               const cat = (category || "").toLowerCase().normalize("NFD").replace(/\p{Diacritic}/gu, "");
+              const srcList = sources?.slice(0, 2).join(", ") || platform;
               let ctx = "";
-              if (cat.includes("politic")) ctx = `Discussão política${countryCode ? ` (${countryCodeToFlag(countryCode) || countryCode})` : ""}, com destaque em ${sources?.slice(0, 2).join(", ") || platform}`;
-              else if (cat.includes("tecnologi") || cat.includes("technolog")) ctx = `Tópico tecnológico em alta, mencionado por ${sources?.slice(0, 2).join(", ") || platform}`;
-              else if (cat.includes("economi") || cat.includes("business") || cat.includes("negocio") || cat.includes("financ")) ctx = `Movimento econômico com repercussão em ${sources?.slice(0, 2).join(", ") || "mercados globais"}`;
+              if (cat.includes("politic")) ctx = `Discussão política${countryCode && countryCode !== "GL" ? ` (${countryCodeToFlag(countryCode) || countryCode})` : ""}, com destaque em ${srcList}`;
+              else if (cat.includes("tecnologi") || cat.includes("technolog")) ctx = `Tópico tecnológico em alta, mencionado por ${srcList}`;
+              else if (cat.includes("economi") || cat.includes("business") || cat.includes("negocio") || cat.includes("financ")) ctx = `Movimento econômico com repercussão em ${srcList}`;
               else if (cat.includes("ciencia") || cat.includes("science")) ctx = `Avanço científico com repercussão em ${sources?.length || 1} publicações`;
-              else if (cat.includes("esporte") || cat.includes("sport")) ctx = `Evento esportivo em destaque via ${sources?.slice(0, 2).join(", ") || platform}`;
-              else if (cat.includes("entretenimento") || cat.includes("entertainment")) ctx = `Entretenimento em alta via ${sources?.slice(0, 2).join(", ") || platform}`;
-              else if (cat.includes("cultura") || cat.includes("culture")) ctx = `Cultura em destaque via ${sources?.slice(0, 2).join(", ") || platform}`;
-              else if (cat.includes("saude") || cat.includes("health")) ctx = `Saúde em destaque via ${sources?.slice(0, 2).join(", ") || platform}`;
+              else if (cat.includes("esporte") || cat.includes("sport")) ctx = `Evento esportivo em destaque via ${srcList}`;
+              else if (cat.includes("entretenimento") || cat.includes("entertainment")) ctx = `Entretenimento em alta via ${srcList}`;
+              else if (cat.includes("cultura") || cat.includes("culture")) ctx = `Cultura em destaque via ${srcList}`;
+              else if (cat.includes("saude") || cat.includes("health")) ctx = `Saúde em destaque via ${srcList}`;
               else {
                 const diffH = firstSeenAt ? Math.floor((Date.now() - new Date(firstSeenAt).getTime()) / 3600000) : null;
-                if (diffH && diffH > 0 && diffH < 48) ctx = `Assunto em destaque nas últimas ${diffH}h via ${platform}`;
-                else if (sources && sources.length > 0) ctx = `Cobertura por ${sources.slice(0, 2).join(", ")}`;
-                else ctx = `Assunto em destaque via ${platform}`;
+                if (diffH && diffH > 0 && diffH < 48) ctx = `Assunto em destaque nas últimas ${diffH}h`;
+                else if (sources && sources.length > 0) ctx = `Cobertura por ${srcList}`;
+                else ctx = "";
               }
+              if (!ctx) return null;
               return (
-                <div className="mb-1.5 text-[11px] py-1.5 px-2.5 rounded-lg bg-muted/60 border-l-2 border-muted-foreground/30 text-muted-foreground">
-                  {ctx}
+                <div className="flex items-center gap-2 mb-2 py-2 px-3 rounded-xl bg-muted/50 border-l-[3px] border-muted-foreground/25">
+                  <span className="text-[11px]">🔍</span>
+                  <span className="text-[12px] text-muted-foreground leading-snug">{ctx}</span>
                 </div>
               );
             })()}
 
-            {/* METRICS — always visible */}
-            <div className="flex items-center gap-2 text-[11px] flex-wrap min-h-[18px]">
-              <span className="text-muted-foreground whitespace-nowrap">{localizedCategory}</span>
-              <span className="volume-badge text-[10px] py-0 whitespace-nowrap">{volume}</span>
-              <span className={`whitespace-nowrap ${changePositive ? "text-green-600 font-medium" : "text-red-500 font-medium"}`}>
+            {/* ANALYSIS — qualitative insight, always visible */}
+            {(() => {
+              const insights: string[] = [];
+              const ch = parseFloat(change?.replace(/[^0-9.\-]/g, "") || "0");
+              if (ch > 500) insights.push(`Crescimento explosivo: +${Math.round(ch)}% em 1h`);
+              else if (ch > 200) insights.push(`Alta aceleração: +${Math.round(ch)}%`);
+              const countriesList = crossPlatformCluster?.trends
+                ? [...new Set(crossPlatformCluster.trends.map(ct => ct.countryCode).filter(Boolean))]
+                : [];
+              if (countriesList.length > 10) insights.push(`Discussão global em ${countriesList.length} países`);
+              else if (countriesList.length > 5) insights.push(`Presente em ${countriesList.length} países`);
+              if (isMultiplatform && crossPlatformCluster && crossPlatformCluster.platformCount > 3) {
+                insights.push(`Presente em ${crossPlatformCluster.platformCount} plataformas diferentes`);
+              }
+              if (sources && sources.length > 3) insights.push(`Coberto por ${sources.length} fontes distintas`);
+              const diffH = firstSeenAt ? Math.round((Date.now() - new Date(firstSeenAt).getTime()) / 3600000) : null;
+              if (diffH && diffH > 0 && diffH < 48) insights.push(`Em discussão há ${diffH}h`);
+              if (insights.length === 0) return null;
+              const analysisText = insights.slice(0, 2).join(". ") + ".";
+              return (
+                <div className="flex items-start gap-2 mb-2 py-2 px-3 rounded-xl bg-accent/40 border border-accent/60">
+                  <span className="text-[11px] mt-0.5">💡</span>
+                  <span className="text-[12px] text-foreground/70 italic leading-snug">{analysisText}</span>
+                </div>
+              );
+            })()}
+
+            {/* METRICS row — compact */}
+            <div className="flex items-center gap-3 text-[11px] flex-wrap mt-1">
+              <span className="text-muted-foreground font-medium whitespace-nowrap">{localizedCategory}</span>
+              {volume && volume !== "0" && (
+                <span className="text-[10px] text-foreground/60 whitespace-nowrap">Vol: {volume}</span>
+              )}
+              <span className={`whitespace-nowrap font-semibold ${changePositive ? "text-green-600" : "text-red-500"}`}>
                 {change}
               </span>
               {temporal.started && (
-                <span className="text-[10px] text-muted-foreground/70 whitespace-nowrap">{temporal.started}</span>
+                <span className="text-[10px] text-muted-foreground/60 whitespace-nowrap">{temporal.started}</span>
               )}
               {temporal.peak && (
-                <span className="text-[10px] text-muted-foreground/70 whitespace-nowrap">{temporal.peak}</span>
+                <span className="text-[10px] text-muted-foreground/60 whitespace-nowrap">{temporal.peak}</span>
               )}
             </div>
           </div>
