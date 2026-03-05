@@ -20,7 +20,7 @@ import { useGamification } from "@/hooks/use-gamification";
 import { useSavedCards } from "@/hooks/use-saved-cards";
 import { useSavedFilters } from "@/hooks/use-saved-filters";
 import { supabase } from "@/integrations/supabase/client";
-import { ChevronRight, X, Map, Newspaper } from "lucide-react";
+import { ChevronRight, X, Map, Newspaper, LayoutList, LayoutGrid } from "lucide-react";
 import {
   ResizablePanelGroup,
   ResizablePanel,
@@ -67,6 +67,7 @@ const Index = () => {
   const [filters, setFilters] = useState<FilterState>(getInitialFilters);
   const [user, setUser] = useState<any>(null);
   const [viewMode, setViewMode] = useState<"timeline" | "map">("timeline");
+  const [compactMode, setCompactMode] = useState(false);
   const timelinePanelRef = useRef<HTMLDivElement>(null);
   const { timelineRef: gridRef, columns: gridColumns } = useTimelineColumns();
 
@@ -339,6 +340,13 @@ const Index = () => {
         <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-widest">
           {t("timeline")}
         </span>
+        <button
+          onClick={() => setCompactMode(c => !c)}
+          className="h-6 w-6 flex items-center justify-center rounded-md hover:bg-secondary transition-colors text-muted-foreground hover:text-foreground"
+          title={compactMode ? "Modo expandido" : "Modo compacto"}
+        >
+          {compactMode ? <LayoutGrid className="w-3.5 h-3.5" /> : <LayoutList className="w-3.5 h-3.5" />}
+        </button>
       </div>
 
       {breadcrumbs.length > 0 && (
@@ -373,6 +381,7 @@ const Index = () => {
                 <motion.div layout key={`${trendId}-${i}`} id={`trend-card-${trendId}`} className={highlightedTrendId === trendId ? 'animate-highlight-pulse rounded-xl' : ''}>
                 <TimelineCard
                   {...trend}
+                  compact={compactMode}
                   staggerIndex={i}
                   userId={user?.id}
                   onTrackAction={trackAction}
