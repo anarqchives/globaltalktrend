@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
-import { RotateCcw, ChevronDown } from "lucide-react";
-import { useLanguage } from "@/contexts/LanguageContext";
+import { RotateCcw, ChevronDown, Star } from "lucide-react";
+import { useLanguage, LangCode } from "@/contexts/LanguageContext";
 const defaultFilters: FilterState = {
   country: "global",
   period: "Hoje",
@@ -19,6 +19,8 @@ interface FilterBarProps {
   filters: FilterState;
   onChange: (filters: FilterState) => void;
   onForceReset?: () => void;
+  onSaveFilter?: () => void;
+  isLoggedIn?: boolean;
 }
 
 export const countries = [
@@ -101,7 +103,7 @@ export const countries = [
 
 const selectClass = "appearance-none bg-transparent text-foreground text-[13px] md:text-[13px] text-[12px] font-medium pl-3 pr-7 py-2 min-h-[44px] rounded-lg cursor-pointer min-w-0 hover:bg-muted/50 dark:hover:bg-white/5 transition-colors focus:outline-none focus:ring-0";
 
-const FilterBar = ({ filters, onChange, onForceReset }: FilterBarProps) => {
+const FilterBar = ({ filters, onChange, onForceReset, onSaveFilter, isLoggedIn }: FilterBarProps) => {
   const { t } = useLanguage();
 
   const update = (key: keyof FilterState, value: string) => {
