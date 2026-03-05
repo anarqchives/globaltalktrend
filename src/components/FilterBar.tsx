@@ -229,11 +229,11 @@ const FilterBar = ({ filters, onChange, onForceReset, onSaveFilter, isLoggedIn }
         {isLoggedIn && onSaveFilter && (
           <button
             onClick={onSaveFilter}
-            className="flex items-center gap-1 px-3 py-2 rounded-lg text-[12px] font-medium bg-primary text-primary-foreground hover:bg-primary/90 transition-colors flex-shrink-0 focus:outline-none rounded-full"
+            className="flex items-center gap-1.5 px-4 py-2 rounded-full text-[12px] font-medium border-[1.5px] border-primary text-primary bg-transparent hover:bg-primary hover:text-primary-foreground transition-all flex-shrink-0 focus:outline-none"
             title="Criar alerta personalizado"
           >
-            <Star className="w-3 h-3" />
-            Criar alerta personalizado
+            <Bell className="w-3 h-3" />
+            Criar alerta
           </button>
         )}
 
