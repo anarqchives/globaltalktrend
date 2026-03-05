@@ -88,7 +88,7 @@ export default function KPICards({ trends, countriesCount, loading }: KPICardsPr
   const cards = [
     {
       icon: <BarChart3 className="w-4 h-4" />,
-      label: t("totalTrends") || "Tendências ativas",
+      label: "Tendências ativas",
       value: kpis.total.toString(),
       sub: `${countriesCount} ${t("countries") || "países"}`,
       color: "text-primary",
@@ -96,7 +96,7 @@ export default function KPICards({ trends, countriesCount, loading }: KPICardsPr
     },
     {
       icon: <Zap className="w-4 h-4" />,
-      label: t("fastestGrowing") || "Maior crescimento",
+      label: "Maior crescimento",
       value: `+${Math.round(kpis.fastestChange)}%`,
       sub: kpis.fastestTrend.title.slice(0, 30) + (kpis.fastestTrend.title.length > 30 ? "…" : ""),
       color: "text-green-500",
@@ -104,7 +104,7 @@ export default function KPICards({ trends, countriesCount, loading }: KPICardsPr
     },
     {
       icon: <Globe className="w-4 h-4" />,
-      label: t("mostActiveCountry") || "País mais ativo",
+      label: "País mais ativo",
       value: `${kpis.flag} ${kpis.topCountryCode}`,
       sub: `${kpis.topCountryCount} tendências`,
       color: "text-blue-500",
@@ -112,9 +112,9 @@ export default function KPICards({ trends, countriesCount, loading }: KPICardsPr
     },
     {
       icon: <TrendingUp className="w-4 h-4" />,
-      label: t("avgGrowth") || "Crescimento médio",
+      label: "Crescimento médio",
       value: `${kpis.avgGrowth > 0 ? "+" : ""}${kpis.avgGrowth}%`,
-      sub: t("vsYesterday") || "vs. média geral",
+      sub: "vs. média geral",
       color: kpis.avgGrowth >= 0 ? "text-green-500" : "text-red-500",
       bg: kpis.avgGrowth >= 0 ? "bg-green-500/10" : "bg-red-500/10",
     },
