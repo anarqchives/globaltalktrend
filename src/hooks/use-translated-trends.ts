@@ -55,7 +55,15 @@ const SOURCE_LANGS: Record<string, string[]> = {
   en: ["Hacker News", "GitHub", "Stack Overflow", "The Guardian", "arXiv", "PubMed", "OpenAlex", "Crossref", "NOAA", "GDELT"],
 };
 
+// Simple heuristic: detect if text contains non-Latin scripts (Cyrillic, CJK, Arabic, etc.)
+function containsNonLatinScript(text: string): boolean {
+  return /[\u0400-\u04FF\u3000-\u9FFF\uAC00-\uD7AF\u0600-\u06FF\u0900-\u097F]/.test(text);
+}
+
 function needsTranslation(trend: TrendCardProps, lang: string): boolean {
+  // ALWAYS translate content with non-Latin characters when target is Portuguese
+  if (lang === "pt" && containsNonLatinScript(trend.title || "")) return true;
+  
   // If lang matches the likely source language of the platform, skip
   for (const [sourceLang, platforms] of Object.entries(SOURCE_LANGS)) {
     if (lang === sourceLang && platforms.includes(trend.platform)) return false;
@@ -63,8 +71,11 @@ function needsTranslation(trend: TrendCardProps, lang: string): boolean {
   return true;
 }
 
+// Extended type that preserves original title for cross-platform matching
+export type TranslatedTrendCardProps = TrendCardProps & { _originalTitle?: string; translated?: boolean };
+
 export function useTranslatedTrends(trends: TrendCardProps[], lang: string) {
-  const [translated, setTranslated] = useState<TrendCardProps[]>(trends);
+  const [translated, setTranslated] = useState<TranslatedTrendCardProps[]>(trends);
   const [isTranslating, setIsTranslating] = useState(false);
   const cacheRef = useRef<TranslationCache>(loadCache());
   const lastLangRef = useRef(lang);
@@ -118,22 +129,23 @@ export function useTranslatedTrends(trends: TrendCardProps[], lang: string) {
     lastLangRef.current = lang;
     lastTrendsKeyRef.current = trendsKey;
 
-    // Step 1: Apply cached translations immediately
+    // Step 1: Apply cached translations immediately, preserving original title
     const cache = cacheRef.current;
-    const withCached = trends.map((t) => {
-      if (!needsTranslation(t, lang)) return t;
+    const withCached: TranslatedTrendCardProps[] = trends.map((t) => {
+      if (!needsTranslation(t, lang)) return { ...t, _originalTitle: t.title };
       const key = getCacheKey(t.title, lang);
       const cached = cache[key];
       if (cached && Date.now() - cached.ts < CACHE_TTL) {
         return {
           ...t,
+          _originalTitle: t.title,
           title: cached.title,
           details: cached.details || t.details,
           description: cached.details || t.description,
           translated: true,
-        } as TrendCardProps & { translated?: boolean };
+        };
       }
-      return t;
+      return { ...t, _originalTitle: t.title };
     });
     setTranslated(withCached);
 
@@ -175,7 +187,7 @@ export function useTranslatedTrends(trends: TrendCardProps[], lang: string) {
                 details: tr.details || t.details,
                 description: tr.details || t.description,
                 translated: true,
-              } as TrendCardProps & { translated?: boolean };
+              };
             }
             return t;
           });
@@ -185,5 +197,5 @@ export function useTranslatedTrends(trends: TrendCardProps[], lang: string) {
     })();
   }, [trends, lang, translateBatch]);
 
-  return { translatedTrends: translated, isTranslating };
+  return { translatedTrends: translated as TranslatedTrendCardProps[], isTranslating };
 }

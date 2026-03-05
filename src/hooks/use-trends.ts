@@ -989,11 +989,29 @@ export function useTrends(filters: FilterState, onTrendCountsChange: (counts: Re
       return [];
     }
 
-    // Same for category-only filters with no results
-    if (filtered.length === 0 && filters.category !== "Todas" && trends.length > 0) {
-      console.log(`🧠 Zero trends para categoria ${filterCategory} — usando fallback contextualizado`);
-      const contextual = generateContextualFallback(filters);
-      if (contextual.length > 0) return contextual;
+    // Same for category-only or combined filters with no results
+    if (filtered.length === 0 && trends.length > 0) {
+      const hasActiveFilters = filters.category !== "Todas" || filters.type !== "Todas mídias";
+      if (hasActiveFilters) {
+        console.log(`🧠 Zero trends para filtros ativos (cat=${filterCategory}, type=${filters.type}) — usando fallback`);
+        
+        // Try relaxing type filter first (keep category)
+        if (filters.type !== "Todas mídias" && filters.category !== "Todas") {
+          const categoryOnly = normalizedTrends.filter(t => {
+            const matchCountry = filters.country === "global" || t.normalizedCountry === countryFilter;
+            const matchCategory = t.normalizedCategory === filterCategory || t.normalizedCategory.startsWith(filterCategory);
+            return matchCountry && matchCategory;
+          });
+          if (categoryOnly.length > 0) {
+            console.log(`✅ Fallback: ${categoryOnly.length} trends da categoria (ignorando tipo)`);
+            return categoryOnly.sort((a, b) => (b.relevanceScore || 50) - (a.relevanceScore || 50));
+          }
+        }
+        
+        // Contextual fallback
+        const contextual = generateContextualFallback(filters);
+        if (contextual.length > 0) return contextual;
+      }
     }
 
     // Save successful filter results to predictive cache

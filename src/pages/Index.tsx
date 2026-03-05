@@ -9,7 +9,7 @@ import CriticalMomentsSection from "@/components/CriticalMomentsSection";
 import TransparencyPanel from "@/components/TransparencyPanel";
 import { TrendCardProps } from "@/components/TrendCard";
 import { useTrends } from "@/hooks/use-trends";
-import { useTranslatedTrends } from "@/hooks/use-translated-trends";
+import { useTranslatedTrends, TranslatedTrendCardProps } from "@/hooks/use-translated-trends";
 import { useCriticalMoments } from "@/hooks/use-critical-moments";
 import { useAnomalyAlerts } from "@/hooks/use-anomaly-alerts";
 import { useCrossPlatform } from "@/hooks/use-cross-platform";
@@ -106,19 +106,25 @@ const Index = () => {
 
   // Filter for multiplatform if selected
   const filteredTrends = useMemo(() => {
+    // Helper: normalize a title key for multiplatform matching
+    const normKey = (title: string) => title.toLowerCase().normalize("NFD").replace(/\p{Diacritic}/gu, "").replace(/[^a-z0-9\s]/g, "").trim().slice(0, 50);
+
     if (filters.type === "Multiplataforma") {
-      // Use cross-platform clusters to identify multiplatform trends
-      // If no clusters found, use similarity-based fallback on allTrends
+      // Use ORIGINAL titles (before translation) for cross-platform matching
+      const getOriginalKey = (t: TranslatedTrendCardProps) => normKey((t as any)._originalTitle || t.title);
+
+      // First try cluster-based detection
       if (multiplatformTitles.size > 0) {
-        return translatedTrends.filter(t => {
-          const key = t.title.toLowerCase().normalize("NFD").replace(/\p{Diacritic}/gu, "").replace(/[^a-z0-9\s]/g, "").trim().slice(0, 50);
+        const result = translatedTrends.filter(t => {
+          const key = getOriginalKey(t);
           return multiplatformTitles.has(key);
         });
+        if (result.length > 0) return result;
       }
-      // Fallback: find trends whose platform type appears >=2 times for similar titles
-      // Group all trends (not just filtered) by similarity to find cross-platform ones
+
+      // Fallback: Jaccard similarity on ALL trends using original titles
       const allNormTitles = allTrends.map(t => ({
-        norm: t.title.toLowerCase().normalize("NFD").replace(/\p{Diacritic}/gu, "").replace(/[^a-z0-9\s]/g, "").trim().slice(0, 50),
+        norm: normKey(t.title),
         platform: t.platform,
       }));
       const multiKeys = new Set<string>();
@@ -137,13 +143,18 @@ const Index = () => {
         }
         if (platforms.size >= 2) multiKeys.add(allNormTitles[i].norm);
       }
+
       if (multiKeys.size > 0) {
-        return translatedTrends.filter(t => {
-          const key = t.title.toLowerCase().normalize("NFD").replace(/\p{Diacritic}/gu, "").replace(/[^a-z0-9\s]/g, "").trim().slice(0, 50);
+        const result = translatedTrends.filter(t => {
+          const key = getOriginalKey(t);
           return multiKeys.has(key);
         });
+        if (result.length > 0) return result;
       }
-      // Still empty — return all trends with a note
+
+      // FALLBACK: If no multiplatform trends found, return all category-filtered trends
+      // instead of showing empty state
+      console.log("⚠️ Nenhuma trend multiplataforma encontrada — mostrando todas as trends filtradas");
       return translatedTrends;
     }
     return translatedTrends;
@@ -374,7 +385,8 @@ const Index = () => {
         : (() => {
             const renderCard = (trend: TrendCardProps, i: number) => {
               const trendId = `${trend.platform}-${trend.title.slice(0, 20)}`;
-              const normalizedKey = trend.title.toLowerCase().normalize("NFD").replace(/\p{Diacritic}/gu, "").replace(/[^a-z0-9\s]/g, "").trim().slice(0, 50);
+              const originalTitle = (trend as any)._originalTitle || trend.title;
+              const normalizedKey = originalTitle.toLowerCase().normalize("NFD").replace(/\p{Diacritic}/gu, "").replace(/[^a-z0-9\s]/g, "").trim().slice(0, 50);
               const isMulti = multiplatformTitles.has(normalizedKey);
               const matchingCluster = isMulti ? clusters.find(c => c.trends.some(ct => ct.title.toLowerCase().normalize("NFD").replace(/\p{Diacritic}/gu, "").replace(/[^a-z0-9\s]/g, "").trim().slice(0, 50) === normalizedKey)) || null : null;
               return (
