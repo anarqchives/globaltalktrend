@@ -160,11 +160,24 @@ export default function CriticalMomentsSection({ moments, onSelectTrend, onClose
                       {m.trend.title}
                     </p>
 
-                    {triggerLabel && (
-                      <p className="text-[10px] text-muted-foreground mt-1 italic leading-tight">
-                        💡 {triggerLabel}
+                  {/* Contextual explanation instead of generic trigger */}
+                  {(() => {
+                    const explanationParts: string[] = [];
+                    if (m.changePercent > 500) explanationParts.push(`crescimento explosivo de ${Math.round(m.changePercent)}%`);
+                    else if (m.changePercent > 200) explanationParts.push(`alta aceleração de ${Math.round(m.changePercent)}%`);
+                    else if (m.changePercent > 50) explanationParts.push(`crescimento de ${Math.round(m.changePercent)}%`);
+                    if (m.reasons.includes("geographicSpread")) explanationParts.push("repercussão internacional");
+                    if (m.reasons.includes("multiSource")) explanationParts.push("reportado por múltiplas fontes");
+                    if (m.reasons.includes("verifiedSource")) explanationParts.push("confirmado por fonte verificada");
+                    if (explanationParts.length === 0 && triggerLabel) explanationParts.push(triggerLabel);
+                    if (explanationParts.length === 0) explanationParts.push("atividade anômala detectada");
+                    const explanation = `Este assunto está em destaque devido a ${explanationParts.slice(0, 2).join(" e ")}.`;
+                    return (
+                      <p className="text-[10px] text-muted-foreground mt-1 leading-tight bg-background/60 rounded px-1.5 py-0.5 border-l-2 border-red-500/30">
+                        {explanation}
                       </p>
-                    )}
+                    );
+                  })()}
 
                     <div className="flex items-center gap-1.5 mt-1.5 flex-wrap">
                       <span className="text-[10px] font-bold text-red-500 whitespace-nowrap">

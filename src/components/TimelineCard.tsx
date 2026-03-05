@@ -535,17 +535,31 @@ const TimelineCard = ({
           </div>
 
           <div className="flex flex-col items-center gap-1">
-            <button onClick={(e) => { e.stopPropagation(); onSaveCard?.({ title, platform, category, country_code: countryCode, source_url: sourceUrl, thumbnail, description: displayDescription, volume, change, changePositive, historicalData, platformColor: pf.color, sources }); }} className="p-1 rounded-full text-muted-foreground/60 hover:text-primary transition-colors" title="📌 Salvar no painel">
-              <Bookmark className="w-3 h-3" />
-            </button>
-            <button onClick={handleShare} className="p-1 rounded-full text-muted-foreground/60 hover:text-foreground transition-colors" title={t("share")}>
-              <Share2 className="w-3 h-3" />
-            </button>
-            <button onClick={handleShareLink} className="p-1 rounded-full text-muted-foreground/60 hover:text-foreground transition-colors" title={t("copyLinkFilters")}>
+            {/* Unified share: uses navigator.share or clipboard */}
+            <button onClick={(e) => {
+              e.stopPropagation();
+              const shareUrl = sourceUrl || window.location.href;
+              if (navigator.share) {
+                navigator.share({ title, url: shareUrl }).catch(() => {});
+              } else {
+                navigator.clipboard.writeText(`${title} — ${shareUrl}`);
+                toast({ title: "🔗 Link copiado!", description: title.slice(0, 60) });
+              }
+              onTrackAction?.("share", 5, { title, platform, countryCode, category });
+            }} className="p-1 rounded-full text-muted-foreground/60 hover:text-foreground transition-colors" title={t("share")}>
               <Link2 className="w-3 h-3" />
             </button>
             <button onClick={handleAlertClick} className="p-1 rounded-full text-muted-foreground/60 hover:text-primary transition-colors" title={t("createAlert")}>
               <Bell className="w-3 h-3" />
+            </button>
+            <button onClick={(e) => { e.stopPropagation(); onSaveCard?.({ title, platform, category, country_code: countryCode, source_url: sourceUrl, thumbnail, description: displayDescription, volume, change, changePositive, historicalData, platformColor: pf.color, sources }); }} className="p-1 rounded-full text-muted-foreground/60 hover:text-primary transition-colors" title="Salvar no painel">
+              <Bookmark className="w-3 h-3" />
+            </button>
+            <button onClick={(e) => {
+              e.stopPropagation();
+              toast({ title: "⚠️ Denúncia enviada", description: `Obrigado por reportar: ${title.slice(0, 40)}` });
+            }} className="p-1 rounded-full text-muted-foreground/60 hover:text-destructive transition-colors" title="Denunciar erro">
+              <Flag className="w-3 h-3" />
             </button>
             <button onClick={handleExpand} className="p-1 rounded-full text-muted-foreground hover:text-foreground transition-colors">
               {expanded ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
