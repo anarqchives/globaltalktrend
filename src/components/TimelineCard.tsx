@@ -411,8 +411,8 @@ const TimelineCard = ({
             
             </div>
 
-            {/* IMAGE — always visible */}
-            {thumbnail && !imgError && (
+            {/* IMAGE — hidden in compact mode */}
+            {thumbnail && !imgError && !compact && (
               <div className="relative w-full mb-2 rounded-xl overflow-hidden bg-secondary aspect-video">
                 <img
                   src={thumbnail}
@@ -426,7 +426,7 @@ const TimelineCard = ({
 
             {/* TITLE + Score */}
             <div className="mb-1.5">
-              <p className="text-sm font-medium text-foreground line-clamp-2 leading-snug">
+              <p className={`font-medium text-foreground leading-snug ${compact ? 'text-xs line-clamp-1' : 'text-sm line-clamp-2'}`}>
                 {title}
               </p>
               <div className="flex items-center gap-1.5 mt-0.5">
@@ -437,8 +437,8 @@ const TimelineCard = ({
               </div>
             </div>
 
-            {/* SUMMARY — always visible, real description */}
-            {displayDescription && (
+            {/* SUMMARY — hidden in compact mode */}
+            {displayDescription && !compact && (
               <p className="text-[13px] text-foreground/80 leading-relaxed mt-1 mb-2 line-clamp-3 border-b border-dashed border-border pb-2">
                 {displayDescription}
               </p>
