@@ -334,25 +334,7 @@ const TimelineCard = ({
     }
   };
 
-  const handleSummarize = async (e: React.MouseEvent) => {
-    e.stopPropagation();
-    if (aiSummary || summarizing) return;
-    setSummarizing(true);
-    try {
-      const { data, error } = await supabase.functions.invoke("summarize-trend", {
-        body: { title, details, platform, volume },
-      });
-      if (error) throw error;
-      setAiSummary(data);
-    } catch (err: any) {
-      console.error("Summarize error:", err);
-      toast({ title: t("errorSummarize"), description: t("tryAgain"), variant: "destructive" });
-    } finally {
-      setSummarizing(false);
-    }
-  };
 
-  const sentiment = aiSummary ? sentimentKeys[aiSummary.sentiment as keyof typeof sentimentKeys] || sentimentKeys.neutral : null;
 
   return (
     <div className="timeline-card-wrapper">
