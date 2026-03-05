@@ -1,7 +1,6 @@
 import { useMemo } from "react";
 import { TrendCardProps } from "@/components/TrendCard";
 import { TrendingUp, Globe, Zap, BarChart3 } from "lucide-react";
-import { useLanguage } from "@/contexts/LanguageContext";
 
 interface KPICardsProps {
   trends: TrendCardProps[];
@@ -23,7 +22,6 @@ function parseVolume(vol: string): number {
 }
 
 export default function KPICards({ trends, countriesCount, loading }: KPICardsProps) {
-  const { t } = useLanguage();
 
   const kpis = useMemo(() => {
     if (!trends.length) return null;
