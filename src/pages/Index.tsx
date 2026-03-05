@@ -4,6 +4,7 @@ import FilterBar, { FilterState, countries } from "@/components/FilterBar";
 import TimelineCard from "@/components/TimelineCard";
 import TrendCardSkeleton from "@/components/TrendCardSkeleton";
 import CriticalMomentsSection from "@/components/CriticalMomentsSection";
+import KPICards from "@/components/KPICards";
 import TransparencyPanel from "@/components/TransparencyPanel";
 import { TrendCardProps } from "@/components/TrendCard";
 import { useTrends } from "@/hooks/use-trends";
@@ -200,6 +201,14 @@ const Index = () => {
     setRefreshing(true);
     await fetchTrends();
     setRefreshing(false);
+  }, [fetchTrends]);
+
+  // Auto-refresh every 60 seconds (non-intrusive: doesn't reset scroll or expanded state)
+  useEffect(() => {
+    const interval = setInterval(() => {
+      fetchTrends();
+    }, 60_000);
+    return () => clearInterval(interval);
   }, [fetchTrends]);
 
   const [showScrollTop, setShowScrollTop] = useState(false);
@@ -441,6 +450,7 @@ const Index = () => {
         onAnomalyClick={handleAnomalyClick}
       />
       <FilterBar filters={filters} onChange={setFilters} onForceReset={() => setFilters(defaultFilters)} />
+      <KPICards trends={filteredTrends} countriesCount={countriesCount} loading={loading && isFirstLoad} />
 
       <div className="flex-1 overflow-hidden">
         {isMobile ? (
