@@ -17,7 +17,7 @@ import { useHistory } from "@/hooks/use-history";
 import { useGamification } from "@/hooks/use-gamification";
 import { useSavedCards } from "@/hooks/use-saved-cards";
 import { supabase } from "@/integrations/supabase/client";
-import { ChevronRight, X } from "lucide-react";
+import { ChevronRight, X, Map, Newspaper } from "lucide-react";
 import {
   ResizablePanelGroup,
   ResizablePanel,

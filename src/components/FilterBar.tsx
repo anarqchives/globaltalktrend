@@ -129,22 +129,16 @@ const FilterBar = ({ filters, onChange, onForceReset }: FilterBarProps) => {
     { value: "Cultura", label: t("culture") },
     { value: "Negócios/Finanças", label: t("business") },
     { value: "Ciência", label: t("science") },
-    { value: "Saúde", label: "Saúde" },
-    { value: "Clima/Meio Ambiente", label: "Clima" },
-    { value: "Conflitos/Crises", label: "Conflitos" },
-    { value: "Conhecimento", label: "Conhecimento" },
+    { value: "Saúde", label: t("science") === "Science" ? "Health" : "Saúde" },
   ];
 
   const typeOptions = [
     { value: "Todas mídias", label: t("allMedia") },
-    { value: "Multiplataforma", label: "🔥 Multiplataforma" },
+    { value: "Multiplataforma", label: "🔄 Multiplataforma" },
     { value: "Redes sociais", label: t("socialMedia") },
     { value: "Imprensa", label: t("press") },
     { value: "Buscas (Google)", label: t("searches") },
-    { value: "Dados oficiais", label: "Dados Oficiais" },
-    { value: "Ciência", label: "Ciência" },
-    { value: "Enciclopédia", label: "Enciclopédia" },
-    { value: "Conflitos", label: "Conflitos" },
+    { value: "Dados oficiais", label: "🏛️ Dados Oficiais" },
   ];
 
   return (
