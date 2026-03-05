@@ -373,6 +373,7 @@ const Index = () => {
                 <div key={`${trendId}-${i}`} id={`trend-card-${trendId}`} className={highlightedTrendId === trendId ? 'animate-highlight-pulse rounded-xl' : ''}>
                 <TimelineCard
                   {...trend}
+                  staggerIndex={i}
                   userId={user?.id}
                   onTrackAction={trackAction}
                   forceExpanded={expandedTrendId === trendId}
