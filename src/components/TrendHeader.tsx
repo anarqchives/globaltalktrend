@@ -187,7 +187,8 @@ const TrendHeader = ({ totalTrends = 0, countriesCount = 0, onRefresh, refreshin
             <h1 className="text-base font-light tracking-tight whitespace-nowrap select-none flex items-center gap-2">
               <span className="font-semibold text-foreground hidden sm:inline">Global Talk Trend</span>
               <span className="font-semibold text-foreground sm:hidden">GTT</span>
-              <span className="text-muted-foreground hidden md:inline">Monitor em Tempo Real</span>
+              <span className="text-muted-foreground hidden lg:inline text-[11px]">Monitore os assuntos em alta pelo mundo, em tempo real</span>
+              <span className="text-muted-foreground hidden md:inline lg:hidden text-[11px]">Monitor em Tempo Real</span>
             </h1>
             {totalTrends > 1 && countriesCount > 0 ?
             <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-primary/10 text-primary text-[11px] font-bold tabular-nums flex-shrink-0 hidden sm:inline-flex">
@@ -301,7 +302,7 @@ const TrendHeader = ({ totalTrends = 0, countriesCount = 0, onRefresh, refreshin
               href="https://buy.stripe.com/fZu7sMgw6cHLeTnbWVdIA00"
               target="_blank"
               rel="noopener noreferrer"
-              className="px-3 py-1 rounded-full bg-primary/10 text-primary text-[11px] font-semibold hover:bg-primary/20 transition-colors whitespace-nowrap min-h-[28px] flex items-center">
+              className="px-3 py-1 rounded-full bg-primary text-primary-foreground text-[11px] font-semibold hover:bg-primary/90 transition-all whitespace-nowrap min-h-[28px] flex items-center shadow-sm hover:shadow-md hover:scale-105">
               
               Apoie
             </a>
@@ -389,11 +390,19 @@ const TrendHeader = ({ totalTrends = 0, countriesCount = 0, onRefresh, refreshin
 
                   <DropdownMenuSeparator />
 
+                  {/* Dashboard */}
+                  <DropdownMenuItem className="text-xs gap-2" asChild>
+                    <Link to="/perfil?tab=dashboard" className="flex items-center gap-2">
+                      <Users className="w-3.5 h-3.5 text-primary" />
+                      📊 Dashboard
+                    </Link>
+                  </DropdownMenuItem>
+
                   {/* Reports */}
                   <DropdownMenuItem className="text-xs gap-2" asChild>
                     <Link to="/perfil?tab=reports" className="flex items-center gap-2">
                       <FileText className="w-3.5 h-3.5 text-primary" />
-                      Gerar Relatório
+                      📄 Gerar Relatório
                     </Link>
                   </DropdownMenuItem>
 
@@ -401,7 +410,7 @@ const TrendHeader = ({ totalTrends = 0, countriesCount = 0, onRefresh, refreshin
                   <DropdownMenuItem className="text-xs gap-2" asChild>
                     <span className="flex items-center gap-2 cursor-default">
                       <Bell className="w-3.5 h-3.5" />
-                      Meus Alertas
+                      🔔 Meus Alertas
                       {alerts.length > 0 &&
                     <span className="ml-auto text-[10px] bg-primary/10 text-primary px-1.5 py-0.5 rounded-full font-bold">
                           {alerts.length}
@@ -414,7 +423,15 @@ const TrendHeader = ({ totalTrends = 0, countriesCount = 0, onRefresh, refreshin
                   <DropdownMenuItem className="text-xs gap-2" asChild>
                     <Link to="/perfil" className="flex items-center gap-2">
                       <User className="w-3.5 h-3.5" />
-                      Meu Perfil
+                      👤 Meu Perfil
+                    </Link>
+                  </DropdownMenuItem>
+
+                  {/* Stats */}
+                  <DropdownMenuItem className="text-xs gap-2" asChild>
+                    <Link to="/perfil?tab=stats" className="flex items-center gap-2">
+                      <Star className="w-3.5 h-3.5" />
+                      📈 Estatísticas
                     </Link>
                   </DropdownMenuItem>
 
@@ -422,7 +439,7 @@ const TrendHeader = ({ totalTrends = 0, countriesCount = 0, onRefresh, refreshin
                   <DropdownMenuItem className="text-xs gap-2" asChild>
                     <Link to="/historico" className="flex items-center gap-2">
                       <Clock className="w-3.5 h-3.5" />
-                      Meu Histórico
+                      🕒 Meu Histórico
                     </Link>
                   </DropdownMenuItem>
 
@@ -430,7 +447,7 @@ const TrendHeader = ({ totalTrends = 0, countriesCount = 0, onRefresh, refreshin
                   <DropdownMenuItem className="text-xs gap-2" asChild>
                     <Link to="/metodologia" className="flex items-center gap-2">
                       <BookOpen className="w-3.5 h-3.5" />
-                      Metodologia
+                      📚 Metodologia
                     </Link>
                   </DropdownMenuItem>
 
@@ -438,7 +455,7 @@ const TrendHeader = ({ totalTrends = 0, countriesCount = 0, onRefresh, refreshin
 
                   <DropdownMenuItem onClick={handleLogout} className="text-xs gap-2 text-red-500 focus:text-red-500">
                     <LogOut className="w-3.5 h-3.5" />
-                    Sair
+                    🚪 Sair
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu> :
