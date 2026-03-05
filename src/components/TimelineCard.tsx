@@ -460,30 +460,18 @@ const TimelineCard = ({
               );
             })()}
 
-            {/* CONTEXT — category-specific insight, always visible */}
+            {/* CONTEXT — only real data: sources, region, author */}
             {(() => {
-              const cat = (category || "").toLowerCase().normalize("NFD").replace(/\p{Diacritic}/gu, "");
-              const srcList = sources?.slice(0, 2).join(", ") || platform;
-              let ctx = "";
-              if (cat.includes("politic")) ctx = `Discussão política${countryCode && countryCode !== "GL" ? ` (${countryCodeToFlag(countryCode) || countryCode})` : ""}, com destaque em ${srcList}`;
-              else if (cat.includes("tecnologi") || cat.includes("technolog")) ctx = `Tópico tecnológico em alta, mencionado por ${srcList}`;
-              else if (cat.includes("economi") || cat.includes("business") || cat.includes("negocio") || cat.includes("financ")) ctx = `Movimento econômico com repercussão em ${srcList}`;
-              else if (cat.includes("ciencia") || cat.includes("science")) ctx = `Avanço científico com repercussão em ${sources?.length || 1} publicações`;
-              else if (cat.includes("esporte") || cat.includes("sport")) ctx = `Evento esportivo em destaque via ${srcList}`;
-              else if (cat.includes("entretenimento") || cat.includes("entertainment")) ctx = `Entretenimento em alta via ${srcList}`;
-              else if (cat.includes("cultura") || cat.includes("culture")) ctx = `Cultura em destaque via ${srcList}`;
-              else if (cat.includes("saude") || cat.includes("health")) ctx = `Saúde em destaque via ${srcList}`;
-              else {
-                const diffH = firstSeenAt ? Math.floor((Date.now() - new Date(firstSeenAt).getTime()) / 3600000) : null;
-                if (diffH && diffH > 0 && diffH < 48) ctx = `Assunto em destaque nas últimas ${diffH}h`;
-                else if (sources && sources.length > 0) ctx = `Cobertura por ${srcList}`;
-                else ctx = "";
-              }
-              if (!ctx) return null;
+              const ctxParts: string[] = [];
+              if (sources && sources.length > 0) ctxParts.push(`Fontes: ${sources.slice(0, 3).join(", ")}`);
+              if (region) ctxParts.push(`Região: ${region}`);
+              const diffH = firstSeenAt ? Math.floor((Date.now() - new Date(firstSeenAt).getTime()) / 3600000) : null;
+              if (diffH && diffH > 0 && diffH < 48) ctxParts.push(`Em pauta há ${diffH}h`);
+              if (ctxParts.length === 0) return null;
               return (
                 <div className="flex items-center gap-2 mb-2 py-2 px-3 rounded-xl bg-muted/50 border-l-[3px] border-muted-foreground/25">
                   <span className="text-[11px]">🔍</span>
-                  <span className="text-[12px] text-muted-foreground leading-snug">{ctx}</span>
+                  <span className="text-[12px] text-muted-foreground leading-snug">{ctxParts.join(" · ")}</span>
                 </div>
               );
             })()}

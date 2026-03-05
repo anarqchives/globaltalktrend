@@ -65,8 +65,6 @@ const Index = () => {
   const [filters, setFilters] = useState<FilterState>(getInitialFilters);
   const [user, setUser] = useState<any>(null);
   const [viewMode, setViewMode] = useState<"timeline" | "map">("timeline");
-  const [mapOverlay, setMapOverlay] = useState(false);
-  const [timelineWide, setTimelineWide] = useState(false);
   const timelinePanelRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -336,15 +334,6 @@ const Index = () => {
         <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-widest">
           {t("timeline")}
         </span>
-        {!isMobile && (
-          <button
-            onClick={() => setMapOverlay(true)}
-            className="flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-medium border border-primary/30 text-primary hover:bg-primary hover:text-primary-foreground transition-all"
-          >
-            <Map className="w-3 h-3" />
-            🗺️ Mapa
-          </button>
-        )}
       </div>
 
       {breadcrumbs.length > 0 && (
@@ -574,23 +563,22 @@ const Index = () => {
       />
 
       <div className="flex-1 overflow-hidden">
+        {/* Critical Moments */}
+        {!loading && criticalMoments.length > 0 && filteredTrends.length > 1 && !criticalDismissed && (
+          <CriticalMomentsSection
+            moments={criticalMoments}
+            onSelectTrend={handleSelectTrend}
+            onClose={() => setCriticalDismissed(true)}
+          />
+        )}
+
         {isMobile ? (
           <div className="h-full min-h-0 flex flex-col relative">
-            {/* Critical Moments inline on mobile */}
-            {!loading && criticalMoments.length > 0 && filteredTrends.length > 1 && !criticalDismissed && (
-              <CriticalMomentsSection
-                moments={criticalMoments}
-                onSelectTrend={handleSelectTrend}
-                onClose={() => setCriticalDismissed(true)}
-              />
-            )}
-            {/* Mobile: toggle between timeline and map */}
             <div className="flex-1 min-h-0 overflow-hidden">
               {viewMode === "timeline" ? renderTimeline() : (
                 <div className="h-full">{renderMap()}</div>
               )}
             </div>
-            {/* Floating toggle button */}
             <button
               onClick={() => setViewMode(v => v === "timeline" ? "map" : "timeline")}
               className="absolute bottom-4 right-4 z-30 flex items-center gap-1.5 px-3 py-2 rounded-full bg-primary text-primary-foreground text-xs font-semibold shadow-lg hover:bg-primary/90 transition-all"
@@ -603,46 +591,19 @@ const Index = () => {
             </button>
           </div>
         ) : (
-          <div className="h-full flex flex-col">
-            {/* Critical Moments inline on desktop too */}
-            {!loading && criticalMoments.length > 0 && filteredTrends.length > 1 && !criticalDismissed && (
-              <CriticalMomentsSection
-                moments={criticalMoments}
-                onSelectTrend={handleSelectTrend}
-                onClose={() => setCriticalDismissed(true)}
-              />
-            )}
-            {/* Timeline takes full width */}
-            <div className="flex-1 min-h-0 overflow-hidden" ref={timelinePanelRef}>
-              {renderTimeline()}
-            </div>
-          </div>
+          <ResizablePanelGroup direction="horizontal" className="h-full">
+            <ResizablePanel defaultSize={65} minSize={40} maxSize={85}>
+              <div className="h-full min-h-0 overflow-hidden" ref={timelinePanelRef}>
+                {renderTimeline()}
+              </div>
+            </ResizablePanel>
+            <ResizableHandle withHandle />
+            <ResizablePanel defaultSize={35} minSize={15} maxSize={60}>
+              <div className="h-full">{renderMap()}</div>
+            </ResizablePanel>
+          </ResizablePanelGroup>
         )}
       </div>
-
-      {/* Mobile coffee button removed — now in header */}
-
-      {/* Map Overlay */}
-      {mapOverlay && (
-        <div className="fixed inset-0 z-[100] bg-black/90 backdrop-blur-md flex flex-col animate-in fade-in duration-300">
-          <div className="flex items-center justify-between px-6 py-4 border-b border-white/10">
-            <h2 className="text-lg font-semibold text-white flex items-center gap-2">
-              <Map className="w-5 h-5" /> Mapa Global
-            </h2>
-            <button
-              onClick={() => setMapOverlay(false)}
-              className="w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center transition-all hover:rotate-90"
-            >
-              <X className="w-5 h-5" />
-            </button>
-          </div>
-          <div className="flex-1 p-4 min-h-0">
-            <div className="w-full h-full rounded-2xl overflow-hidden shadow-2xl">
-              {renderMap()}
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* Transparency Panel */}
       <TransparencyPanel
