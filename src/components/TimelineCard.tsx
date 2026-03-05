@@ -218,6 +218,31 @@ const TimelineCard = ({
   const [activeTab, setActiveTab] = useState<"details" | "context" | "history" | "crossplatform" | "narrative">("details");
   const temporal = useMemo(() => formatTemporalBadge(firstSeenAt, peakAt, t("startedAgo"), t("peakAt")), [firstSeenAt, peakAt, lang]);
 
+  // Trend Score: 0-100 based on growth, volume, sources, geography
+  const trendScore = useMemo(() => {
+    let score = 0;
+    // Growth component (0-30)
+    const ch = Math.abs(parseFloat(change?.replace(/[^0-9.\-]/g, "") || "0"));
+    score += Math.min(ch / 10, 30);
+    // Volume component (0-30)
+    const volStr = (volume || "0").toLowerCase();
+    let vol = parseFloat(volStr.replace(/[^0-9.]/g, "")) || 0;
+    if (volStr.includes("m")) vol *= 1_000_000;
+    else if (volStr.includes("k")) vol *= 1_000;
+    score += Math.min(vol / 5000, 30);
+    // Sources diversity (0-20)
+    score += Math.min((sources?.length || 1) * 5, 20);
+    // Multiplatform / geography (0-20)
+    if (isMultiplatform) score += 15;
+    if (crossPlatformCluster && crossPlatformCluster.platformCount > 2) score += 5;
+    return Math.min(Math.round(score), 100);
+  }, [change, volume, sources, isMultiplatform, crossPlatformCluster]);
+
+  const trendScoreLabel = trendScore >= 80 ? { emoji: "🔥", text: "Explosivo", cls: "bg-red-500/15 text-red-600 dark:text-red-400" }
+    : trendScore >= 60 ? { emoji: "📈", text: "Em Alta", cls: "bg-orange-500/15 text-orange-600 dark:text-orange-400" }
+    : trendScore >= 40 ? { emoji: "➡️", text: "Estável", cls: "bg-yellow-500/15 text-yellow-700 dark:text-yellow-400" }
+    : { emoji: "📉", text: "Baixo", cls: "bg-muted text-muted-foreground" };
+
   const relativeTimeFormats: Record<string, { now: string; min: string; h: string; d: string }> = {
     pt: { now: "agora", min: "há {n}min", h: "há {n}h", d: "há {n}d" },
     en: { now: "now", min: "{n}min ago", h: "{n}h ago", d: "{n}d ago" },
