@@ -25,11 +25,7 @@ const platformIcons: Record<string, { emoji: string; color: string }> = {
   "X (Twitter)": { emoji: "𝕏", color: "hsl(0, 0%, 15%)" },
 };
 
-const sentimentKeys = {
-  positive: { icon: "😊", color: "text-green-600", key: "positive" as const },
-  negative: { icon: "😟", color: "text-red-500", key: "negative" as const },
-  neutral: { icon: "😐", color: "text-muted-foreground", key: "neutral" as const },
-};
+
 
 const countryCodeToFlag = (code?: string) => {
   if (!code || code.length !== 2) return null;
