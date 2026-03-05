@@ -544,7 +544,7 @@ const Index = () => {
 
       <div className="flex-1 overflow-hidden">
         {isMobile ? (
-          <div className="h-full min-h-0 flex flex-col">
+          <div className="h-full min-h-0 flex flex-col relative">
             {/* Critical Moments inline on mobile */}
             {!loading && criticalMoments.length > 0 && filteredTrends.length > 1 && !criticalDismissed && (
               <CriticalMomentsSection
@@ -553,10 +553,23 @@ const Index = () => {
                 onClose={() => setCriticalDismissed(true)}
               />
             )}
-            {/* Mobile: timeline only, no map */}
+            {/* Mobile: toggle between timeline and map */}
             <div className="flex-1 min-h-0 overflow-hidden">
-              {renderTimeline()}
+              {viewMode === "timeline" ? renderTimeline() : (
+                <div className="h-full">{renderMap()}</div>
+              )}
             </div>
+            {/* Floating toggle button */}
+            <button
+              onClick={() => setViewMode(v => v === "timeline" ? "map" : "timeline")}
+              className="absolute bottom-4 right-4 z-30 flex items-center gap-1.5 px-3 py-2 rounded-full bg-primary text-primary-foreground text-xs font-semibold shadow-lg hover:bg-primary/90 transition-all"
+            >
+              {viewMode === "timeline" ? (
+                <><Map className="w-3.5 h-3.5" /> {t("map")}</>
+              ) : (
+                <><Newspaper className="w-3.5 h-3.5" /> {t("timeline")}</>
+              )}
+            </button>
           </div>
         ) : (
           <ResizablePanelGroup direction="horizontal" className="h-full">
