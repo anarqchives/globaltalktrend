@@ -645,7 +645,7 @@ const TimelineCard = ({
         defaultKeyword={title}
         defaultCategory={category}
       />
-    </div>
+    </motion.div>
   );
 };
 
