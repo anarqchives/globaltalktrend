@@ -16,6 +16,7 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { useHistory } from "@/hooks/use-history";
 import { useGamification } from "@/hooks/use-gamification";
 import { useSavedCards } from "@/hooks/use-saved-cards";
+import { useSavedFilters } from "@/hooks/use-saved-filters";
 import { supabase } from "@/integrations/supabase/client";
 import { ChevronRight, X, Map, Newspaper } from "lucide-react";
 import {
@@ -74,6 +75,7 @@ const Index = () => {
   const { trackView } = useHistory(user?.id ?? null);
   const { trackAction } = useGamification(user?.id ?? null);
   const { saveCard } = useSavedCards(user?.id ?? null);
+  const { saveFilter } = useSavedFilters(user?.id ?? null);
   const [trendCounts, setTrendCounts] = useState<Record<string, number>>({});
   const [expandedTrendId, setExpandedTrendId] = useState<string | null>(null);
   const [highlightedTrendId, setHighlightedTrendId] = useState<string | null>(null);
@@ -540,7 +542,18 @@ const Index = () => {
         onOpenTransparency={() => setTransparencyOpen(true)}
         onAnomalyClick={handleAnomalyClick}
       />
-      <FilterBar filters={filters} onChange={setFilters} onForceReset={() => setFilters(defaultFilters)} />
+      <FilterBar
+        filters={filters}
+        onChange={setFilters}
+        onForceReset={() => setFilters(defaultFilters)}
+        isLoggedIn={!!user}
+        onSaveFilter={() => {
+          const name = prompt("Nome do filtro:");
+          if (name?.trim()) {
+            saveFilter(name.trim(), filters);
+          }
+        }}
+      />
 
       <div className="flex-1 overflow-hidden">
         {isMobile ? (

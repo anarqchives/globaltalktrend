@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
-import { RotateCcw, ChevronDown } from "lucide-react";
-import { useLanguage } from "@/contexts/LanguageContext";
+import { RotateCcw, ChevronDown, Star } from "lucide-react";
+import { useLanguage, LangCode } from "@/contexts/LanguageContext";
 const defaultFilters: FilterState = {
   country: "global",
   period: "Hoje",
@@ -19,6 +19,8 @@ interface FilterBarProps {
   filters: FilterState;
   onChange: (filters: FilterState) => void;
   onForceReset?: () => void;
+  onSaveFilter?: () => void;
+  isLoggedIn?: boolean;
 }
 
 export const countries = [
@@ -101,7 +103,7 @@ export const countries = [
 
 const selectClass = "appearance-none bg-transparent text-foreground text-[13px] md:text-[13px] text-[12px] font-medium pl-3 pr-7 py-2 min-h-[44px] rounded-lg cursor-pointer min-w-0 hover:bg-muted/50 dark:hover:bg-white/5 transition-colors focus:outline-none focus:ring-0";
 
-const FilterBar = ({ filters, onChange, onForceReset }: FilterBarProps) => {
+const FilterBar = ({ filters, onChange, onForceReset, onSaveFilter, isLoggedIn }: FilterBarProps) => {
   const { t } = useLanguage();
 
   const update = (key: keyof FilterState, value: string) => {
@@ -120,16 +122,19 @@ const FilterBar = ({ filters, onChange, onForceReset }: FilterBarProps) => {
     { value: "Este mês", label: t("thisMonth") },
   ];
 
+  const healthLabel: Record<string, string> = { pt: "Saúde", en: "Health", es: "Salud", fr: "Santé", de: "Gesundheit", it: "Salute", zh: "健康", ja: "健康", ko: "건강", ar: "صحة", hi: "स्वास्थ्य", ru: "Здоровье" };
+  const { lang: currentLang } = useLanguage();
+
   const categoryOptions = [
     { value: "Todas", label: t("all") },
     { value: "Política", label: t("politics") },
-    { value: "Entretenimento", label: t("entertainment") },
+    { value: "Economia", label: t("business") },
     { value: "Tecnologia", label: t("technology") },
-    { value: "Esportes", label: t("sports") },
-    { value: "Cultura", label: t("culture") },
-    { value: "Negócios/Finanças", label: t("business") },
     { value: "Ciência", label: t("science") },
-    { value: "Saúde", label: t("science") === "Science" ? "Health" : "Saúde" },
+    { value: "Saúde", label: healthLabel[currentLang] || "Saúde" },
+    { value: "Esportes", label: t("sports") },
+    { value: "Entretenimento", label: t("entertainment") },
+    { value: "Cultura", label: t("culture") },
   ];
 
   const typeOptions = [
@@ -202,15 +207,6 @@ const FilterBar = ({ filters, onChange, onForceReset }: FilterBarProps) => {
           <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 w-3 h-3 text-muted-foreground pointer-events-none" />
         </div>
 
-        <button
-          onClick={() => onForceReset?.()}
-          className="flex items-center gap-1 px-3 py-2 rounded-lg text-[12px] font-medium text-primary hover:bg-muted/50 transition-colors flex-shrink-0 focus:outline-none"
-          title="Reset forçado"
-        >
-          <RotateCcw className="w-3 h-3" />
-          Reset forçado
-        </button>
-
         {isFiltered && (
           <button
             onClick={() => onChange(defaultFilters)}
@@ -219,6 +215,25 @@ const FilterBar = ({ filters, onChange, onForceReset }: FilterBarProps) => {
           >
             <RotateCcw className="w-3 h-3" />
             Reset
+          </button>
+        )}
+
+        <button
+          onClick={() => onForceReset?.()}
+          className="flex items-center gap-1 px-3 py-2 rounded-lg text-[12px] font-medium text-muted-foreground hover:bg-muted/50 transition-colors flex-shrink-0 focus:outline-none"
+          title="Reset forçado"
+        >
+          <RotateCcw className="w-3 h-3" />
+        </button>
+
+        {isLoggedIn && onSaveFilter && (
+          <button
+            onClick={onSaveFilter}
+            className="flex items-center gap-1 px-3 py-2 rounded-lg text-[12px] font-medium text-primary hover:bg-primary/10 transition-colors flex-shrink-0 focus:outline-none"
+            title="Salvar filtros atuais"
+          >
+            <Star className="w-3 h-3" />
+            💾 Salvar
           </button>
         )}
 
