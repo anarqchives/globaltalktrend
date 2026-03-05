@@ -1,5 +1,5 @@
 import { useState, useRef, useCallback, useEffect, useMemo, lazy, Suspense } from "react";
-import { AnimatePresence, motion } from "framer-motion";
+import { AnimatePresence, motion, useScroll, useTransform } from "framer-motion";
 import { useTimelineColumns } from "@/hooks/use-timeline-columns";
 import TrendHeader from "@/components/TrendHeader";
 import FilterBar, { FilterState, countries } from "@/components/FilterBar";
@@ -429,13 +429,19 @@ const Index = () => {
               <>
                 {agora.length > 0 && (
                   <>
-                    <div className="px-2 py-1.5 mt-1">
+                    <motion.div
+                      className="px-2 py-1.5 mt-1"
+                      initial={{ opacity: 0, x: -8 }}
+                      whileInView={{ opacity: 1, x: 0 }}
+                      viewport={{ once: true }}
+                      transition={{ duration: 0.4, ease: "easeOut" }}
+                    >
                       <span className="text-[11px] font-bold text-destructive uppercase tracking-wide flex items-center gap-1.5">
                         <span className="w-1.5 h-1.5 rounded-full bg-destructive animate-pulse" />
                         🔥 Agora
                         <span className="text-[10px] font-normal text-muted-foreground ml-1">({agora.length})</span>
                       </span>
-                    </div>
+                    </motion.div>
                     <div className="grid gap-4" style={gridStyle}>
                       <AnimatePresence mode="popLayout">
                         {agora.map((trend) => renderCard(trend, globalIndex++))}
@@ -445,12 +451,18 @@ const Index = () => {
                 )}
                 {ultimas2h.length > 0 && (
                   <>
-                    <div className="px-2 py-1.5 mt-2">
+                    <motion.div
+                      className="px-2 py-1.5 mt-2"
+                      initial={{ opacity: 0, x: -8 }}
+                      whileInView={{ opacity: 1, x: 0 }}
+                      viewport={{ once: true }}
+                      transition={{ duration: 0.4, ease: "easeOut", delay: 0.1 }}
+                    >
                       <span className="text-[11px] font-bold text-amber-600 dark:text-amber-400 uppercase tracking-wide flex items-center gap-1.5">
                         ⏳ Últimas 2 horas
                         <span className="text-[10px] font-normal text-muted-foreground ml-1">({ultimas2h.length})</span>
                       </span>
-                    </div>
+                    </motion.div>
                     <div className="grid gap-4" style={gridStyle}>
                       <AnimatePresence mode="popLayout">
                         {ultimas2h.map((trend) => renderCard(trend, globalIndex++))}
@@ -460,12 +472,18 @@ const Index = () => {
                 )}
                 {ultimas24h.length > 0 && (
                   <>
-                    <div className="px-2 py-1.5 mt-2">
+                    <motion.div
+                      className="px-2 py-1.5 mt-2"
+                      initial={{ opacity: 0, x: -8 }}
+                      whileInView={{ opacity: 1, x: 0 }}
+                      viewport={{ once: true }}
+                      transition={{ duration: 0.4, ease: "easeOut", delay: 0.15 }}
+                    >
                       <span className="text-[11px] font-bold text-muted-foreground uppercase tracking-wide flex items-center gap-1.5">
                         📅 Últimas 24 horas
                         <span className="text-[10px] font-normal text-muted-foreground ml-1">({ultimas24h.length})</span>
                       </span>
-                    </div>
+                    </motion.div>
                     <div className="grid gap-4" style={gridStyle}>
                       <AnimatePresence mode="popLayout">
                         {ultimas24h.map((trend) => renderCard(trend, globalIndex++))}
