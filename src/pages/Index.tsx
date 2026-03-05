@@ -540,7 +540,21 @@ const Index = () => {
         onOpenTransparency={() => setTransparencyOpen(true)}
         onAnomalyClick={handleAnomalyClick}
       />
-      <FilterBar filters={filters} onChange={setFilters} onForceReset={() => setFilters(defaultFilters)} />
+      <FilterBar
+        filters={filters}
+        onChange={setFilters}
+        onForceReset={() => setFilters(defaultFilters)}
+        isLoggedIn={!!user}
+        onSaveFilter={() => {
+          const name = prompt("Nome do filtro:");
+          if (name?.trim()) {
+            import("@/hooks/use-saved-filters").then(() => {
+              // Dispatch custom event for header to pick up
+              window.dispatchEvent(new CustomEvent("save-filter-inline", { detail: { name: name.trim(), filters } }));
+            });
+          }
+        }}
+      />
 
       <div className="flex-1 overflow-hidden">
         {isMobile ? (
