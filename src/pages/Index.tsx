@@ -432,7 +432,9 @@ const Index = () => {
                         <span className="text-[10px] font-normal text-muted-foreground ml-1">({agora.length})</span>
                       </span>
                     </div>
-                    {agora.map((trend) => renderCard(trend, globalIndex++))}
+                    <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-2">
+                      {agora.map((trend) => renderCard(trend, globalIndex++))}
+                    </div>
                   </>
                 )}
                 {ultimas2h.length > 0 && (
@@ -443,7 +445,9 @@ const Index = () => {
                         <span className="text-[10px] font-normal text-muted-foreground ml-1">({ultimas2h.length})</span>
                       </span>
                     </div>
-                    {ultimas2h.map((trend) => renderCard(trend, globalIndex++))}
+                    <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-2">
+                      {ultimas2h.map((trend) => renderCard(trend, globalIndex++))}
+                    </div>
                   </>
                 )}
                 {ultimas24h.length > 0 && (
@@ -454,7 +458,9 @@ const Index = () => {
                         <span className="text-[10px] font-normal text-muted-foreground ml-1">({ultimas24h.length})</span>
                       </span>
                     </div>
-                    {ultimas24h.map((trend) => renderCard(trend, globalIndex++))}
+                    <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-2">
+                      {ultimas24h.map((trend) => renderCard(trend, globalIndex++))}
+                    </div>
                   </>
                 )}
               </>
