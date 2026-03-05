@@ -203,7 +203,13 @@ const Index = () => {
     setRefreshing(false);
   }, [fetchTrends]);
 
-  const [showScrollTop, setShowScrollTop] = useState(false);
+  // Auto-refresh every 60 seconds (non-intrusive: doesn't reset scroll or expanded state)
+  useEffect(() => {
+    const interval = setInterval(() => {
+      fetchTrends();
+    }, 60_000);
+    return () => clearInterval(interval);
+  }, [fetchTrends]);
 
   useEffect(() => {
     const el = scrollRef.current;
