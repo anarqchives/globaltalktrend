@@ -193,7 +193,8 @@ const TimelineCard = ({
   crossPlatformCluster,
   onSaveCard,
   staggerIndex = 0,
-}: TimelineCardProps & { staggerIndex?: number }) => {
+  compact = false,
+}: TimelineCardProps & { staggerIndex?: number; compact?: boolean }) => {
   const { t, lang } = useLanguage();
   const [expanded, setExpanded] = useState(forceExpanded || false);
   const [alertOpen, setAlertOpen] = useState(false);
