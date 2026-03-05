@@ -211,6 +211,8 @@ const Index = () => {
     return () => clearInterval(interval);
   }, [fetchTrends]);
 
+  const [showScrollTop, setShowScrollTop] = useState(false);
+
   useEffect(() => {
     const el = scrollRef.current;
     if (!el) return;
