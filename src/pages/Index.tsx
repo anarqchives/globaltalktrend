@@ -63,6 +63,7 @@ const Index = () => {
   const { t, lang } = useLanguage();
   const [filters, setFilters] = useState<FilterState>(getInitialFilters);
   const [user, setUser] = useState<any>(null);
+  const [viewMode, setViewMode] = useState<"timeline" | "map">("timeline");
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => setUser(session?.user ?? null));
