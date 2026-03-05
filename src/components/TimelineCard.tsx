@@ -535,16 +535,16 @@ const TimelineCard = ({
           </div>
 
           <div className="flex flex-col items-center gap-1">
-            <button onClick={(e) => { e.stopPropagation(); onSaveCard?.({ title, platform, category, country_code: countryCode, source_url: sourceUrl, thumbnail, description: displayDescription, volume, change, changePositive, historicalData, platformColor: pf.color, sources }); }} className="p-1 rounded-full opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-primary" title="Salvar no painel">
+            <button onClick={(e) => { e.stopPropagation(); onSaveCard?.({ title, platform, category, country_code: countryCode, source_url: sourceUrl, thumbnail, description: displayDescription, volume, change, changePositive, historicalData, platformColor: pf.color, sources }); }} className="p-1 rounded-full text-muted-foreground/60 hover:text-primary transition-colors" title="📌 Salvar no painel">
               <Bookmark className="w-3 h-3" />
             </button>
-            <button onClick={handleShare} className="p-1 rounded-full opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-foreground" title={t("share")}>
+            <button onClick={handleShare} className="p-1 rounded-full text-muted-foreground/60 hover:text-foreground transition-colors" title={t("share")}>
               <Share2 className="w-3 h-3" />
             </button>
-            <button onClick={handleShareLink} className="p-1 rounded-full opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-foreground" title={t("copyLinkFilters")}>
+            <button onClick={handleShareLink} className="p-1 rounded-full text-muted-foreground/60 hover:text-foreground transition-colors" title={t("copyLinkFilters")}>
               <Link2 className="w-3 h-3" />
             </button>
-            <button onClick={handleAlertClick} className="p-1 rounded-full opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-primary" title={t("createAlert")}>
+            <button onClick={handleAlertClick} className="p-1 rounded-full text-muted-foreground/60 hover:text-primary transition-colors" title={t("createAlert")}>
               <Bell className="w-3 h-3" />
             </button>
             <button onClick={handleExpand} className="p-1 rounded-full text-muted-foreground hover:text-foreground transition-colors">
