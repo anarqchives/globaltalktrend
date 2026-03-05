@@ -336,9 +336,12 @@ const TimelineCard = ({
   return (
     <motion.div
       className="timeline-card-wrapper"
-      initial={{ opacity: 0, y: 12 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.35, ease: "easeOut" }}
+      layout
+      initial={{ opacity: 0, y: 16, scale: 0.97 }}
+      whileInView={{ opacity: 1, y: 0, scale: 1 }}
+      exit={{ opacity: 0, y: -8, scale: 0.97 }}
+      viewport={{ once: true, margin: "-40px" }}
+      transition={{ duration: 0.35, ease: [0.25, 0.46, 0.45, 0.94] }}
     >
       <div className={`timeline-card group ${expanded ? 'timeline-card-expanded' : ''}`}>
         <div className="flex items-start gap-3 cursor-pointer" onClick={(e) => {
