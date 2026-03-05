@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect } from "react";
-import { Share2, ChevronDown, ChevronUp, Sparkles, Link2, Bell, ExternalLink, Shield, CheckCircle2, FlaskConical, Globe, Newspaper, Search, Bookmark, Flag } from "lucide-react";
+import { ChevronDown, ChevronUp, Link2, Bell, ExternalLink, Shield, CheckCircle2, FlaskConical, Globe, Newspaper, Bookmark, Flag } from "lucide-react";
 import { AreaChart, Area, ResponsiveContainer, XAxis, YAxis, Tooltip, CartesianGrid } from "recharts";
 import { toast } from "@/hooks/use-toast";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -7,11 +7,8 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { TrendCardProps } from "./TrendCard";
 import { supabase } from "@/integrations/supabase/client";
 import AlertModal from "./AlertModal";
-import TrendContextTab from "./TrendContextTab";
-import TrendHistoryTab from "./TrendHistoryTab";
 import TrendFeedback from "./TrendFeedback";
-import CrossPlatformTab from "./CrossPlatformTab";
-import NarrativeRadarTab from "./NarrativeRadarTab";
+
 import { CrossPlatformCluster } from "@/hooks/use-cross-platform";
 
 const platformIcons: Record<string, { emoji: string; color: string }> = {
@@ -28,11 +25,7 @@ const platformIcons: Record<string, { emoji: string; color: string }> = {
   "X (Twitter)": { emoji: "𝕏", color: "hsl(0, 0%, 15%)" },
 };
 
-const sentimentKeys = {
-  positive: { icon: "😊", color: "text-green-600", key: "positive" as const },
-  negative: { icon: "😟", color: "text-red-500", key: "negative" as const },
-  neutral: { icon: "😐", color: "text-muted-foreground", key: "neutral" as const },
-};
+
 
 const countryCodeToFlag = (code?: string) => {
   if (!code || code.length !== 2) return null;
@@ -207,15 +200,14 @@ const TimelineCard = ({
   useEffect(() => {
     setExpanded(!!forceExpanded);
   }, [forceExpanded]);
-  const [aiSummary, setAiSummary] = useState<{ summary: string; sentiment: string; impact: string } | null>(null);
-  const [summarizing, setSummarizing] = useState(false);
+  
   const pf = platformIcons[platform] || platformIcons["Google Trends"];
   const isPeak = change && parseInt(change.replace(/[^0-9]/g, "")) > 100;
   const flag = countryCodeToFlag(countryCode);
   const gradientId = `tl-${title.replace(/[^a-zA-Z0-9]/g, "").slice(0, 8)}-${Math.random().toString(36).slice(2, 5)}`;
   const [imgError, setImgError] = useState(false);
   const trigger = useMemo(() => detectTriggerFromTitle(title), [title]);
-  const [activeTab, setActiveTab] = useState<"details" | "context" | "history" | "crossplatform" | "narrative">("details");
+  
   const temporal = useMemo(() => formatTemporalBadge(firstSeenAt, peakAt, t("startedAgo"), t("peakAt")), [firstSeenAt, peakAt, lang]);
 
   // Trend Score: 0-100 based on growth, volume, sources, geography
@@ -338,25 +330,7 @@ const TimelineCard = ({
     }
   };
 
-  const handleSummarize = async (e: React.MouseEvent) => {
-    e.stopPropagation();
-    if (aiSummary || summarizing) return;
-    setSummarizing(true);
-    try {
-      const { data, error } = await supabase.functions.invoke("summarize-trend", {
-        body: { title, details, platform, volume },
-      });
-      if (error) throw error;
-      setAiSummary(data);
-    } catch (err: any) {
-      console.error("Summarize error:", err);
-      toast({ title: t("errorSummarize"), description: t("tryAgain"), variant: "destructive" });
-    } finally {
-      setSummarizing(false);
-    }
-  };
 
-  const sentiment = aiSummary ? sentimentKeys[aiSummary.sentiment as keyof typeof sentimentKeys] || sentimentKeys.neutral : null;
 
   return (
     <div className="timeline-card-wrapper">
@@ -419,47 +393,58 @@ const TimelineCard = ({
                    🔥 MULTIPLATAFORMA
                  </span>
                )}
-               {sentiment && (
-                <span className={`text-xs flex-shrink-0 ${sentiment.color}`} title={t(sentiment.key)}>
-                  {sentiment.icon}
-                </span>
-              )}
+            
             </div>
 
-            {/* Auto-narrative: always visible compact insight */}
+            {/* Auto-narrative: always visible */}
             {(() => {
               const narrativeParts: string[] = [];
+              const ch = parseFloat(change?.replace(/[^0-9.\-]/g, "") || "0");
+              if (ch > 200) narrativeParts.push(`🔥 +${Math.round(ch)}%`);
+              else if (ch > 100) narrativeParts.push(`📈 +${Math.round(ch)}%`);
               if (isMultiplatform && crossPlatformCluster) {
-                narrativeParts.push(`🔥 Em ${crossPlatformCluster.platformCount} plataformas: ${crossPlatformCluster.platforms.slice(0, 3).join(', ')}`);
+                narrativeParts.push(`📱 ${crossPlatformCluster.platformCount} plataformas`);
               }
               const countries = crossPlatformCluster?.trends
                 ? [...new Set(crossPlatformCluster.trends.map(ct => ct.countryCode).filter(Boolean))]
                 : [];
               if (countries.length > 1) {
-                const flags = countries.slice(0, 4).map(c => countryCodeToFlag(c)).filter(Boolean).join(' ');
+                const flags = countries.slice(0, 3).map(c => countryCodeToFlag(c)).filter(Boolean).join(' ');
                 narrativeParts.push(`🌍 ${countries.length} países ${flags}`);
               }
-              if (firstSeenAt) {
-                const diffH = Math.floor((Date.now() - new Date(firstSeenAt).getTime()) / 3600000);
-                if (diffH > 0 && diffH < 48) narrativeParts.push(`🕒 Em discussão há ${diffH}h`);
-              }
-              // Always show at least volume/platform context
+              if (sources && sources.length > 1) narrativeParts.push(`📰 ${sources.length} fontes`);
               if (narrativeParts.length === 0) {
                 if (volume && volume !== "0") narrativeParts.push(`📊 ${volume}`);
                 if (countryCode && countryCode !== "GL") {
                   const f = countryCodeToFlag(countryCode);
                   if (f) narrativeParts.push(`📍 ${f}`);
                 }
-                if (sources && sources.length > 1) {
-                  narrativeParts.push(`📰 ${sources.length} fontes`);
-                }
               }
-              if (narrativeParts.length === 0) return null;
+              const narrativeText = narrativeParts.length > 0 ? narrativeParts.join(' · ') : 'Em discussão';
               return (
-                <div className="mt-1 mb-1 flex flex-wrap gap-1.5">
-                  {narrativeParts.map((part, idx) => (
-                    <span key={idx} className="text-[10px] text-muted-foreground/80 bg-muted/50 px-1.5 py-0.5 rounded-full">{part}</span>
-                  ))}
+                <div className="mt-1 mb-1 text-[11px] py-1.5 px-2.5 rounded-lg bg-primary/5 border-l-2 border-primary/40 text-primary/80">
+                  {narrativeText}
+                </div>
+              );
+            })()}
+
+            {/* Auto-context: always visible */}
+            {(() => {
+              const cat = (category || "").toLowerCase().normalize("NFD").replace(/\p{Diacritic}/gu, "");
+              let ctx = "";
+              if (cat.includes("politic")) ctx = `Discussão política${countryCode ? ` (${countryCodeToFlag(countryCode) || countryCode})` : ""}, com destaque em ${sources?.slice(0, 2).join(", ") || platform}`;
+              else if (cat.includes("tecnologi") || cat.includes("technolog")) ctx = `Tópico tecnológico em alta, mencionado por ${sources?.slice(0, 2).join(", ") || platform}`;
+              else if (cat.includes("economi") || cat.includes("business") || cat.includes("negocio")) ctx = `Movimento econômico com repercussão em ${sources?.slice(0, 2).join(", ") || "mercados"}`;
+              else if (cat.includes("ciencia") || cat.includes("science")) ctx = `Avanço científico com repercussão em ${sources?.length || 1} publicações`;
+              else if (cat.includes("esporte") || cat.includes("sport")) ctx = `Evento esportivo em destaque via ${platform}`;
+              else if (cat.includes("entretenimento") || cat.includes("entertainment")) ctx = `Entretenimento em alta via ${platform}`;
+              else {
+                const diffH = firstSeenAt ? Math.floor((Date.now() - new Date(firstSeenAt).getTime()) / 3600000) : null;
+                ctx = diffH && diffH > 0 && diffH < 48 ? `Assunto em destaque nas últimas ${diffH}h` : `Em discussão via ${platform}`;
+              }
+              return (
+                <div className="mb-1 text-[10px] py-1 px-2.5 rounded-lg bg-muted/60 border-l-2 border-muted-foreground/30 text-muted-foreground">
+                  {ctx}
                 </div>
               );
             })()}
@@ -568,210 +553,79 @@ const TimelineCard = ({
         </div>
       </div>
 
-      {/* EXPANDED CONTENT — rendered OUTSIDE timeline-card to prevent layout overlap */}
+      {/* EXPANDED CONTENT — no tabs, all inline */}
       {expanded && (
         <div className="timeline-card-expanded-content">
-          {/* Tab switcher */}
-          <div className="flex gap-1 mb-3 pt-2">
-            <button
-              onClick={(e) => { e.stopPropagation(); setActiveTab("details"); }}
-              className={`px-3 py-1 rounded-full text-[10px] font-semibold transition-colors ${
-                activeTab === "details"
-                  ? "bg-primary text-primary-foreground"
-                  : "bg-muted text-muted-foreground hover:text-foreground"
-              }`}
+          {/* Details */}
+          {details && <p className="text-xs text-muted-foreground mb-3 pt-2">{details}</p>}
+
+          {sourceUrl && (
+            <a
+              href={sourceUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={(e) => e.stopPropagation()}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-medium bg-primary/10 text-primary hover:bg-primary/20 transition-colors mb-3 group"
             >
-              📋 {t("tabDetails")}
-            </button>
-            <button
-              onClick={(e) => { e.stopPropagation(); setActiveTab("context"); }}
-              className={`px-3 py-1 rounded-full text-[10px] font-semibold transition-colors ${
-                activeTab === "context"
-                  ? "bg-primary text-primary-foreground"
-                  : "bg-muted text-muted-foreground hover:text-foreground"
-              }`}
-            >
-              🔍 {t("tabContext")}
-            </button>
-             <button
-              onClick={(e) => { e.stopPropagation(); setActiveTab("history"); }}
-              className={`px-3 py-1 rounded-full text-[10px] font-semibold transition-colors ${
-                activeTab === "history"
-                  ? "bg-primary text-primary-foreground"
-                  : "bg-muted text-muted-foreground hover:text-foreground"
-              }`}
-            >
-              📊 {t("tabHistory")}
-            </button>
-            {isMultiplatform && (
-              <button
-                onClick={(e) => { e.stopPropagation(); setActiveTab("crossplatform"); }}
-                className={`px-3 py-1 rounded-full text-[10px] font-semibold transition-colors ${
-                  activeTab === "crossplatform"
-                    ? "bg-primary text-primary-foreground"
-                    : "bg-muted text-muted-foreground hover:text-foreground"
-                }`}
-              >
-                🔥 Visão Cruzada
-              </button>
+              <span className="text-sm flex-shrink-0" style={{ color: pf.color }}>{pf.emoji}</span>
+              <ExternalLink className="w-3 h-3 group-hover:translate-x-0.5 transition-transform" />
+              {t("viewSource")}
+            </a>
+          )}
+
+          {/* Platform-specific metrics */}
+          <div className="flex flex-wrap gap-2 mb-3 text-[11px]">
+            {platform === "YouTube" && likeRatio !== undefined && likeRatio > 0 && (
+              <span className="source-tag text-[10px] py-0.5 px-2 whitespace-nowrap">👍 {likeRatio}% {t("likes")}</span>
             )}
-            <button
-              onClick={(e) => { e.stopPropagation(); setActiveTab("narrative"); }}
-              className={`px-3 py-1 rounded-full text-[10px] font-semibold transition-colors ${
-                activeTab === "narrative"
-                  ? "bg-primary text-primary-foreground"
-                  : "bg-muted text-muted-foreground hover:text-foreground"
-              }`}
-            >
-              📡 Narrativas
-            </button>
+            {platform === "Reddit" && commentCount !== undefined && (
+              <span className="source-tag text-[10px] py-0.5 px-2 whitespace-nowrap">💬 {commentCount >= 1000 ? `${(commentCount / 1000).toFixed(1)}K` : commentCount} {t("comments")}</span>
+            )}
+            {platform === "Google Trends" && region && (
+              <span className="source-tag text-[10px] py-0.5 px-2 whitespace-nowrap">📍 {region}</span>
+            )}
+            {platform === "NewsAPI" && sources && sources.length > 0 && (
+              <div className="flex flex-wrap gap-1">
+                {sources.slice(0, 3).map((s) => (
+                  <span key={s} className="source-tag text-[10px] py-0.5 px-2 whitespace-nowrap">📰 {s}</span>
+                ))}
+              </div>
+            )}
           </div>
 
-          {activeTab === "details" ? (
-            <>
-              {details && <p className="text-xs text-muted-foreground mb-3">{details}</p>}
-
-              {sourceUrl && (
-                <a
-                  href={sourceUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  onClick={(e) => e.stopPropagation()}
-                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-medium bg-primary/10 text-primary hover:bg-primary/20 transition-colors mb-3 group"
-                >
-                  <span className="text-sm flex-shrink-0" style={{ color: pf.color }} title={platform}>{pf.emoji}</span>
-                  <ExternalLink className="w-3 h-3 group-hover:translate-x-0.5 transition-transform" />
-                  {platform === "YouTube" ? `${t("watchOn")} YouTube` :
-                   platform === "Reddit" ? `${t("viewOn")} Reddit` :
-                   platform === "Google Trends" ? `${t("viewOn")} Google Trends` :
-                   platform === "Bluesky" ? `${t("viewOn")} Bluesky` :
-                   platform === "Mastodon" ? `${t("viewOn")} Mastodon` :
-                   platform === "The Guardian" ? `${t("readOn")} The Guardian` :
-                   platform === "World Bank" ? `${t("viewOn")} World Bank` :
-                   platform === "IBGE" ? `${t("viewOn")} IBGE` :
-                   platform === "OpenAlex" ? `${t("viewSource")}` :
-                   t("viewSource")}
-                </a>
-              )}
-
-              {!aiSummary && (
-                <button
-                  onClick={handleSummarize}
-                  disabled={summarizing}
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-medium bg-primary/10 text-primary hover:bg-primary/20 transition-colors mb-3 disabled:opacity-50"
-                >
-                  <Sparkles className={`w-3 h-3 ${summarizing ? "animate-spin" : ""}`} />
-                  {summarizing ? t("analyzing") : `✨ ${t("summarizeAI")}`}
-                </button>
-              )}
-
-              {aiSummary && (
-                <div className="mb-3 p-2.5 rounded-lg bg-primary/5 border border-primary/10">
-                  <div className="flex items-center gap-2 mb-1.5">
-                    <Sparkles className="w-3 h-3 text-primary" />
-                    <span className="text-[10px] font-semibold text-primary uppercase tracking-wider">{t("aiSummary")}</span>
-                    {sentiment && (
-                      <span className={`text-xs ${sentiment.color} ml-auto`}>
-                        {sentiment.icon} {t(sentiment.key)}
-                      </span>
-                    )}
-                  </div>
-                  <p className="text-xs text-foreground leading-relaxed">{aiSummary.summary}</p>
-                  {aiSummary.impact && (
-                    <span className={`inline-block mt-1.5 text-[10px] font-medium px-2 py-0.5 rounded-full ${
-                      aiSummary.impact === "high" ? "bg-red-500/10 text-red-500" :
-                      aiSummary.impact === "medium" ? "bg-yellow-500/10 text-yellow-600" :
-                      "bg-green-500/10 text-green-600"
-                    }`}>
-                      {aiSummary.impact === "high" ? t("impactHigh") : aiSummary.impact === "medium" ? t("impactMedium") : t("impactLow")}
-                    </span>
-                  )}
-                </div>
-              )}
-
-              <div className="flex flex-wrap gap-2 mb-3 text-[11px]">
-                {platform === "YouTube" && likeRatio !== undefined && likeRatio > 0 && (
-                  <span className="source-tag text-[10px] py-0.5 px-2 whitespace-nowrap">👍 {likeRatio}% {t("likes")}</span>
-                )}
-                {platform === "Reddit" && commentCount !== undefined && (
-                  <span className="source-tag text-[10px] py-0.5 px-2 whitespace-nowrap">💬 {commentCount >= 1000 ? `${(commentCount / 1000).toFixed(1)}K` : commentCount} {t("comments")}</span>
-                )}
-                {platform === "Google Trends" && region && (
-                  <span className="source-tag text-[10px] py-0.5 px-2 whitespace-nowrap">📍 {region}</span>
-                )}
-                {platform === "NewsAPI" && sources && sources.length > 0 && (
-                  <div className="flex flex-wrap gap-1">
-                    {sources.slice(0, 3).map((s) => (
-                      <span key={s} className="source-tag text-[10px] py-0.5 px-2 whitespace-nowrap">📰 {s}</span>
-                    ))}
-                  </div>
-                )}
+          {/* 24h Chart */}
+          {historicalData && historicalData.length > 0 && (
+            <div className="mb-3">
+              <div className="flex items-center justify-between mb-1.5">
+                <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">
+                  {t("evolution24h")}
+                </span>
+                <span className="text-[10px] text-muted-foreground">{metricLabel}</span>
               </div>
+              <div className="h-28 -mx-1">
+                <ResponsiveContainer width="100%" height="100%">
+                  <AreaChart data={historicalData}>
+                    <defs>
+                      <linearGradient id={gradientId} x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0%" stopColor={pf.color} stopOpacity={0.2} />
+                        <stop offset="100%" stopColor={pf.color} stopOpacity={0} />
+                      </linearGradient>
+                    </defs>
+                    <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                    <XAxis dataKey="hour" tick={{ fontSize: 9, fill: "hsl(var(--muted-foreground))" }} tickLine={false} axisLine={false} interval={5} />
+                    <YAxis tick={{ fontSize: 9, fill: "hsl(var(--muted-foreground))" }} tickLine={false} axisLine={false} width={30} tickFormatter={(v) => v >= 1000 ? `${(v / 1000).toFixed(0)}K` : v} />
+                    <Tooltip
+                      contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: "8px", fontSize: 11 }}
+                      formatter={(value: number) => [value >= 1000 ? `${(value / 1000).toFixed(1)}K` : value, metricLabel || "valor"]}
+                    />
+                    <Area type="monotone" dataKey="value" stroke={pf.color} strokeWidth={1.5} fill={`url(#${gradientId})`} />
+                  </AreaChart>
+                </ResponsiveContainer>
+              </div>
+            </div>
+          )}
 
-              {historicalData && historicalData.length > 0 && (
-                <div>
-                  <div className="flex items-center justify-between mb-1.5">
-                    <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">
-                      {t("evolution24h")}
-                    </span>
-                    <span className="text-[10px] text-muted-foreground">{metricLabel}</span>
-                  </div>
-                  <div className="h-28 -mx-1">
-                    <ResponsiveContainer width="100%" height="100%">
-                      <AreaChart data={historicalData}>
-                        <defs>
-                          <linearGradient id={gradientId} x1="0" y1="0" x2="0" y2="1">
-                            <stop offset="0%" stopColor={pf.color} stopOpacity={0.2} />
-                            <stop offset="100%" stopColor={pf.color} stopOpacity={0} />
-                          </linearGradient>
-                        </defs>
-                        <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                        <XAxis dataKey="hour" tick={{ fontSize: 9, fill: "hsl(var(--muted-foreground))" }} tickLine={false} axisLine={false} interval={5} />
-                        <YAxis tick={{ fontSize: 9, fill: "hsl(var(--muted-foreground))" }} tickLine={false} axisLine={false} width={30} tickFormatter={(v) => v >= 1000 ? `${(v / 1000).toFixed(0)}K` : v} />
-                        <Tooltip
-                          contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: "8px", fontSize: 11 }}
-                          formatter={(value: number) => [value >= 1000 ? `${(value / 1000).toFixed(1)}K` : value, metricLabel || "valor"]}
-                        />
-                        <Area type="monotone" dataKey="value" stroke={pf.color} strokeWidth={1.5} fill={`url(#${gradientId})`} />
-                      </AreaChart>
-                    </ResponsiveContainer>
-                  </div>
-                </div>
-              )}
-            </>
-          ) : activeTab === "context" ? (
-            <TrendContextTab
-              title={title}
-              details={details}
-              description={description}
-              platform={platform}
-              volume={volume}
-              category={category}
-              sources={sources}
-            />
-          ) : activeTab === "history" ? (
-            <TrendHistoryTab
-              title={title}
-              platform={platform}
-              category={category}
-              platformColor={pf.color}
-            />
-          ) : activeTab === "crossplatform" ? (
-            <CrossPlatformTab cluster={crossPlatformCluster || null} />
-          ) : activeTab === "narrative" ? (
-            <NarrativeRadarTab
-              title={title}
-              details={details}
-              description={description}
-              platform={platform}
-              volume={volume}
-              category={category}
-              sources={sources}
-              thumbnail={thumbnail}
-            />
-          ) : null}
-
-          {/* Feedback buttons */}
+          {/* Feedback */}
           <TrendFeedback title={title} platform={platform} userId={userId} />
         </div>
       )}
