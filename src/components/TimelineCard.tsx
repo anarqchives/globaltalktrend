@@ -426,40 +426,55 @@ const TimelineCard = ({
               )}
             </div>
 
-            {/* Auto-narrative: always visible compact insight */}
+            {/* Auto-narrative: always visible */}
             {(() => {
               const narrativeParts: string[] = [];
+              const ch = parseFloat(change?.replace(/[^0-9.\-]/g, "") || "0");
+              if (ch > 200) narrativeParts.push(`🔥 +${Math.round(ch)}%`);
+              else if (ch > 100) narrativeParts.push(`📈 +${Math.round(ch)}%`);
               if (isMultiplatform && crossPlatformCluster) {
-                narrativeParts.push(`🔥 Em ${crossPlatformCluster.platformCount} plataformas: ${crossPlatformCluster.platforms.slice(0, 3).join(', ')}`);
+                narrativeParts.push(`📱 ${crossPlatformCluster.platformCount} plataformas`);
               }
               const countries = crossPlatformCluster?.trends
                 ? [...new Set(crossPlatformCluster.trends.map(ct => ct.countryCode).filter(Boolean))]
                 : [];
               if (countries.length > 1) {
-                const flags = countries.slice(0, 4).map(c => countryCodeToFlag(c)).filter(Boolean).join(' ');
+                const flags = countries.slice(0, 3).map(c => countryCodeToFlag(c)).filter(Boolean).join(' ');
                 narrativeParts.push(`🌍 ${countries.length} países ${flags}`);
               }
-              if (firstSeenAt) {
-                const diffH = Math.floor((Date.now() - new Date(firstSeenAt).getTime()) / 3600000);
-                if (diffH > 0 && diffH < 48) narrativeParts.push(`🕒 Em discussão há ${diffH}h`);
-              }
-              // Always show at least volume/platform context
+              if (sources && sources.length > 1) narrativeParts.push(`📰 ${sources.length} fontes`);
               if (narrativeParts.length === 0) {
                 if (volume && volume !== "0") narrativeParts.push(`📊 ${volume}`);
                 if (countryCode && countryCode !== "GL") {
                   const f = countryCodeToFlag(countryCode);
                   if (f) narrativeParts.push(`📍 ${f}`);
                 }
-                if (sources && sources.length > 1) {
-                  narrativeParts.push(`📰 ${sources.length} fontes`);
-                }
               }
-              if (narrativeParts.length === 0) return null;
+              const narrativeText = narrativeParts.length > 0 ? narrativeParts.join(' · ') : 'Em discussão';
               return (
-                <div className="mt-1 mb-1 flex flex-wrap gap-1.5">
-                  {narrativeParts.map((part, idx) => (
-                    <span key={idx} className="text-[10px] text-muted-foreground/80 bg-muted/50 px-1.5 py-0.5 rounded-full">{part}</span>
-                  ))}
+                <div className="mt-1 mb-1 text-[11px] py-1.5 px-2.5 rounded-lg bg-primary/5 border-l-2 border-primary/40 text-primary/80">
+                  {narrativeText}
+                </div>
+              );
+            })()}
+
+            {/* Auto-context: always visible */}
+            {(() => {
+              const cat = (category || "").toLowerCase().normalize("NFD").replace(/\p{Diacritic}/gu, "");
+              let ctx = "";
+              if (cat.includes("politic")) ctx = `Discussão política${countryCode ? ` (${countryCodeToFlag(countryCode) || countryCode})` : ""}, com destaque em ${sources?.slice(0, 2).join(", ") || platform}`;
+              else if (cat.includes("tecnologi") || cat.includes("technolog")) ctx = `Tópico tecnológico em alta, mencionado por ${sources?.slice(0, 2).join(", ") || platform}`;
+              else if (cat.includes("economi") || cat.includes("business") || cat.includes("negocio")) ctx = `Movimento econômico com repercussão em ${sources?.slice(0, 2).join(", ") || "mercados"}`;
+              else if (cat.includes("ciencia") || cat.includes("science")) ctx = `Avanço científico com repercussão em ${sources?.length || 1} publicações`;
+              else if (cat.includes("esporte") || cat.includes("sport")) ctx = `Evento esportivo em destaque via ${platform}`;
+              else if (cat.includes("entretenimento") || cat.includes("entertainment")) ctx = `Entretenimento em alta via ${platform}`;
+              else {
+                const diffH = firstSeenAt ? Math.floor((Date.now() - new Date(firstSeenAt).getTime()) / 3600000) : null;
+                ctx = diffH && diffH > 0 && diffH < 48 ? `Assunto em destaque nas últimas ${diffH}h` : `Em discussão via ${platform}`;
+              }
+              return (
+                <div className="mb-1 text-[10px] py-1 px-2.5 rounded-lg bg-muted/60 border-l-2 border-muted-foreground/30 text-muted-foreground">
+                  {ctx}
                 </div>
               );
             })()}
