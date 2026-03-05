@@ -63,8 +63,11 @@ function needsTranslation(trend: TrendCardProps, lang: string): boolean {
   return true;
 }
 
+// Extended type that preserves original title for cross-platform matching
+export type TranslatedTrendCardProps = TrendCardProps & { _originalTitle?: string; translated?: boolean };
+
 export function useTranslatedTrends(trends: TrendCardProps[], lang: string) {
-  const [translated, setTranslated] = useState<TrendCardProps[]>(trends);
+  const [translated, setTranslated] = useState<TranslatedTrendCardProps[]>(trends);
   const [isTranslating, setIsTranslating] = useState(false);
   const cacheRef = useRef<TranslationCache>(loadCache());
   const lastLangRef = useRef(lang);
@@ -118,22 +121,23 @@ export function useTranslatedTrends(trends: TrendCardProps[], lang: string) {
     lastLangRef.current = lang;
     lastTrendsKeyRef.current = trendsKey;
 
-    // Step 1: Apply cached translations immediately
+    // Step 1: Apply cached translations immediately, preserving original title
     const cache = cacheRef.current;
-    const withCached = trends.map((t) => {
-      if (!needsTranslation(t, lang)) return t;
+    const withCached: TranslatedTrendCardProps[] = trends.map((t) => {
+      if (!needsTranslation(t, lang)) return { ...t, _originalTitle: t.title };
       const key = getCacheKey(t.title, lang);
       const cached = cache[key];
       if (cached && Date.now() - cached.ts < CACHE_TTL) {
         return {
           ...t,
+          _originalTitle: t.title,
           title: cached.title,
           details: cached.details || t.details,
           description: cached.details || t.description,
           translated: true,
-        } as TrendCardProps & { translated?: boolean };
+        };
       }
-      return t;
+      return { ...t, _originalTitle: t.title };
     });
     setTranslated(withCached);
 
@@ -175,7 +179,7 @@ export function useTranslatedTrends(trends: TrendCardProps[], lang: string) {
                 details: tr.details || t.details,
                 description: tr.details || t.description,
                 translated: true,
-              } as TrendCardProps & { translated?: boolean };
+              };
             }
             return t;
           });
