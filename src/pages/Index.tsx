@@ -362,7 +362,7 @@ const Index = () => {
       )}
 
       {(loading && isFirstLoad && filteredTrends.length === 0)
-        ? Array.from({ length: 6 }).map((_, i) => <TrendCardSkeleton key={i} />)
+        ? Array.from({ length: 6 }).map((_, i) => <TrendCardSkeleton key={i} index={i} />)
         : (() => {
             const renderCard = (trend: TrendCardProps, i: number) => {
               const trendId = `${trend.platform}-${trend.title.slice(0, 20)}`;
