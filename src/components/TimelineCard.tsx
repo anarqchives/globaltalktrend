@@ -470,6 +470,12 @@ const TimelineCard = ({
                 <p className="text-sm font-medium text-foreground line-clamp-2 leading-snug">
                   {title}
                 </p>
+                <div className="flex items-center gap-1.5 mt-0.5">
+                  <span className={`inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full text-[9px] font-bold ${trendScoreLabel.cls}`}>
+                    {trendScoreLabel.emoji} {trendScore}
+                  </span>
+                  <span className="text-[9px] text-muted-foreground">{trendScoreLabel.text}</span>
+                </div>
                 {displayDescription && (
                   <p className="text-[11px] text-muted-foreground/80 line-clamp-2 leading-relaxed mt-0.5">
                     {displayDescription}
