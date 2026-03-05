@@ -55,7 +55,15 @@ const SOURCE_LANGS: Record<string, string[]> = {
   en: ["Hacker News", "GitHub", "Stack Overflow", "The Guardian", "arXiv", "PubMed", "OpenAlex", "Crossref", "NOAA", "GDELT"],
 };
 
+// Simple heuristic: detect if text contains non-Latin scripts (Cyrillic, CJK, Arabic, etc.)
+function containsNonLatinScript(text: string): boolean {
+  return /[\u0400-\u04FF\u3000-\u9FFF\uAC00-\uD7AF\u0600-\u06FF\u0900-\u097F]/.test(text);
+}
+
 function needsTranslation(trend: TrendCardProps, lang: string): boolean {
+  // ALWAYS translate content with non-Latin characters when target is Portuguese
+  if (lang === "pt" && containsNonLatinScript(trend.title || "")) return true;
+  
   // If lang matches the likely source language of the platform, skip
   for (const [sourceLang, platforms] of Object.entries(SOURCE_LANGS)) {
     if (lang === sourceLang && platforms.includes(trend.platform)) return false;
