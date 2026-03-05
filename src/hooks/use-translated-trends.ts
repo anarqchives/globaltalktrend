@@ -189,5 +189,5 @@ export function useTranslatedTrends(trends: TrendCardProps[], lang: string) {
     })();
   }, [trends, lang, translateBatch]);
 
-  return { translatedTrends: translated, isTranslating };
+  return { translatedTrends: translated as TranslatedTrendCardProps[], isTranslating };
 }
