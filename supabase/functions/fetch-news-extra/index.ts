@@ -282,14 +282,9 @@ const RSS_FEEDS = [
   { url: "https://www.eluniversal.com.mx/arc/outboundfeeds/rss/", name: "El Universal MX", icon: "🇲🇽", country: "MX", category: "Notícias" },
   { url: "https://www.eltiempo.com/rss.xml", name: "El Tiempo", icon: "🇨🇴", country: "CO", category: "Notícias" },
   { url: "https://elcomercio.pe/feed", name: "El Comercio", icon: "🇵🇪", country: "PE", category: "Notícias" },
-  // Chile
   { url: "https://www.elmercurio.com/Home/FeedRss", name: "El Mercurio", icon: "🇨🇱", country: "CL", category: "Notícias" },
-  // Venezuela
   { url: "https://www.telesurtv.net/news/feed", name: "Telesur", icon: "🇻🇪", country: "VE", category: "Notícias" },
-  { url: "https://www.eluniversal.com/venezuela/feed", name: "El Universal VE", icon: "🇻🇪", country: "VE", category: "Notícias" },
   { url: "https://efe.com/feed", name: "EFE News", icon: "🌐", country: "ES", category: "Notícias" },
-  { url: "https://www.prensa-latina.cu/feed", name: "Prensa Latina", icon: "🇨🇺", country: "CU", category: "Notícias" },
-  // Cobertura internacional em espanhol
   { url: "https://www.france24.com/es/rss", name: "France 24 ES", icon: "🇫🇷", country: "FR", category: "Notícias" },
   { url: "https://rss.dw.com/rdf/rss-es-all", name: "DW Español", icon: "🇩🇪", country: "DE", category: "Notícias" },
 
@@ -306,14 +301,31 @@ const RSS_FEEDS = [
   { url: "https://www.lemonde.fr/rss/une.xml", name: "Le Monde", icon: "🇫🇷", country: "FR", category: "Notícias" },
   { url: "https://www.lefigaro.fr/rss/figaro_actualites.xml", name: "Le Figaro", icon: "🇫🇷", country: "FR", category: "Notícias" },
   { url: "https://www.france24.com/fr/rss", name: "France 24", icon: "🇫🇷", country: "FR", category: "Notícias" },
+  { url: "https://www.liberation.fr/rss", name: "Libération", icon: "🇫🇷", country: "FR", category: "Notícias" },
+  { url: "https://www.lesechos.fr/rss", name: "Les Echos", icon: "🇫🇷", country: "FR", category: "Negócios/Finanças" },
   { url: "https://www.repubblica.it/rss", name: "La Repubblica", icon: "🇮🇹", country: "IT", category: "Notícias" },
   { url: "https://xml2.corrieredellasera.it/rss/homepage.xml", name: "Corriere della Sera", icon: "🇮🇹", country: "IT", category: "Notícias" },
+  { url: "https://www.lastampa.it/rss", name: "La Stampa", icon: "🇮🇹", country: "IT", category: "Notícias" },
+  { url: "https://www.ilsole24ore.com/rss", name: "Il Sole 24 Ore", icon: "🇮🇹", country: "IT", category: "Negócios/Finanças" },
+  { url: "https://www.ansa.it/ansalatina/noticias/ansalatina_rss.xml", name: "ANSA", icon: "🇮🇹", country: "IT", category: "Notícias" },
   { url: "https://feeds.elpais.com/mrss-s/pages/ep/site/elpais.com/portada", name: "El País", icon: "🇪🇸", country: "ES", category: "Notícias" },
   { url: "https://feeds.elpais.com/mrss-s/pages/ep/site/brasil.elpais.com/portada", name: "El País Brasil", icon: "🇧🇷", country: "BR", category: "Notícias" },
   { url: "https://e00-elmundo.uecdn.es/elmundo/rss/portada.xml", name: "El Mundo", icon: "🇪🇸", country: "ES", category: "Notícias" },
   { url: "https://feeds.feedburner.com/PublicoRSS", name: "Público", icon: "🇵🇹", country: "PT", category: "Notícias" },
   { url: "https://expresso.pt/feed", name: "Expresso", icon: "🇵🇹", country: "PT", category: "Notícias" },
   { url: "https://nltimes.nl/feed", name: "NL Times", icon: "🇳🇱", country: "NL", category: "Notícias" },
+  { url: "https://nos.nl/feeds", name: "NOS", icon: "🇳🇱", country: "NL", category: "Notícias" },
+  { url: "https://www.thelocal.se/rss", name: "The Local SE", icon: "🇸🇪", country: "SE", category: "Notícias" },
+  { url: "https://norwaytoday.info/feed", name: "Norway Today", icon: "🇳🇴", country: "NO", category: "Notícias" },
+  { url: "https://www.nrk.no/toppsaker.rss", name: "NRK", icon: "🇳🇴", country: "NO", category: "Notícias" },
+  { url: "https://www.thefirstnews.com/rss", name: "The First News", icon: "🇵🇱", country: "PL", category: "Notícias" },
+  { url: "https://polandin.com/feed", name: "Poland In", icon: "🇵🇱", country: "PL", category: "Notícias" },
+  { url: "https://www.kyivpost.com/feed", name: "Kyiv Post", icon: "🇺🇦", country: "UA", category: "Notícias" },
+  { url: "https://www.ukrinform.net/rss", name: "Ukrinform", icon: "🇺🇦", country: "UA", category: "Notícias" },
+  { url: "https://greekreporter.com/feed", name: "Greek Reporter", icon: "🇬🇷", country: "GR", category: "Notícias" },
+  { url: "https://www.ekathimerini.com/rss", name: "Kathimerini", icon: "🇬🇷", country: "GR", category: "Notícias" },
+  { url: "https://www.zeit.de/index.rss", name: "Die Zeit", icon: "🇩🇪", country: "DE", category: "Notícias" },
+  { url: "https://www.tagesschau.de/xml/rss2", name: "Tagesschau", icon: "🇩🇪", country: "DE", category: "Notícias" },
 
   // ── ÁSIA ──
   { url: "https://www3.nhk.or.jp/rss/news/cat0.xml", name: "NHK", icon: "🇯🇵", country: "JP", category: "Notícias" },
@@ -321,12 +333,38 @@ const RSS_FEEDS = [
   { url: "https://www.scmp.com/rss/4/feed", name: "South China Morning Post", icon: "🇨🇳", country: "CN", category: "Notícias" },
   { url: "http://www.xinhuanet.com/english/rss/worldrss.xml", name: "Xinhua", icon: "🇨🇳", country: "CN", category: "Notícias" },
   { url: "https://www.chinadaily.com.cn/rss/world_rss.xml", name: "China Daily", icon: "🇨🇳", country: "CN", category: "Notícias" },
+  { url: "https://www.globaltimes.cn/rss", name: "Global Times", icon: "🇨🇳", country: "CN", category: "Notícias" },
   { url: "https://timesofindia.indiatimes.com/rssfeedstopstories.cms", name: "Times of India", icon: "🇮🇳", country: "IN", category: "Notícias" },
   { url: "https://www.thehindu.com/feeder/default.rss", name: "The Hindu", icon: "🇮🇳", country: "IN", category: "Notícias" },
   { url: "https://www.ndtv.com/rss/top-stories", name: "NDTV", icon: "🇮🇳", country: "IN", category: "Notícias" },
+  { url: "https://indianexpress.com/feed", name: "Indian Express", icon: "🇮🇳", country: "IN", category: "Notícias" },
+  { url: "https://www.hindustantimes.com/feeds/rss/india-news/rssfeed.xml", name: "Hindustan Times", icon: "🇮🇳", country: "IN", category: "Notícias" },
   { url: "http://www.koreaherald.com/rss_xml.php", name: "Korea Herald", icon: "🇰🇷", country: "KR", category: "Notícias" },
+  { url: "https://en.yna.co.kr/RSS/news.xml", name: "Yonhap News", icon: "🇰🇷", country: "KR", category: "Notícias" },
+  { url: "https://www.koreatimes.co.kr/www/rss/rss.xml", name: "Korea Times", icon: "🇰🇷", country: "KR", category: "Notícias" },
   { url: "https://www.straitstimes.com/news/asia/rss.xml", name: "The Straits Times", icon: "🇸🇬", country: "SG", category: "Notícias" },
+  { url: "https://www.channelnewsasia.com/rss", name: "Channel News Asia", icon: "🇸🇬", country: "SG", category: "Notícias" },
+  { url: "https://www.todayonline.com/rss", name: "Today Online", icon: "🇸🇬", country: "SG", category: "Notícias" },
   { url: "https://www.thejakartapost.com/rss", name: "The Jakarta Post", icon: "🇮🇩", country: "ID", category: "Notícias" },
+  { url: "https://en.antaranews.com/rss", name: "Antara News", icon: "🇮🇩", country: "ID", category: "Notícias" },
+  { url: "https://www.dailysabah.com/rss", name: "Daily Sabah", icon: "🇹🇷", country: "TR", category: "Notícias" },
+  { url: "https://www.hurriyetdailynews.com/rss", name: "Hurriyet Daily News", icon: "🇹🇷", country: "TR", category: "Notícias" },
+
+  // ── PALESTINA ──
+  { url: "https://english.wafa.ps/rss", name: "WAFA News", icon: "🇵🇸", country: "PS", category: "Notícias" },
+  { url: "https://www.palestinechronicle.com/feed", name: "Palestine Chronicle", icon: "🇵🇸", country: "PS", category: "Notícias" },
+  { url: "https://electronicintifada.net/rss.xml", name: "Electronic Intifada", icon: "🇵🇸", country: "PS", category: "Notícias" },
+  { url: "https://www.middleeastmonitor.com/feed", name: "Middle East Monitor", icon: "🇵🇸", country: "PS", category: "Notícias" },
+  { url: "https://www.maannews.net/rss", name: "Ma'an News", icon: "🇵🇸", country: "PS", category: "Notícias" },
+
+  // ── ISRAEL ──
+  { url: "https://www.haaretz.com/cmlink/haaretz-en-rss-1.0", name: "Haaretz", icon: "🇮🇱", country: "IL", category: "Notícias" },
+  { url: "https://www.jpost.com/Rss/RssFeedsHeadlines.aspx", name: "The Jerusalem Post", icon: "🇮🇱", country: "IL", category: "Notícias" },
+  { url: "https://www.ynetnews.com/feed", name: "Ynetnews", icon: "🇮🇱", country: "IL", category: "Notícias" },
+  { url: "https://www.timesofisrael.com/feed", name: "Times of Israel", icon: "🇮🇱", country: "IL", category: "Notícias" },
+
+  // ── ORIENTE MÉDIO ──
+  { url: "https://www.aljazeera.com/xml/rss/all.xml", name: "Al Jazeera", icon: "🇶🇦", country: "QA", category: "Notícias" },
 
   // ── RÚSSIA / EURÁSIA ──
   { url: "https://tass.com/rss/v2.xml", name: "TASS", icon: "🇷🇺", country: "RU", category: "Notícias" },
@@ -334,14 +372,34 @@ const RSS_FEEDS = [
   { url: "https://www.themoscowtimes.com/rss/news", name: "Moscow Times", icon: "🇷🇺", country: "RU", category: "Notícias" },
   { url: "https://www.rbth.com/rss", name: "Russia Beyond", icon: "🇷🇺", country: "RU", category: "Notícias" },
 
-  // ── ORIENTE MÉDIO & ÁFRICA ──
-  { url: "https://www.haaretz.com/cmlink/haaretz-en-rss-1.0", name: "Haaretz", icon: "🇮🇱", country: "IL", category: "Notícias" },
-  { url: "https://www.jpost.com/Rss/RssFeedsHeadlines.aspx", name: "The Jerusalem Post", icon: "🇮🇱", country: "IL", category: "Notícias" },
-  { url: "https://www.aljazeera.com/xml/rss/all.xml", name: "Al Jazeera", icon: "🇶🇦", country: "QA", category: "Notícias" },
-  { url: "http://english.ahram.org.eg/rss.aspx", name: "Ahram Online", icon: "🇪🇬", country: "EG", category: "Notícias" },
+  // ── ÁFRICA ──
   { url: "https://www.news24.com/rss", name: "News24", icon: "🇿🇦", country: "ZA", category: "Notícias" },
+  { url: "https://www.timeslive.co.za/feed", name: "Times Live", icon: "🇿🇦", country: "ZA", category: "Notícias" },
+  { url: "https://www.iol.co.za/rss", name: "IOL", icon: "🇿🇦", country: "ZA", category: "Notícias" },
+  { url: "https://mg.co.za/feed", name: "Mail & Guardian", icon: "🇿🇦", country: "ZA", category: "Notícias" },
+  { url: "https://www.sabcnews.com/feed", name: "SABC News", icon: "🇿🇦", country: "ZA", category: "Notícias" },
   { url: "https://www.premiumtimesng.com/feed", name: "Premium Times", icon: "🇳🇬", country: "NG", category: "Notícias" },
+  { url: "https://www.vanguardngr.com/feed", name: "Vanguard", icon: "🇳🇬", country: "NG", category: "Notícias" },
+  { url: "https://guardian.ng/feed", name: "Guardian Nigeria", icon: "🇳🇬", country: "NG", category: "Notícias" },
+  { url: "https://punchng.com/feed", name: "Punch", icon: "🇳🇬", country: "NG", category: "Notícias" },
   { url: "https://www.nation.co.ke/feed", name: "Daily Nation", icon: "🇰🇪", country: "KE", category: "Notícias" },
+  { url: "https://www.standardmedia.co.ke/rss", name: "The Standard KE", icon: "🇰🇪", country: "KE", category: "Notícias" },
+  { url: "https://www.citizen.digital/rss", name: "Citizen Digital", icon: "🇰🇪", country: "KE", category: "Notícias" },
+  { url: "http://english.ahram.org.eg/rss.aspx", name: "Ahram Online", icon: "🇪🇬", country: "EG", category: "Notícias" },
+  { url: "https://egyptindependent.com/feed", name: "Egypt Independent", icon: "🇪🇬", country: "EG", category: "Notícias" },
+  { url: "https://www.dailynewsegypt.com/feed", name: "Daily News Egypt", icon: "🇪🇬", country: "EG", category: "Notícias" },
+  { url: "https://www.moroccoworldnews.com/feed", name: "Morocco World News", icon: "🇲🇦", country: "MA", category: "Notícias" },
+  { url: "https://www.aps.dz/en/rss", name: "Algeria Press Service", icon: "🇩🇿", country: "DZ", category: "Notícias" },
+  { url: "https://inforpress.cv/rss", name: "Inforpress", icon: "🇨🇻", country: "CV", category: "Notícias" },
+
+  // ── OCEANIA ──
+  { url: "https://www.abc.net.au/news/feed/51120/rss.xml", name: "ABC News AU", icon: "🇦🇺", country: "AU", category: "Notícias" },
+  { url: "https://www.theguardian.com/australia-news/rss", name: "Guardian Australia", icon: "🇦🇺", country: "AU", category: "Notícias" },
+  { url: "https://www.smh.com.au/rss/feed.xml", name: "Sydney Morning Herald", icon: "🇦🇺", country: "AU", category: "Notícias" },
+  { url: "https://www.sbs.com.au/news/feed", name: "SBS News", icon: "🇦🇺", country: "AU", category: "Notícias" },
+  { url: "https://www.nzherald.co.nz/arc/outboundfeeds/rss/curated/78/?outputType=xml", name: "NZ Herald", icon: "🇳🇿", country: "NZ", category: "Notícias" },
+  { url: "https://www.stuff.co.nz/rss", name: "Stuff NZ", icon: "🇳🇿", country: "NZ", category: "Notícias" },
+  { url: "https://www.rnz.co.nz/rss/national.xml", name: "RNZ", icon: "🇳🇿", country: "NZ", category: "Notícias" },
 
   // ── AGREGADORES GLOBAIS ──
   { url: "https://feeds.reuters.com/reuters/worldnews", name: "Reuters", icon: "🌐", country: "US", category: "Política" },

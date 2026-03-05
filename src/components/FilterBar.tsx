@@ -120,16 +120,19 @@ const FilterBar = ({ filters, onChange, onForceReset }: FilterBarProps) => {
     { value: "Este mês", label: t("thisMonth") },
   ];
 
+  const healthLabel: Record<string, string> = { pt: "Saúde", en: "Health", es: "Salud", fr: "Santé", de: "Gesundheit", it: "Salute", zh: "健康", ja: "健康", ko: "건강", ar: "صحة", hi: "स्वास्थ्य", ru: "Здоровье" };
+  const { lang: currentLang } = useLanguage();
+
   const categoryOptions = [
     { value: "Todas", label: t("all") },
     { value: "Política", label: t("politics") },
-    { value: "Entretenimento", label: t("entertainment") },
+    { value: "Economia", label: t("business") },
     { value: "Tecnologia", label: t("technology") },
-    { value: "Esportes", label: t("sports") },
-    { value: "Cultura", label: t("culture") },
-    { value: "Negócios/Finanças", label: t("business") },
     { value: "Ciência", label: t("science") },
-    { value: "Saúde", label: t("science") === "Science" ? "Health" : "Saúde" },
+    { value: "Saúde", label: healthLabel[currentLang] || "Saúde" },
+    { value: "Esportes", label: t("sports") },
+    { value: "Entretenimento", label: t("entertainment") },
+    { value: "Cultura", label: t("culture") },
   ];
 
   const typeOptions = [
@@ -202,15 +205,6 @@ const FilterBar = ({ filters, onChange, onForceReset }: FilterBarProps) => {
           <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 w-3 h-3 text-muted-foreground pointer-events-none" />
         </div>
 
-        <button
-          onClick={() => onForceReset?.()}
-          className="flex items-center gap-1 px-3 py-2 rounded-lg text-[12px] font-medium text-primary hover:bg-muted/50 transition-colors flex-shrink-0 focus:outline-none"
-          title="Reset forçado"
-        >
-          <RotateCcw className="w-3 h-3" />
-          Reset forçado
-        </button>
-
         {isFiltered && (
           <button
             onClick={() => onChange(defaultFilters)}
@@ -221,6 +215,14 @@ const FilterBar = ({ filters, onChange, onForceReset }: FilterBarProps) => {
             Reset
           </button>
         )}
+
+        <button
+          onClick={() => onForceReset?.()}
+          className="flex items-center gap-1 px-3 py-2 rounded-lg text-[12px] font-medium text-muted-foreground hover:bg-muted/50 transition-colors flex-shrink-0 focus:outline-none"
+          title="Reset forçado"
+        >
+          <RotateCcw className="w-3 h-3" />
+        </button>
 
         <div className="flex items-center gap-1.5 ml-auto flex-shrink-0 whitespace-nowrap">
           <span className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ background: "hsl(142, 72%, 45%)" }} />
