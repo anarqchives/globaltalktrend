@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
-import { RotateCcw, ChevronDown, Star } from "lucide-react";
+import { RotateCcw, ChevronDown, Bell } from "lucide-react";
 import { useLanguage, LangCode } from "@/contexts/LanguageContext";
 const defaultFilters: FilterState = {
   country: "global",
