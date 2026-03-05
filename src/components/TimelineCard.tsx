@@ -7,10 +7,7 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { TrendCardProps } from "./TrendCard";
 import { supabase } from "@/integrations/supabase/client";
 import AlertModal from "./AlertModal";
-import TrendContextTab from "./TrendContextTab";
-import TrendHistoryTab from "./TrendHistoryTab";
 import TrendFeedback from "./TrendFeedback";
-import CrossPlatformTab from "./CrossPlatformTab";
 import NarrativeRadarTab from "./NarrativeRadarTab";
 import { CrossPlatformCluster } from "@/hooks/use-cross-platform";
 
@@ -215,7 +212,7 @@ const TimelineCard = ({
   const gradientId = `tl-${title.replace(/[^a-zA-Z0-9]/g, "").slice(0, 8)}-${Math.random().toString(36).slice(2, 5)}`;
   const [imgError, setImgError] = useState(false);
   const trigger = useMemo(() => detectTriggerFromTitle(title), [title]);
-  const [activeTab, setActiveTab] = useState<"details" | "context" | "history" | "crossplatform" | "narrative">("details");
+  
   const temporal = useMemo(() => formatTemporalBadge(firstSeenAt, peakAt, t("startedAgo"), t("peakAt")), [firstSeenAt, peakAt, lang]);
 
   // Trend Score: 0-100 based on growth, volume, sources, geography
