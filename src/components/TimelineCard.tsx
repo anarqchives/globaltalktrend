@@ -149,21 +149,24 @@ const TimelineCard = ({
   const trigger = useMemo(() => detectTriggerFromTitle(title), [title]);
   const signalType = useMemo(() => detectSignalType(platform, change), [platform, change]);
 
-  // TVI Score: 0-100
-  const trendScore = useMemo(() => {
-    let score = 0;
+  // TVI Score: 0-100 with decomposition
+  const tviBreakdown = useMemo(() => {
     const ch = Math.abs(parseFloat(change?.replace(/[^0-9.\-]/g, "") || "0"));
-    score += Math.min(ch / 10, 30);
+    const velocity = Math.min(Math.round(ch / 10), 30); // 0-30
     const volStr = (volume || "0").toLowerCase();
     let vol = parseFloat(volStr.replace(/[^0-9.]/g, "")) || 0;
     if (volStr.includes("m")) vol *= 1_000_000;
     else if (volStr.includes("k")) vol *= 1_000;
-    score += Math.min(vol / 5000, 30);
-    score += Math.min((sources?.length || 1) * 5, 20);
-    if (isMultiplatform) score += 15;
-    if (crossPlatformCluster && crossPlatformCluster.platformCount > 2) score += 5;
-    return Math.min(Math.round(score), 100);
+    const volumeScore = Math.min(Math.round(vol / 5000), 30); // 0-30
+    const sourcesScore = Math.min((sources?.length || 1) * 5, 20); // 0-20
+    let geoScore = 0;
+    if (isMultiplatform) geoScore += 15;
+    if (crossPlatformCluster && crossPlatformCluster.platformCount > 2) geoScore += 5;
+    geoScore = Math.min(geoScore, 20); // 0-20
+    const total = Math.min(velocity + volumeScore + sourcesScore + geoScore, 100);
+    return { velocity, volume: volumeScore, sources: sourcesScore, geography: geoScore, total };
   }, [change, volume, sources, isMultiplatform, crossPlatformCluster]);
+  const trendScore = tviBreakdown.total;
 
   const trendScoreLabel = trendScore >= 80
     ? { emoji: "🔥", text: "Explosive", cls: "border-destructive text-destructive bg-destructive/10" }
