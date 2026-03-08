@@ -1,16 +1,14 @@
 import { useState, useMemo, useEffect } from "react";
 import { motion } from "framer-motion";
-import { ChevronDown, ChevronUp, Link2, Bell, ExternalLink, Shield, CheckCircle2, FlaskConical, Globe, Newspaper, Bookmark, Flag } from "lucide-react";
+import { ChevronDown, ChevronUp, Link2, Bell, ExternalLink, Shield, CheckCircle2, FlaskConical, Globe, Newspaper, Bookmark, Flag, Share2, Eye, TrendingUp, Radio, Clock, BarChart3 } from "lucide-react";
 import { AreaChart, Area, ResponsiveContainer, XAxis, YAxis, Tooltip, CartesianGrid } from "recharts";
 import { toast } from "@/hooks/use-toast";
 import { useLanguage } from "@/contexts/LanguageContext";
-// UserMode removed
 import { TrendCardProps } from "./TrendCard";
 import { supabase } from "@/integrations/supabase/client";
 import AlertModal from "./AlertModal";
 import TrendFeedback from "./TrendFeedback";
 import PropagationTimeline from "./PropagationTimeline";
-
 import { CrossPlatformCluster } from "@/hooks/use-cross-platform";
 
 const platformIcons: Record<string, { emoji: string; color: string }> = {
@@ -27,8 +25,6 @@ const platformIcons: Record<string, { emoji: string; color: string }> = {
   "X (Twitter)": { emoji: "𝕏", color: "hsl(0, 0%, 15%)" },
 };
 
-
-
 const countryCodeToFlag = (code?: string) => {
   if (!code || code.length !== 2) return null;
   return String.fromCodePoint(...[...code.toUpperCase()].map(c => 0x1F1E6 + c.charCodeAt(0) - 65));
@@ -43,7 +39,6 @@ const trustBadgeKeys: Record<string, { labelKey: string; icon: React.ReactNode; 
   hot: { labelKey: "hotTopic", icon: <span className="text-[9px]">🔥</span>, className: "bg-red-100/80 text-red-700 dark:bg-red-500/15 dark:text-red-400" },
 };
 
-// Client-side quick trigger detection (before AI analysis)
 const triggerPatterns: { type: string; emoji: string; labelKey: string; keywords: string[] }[] = [
   { type: "launch", emoji: "🎬", labelKey: "launch", keywords: ["trailer", "estreia", "lançamento", "novo", "nova", "release", "launch", "premiere", "debut"] },
   { type: "politics", emoji: "🗳️", labelKey: "politics", keywords: ["eleição", "voto", "governo", "presidente", "congresso", "election", "vote", "government", "president", "congress", "trump", "biden"] },
@@ -73,7 +68,7 @@ interface TimelineCardProps extends TrendCardProps {
   forceExpanded?: boolean;
   isMultiplatform?: boolean;
   crossPlatformCluster?: CrossPlatformCluster | null;
-  onSaveCard?: (card: { title: string; platform: string; category?: string; country_code?: string; source_url?: string; thumbnail?: string; description?: string; volume?: string; change?: string; changePositive?: boolean; historicalData?: any; platformColor?: string; sources?: string[] }) => void;
+  onSaveCard?: (card: any) => void;
 }
 
 const normalizeText = (value: string) => value.toLowerCase().normalize("NFD").replace(/\p{Diacritic}/gu, "").trim();
@@ -81,178 +76,102 @@ const normalizeText = (value: string) => value.toLowerCase().normalize("NFD").re
 const localizeCategory = (category: string, t: (key: any) => string) => {
   const normalized = normalizeText(category || "");
   const map: Record<string, string> = {
-    politica: "politics",
-    politics: "politics",
-    entretenimento: "entertainment",
-    entertainment: "entertainment",
-    tecnologia: "technology",
-    technology: "technology",
-    esportes: "sports",
-    sports: "sports",
-    cultura: "culture",
-    culture: "culture",
-    negocios: "business",
-    "negocios/financas": "business",
-    business: "business",
-    ciencia: "science",
-    science: "science",
-    geral: "general",
-    general: "general",
-    social: "socialMedia",
+    politica: "politics", politics: "politics", entretenimento: "entertainment", entertainment: "entertainment",
+    tecnologia: "technology", technology: "technology", esportes: "sports", sports: "sports",
+    cultura: "culture", culture: "culture", negocios: "business", "negocios/financas": "business", business: "business",
+    ciencia: "science", science: "science", geral: "general", general: "general", social: "socialMedia",
   };
   const key = map[normalized];
   return key ? t(key as any) : category;
 };
 
+const relativeTimeFormats: Record<string, { now: string; min: string; h: string; d: string }> = {
+  pt: { now: "agora", min: "há {n}min", h: "há {n}h", d: "há {n}d" },
+  en: { now: "now", min: "{n}min ago", h: "{n}h ago", d: "{n}d ago" },
+  es: { now: "ahora", min: "hace {n}min", h: "hace {n}h", d: "hace {n}d" },
+  fr: { now: "maintenant", min: "il y a {n}min", h: "il y a {n}h", d: "il y a {n}j" },
+  de: { now: "jetzt", min: "vor {n}min", h: "vor {n}h", d: "vor {n}T" },
+  it: { now: "adesso", min: "{n}min fa", h: "{n}h fa", d: "{n}g fa" },
+  zh: { now: "刚刚", min: "{n}分钟前", h: "{n}小时前", d: "{n}天前" },
+  ja: { now: "たった今", min: "{n}分前", h: "{n}時間前", d: "{n}日前" },
+  ko: { now: "방금", min: "{n}분 전", h: "{n}시간 전", d: "{n}일 전" },
+  ar: { now: "الآن", min: "منذ {n} دقيقة", h: "منذ {n} ساعة", d: "منذ {n} يوم" },
+  hi: { now: "अभी", min: "{n} मिनट पहले", h: "{n} घंटे पहले", d: "{n} दिन पहले" },
+  ru: { now: "сейчас", min: "{n} мин назад", h: "{n}ч назад", d: "{n}д назад" },
+};
+
 function localizeFallbackTime(timeValue: string, lang: string): string {
   if (!timeValue) return timeValue;
   const lower = timeValue.toLowerCase().trim();
-  const relativeFormats: Record<string, { now: string; min: string; h: string; d: string }> = {
-    pt: { now: "agora", min: "há {n}min", h: "há {n}h", d: "há {n}d" },
-    en: { now: "now", min: "{n}min ago", h: "{n}h ago", d: "{n}d ago" },
-    es: { now: "ahora", min: "hace {n}min", h: "hace {n}h", d: "hace {n}d" },
-    fr: { now: "maintenant", min: "il y a {n}min", h: "il y a {n}h", d: "il y a {n}j" },
-    de: { now: "jetzt", min: "vor {n}min", h: "vor {n}h", d: "vor {n}T" },
-    it: { now: "adesso", min: "{n}min fa", h: "{n}h fa", d: "{n}g fa" },
-    zh: { now: "刚刚", min: "{n}分钟前", h: "{n}小时前", d: "{n}天前" },
-    ja: { now: "たった今", min: "{n}分前", h: "{n}時間前", d: "{n}日前" },
-    ko: { now: "방금", min: "{n}분 전", h: "{n}시간 전", d: "{n}일 전" },
-    ar: { now: "الآن", min: "منذ {n} دقيقة", h: "منذ {n} ساعة", d: "منذ {n} يوم" },
-    hi: { now: "अभी", min: "{n} मिनट पहले", h: "{n} घंटे पहले", d: "{n} दिन पहले" },
-    ru: { now: "сейчас", min: "{n} мин назад", h: "{n}ч назад", d: "{n}д назад" },
-  };
-
-  const fmt = relativeFormats[lang] || relativeFormats.pt;
+  const fmt = relativeTimeFormats[lang] || relativeTimeFormats.pt;
   if (lower === "agora" || lower === "now") return fmt.now;
-
   const match = lower.match(/(?:há\s*)?(\d+)\s*(min|m|h|d)/i);
   if (!match) return timeValue;
-
   const value = match[1];
   const unit = match[2].toLowerCase();
-
   if (unit === "min" || unit === "m") return fmt.min.replace("{n}", value);
   if (unit === "h") return fmt.h.replace("{n}", value);
   if (unit === "d") return fmt.d.replace("{n}", value);
   return timeValue;
 }
 
-function formatTemporalBadge(firstSeenAt?: string, peakAt?: string, startedLabel = "Começou há", peakLabel = "Pico às"): { started: string | null; peak: string | null } {
-  if (!firstSeenAt) return { started: null, peak: null };
-  const now = new Date();
-  const first = new Date(firstSeenAt);
-  const diffMs = now.getTime() - first.getTime();
-  const diffH = Math.floor(diffMs / (1000 * 60 * 60));
-  const diffMin = Math.floor(diffMs / (1000 * 60));
-
-  let started: string | null = null;
-  if (diffMin < 60) started = `⏰ ${startedLabel} ${diffMin}min`;
-  else if (diffH < 24) started = `⏰ ${startedLabel} ${diffH}h`;
-  else started = `⏰ ${startedLabel} ${Math.floor(diffH / 24)}d`;
-
-  let peak: string | null = null;
-  if (peakAt) {
-    const peakDate = new Date(peakAt);
-    peak = `📈 ${peakLabel} ${peakDate.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}`;
-  }
-
-  return { started, peak };
+// Signal type detection for tags
+function detectSignalType(platform: string, change?: string): string {
+  const ch = Math.abs(parseFloat(change?.replace(/[^0-9.\-]/g, "") || "0"));
+  if (ch > 200) return "🔥 Spike";
+  if (platform === "Google Trends") return "🔍 Search";
+  if (["Reddit", "Bluesky", "Mastodon", "X (Twitter)"].includes(platform)) return "📱 Social";
+  if (["NewsAPI", "GNews", "The Guardian", "Bing News", "NewsData"].includes(platform)) return "📰 News";
+  if (["GitHub", "Stack Overflow", "Hacker News"].includes(platform)) return "💻 Dev";
+  if (["Wikipedia", "OpenAlex", "World Bank"].includes(platform)) return "📚 Knowledge";
+  return "📊 Signal";
 }
 
 const TimelineCard = ({
-  platform,
-  title,
-  category,
-  time,
-  volume,
-  change,
-  changePositive,
-  details,
-  historicalData,
-  metricLabel,
-  likeRatio,
-  commentCount,
-  region,
-  countryCode,
-  sources,
-  sourceUrl,
-  trustBadge,
-  thumbnail,
-  publishedAt,
-  description,
-  firstSeenAt,
-  peakAt,
-  relevanceScore,
-  translated,
-  onClick,
-  onFilterPlatform,
-  onExpand,
-  userId,
-  onTrackAction,
-  forceExpanded,
-  isMultiplatform,
-  crossPlatformCluster,
-  onSaveCard,
-  staggerIndex = 0,
-  compact = false,
+  platform, title, category, time, volume, change, changePositive,
+  details, historicalData, metricLabel, likeRatio, commentCount, region,
+  countryCode, sources, sourceUrl, trustBadge, thumbnail, publishedAt,
+  description, firstSeenAt, peakAt, relevanceScore, translated,
+  onClick, onFilterPlatform, onExpand, userId, onTrackAction,
+  forceExpanded, isMultiplatform, crossPlatformCluster, onSaveCard,
+  staggerIndex = 0, compact = false,
 }: TimelineCardProps & { staggerIndex?: number; compact?: boolean }) => {
   const { t, lang } = useLanguage();
   const [expanded, setExpanded] = useState(forceExpanded || false);
   const [alertOpen, setAlertOpen] = useState(false);
+  const [imgError, setImgError] = useState(false);
 
-  // Sync with external forceExpanded prop
-  useEffect(() => {
-    setExpanded(!!forceExpanded);
-  }, [forceExpanded]);
-  
+  useEffect(() => { setExpanded(!!forceExpanded); }, [forceExpanded]);
+
   const pf = platformIcons[platform] || platformIcons["Google Trends"];
-  const isPeak = change && parseInt(change.replace(/[^0-9]/g, "")) > 100;
   const flag = countryCodeToFlag(countryCode);
   const gradientId = `tl-${title.replace(/[^a-zA-Z0-9]/g, "").slice(0, 8)}-${Math.random().toString(36).slice(2, 5)}`;
-  const [imgError, setImgError] = useState(false);
   const trigger = useMemo(() => detectTriggerFromTitle(title), [title]);
-  
-  const temporal = useMemo(() => formatTemporalBadge(firstSeenAt, peakAt, t("startedAgo"), t("peakAt")), [firstSeenAt, peakAt, lang]);
+  const signalType = useMemo(() => detectSignalType(platform, change), [platform, change]);
 
-  // Trend Score: 0-100 based on growth, volume, sources, geography
+  // TVI Score: 0-100
   const trendScore = useMemo(() => {
     let score = 0;
-    // Growth component (0-30)
     const ch = Math.abs(parseFloat(change?.replace(/[^0-9.\-]/g, "") || "0"));
     score += Math.min(ch / 10, 30);
-    // Volume component (0-30)
     const volStr = (volume || "0").toLowerCase();
     let vol = parseFloat(volStr.replace(/[^0-9.]/g, "")) || 0;
     if (volStr.includes("m")) vol *= 1_000_000;
     else if (volStr.includes("k")) vol *= 1_000;
     score += Math.min(vol / 5000, 30);
-    // Sources diversity (0-20)
     score += Math.min((sources?.length || 1) * 5, 20);
-    // Multiplatform / geography (0-20)
     if (isMultiplatform) score += 15;
     if (crossPlatformCluster && crossPlatformCluster.platformCount > 2) score += 5;
     return Math.min(Math.round(score), 100);
   }, [change, volume, sources, isMultiplatform, crossPlatformCluster]);
 
-  const trendScoreLabel = trendScore >= 80 ? { emoji: "🔥", text: "Explosivo", cls: "bg-red-500/15 text-red-600 dark:text-red-400" }
-    : trendScore >= 60 ? { emoji: "📈", text: "Em Alta", cls: "bg-orange-500/15 text-orange-600 dark:text-orange-400" }
-    : trendScore >= 40 ? { emoji: "➡️", text: "Estável", cls: "bg-yellow-500/15 text-yellow-700 dark:text-yellow-400" }
-    : { emoji: "📉", text: "Baixo", cls: "bg-muted text-muted-foreground" };
-
-  const relativeTimeFormats: Record<string, { now: string; min: string; h: string; d: string }> = {
-    pt: { now: "agora", min: "há {n}min", h: "há {n}h", d: "há {n}d" },
-    en: { now: "now", min: "{n}min ago", h: "{n}h ago", d: "{n}d ago" },
-    es: { now: "ahora", min: "hace {n}min", h: "hace {n}h", d: "hace {n}d" },
-    fr: { now: "maintenant", min: "il y a {n}min", h: "il y a {n}h", d: "il y a {n}j" },
-    de: { now: "jetzt", min: "vor {n}min", h: "vor {n}h", d: "vor {n}T" },
-    it: { now: "adesso", min: "{n}min fa", h: "{n}h fa", d: "{n}g fa" },
-    zh: { now: "刚刚", min: "{n}分钟前", h: "{n}小时前", d: "{n}天前" },
-    ja: { now: "たった今", min: "{n}分前", h: "{n}時間前", d: "{n}日前" },
-    ko: { now: "방금", min: "{n}분 전", h: "{n}시간 전", d: "{n}일 전" },
-    ar: { now: "الآن", min: "منذ {n} دقيقة", h: "منذ {n} ساعة", d: "منذ {n} يوم" },
-    hi: { now: "अभी", min: "{n} मिनट पहले", h: "{n} घंटे पहले", d: "{n} दिन पहले" },
-    ru: { now: "сейчас", min: "{n} мин назад", h: "{n}ч назад", d: "{n}д назад" },
-  };
+  const trendScoreLabel = trendScore >= 80
+    ? { emoji: "🔥", text: "Explosive", cls: "border-destructive text-destructive bg-destructive/10" }
+    : trendScore >= 60
+    ? { emoji: "📈", text: "Rising", cls: "border-orange-500 text-orange-600 dark:text-orange-400 bg-orange-500/10" }
+    : trendScore >= 40
+    ? { emoji: "➡️", text: "Stable", cls: "border-yellow-500 text-yellow-700 dark:text-yellow-400 bg-yellow-500/10" }
+    : { emoji: "—", text: "Low", cls: "border-muted-foreground/30 text-muted-foreground bg-muted/30" };
 
   const formattedDate = useMemo(() => {
     if (!publishedAt) return null;
@@ -269,8 +188,7 @@ const TimelineCard = ({
       if (diffH < 24) return fmt.h.replace("{n}", String(diffH));
       const diffD = Math.floor(diffH / 24);
       if (diffD < 7) return fmt.d.replace("{n}", String(diffD));
-      const localeMap: Record<string, string> = { pt: "pt-BR", en: "en-US", es: "es-ES", fr: "fr-FR", de: "de-DE", it: "it-IT", zh: "zh-CN", ja: "ja-JP", ko: "ko-KR", ar: "ar-SA", hi: "hi-IN", ru: "ru-RU" };
-      return date.toLocaleDateString(localeMap[lang] || "pt-BR", { day: "2-digit", month: "short" });
+      return date.toLocaleDateString(lang === "en" ? "en-US" : "pt-BR", { day: "2-digit", month: "short" });
     } catch { return null; }
   }, [publishedAt, lang]);
 
@@ -278,350 +196,296 @@ const TimelineCard = ({
   const localizedCategory = useMemo(() => localizeCategory(category, t), [category, t]);
   const localizedTime = useMemo(() => formattedDate || localizeFallbackTime(time, lang), [formattedDate, time, lang]);
 
-  const handlePlatformClick = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    onFilterPlatform?.(platform);
-  };
+  const handlePlatformClick = (e: React.MouseEvent) => { e.stopPropagation(); onFilterPlatform?.(platform); };
 
-  const handleShare = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    navigator.clipboard.writeText(`${title} — ${volume} (${platform})`);
-    toast({ title: t("copied"), description: title.slice(0, 60) });
-    onTrackAction?.("share", 5, { title, platform, countryCode, category });
-  };
-
-  const handleShareLink = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    const url = window.location.href;
-    navigator.clipboard.writeText(url);
-    toast({ title: `🔗 ${t("linkCopied")}`, description: t("linkCopiedDesc") });
-  };
-
-
-  const handleExpand = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    const newExpanded = !expanded;
-    setExpanded(newExpanded);
-    if (newExpanded) {
+  const handleToggle = () => {
+    const next = !expanded;
+    setExpanded(next);
+    if (next) {
       onExpand?.(title, platform, { volume, category, countryCode });
       onTrackAction?.("expand", 2, { title, platform, countryCode, category });
     }
   };
 
+  const handleShare = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    const shareUrl = sourceUrl || window.location.href;
+    if (navigator.share) {
+      navigator.share({ title, url: shareUrl }).catch(() => {});
+    } else {
+      navigator.clipboard.writeText(`${title} — ${shareUrl}`);
+      toast({ title: "🔗 Link copiado!", description: title.slice(0, 60) });
+    }
+    onTrackAction?.("share", 5, { title, platform, countryCode, category });
+  };
+
   const handleAlertClick = (e: React.MouseEvent) => {
     e.stopPropagation();
-    if (!userId) {
-      toast({ title: t("loginRequired"), description: t("loginRequiredDesc") });
-      return;
-    }
+    if (!userId) { toast({ title: t("loginRequired"), description: t("loginRequiredDesc") }); return; }
     setAlertOpen(true);
   };
 
   const handleCreateAlert = async (input: any) => {
     if (!userId) return;
     const { error } = await supabase.from("alerts").insert({
-      user_id: userId,
-      keyword: title,
-      category: category || null,
-      threshold: input.threshold,
-      frequency: input.frequency,
-      notification_method: input.notification_method,
+      user_id: userId, keyword: title, category: category || null,
+      threshold: input.threshold, frequency: input.frequency, notification_method: input.notification_method,
     });
-    if (error) {
-      toast({ title: t("error"), description: error.message, variant: "destructive" });
-    } else {
-      toast({ title: `🔔 ${t("alertCreated")}`, description: `${t("monitoring")}: ${title.slice(0, 40)}` });
-    }
+    if (error) toast({ title: t("error"), description: error.message, variant: "destructive" });
+    else toast({ title: `🔔 ${t("alertCreated")}`, description: `${t("monitoring")}: ${title.slice(0, 40)}` });
   };
 
+  // Sparkline data for inline micro chart
+  const sparkData = useMemo(() => {
+    if (!historicalData || historicalData.length === 0) return null;
+    return historicalData.slice(-12);
+  }, [historicalData]);
 
+  const changeNum = parseFloat(change?.replace(/[^0-9.\-]/g, "") || "0");
 
   return (
     <motion.div
       className="timeline-card-wrapper"
       layout
-      initial={{ opacity: 0, y: 16, scale: 0.97 }}
-      whileInView={{ opacity: 1, y: 0, scale: 1 }}
-      exit={{ opacity: 0, y: -8, scale: 0.97 }}
-      viewport={{ once: true, margin: "-40px" }}
-      transition={{
-        duration: 0.35,
-        ease: [0.25, 0.46, 0.45, 0.94],
-        delay: Math.min(staggerIndex * 0.06, 0.5),
-      }}
+      initial={{ opacity: 0, y: 12 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: -8 }}
+      viewport={{ once: true, margin: "-30px" }}
+      transition={{ duration: 0.3, ease: [0.25, 0.46, 0.45, 0.94], delay: Math.min(staggerIndex * 0.04, 0.4) }}
     >
-      <div className={`timeline-card group ${expanded ? 'timeline-card-expanded' : ''} ${compact ? 'py-2 px-3' : ''}`}>
-        <div className="flex items-start gap-3 cursor-pointer" onClick={(e) => {
-          e.stopPropagation();
-          const newExpanded = !expanded;
-          setExpanded(newExpanded);
-          if (newExpanded) {
-            onExpand?.(title, platform, { volume, category, countryCode });
-            onTrackAction?.("expand", 2, { title, platform, countryCode, category });
-          }
-        }}>
+      <div className={`timeline-card group ${expanded ? 'timeline-card-expanded' : ''}`}>
+        {/* === HEADER ROW: Platform + Time + TVI === */}
+        <div className="flex items-center gap-2 mb-1.5">
           <div
-            className="w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold flex-shrink-0 mt-0.5 cursor-pointer hover:scale-110 transition-transform"
-            style={{ background: `${pf.color}15`, color: pf.color }}
+            className="w-6 h-6 rounded-full flex items-center justify-center text-[11px] font-bold flex-shrink-0 cursor-pointer hover:scale-110 transition-transform"
+            style={{ background: `${pf.color}12`, color: pf.color }}
             onClick={handlePlatformClick}
             title={`${t("filterByPlatform")} ${platform}`}
           >
             {pf.emoji}
           </div>
+          <span className="text-[10px] font-semibold cursor-pointer hover:underline flex-shrink-0" style={{ color: pf.color }} onClick={handlePlatformClick}>
+            {platform}
+          </span>
+          {flag && <span className="text-[11px] flex-shrink-0">{flag}</span>}
+          <span className="text-[10px] text-muted-foreground flex-shrink-0">{localizedTime}</span>
 
-          <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-1.5 mb-0.5 flex-wrap overflow-hidden">
-              <span
-                className="text-[11px] font-semibold cursor-pointer active:underline hover:underline flex-shrink-0"
-                style={{ color: pf.color }}
-                onClick={handlePlatformClick}
-              >
-                {platform}
-              </span>
-              {flag && <span className="text-xs flex-shrink-0" title={countryCode}>{flag}</span>}
-              <span className="text-[11px] text-muted-foreground flex-shrink-0 whitespace-nowrap">{localizedTime}</span>
-               {isPeak && <span className="peak-badge flex-shrink-0 whitespace-nowrap">🔥 {t("peak")}</span>}
-               {trustBadge && trustBadgeKeys[trustBadge] && (
-                 <span
-                   className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium whitespace-nowrap overflow-hidden text-ellipsis max-w-[120px] flex-shrink-0 cursor-help ${trustBadgeKeys[trustBadge].className}`}
-                 >
-                   {trustBadgeKeys[trustBadge].icon}
-                   {t(trustBadgeKeys[trustBadge].labelKey as any)}
-                 </span>
-               )}
-               {isPeak && !trustBadge && trustBadgeKeys.hot && (
-                 <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium whitespace-nowrap flex-shrink-0 ${trustBadgeKeys.hot.className}`}>
-                   🔥 {t("hotTopic")}
-                 </span>
-                 )}
-                {translated && (
-                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium whitespace-nowrap flex-shrink-0 bg-blue-500/10 text-blue-600 dark:text-blue-400 cursor-help" title={t("autoTranslated")}>
-                    🌐
-                  </span>
-                )}
-               {trigger && (
-                 <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium bg-accent text-accent-foreground border border-border whitespace-nowrap flex-shrink-0">
-                   {trigger.emoji} {t(trigger.labelKey as any)}
-                 </span>
-               )}
-               {isMultiplatform && (
-                 <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-orange-500/15 text-orange-600 dark:text-orange-400 border border-orange-500/20 whitespace-nowrap flex-shrink-0">
-                   🔥 MULTIPLATAFORMA
-                 </span>
-               )}
-            
-            </div>
+          {/* Trust badge */}
+          {trustBadge && trustBadgeKeys[trustBadge] && (
+            <span className={`inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full text-[9px] font-medium flex-shrink-0 ${trustBadgeKeys[trustBadge].className}`}>
+              {trustBadgeKeys[trustBadge].icon}
+              {t(trustBadgeKeys[trustBadge].labelKey as any)}
+            </span>
+          )}
 
-            {/* IMAGE — hidden in compact mode */}
-            {thumbnail && !imgError && !compact && (
-              <div className="relative w-full mb-2 rounded-xl overflow-hidden bg-secondary aspect-video">
-                <img
-                  src={thumbnail}
-                  alt=""
-                  className="w-full h-full object-cover transition-transform duration-300 hover:scale-105"
-                  loading="lazy"
-                  onError={() => setImgError(true)}
-                />
-              </div>
-            )}
+          {translated && (
+            <span className="text-[9px] text-blue-500 flex-shrink-0" title={t("autoTranslated")}>🌐</span>
+          )}
 
-            {/* TITLE + TVI Score Badge */}
-            <div className="mb-1.5">
-              <div className="flex items-start gap-2">
-                <p className={`font-medium text-foreground leading-snug flex-1 ${compact ? 'text-xs line-clamp-1' : 'text-sm line-clamp-2'}`}>
-                  {title}
-                </p>
-                {/* TVI circular badge */}
-                <div
-                  className={`flex-shrink-0 w-8 h-8 rounded-full flex flex-col items-center justify-center text-[9px] font-black leading-none border-2 ${
-                    trendScore >= 80 ? "border-red-500 text-red-600 dark:text-red-400 bg-red-500/10" :
-                    trendScore >= 60 ? "border-orange-500 text-orange-600 dark:text-orange-400 bg-orange-500/10" :
-                    trendScore >= 40 ? "border-yellow-500 text-yellow-700 dark:text-yellow-400 bg-yellow-500/10" :
-                    "border-muted-foreground/30 text-muted-foreground bg-muted/50"
-                  }`}
-                  title={`TVI: ${trendScore} — ${trendScoreLabel.text}`}
-                >
-                  <span className="text-[11px] font-black">{trendScore}</span>
-                </div>
-              </div>
-              <div className="flex items-center gap-1.5 mt-0.5">
-                <span className={`inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full text-[9px] font-bold ${trendScoreLabel.cls}`}>
-                  {trendScoreLabel.emoji} TVI
-                </span>
-                <span className="text-[9px] text-muted-foreground">{trendScoreLabel.text}</span>
-              </div>
-            </div>
+          <div className="flex-1" />
 
-            {/* SUMMARY — hidden in compact mode */}
-            {displayDescription && !compact && (
-              <p className="text-[13px] text-foreground/80 leading-relaxed mt-1 mb-2 line-clamp-3 border-b border-dashed border-border pb-2">
-                {displayDescription}
-              </p>
-            )}
-
-            {/* NARRATIVE — quantitative data, always visible */}
-            {(() => {
-              const narrativeParts: string[] = [];
-              const ch = parseFloat(change?.replace(/[^0-9.\-]/g, "") || "0");
-              if (ch > 200) narrativeParts.push(`🔥 +${Math.round(ch)}% na última hora`);
-              else if (ch > 100) narrativeParts.push(`📈 +${Math.round(ch)}% em crescimento`);
-              else if (ch > 0) narrativeParts.push(`📊 +${Math.round(ch)}%`);
-              if (isMultiplatform && crossPlatformCluster) {
-                narrativeParts.push(`📱 ${crossPlatformCluster.platformCount} plataformas`);
-              }
-              const countriesList = crossPlatformCluster?.trends
-                ? [...new Set(crossPlatformCluster.trends.map(ct => ct.countryCode).filter(Boolean))]
-                : [];
-              if (countriesList.length > 1) {
-                const flags = countriesList.slice(0, 3).map(c => countryCodeToFlag(c)).filter(Boolean).join(" ");
-                narrativeParts.push(`🌍 ${countriesList.length} países ${flags}`);
-              } else if (countryCode && countryCode !== "GL") {
-                const f = countryCodeToFlag(countryCode);
-                if (f) narrativeParts.push(`📍 ${f}`);
-              }
-              if (volume && volume !== "0") narrativeParts.push(`💬 ${volume}`);
-              if (sources && sources.length > 1) narrativeParts.push(`📰 ${sources.length} fontes`);
-              const narrativeText = narrativeParts.length > 0 ? narrativeParts.join(" · ") : null;
-              if (!narrativeText) return null;
-              return (
-                <div className="flex items-center gap-2 mb-2 py-2 px-3 rounded-xl bg-primary/5 border-l-[3px] border-primary/50">
-                  <span className="text-[12px] font-medium text-primary/90 leading-snug">{narrativeText}</span>
-                </div>
-              );
-            })()}
-
-            {/* CONTEXT — only real data: sources, region, author */}
-            {(() => {
-              const ctxParts: string[] = [];
-              if (sources && sources.length > 0) ctxParts.push(`Fontes: ${sources.slice(0, 3).join(", ")}`);
-              if (region) ctxParts.push(`Região: ${region}`);
-              const diffH = firstSeenAt ? Math.floor((Date.now() - new Date(firstSeenAt).getTime()) / 3600000) : null;
-              if (diffH && diffH > 0 && diffH < 48) ctxParts.push(`Em pauta há ${diffH}h`);
-              if (ctxParts.length === 0) return null;
-              return (
-                <div className="flex items-center gap-2 mb-2 py-2 px-3 rounded-xl bg-muted/50 border-l-[3px] border-muted-foreground/25">
-                  <span className="text-[11px]">🔍</span>
-                  <span className="text-[12px] text-muted-foreground leading-snug">{ctxParts.join(" · ")}</span>
-                </div>
-              );
-            })()}
-
-            {/* ANALYSIS — qualitative insight, always visible */}
-            {(() => {
-              const insights: string[] = [];
-              const ch = parseFloat(change?.replace(/[^0-9.\-]/g, "") || "0");
-              if (ch > 500) insights.push(`Crescimento explosivo: +${Math.round(ch)}% em 1h`);
-              else if (ch > 200) insights.push(`Alta aceleração: +${Math.round(ch)}%`);
-              const countriesList = crossPlatformCluster?.trends
-                ? [...new Set(crossPlatformCluster.trends.map(ct => ct.countryCode).filter(Boolean))]
-                : [];
-              if (countriesList.length > 10) insights.push(`Discussão global em ${countriesList.length} países`);
-              else if (countriesList.length > 5) insights.push(`Presente em ${countriesList.length} países`);
-              if (isMultiplatform && crossPlatformCluster && crossPlatformCluster.platformCount > 3) {
-                insights.push(`Presente em ${crossPlatformCluster.platformCount} plataformas diferentes`);
-              }
-              if (sources && sources.length > 3) insights.push(`Coberto por ${sources.length} fontes distintas`);
-              const diffH = firstSeenAt ? Math.round((Date.now() - new Date(firstSeenAt).getTime()) / 3600000) : null;
-              if (diffH && diffH > 0 && diffH < 48) insights.push(`Em discussão há ${diffH}h`);
-              if (insights.length === 0) return null;
-              const analysisText = insights.slice(0, 2).join(". ") + ".";
-              return (
-                <div className="flex items-start gap-2 mb-2 py-2 px-3 rounded-xl bg-accent/40 border border-accent/60">
-                  <span className="text-[11px] mt-0.5">💡</span>
-                  <span className="text-[12px] text-foreground/70 italic leading-snug">{analysisText}</span>
-                </div>
-              );
-            })()}
-
-            {/* METRICS row — compact */}
-            <div className="flex items-center gap-3 text-[11px] flex-wrap mt-1">
-              <span className="text-muted-foreground font-medium whitespace-nowrap">{localizedCategory}</span>
-              {volume && volume !== "0" && (
-                <span className="text-[10px] text-foreground/60 whitespace-nowrap">Vol: {volume}</span>
-              )}
-              <span className={`whitespace-nowrap font-semibold ${changePositive ? "text-green-600" : "text-red-500"}`}>
-                {change}
-              </span>
-              {temporal.started && (
-                <span className="text-[10px] text-muted-foreground/60 whitespace-nowrap">{temporal.started}</span>
-              )}
-              {temporal.peak && (
-                <span className="text-[10px] text-muted-foreground/60 whitespace-nowrap">{temporal.peak}</span>
-              )}
-            </div>
-          </div>
-
-          <div className="flex flex-col items-center gap-1">
-            {/* Unified share: uses navigator.share or clipboard */}
-            <button onClick={(e) => {
-              e.stopPropagation();
-              const shareUrl = sourceUrl || window.location.href;
-              if (navigator.share) {
-                navigator.share({ title, url: shareUrl }).catch(() => {});
-              } else {
-                navigator.clipboard.writeText(`${title} — ${shareUrl}`);
-                toast({ title: "🔗 Link copiado!", description: title.slice(0, 60) });
-              }
-              onTrackAction?.("share", 5, { title, platform, countryCode, category });
-            }} className="p-1 rounded-full text-muted-foreground/60 hover:text-foreground transition-colors" title={t("share")}>
-              <Link2 className="w-3 h-3" />
-            </button>
-            <button onClick={handleAlertClick} className="p-1 rounded-full text-muted-foreground/60 hover:text-primary transition-colors" title={t("createAlert")}>
-              <Bell className="w-3 h-3" />
-            </button>
-            <button onClick={(e) => { e.stopPropagation(); onSaveCard?.({ title, platform, category, country_code: countryCode, source_url: sourceUrl, thumbnail, description: displayDescription, volume, change, changePositive, historicalData, platformColor: pf.color, sources }); }} className="p-1 rounded-full text-muted-foreground/60 hover:text-primary transition-colors" title="Salvar no painel">
-              <Bookmark className="w-3 h-3" />
-            </button>
-            <button onClick={(e) => {
-              e.stopPropagation();
-              toast({ title: "⚠️ Denúncia enviada", description: `Obrigado por reportar: ${title.slice(0, 40)}` });
-            }} className="p-1 rounded-full text-muted-foreground/60 hover:text-destructive transition-colors" title="Denunciar erro">
-              <Flag className="w-3 h-3" />
-            </button>
-            <button onClick={handleExpand} className="p-1 rounded-full text-muted-foreground hover:text-foreground transition-colors">
-              {expanded ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
-            </button>
+          {/* TVI Badge */}
+          <div
+            className={`flex-shrink-0 w-7 h-7 rounded-full flex items-center justify-center text-[10px] font-black border-2 ${trendScoreLabel.cls}`}
+            title={`TVI: ${trendScore} — ${trendScoreLabel.text}`}
+          >
+            {trendScore}
           </div>
         </div>
-      </div>
 
-      {/* EXPANDED CONTENT — no tabs, all inline */}
-      {expanded && (
-        <div className="timeline-card-expanded-content">
-          {/* Details */}
-          {details && <p className="text-xs text-muted-foreground mb-3 pt-2">{details}</p>}
+        {/* === MAIN CONTENT: Click to expand === */}
+        <div className="cursor-pointer" onClick={handleToggle}>
+          {/* Title */}
+          <h3 className={`font-semibold text-foreground leading-snug mb-1 ${compact ? 'text-xs line-clamp-1' : 'text-[14px] line-clamp-2'}`}>
+            {title}
+          </h3>
 
+          {/* Contextual Description — the core intelligence layer */}
+          {displayDescription && !compact && (
+            <p className="text-[12px] text-muted-foreground leading-relaxed line-clamp-2 mb-2">
+              {displayDescription}
+            </p>
+          )}
+
+          {/* === METRICS BAR: Horizontal, compact === */}
+          <div className="flex items-center gap-2 flex-wrap text-[10px] mb-1.5">
+            {/* Growth */}
+            <span className={`inline-flex items-center gap-0.5 font-bold ${changePositive ? "text-green-600 dark:text-green-400" : "text-destructive"}`}>
+              <TrendingUp className="w-3 h-3" />
+              {change}
+            </span>
+
+            {/* Volume */}
+            {volume && volume !== "0" && (
+              <span className="text-muted-foreground">
+                💬 {volume}
+              </span>
+            )}
+
+            {/* Sources */}
+            {sources && sources.length > 0 && (
+              <span className="text-muted-foreground inline-flex items-center gap-0.5">
+                <Radio className="w-2.5 h-2.5" />
+                {sources.length} {sources.length === 1 ? "fonte" : "fontes"}
+              </span>
+            )}
+
+            {/* Region */}
+            {countryCode && countryCode !== "GL" && (
+              <span className="text-muted-foreground">
+                📍 {countryCode}
+              </span>
+            )}
+
+            {/* Multiplatform */}
+            {isMultiplatform && crossPlatformCluster && (
+              <span className="font-bold text-orange-600 dark:text-orange-400 inline-flex items-center gap-0.5">
+                <Globe className="w-2.5 h-2.5" />
+                {crossPlatformCluster.platformCount} plat.
+              </span>
+            )}
+
+            {/* Micro sparkline */}
+            {sparkData && !compact && (
+              <div className="ml-auto flex-shrink-0 w-16 h-4">
+                <ResponsiveContainer width="100%" height="100%">
+                  <AreaChart data={sparkData}>
+                    <defs>
+                      <linearGradient id={`spark-${gradientId}`} x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0%" stopColor={pf.color} stopOpacity={0.3} />
+                        <stop offset="100%" stopColor={pf.color} stopOpacity={0} />
+                      </linearGradient>
+                    </defs>
+                    <Area type="monotone" dataKey="value" stroke={pf.color} strokeWidth={1} fill={`url(#spark-${gradientId})`} dot={false} />
+                  </AreaChart>
+                </ResponsiveContainer>
+              </div>
+            )}
+          </div>
+
+          {/* === TAGS ROW === */}
+          <div className="flex items-center gap-1 flex-wrap">
+            <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-medium bg-secondary text-muted-foreground">
+              {localizedCategory}
+            </span>
+            <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-medium bg-secondary text-muted-foreground">
+              {signalType}
+            </span>
+            {trigger && (
+              <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-medium bg-accent/20 text-accent-foreground">
+                {trigger.emoji} {t(trigger.labelKey as any)}
+              </span>
+            )}
+            {isMultiplatform && (
+              <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-bold bg-orange-500/10 text-orange-600 dark:text-orange-400">
+                🔗 Cross-platform
+              </span>
+            )}
+            {trendScore >= 80 && (
+              <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-bold bg-destructive/10 text-destructive">
+                🔥 Explosive
+              </span>
+            )}
+          </div>
+        </div>
+
+        {/* === ACTION BAR === */}
+        <div className="flex items-center gap-1 mt-2 pt-1.5 border-t border-border/50">
           {sourceUrl && (
             <a
               href={sourceUrl}
               target="_blank"
               rel="noopener noreferrer"
               onClick={(e) => e.stopPropagation()}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-medium bg-primary/10 text-primary hover:bg-primary/20 transition-colors mb-3 group"
+              className="inline-flex items-center gap-1 px-2 py-1 rounded-md text-[10px] font-medium text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors"
             >
-              <span className="text-sm flex-shrink-0" style={{ color: pf.color }}>{pf.emoji}</span>
-              <ExternalLink className="w-3 h-3 group-hover:translate-x-0.5 transition-transform" />
+              <ExternalLink className="w-3 h-3" />
               {t("viewSource")}
             </a>
+          )}
+          <button
+            onClick={(e) => { e.stopPropagation(); handleToggle(); }}
+            className="inline-flex items-center gap-1 px-2 py-1 rounded-md text-[10px] font-medium text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors"
+          >
+            <Eye className="w-3 h-3" />
+            {expanded ? "Fechar" : "Análise"}
+          </button>
+          <button onClick={handleShare} className="inline-flex items-center gap-1 px-2 py-1 rounded-md text-[10px] font-medium text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors">
+            <Share2 className="w-3 h-3" />
+            {t("share")}
+          </button>
+
+          <div className="flex-1" />
+
+          <button onClick={handleAlertClick} className="p-1 rounded-md text-muted-foreground/50 hover:text-primary transition-colors">
+            <Bell className="w-3 h-3" />
+          </button>
+          <button onClick={(e) => { e.stopPropagation(); onSaveCard?.({ title, platform, category, country_code: countryCode, source_url: sourceUrl, thumbnail, description: displayDescription, volume, change, changePositive, historicalData, platformColor: pf.color, sources }); }} className="p-1 rounded-md text-muted-foreground/50 hover:text-primary transition-colors">
+            <Bookmark className="w-3 h-3" />
+          </button>
+          <button onClick={(e) => { e.stopPropagation(); toast({ title: "⚠️ Denúncia enviada", description: `Obrigado por reportar: ${title.slice(0, 40)}` }); }} className="p-1 rounded-md text-muted-foreground/50 hover:text-destructive transition-colors">
+            <Flag className="w-3 h-3" />
+          </button>
+        </div>
+      </div>
+
+      {/* === EXPANDED CONTENT === */}
+      {expanded && (
+        <div className="timeline-card-expanded-content">
+          {/* Image */}
+          {thumbnail && !imgError && (
+            <div className="relative w-full mb-3 rounded-lg overflow-hidden bg-secondary aspect-video">
+              <img src={thumbnail} alt="" className="w-full h-full object-cover" loading="lazy" onError={() => setImgError(true)} />
+            </div>
+          )}
+
+          {/* Full description */}
+          {details && details !== displayDescription && (
+            <p className="text-xs text-muted-foreground mb-3">{details}</p>
+          )}
+
+          {/* Detailed metrics grid */}
+          <div className="grid grid-cols-3 gap-2 mb-3">
+            <div className="text-center p-2 rounded-lg bg-secondary/50">
+              <span className="block text-[9px] text-muted-foreground uppercase tracking-wide">Growth</span>
+              <span className={`block text-sm font-bold ${changePositive ? "text-green-600" : "text-destructive"}`}>{change}</span>
+            </div>
+            <div className="text-center p-2 rounded-lg bg-secondary/50">
+              <span className="block text-[9px] text-muted-foreground uppercase tracking-wide">Volume</span>
+              <span className="block text-sm font-bold text-foreground">{volume || "—"}</span>
+            </div>
+            <div className="text-center p-2 rounded-lg bg-secondary/50">
+              <span className="block text-[9px] text-muted-foreground uppercase tracking-wide">TVI</span>
+              <span className="block text-sm font-bold text-foreground">{trendScore}/100</span>
+            </div>
+          </div>
+
+          {/* Sources list */}
+          {sources && sources.length > 0 && (
+            <div className="mb-3">
+              <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide flex items-center gap-1 mb-1.5">
+                <BarChart3 className="w-3 h-3" /> Sources
+              </span>
+              <div className="flex flex-wrap gap-1">
+                {sources.slice(0, 5).map((s) => (
+                  <span key={s} className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium bg-primary/10 text-primary">
+                    {s}
+                  </span>
+                ))}
+              </div>
+            </div>
           )}
 
           {/* Platform-specific metrics */}
           <div className="flex flex-wrap gap-2 mb-3 text-[11px]">
             {platform === "YouTube" && likeRatio !== undefined && likeRatio > 0 && (
-              <span className="source-tag text-[10px] py-0.5 px-2 whitespace-nowrap">👍 {likeRatio}% {t("likes")}</span>
+              <span className="source-tag text-[10px] py-0.5 px-2">👍 {likeRatio}% {t("likes")}</span>
             )}
             {platform === "Reddit" && commentCount !== undefined && (
-              <span className="source-tag text-[10px] py-0.5 px-2 whitespace-nowrap">💬 {commentCount >= 1000 ? `${(commentCount / 1000).toFixed(1)}K` : commentCount} {t("comments")}</span>
+              <span className="source-tag text-[10px] py-0.5 px-2">💬 {commentCount >= 1000 ? `${(commentCount / 1000).toFixed(1)}K` : commentCount} {t("comments")}</span>
             )}
             {platform === "Google Trends" && region && (
-              <span className="source-tag text-[10px] py-0.5 px-2 whitespace-nowrap">📍 {region}</span>
-            )}
-            {platform === "NewsAPI" && sources && sources.length > 0 && (
-              <div className="flex flex-wrap gap-1">
-                {sources.slice(0, 3).map((s) => (
-                  <span key={s} className="source-tag text-[10px] py-0.5 px-2 whitespace-nowrap">📰 {s}</span>
-                ))}
-              </div>
+              <span className="source-tag text-[10px] py-0.5 px-2">📍 {region}</span>
             )}
           </div>
 
@@ -634,7 +498,7 @@ const TimelineCard = ({
                 </span>
                 <span className="text-[10px] text-muted-foreground">{metricLabel}</span>
               </div>
-              <div className="h-28 -mx-1">
+              <div className="h-24 -mx-1">
                 <ResponsiveContainer width="100%" height="100%">
                   <AreaChart data={historicalData}>
                     <defs>
@@ -657,25 +521,18 @@ const TimelineCard = ({
             </div>
           )}
 
-          {/* Propagation Timeline — show for multiplatform clusters */}
+          {/* Propagation Timeline */}
           {isMultiplatform && crossPlatformCluster && crossPlatformCluster.platformCount >= 2 && (
             <div className="mb-3 border-t border-border pt-2">
               <PropagationTimeline cluster={crossPlatformCluster} compact />
             </div>
           )}
 
-          {/* Feedback */}
           <TrendFeedback title={title} platform={platform} userId={userId} />
         </div>
       )}
 
-      <AlertModal
-        open={alertOpen}
-        onClose={() => setAlertOpen(false)}
-        onSubmit={handleCreateAlert}
-        defaultKeyword={title}
-        defaultCategory={category}
-      />
+      <AlertModal open={alertOpen} onClose={() => setAlertOpen(false)} onSubmit={handleCreateAlert} defaultKeyword={title} defaultCategory={category} />
     </motion.div>
   );
 };
