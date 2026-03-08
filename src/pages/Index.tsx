@@ -8,6 +8,7 @@ import TrendCardSkeleton from "@/components/TrendCardSkeleton";
 import CriticalMomentsSection from "@/components/CriticalMomentsSection";
 import EmergingTrendsSection from "@/components/EmergingTrendsSection";
 import TransparencyPanel from "@/components/TransparencyPanel";
+import TemporalHeatmap from "@/components/TemporalHeatmap";
 import { TrendCardProps } from "@/components/TrendCard";
 import { useTrends } from "@/hooks/use-trends";
 import { useTranslatedTrends, TranslatedTrendCardProps } from "@/hooks/use-translated-trends";
