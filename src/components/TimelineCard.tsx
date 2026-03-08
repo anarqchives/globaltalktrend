@@ -9,6 +9,7 @@ import { TrendCardProps } from "./TrendCard";
 import { supabase } from "@/integrations/supabase/client";
 import AlertModal from "./AlertModal";
 import TrendFeedback from "./TrendFeedback";
+import PropagationTimeline from "./PropagationTimeline";
 
 import { CrossPlatformCluster } from "@/hooks/use-cross-platform";
 
