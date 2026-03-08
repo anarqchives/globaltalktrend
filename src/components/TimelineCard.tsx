@@ -9,6 +9,7 @@ import { TrendCardProps } from "./TrendCard";
 import { supabase } from "@/integrations/supabase/client";
 import AlertModal from "./AlertModal";
 import TrendFeedback from "./TrendFeedback";
+import PropagationTimeline from "./PropagationTimeline";
 
 import { CrossPlatformCluster } from "@/hooks/use-cross-platform";
 
@@ -424,14 +425,28 @@ const TimelineCard = ({
               </div>
             )}
 
-            {/* TITLE + Score */}
+            {/* TITLE + TVI Score Badge */}
             <div className="mb-1.5">
-              <p className={`font-medium text-foreground leading-snug ${compact ? 'text-xs line-clamp-1' : 'text-sm line-clamp-2'}`}>
-                {title}
-              </p>
+              <div className="flex items-start gap-2">
+                <p className={`font-medium text-foreground leading-snug flex-1 ${compact ? 'text-xs line-clamp-1' : 'text-sm line-clamp-2'}`}>
+                  {title}
+                </p>
+                {/* TVI circular badge */}
+                <div
+                  className={`flex-shrink-0 w-8 h-8 rounded-full flex flex-col items-center justify-center text-[9px] font-black leading-none border-2 ${
+                    trendScore >= 80 ? "border-red-500 text-red-600 dark:text-red-400 bg-red-500/10" :
+                    trendScore >= 60 ? "border-orange-500 text-orange-600 dark:text-orange-400 bg-orange-500/10" :
+                    trendScore >= 40 ? "border-yellow-500 text-yellow-700 dark:text-yellow-400 bg-yellow-500/10" :
+                    "border-muted-foreground/30 text-muted-foreground bg-muted/50"
+                  }`}
+                  title={`TVI: ${trendScore} — ${trendScoreLabel.text}`}
+                >
+                  <span className="text-[11px] font-black">{trendScore}</span>
+                </div>
+              </div>
               <div className="flex items-center gap-1.5 mt-0.5">
                 <span className={`inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full text-[9px] font-bold ${trendScoreLabel.cls}`}>
-                  {trendScoreLabel.emoji} {trendScore}
+                  {trendScoreLabel.emoji} TVI
                 </span>
                 <span className="text-[9px] text-muted-foreground">{trendScoreLabel.text}</span>
               </div>
@@ -639,6 +654,13 @@ const TimelineCard = ({
                   </AreaChart>
                 </ResponsiveContainer>
               </div>
+            </div>
+          )}
+
+          {/* Propagation Timeline — show for multiplatform clusters */}
+          {isMultiplatform && crossPlatformCluster && crossPlatformCluster.platformCount >= 2 && (
+            <div className="mb-3 border-t border-border pt-2">
+              <PropagationTimeline cluster={crossPlatformCluster} compact />
             </div>
           )}
 

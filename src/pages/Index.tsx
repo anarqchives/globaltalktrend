@@ -6,6 +6,7 @@ import FilterBar, { FilterState, countries } from "@/components/FilterBar";
 import TimelineCard from "@/components/TimelineCard";
 import TrendCardSkeleton from "@/components/TrendCardSkeleton";
 import CriticalMomentsSection from "@/components/CriticalMomentsSection";
+import EmergingTrendsSection from "@/components/EmergingTrendsSection";
 import TransparencyPanel from "@/components/TransparencyPanel";
 import { TrendCardProps } from "@/components/TrendCard";
 import { useTrends } from "@/hooks/use-trends";
@@ -95,6 +96,7 @@ const Index = () => {
   const { multiplatformTitles, clusters } = useCrossPlatform(allTrends);
   const [transparencyOpen, setTransparencyOpen] = useState(false);
   const [criticalDismissed, setCriticalDismissed] = useState(false);
+  const [emergingDismissed, setEmergingDismissed] = useState(false);
 
   // Reset dismissed state when new critical moments appear
   useEffect(() => {
@@ -614,6 +616,15 @@ const Index = () => {
       />
 
       <div className="flex-1 overflow-hidden">
+        {/* Emerging Trends */}
+        {!loading && !emergingDismissed && filteredTrends.length > 3 && (
+          <EmergingTrendsSection
+            trends={filteredTrends}
+            onSelectTrend={handleSelectTrend}
+            onClose={() => setEmergingDismissed(true)}
+          />
+        )}
+
         {/* Critical Moments */}
         {!loading && criticalMoments.length > 0 && filteredTrends.length > 1 && !criticalDismissed && (
           <CriticalMomentsSection
