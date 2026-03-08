@@ -657,6 +657,13 @@ const TimelineCard = ({
             </div>
           )}
 
+          {/* Propagation Timeline — show for multiplatform clusters */}
+          {isMultiplatform && crossPlatformCluster && crossPlatformCluster.platformCount >= 2 && (
+            <div className="mb-3 border-t border-border pt-2">
+              <PropagationTimeline cluster={crossPlatformCluster} compact />
+            </div>
+          )}
+
           {/* Feedback */}
           <TrendFeedback title={title} platform={platform} userId={userId} />
         </div>

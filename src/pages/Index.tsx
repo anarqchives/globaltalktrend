@@ -616,6 +616,15 @@ const Index = () => {
       />
 
       <div className="flex-1 overflow-hidden">
+        {/* Emerging Trends */}
+        {!loading && !emergingDismissed && filteredTrends.length > 3 && (
+          <EmergingTrendsSection
+            trends={filteredTrends}
+            onSelectTrend={handleSelectTrend}
+            onClose={() => setEmergingDismissed(true)}
+          />
+        )}
+
         {/* Critical Moments */}
         {!loading && criticalMoments.length > 0 && filteredTrends.length > 1 && !criticalDismissed && (
           <CriticalMomentsSection
