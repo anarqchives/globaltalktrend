@@ -96,6 +96,7 @@ const Index = () => {
   const { multiplatformTitles, clusters } = useCrossPlatform(allTrends);
   const [transparencyOpen, setTransparencyOpen] = useState(false);
   const [criticalDismissed, setCriticalDismissed] = useState(false);
+  const [emergingDismissed, setEmergingDismissed] = useState(false);
 
   // Reset dismissed state when new critical moments appear
   useEffect(() => {
