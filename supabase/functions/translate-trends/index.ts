@@ -1,5 +1,3 @@
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers":
@@ -7,21 +5,25 @@ const corsHeaders = {
 };
 
 const langNames: Record<string, string> = {
-  pt: "Portuguese",
-  en: "English",
-  es: "Spanish",
-  fr: "French",
-  de: "German",
-  it: "Italian",
-  zh: "Chinese",
-  ja: "Japanese",
-  ko: "Korean",
-  ar: "Arabic",
-  hi: "Hindi",
-  ru: "Russian",
+  pt: "Portuguese", en: "English", es: "Spanish", fr: "French",
+  de: "German", it: "Italian", zh: "Chinese", ja: "Japanese",
+  ko: "Korean", ar: "Arabic", hi: "Hindi", ru: "Russian",
 };
 
-const BATCH_SIZE = 10;
+const BATCH_SIZE = 8;
+
+function extractJsonFromText(text: string): any {
+  // Try direct parse first
+  try { return JSON.parse(text); } catch {}
+  // Try stripping markdown code fences
+  const cleaned = text.replace(/```json\s*/gi, "").replace(/```\s*/g, "").trim();
+  const start = cleaned.search(/[\{\[]/);
+  const end = Math.max(cleaned.lastIndexOf("}"), cleaned.lastIndexOf("]"));
+  if (start !== -1 && end > start) {
+    try { return JSON.parse(cleaned.substring(start, end + 1)); } catch {}
+  }
+  return null;
+}
 
 async function translateBatch(
   batch: { title: string; details?: string }[],
@@ -30,17 +32,13 @@ async function translateBatch(
 ): Promise<{ title: string; details?: string }[]> {
   const numbered = batch
     .map((item, i) => {
-      const detailPart = item.details ? ` ||| ${item.details.slice(0, 120)}` : "";
-      return `${i + 1}. ${item.title.slice(0, 200)}${detailPart}`;
+      const d = item.details ? ` ||| ${item.details.slice(0, 100)}` : "";
+      return `${i + 1}. ${item.title.slice(0, 180)}${d}`;
     })
     .join("\n");
 
-  const systemPrompt = `You are a professional translator. Translate each numbered line to ${langLabel}. 
-Keep the same numbering. If a line has " ||| " separator, translate both parts and keep the separator.
-Return ONLY the numbered translations, nothing else.`;
-
   const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), 8000);
+  const timeout = setTimeout(() => controller.abort(), 12000);
 
   try {
     const aiRes = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
@@ -52,7 +50,10 @@ Return ONLY the numbered translations, nothing else.`;
       body: JSON.stringify({
         model: "google/gemini-2.5-flash-lite",
         messages: [
-          { role: "system", content: systemPrompt },
+          {
+            role: "system",
+            content: `Translate each numbered line to ${langLabel}. Keep numbering. If " ||| " exists, translate both parts keeping separator. Return ONLY numbered translations.`,
+          },
           { role: "user", content: numbered },
         ],
         temperature: 0.1,
@@ -63,21 +64,18 @@ Return ONLY the numbered translations, nothing else.`;
     clearTimeout(timeout);
 
     if (!aiRes.ok) {
-      const errText = await aiRes.text();
-      console.error(`AI translation batch failed [${aiRes.status}]:`, errText);
-      return batch; // Return originals on failure
-    }
-
-    const rawText = await aiRes.text();
-    let aiData: any;
-    try {
-      aiData = JSON.parse(rawText);
-    } catch {
-      console.error("AI returned non-JSON response, length:", rawText.length);
+      console.error(`AI batch error [${aiRes.status}]`);
       return batch;
     }
 
-    const content = aiData.choices?.[0]?.message?.content || "";
+    const rawText = await aiRes.text();
+    const aiData = extractJsonFromText(rawText);
+    if (!aiData) {
+      console.error("Non-JSON AI response, len:", rawText.length);
+      return batch;
+    }
+
+    const content: string = aiData?.choices?.[0]?.message?.content || "";
     if (!content) return batch;
 
     const lines = content.split("\n").filter((l: string) => l.trim());
@@ -92,22 +90,21 @@ Return ONLY the numbered translations, nothing else.`;
           const [title, details] = text.split(" ||| ");
           results.push({ title: title.trim(), details: details?.trim() });
         } else {
-          results.push({ title: text });
+          results.push({ title: text, details: batch[i].details });
         }
       } else {
-        results.push({ title: batch[i].title, details: batch[i].details });
+        results.push(batch[i]);
       }
     }
-
     return results;
   } catch (err) {
     clearTimeout(timeout);
-    console.error("Batch translation error:", err);
-    return batch; // Return originals on timeout/error
+    console.error("Batch translate error:", String(err));
+    return batch;
   }
 }
 
-serve(async (req) => {
+Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
@@ -115,63 +112,60 @@ serve(async (req) => {
   try {
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) {
-      return new Response(JSON.stringify({ error: "LOVABLE_API_KEY not set", translations: [] }), {
-        status: 500,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      return Response.json({ error: "API key missing", translations: [] }, {
+        status: 500, headers: corsHeaders,
       });
     }
 
-    const { items, targetLang } = await req.json();
+    const body = await req.json();
+    const items: { title: string; details?: string }[] = body?.items;
+    const targetLang: string = body?.targetLang;
+
     if (!items || !Array.isArray(items) || items.length === 0 || !targetLang) {
-      return new Response(JSON.stringify({ translations: [] }), {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+      return Response.json({ translations: [] }, { headers: corsHeaders });
     }
 
     const langLabel = langNames[targetLang] || targetLang;
 
-    // Process in small batches to avoid timeouts
-    const allTranslations: { title: string; details?: string }[] = [];
+    // Split into batches
     const batches: { title: string; details?: string }[][] = [];
-
     for (let i = 0; i < items.length; i += BATCH_SIZE) {
       batches.push(items.slice(i, i + BATCH_SIZE));
     }
 
-    // Run batches concurrently (max 3 at a time)
-    const concurrency = Math.min(batches.length, 3);
-    const queue = [...batches];
+    // Process up to 3 batches concurrently using indexed approach (no race condition)
+    const CONCURRENCY = 3;
     const results: { title: string; details?: string }[][] = new Array(batches.length);
+    let nextIdx = 0;
 
-    const workers = Array.from({ length: concurrency }, async (_, workerIdx) => {
-      while (queue.length > 0) {
-        const batchIdx = batches.length - queue.length;
-        const batch = queue.shift();
-        if (!batch) break;
-        results[batchIdx] = await translateBatch(batch, langLabel, LOVABLE_API_KEY);
+    async function worker() {
+      while (true) {
+        const idx = nextIdx++;
+        if (idx >= batches.length) break;
+        results[idx] = await translateBatch(batches[idx], langLabel, LOVABLE_API_KEY!);
       }
-    });
+    }
 
-    await Promise.all(workers);
+    await Promise.all(
+      Array.from({ length: Math.min(CONCURRENCY, batches.length) }, () => worker())
+    );
 
+    const allTranslations: { title: string; details?: string }[] = [];
     for (const batch of results) {
       if (batch) allTranslations.push(...batch);
     }
 
-    // If we somehow got fewer translations than items, pad with originals
+    // Pad with originals if needed
     while (allTranslations.length < items.length) {
       const idx = allTranslations.length;
-      allTranslations.push({ title: items[idx].title, details: items[idx].details });
+      allTranslations.push(items[idx]);
     }
 
-    return new Response(JSON.stringify({ translations: allTranslations }), {
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
+    return Response.json({ translations: allTranslations }, { headers: corsHeaders });
   } catch (error) {
-    console.error("Translation error:", error);
-    return new Response(JSON.stringify({ error: "Translation failed", translations: [] }), {
-      status: 500,
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    console.error("Translation top-level error:", error);
+    return Response.json({ error: "Translation failed", translations: [] }, {
+      status: 500, headers: corsHeaders,
     });
   }
 });
