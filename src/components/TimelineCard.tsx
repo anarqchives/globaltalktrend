@@ -408,7 +408,7 @@ const TimelineCard = ({
             className="inline-flex items-center gap-1 px-2 py-1 rounded-md text-[10px] font-medium text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors"
           >
             <Eye className="w-3 h-3" />
-            {expanded ? t("close") || "Fechar" : t("analysis") || "Análise"}
+            {expanded ? "Fechar" : "Análise"}
           </button>
           <button onClick={handleShare} className="inline-flex items-center gap-1 px-2 py-1 rounded-md text-[10px] font-medium text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors">
             <Share2 className="w-3 h-3" />
