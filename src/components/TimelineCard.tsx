@@ -459,27 +459,81 @@ const TimelineCard = ({
             <p className="text-xs text-muted-foreground mb-3">{details}</p>
           )}
 
-          {/* Detailed metrics grid */}
-          <div className="grid grid-cols-3 gap-2 mb-3">
+          {/* Intelligence Metrics Grid */}
+          <div className="grid grid-cols-4 gap-1.5 mb-3">
             <div className="text-center p-2 rounded-lg bg-secondary/50">
-              <span className="block text-[9px] text-muted-foreground uppercase tracking-wide">Growth</span>
-              <span className={`block text-sm font-bold ${changePositive ? "text-green-600" : "text-destructive"}`}>{change}</span>
+              <span className="block text-[8px] text-muted-foreground uppercase tracking-wide mb-0.5">Growth</span>
+              <span className={`block text-xs font-bold ${changePositive ? "text-green-600 dark:text-green-400" : "text-destructive"}`}>{change}</span>
             </div>
             <div className="text-center p-2 rounded-lg bg-secondary/50">
-              <span className="block text-[9px] text-muted-foreground uppercase tracking-wide">Volume</span>
-              <span className="block text-sm font-bold text-foreground">{volume || "—"}</span>
+              <span className="block text-[8px] text-muted-foreground uppercase tracking-wide mb-0.5">Volume</span>
+              <span className="block text-xs font-bold text-foreground">{volume || "—"}</span>
             </div>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <div className="text-center p-2 rounded-lg bg-secondary/50 cursor-help">
+                  <span className="block text-[8px] text-muted-foreground uppercase tracking-wide mb-0.5">TVI</span>
+                  <span className="block text-xs font-bold text-foreground">{trendScore}/100</span>
+                </div>
+              </TooltipTrigger>
+              <TooltipContent side="top" className="text-[10px] space-y-0.5">
+                <div className="font-bold mb-1">Trend Velocity Index</div>
+                <div className="flex justify-between gap-3"><span>⚡ Velocity (30%)</span><span className="font-bold">{tviBreakdown.velocity}</span></div>
+                <div className="flex justify-between gap-3"><span>💬 Volume (30%)</span><span className="font-bold">{tviBreakdown.volume}</span></div>
+                <div className="flex justify-between gap-3"><span>📰 Sources (20%)</span><span className="font-bold">{tviBreakdown.sources}</span></div>
+                <div className="flex justify-between gap-3"><span>🌍 Geography (20%)</span><span className="font-bold">{tviBreakdown.geography}</span></div>
+              </TooltipContent>
+            </Tooltip>
             <div className="text-center p-2 rounded-lg bg-secondary/50">
-              <span className="block text-[9px] text-muted-foreground uppercase tracking-wide">TVI</span>
-              <span className="block text-sm font-bold text-foreground">{trendScore}/100</span>
+              <span className="block text-[8px] text-muted-foreground uppercase tracking-wide mb-0.5">Sources</span>
+              <span className="block text-xs font-bold text-foreground">{sources?.length || 1}</span>
             </div>
           </div>
 
-          {/* Sources list */}
+          {/* Narrative Origin & Signal Confidence */}
+          <div className="flex items-start gap-2 mb-3 p-2 rounded-lg bg-secondary/30 border border-border/50">
+            <div className="flex-1 min-w-0">
+              <div className="text-[9px] font-semibold text-muted-foreground uppercase tracking-wide mb-0.5">
+                🗺️ Narrative Origin
+              </div>
+              <div className="text-[11px] text-foreground font-medium">{platform}</div>
+              {countryCode && countryCode !== "GL" && (
+                <div className="text-[9px] text-muted-foreground">{flag} {countryCode}</div>
+              )}
+            </div>
+            <div className="text-right flex-shrink-0">
+              <div className="text-[9px] font-semibold text-muted-foreground uppercase tracking-wide mb-0.5">
+                Confidence
+              </div>
+              <div className={`text-[11px] font-bold ${trendScore >= 70 ? "text-green-600 dark:text-green-400" : trendScore >= 40 ? "text-amber-600 dark:text-amber-400" : "text-muted-foreground"}`}>
+                {trendScore >= 70 ? "High" : trendScore >= 40 ? "Medium" : "Low"}
+              </div>
+              <div className="text-[9px] text-muted-foreground">{trendScore}%</div>
+            </div>
+          </div>
+
+          {/* Propagation path (always show if multi-source) */}
+          {sources && sources.length >= 2 && (
+            <div className="mb-3">
+              <span className="text-[9px] font-semibold text-muted-foreground uppercase tracking-wide flex items-center gap-1 mb-1">
+                <Radio className="w-2.5 h-2.5" /> Propagation path
+              </span>
+              <div className="flex items-center gap-1 flex-wrap text-[9px]">
+                {sources.slice(0, 5).map((s, idx) => (
+                  <span key={s} className="flex items-center gap-1">
+                    {idx > 0 && <span className="text-muted-foreground/40">→</span>}
+                    <span className="px-1.5 py-0.5 rounded-full bg-primary/10 text-primary font-medium">{s}</span>
+                  </span>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Sources list (full) */}
           {sources && sources.length > 0 && (
             <div className="mb-3">
               <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide flex items-center gap-1 mb-1.5">
-                <BarChart3 className="w-3 h-3" /> Sources
+                <BarChart3 className="w-3 h-3" /> Verified Sources
               </span>
               <div className="flex flex-wrap gap-1">
                 {sources.slice(0, 5).map((s) => (
@@ -536,7 +590,7 @@ const TimelineCard = ({
             </div>
           )}
 
-          {/* Propagation Timeline */}
+          {/* Propagation Timeline (cross-platform) */}
           {isMultiplatform && crossPlatformCluster && crossPlatformCluster.platformCount >= 2 && (
             <div className="mb-3 border-t border-border pt-2">
               <PropagationTimeline cluster={crossPlatformCluster} compact />
