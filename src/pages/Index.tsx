@@ -98,6 +98,7 @@ const Index = () => {
   const [transparencyOpen, setTransparencyOpen] = useState(false);
   const [criticalDismissed, setCriticalDismissed] = useState(false);
   const [emergingDismissed, setEmergingDismissed] = useState(false);
+  const [heatmapDismissed, setHeatmapDismissed] = useState(false);
 
   // Reset dismissed state when new critical moments appear
   useEffect(() => {
