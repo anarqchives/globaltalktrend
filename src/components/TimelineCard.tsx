@@ -288,13 +288,24 @@ const TimelineCard = ({
 
           <div className="flex-1" />
 
-          {/* TVI Badge */}
-          <div
-            className={`flex-shrink-0 w-7 h-7 rounded-full flex items-center justify-center text-[10px] font-black border-2 ${trendScoreLabel.cls}`}
-            title={`TVI: ${trendScore} — ${trendScoreLabel.text}`}
-          >
-            {trendScore}
-          </div>
+          {/* TVI Badge with decomposition tooltip */}
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <div
+                className={`flex-shrink-0 w-7 h-7 rounded-full flex items-center justify-center text-[10px] font-black border-2 cursor-help ${trendScoreLabel.cls}`}
+              >
+                {trendScore}
+              </div>
+            </TooltipTrigger>
+            <TooltipContent side="left" className="p-2 text-[10px] space-y-1 min-w-[140px]">
+              <div className="font-bold text-[11px] mb-1">TVI Score: {trendScore}/100</div>
+              <div className="flex justify-between"><span>⚡ Velocity (30%)</span><span className="font-bold">{tviBreakdown.velocity}</span></div>
+              <div className="flex justify-between"><span>💬 Volume (30%)</span><span className="font-bold">{tviBreakdown.volume}</span></div>
+              <div className="flex justify-between"><span>📰 Sources (20%)</span><span className="font-bold">{tviBreakdown.sources}</span></div>
+              <div className="flex justify-between"><span>🌍 Geography (20%)</span><span className="font-bold">{tviBreakdown.geography}</span></div>
+              <div className="border-t border-border pt-1 mt-1 text-[9px] text-muted-foreground">{trendScoreLabel.emoji} {trendScoreLabel.text}</div>
+            </TooltipContent>
+          </Tooltip>
         </div>
 
         {/* === MAIN CONTENT: Click to expand === */}
