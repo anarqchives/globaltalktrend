@@ -8,6 +8,7 @@ import TrendCardSkeleton from "@/components/TrendCardSkeleton";
 import CriticalMomentsSection from "@/components/CriticalMomentsSection";
 import EmergingTrendsSection from "@/components/EmergingTrendsSection";
 import TransparencyPanel from "@/components/TransparencyPanel";
+import TemporalHeatmap from "@/components/TemporalHeatmap";
 import { TrendCardProps } from "@/components/TrendCard";
 import { useTrends } from "@/hooks/use-trends";
 import { useTranslatedTrends, TranslatedTrendCardProps } from "@/hooks/use-translated-trends";
@@ -97,6 +98,7 @@ const Index = () => {
   const [transparencyOpen, setTransparencyOpen] = useState(false);
   const [criticalDismissed, setCriticalDismissed] = useState(false);
   const [emergingDismissed, setEmergingDismissed] = useState(false);
+  const [heatmapDismissed, setHeatmapDismissed] = useState(false);
 
   // Reset dismissed state when new critical moments appear
   useEffect(() => {
@@ -632,6 +634,11 @@ const Index = () => {
             onSelectTrend={handleSelectTrend}
             onClose={() => setCriticalDismissed(true)}
           />
+        )}
+
+        {/* Temporal Heatmap */}
+        {!loading && !heatmapDismissed && filteredTrends.length > 5 && (
+          <TemporalHeatmap trends={allTrends} />
         )}
 
         {isMobile ? (

@@ -1,7 +1,8 @@
 import { useState, useMemo, useEffect } from "react";
 import { motion } from "framer-motion";
 import { ChevronDown, ChevronUp, Link2, Bell, ExternalLink, Shield, CheckCircle2, FlaskConical, Globe, Newspaper, Bookmark, Flag, Share2, Eye, TrendingUp, Radio, Clock, BarChart3 } from "lucide-react";
-import { AreaChart, Area, ResponsiveContainer, XAxis, YAxis, Tooltip, CartesianGrid } from "recharts";
+import { AreaChart, Area, ResponsiveContainer, XAxis, YAxis, Tooltip as RechartsTooltip, CartesianGrid } from "recharts";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { toast } from "@/hooks/use-toast";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { TrendCardProps } from "./TrendCard";
@@ -149,21 +150,24 @@ const TimelineCard = ({
   const trigger = useMemo(() => detectTriggerFromTitle(title), [title]);
   const signalType = useMemo(() => detectSignalType(platform, change), [platform, change]);
 
-  // TVI Score: 0-100
-  const trendScore = useMemo(() => {
-    let score = 0;
+  // TVI Score: 0-100 with decomposition
+  const tviBreakdown = useMemo(() => {
     const ch = Math.abs(parseFloat(change?.replace(/[^0-9.\-]/g, "") || "0"));
-    score += Math.min(ch / 10, 30);
+    const velocity = Math.min(Math.round(ch / 10), 30); // 0-30
     const volStr = (volume || "0").toLowerCase();
     let vol = parseFloat(volStr.replace(/[^0-9.]/g, "")) || 0;
     if (volStr.includes("m")) vol *= 1_000_000;
     else if (volStr.includes("k")) vol *= 1_000;
-    score += Math.min(vol / 5000, 30);
-    score += Math.min((sources?.length || 1) * 5, 20);
-    if (isMultiplatform) score += 15;
-    if (crossPlatformCluster && crossPlatformCluster.platformCount > 2) score += 5;
-    return Math.min(Math.round(score), 100);
+    const volumeScore = Math.min(Math.round(vol / 5000), 30); // 0-30
+    const sourcesScore = Math.min((sources?.length || 1) * 5, 20); // 0-20
+    let geoScore = 0;
+    if (isMultiplatform) geoScore += 15;
+    if (crossPlatformCluster && crossPlatformCluster.platformCount > 2) geoScore += 5;
+    geoScore = Math.min(geoScore, 20); // 0-20
+    const total = Math.min(velocity + volumeScore + sourcesScore + geoScore, 100);
+    return { velocity, volume: volumeScore, sources: sourcesScore, geography: geoScore, total };
   }, [change, volume, sources, isMultiplatform, crossPlatformCluster]);
+  const trendScore = tviBreakdown.total;
 
   const trendScoreLabel = trendScore >= 80
     ? { emoji: "🔥", text: "Explosive", cls: "border-destructive text-destructive bg-destructive/10" }
@@ -284,13 +288,24 @@ const TimelineCard = ({
 
           <div className="flex-1" />
 
-          {/* TVI Badge */}
-          <div
-            className={`flex-shrink-0 w-7 h-7 rounded-full flex items-center justify-center text-[10px] font-black border-2 ${trendScoreLabel.cls}`}
-            title={`TVI: ${trendScore} — ${trendScoreLabel.text}`}
-          >
-            {trendScore}
-          </div>
+          {/* TVI Badge with decomposition tooltip */}
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <div
+                className={`flex-shrink-0 w-7 h-7 rounded-full flex items-center justify-center text-[10px] font-black border-2 cursor-help ${trendScoreLabel.cls}`}
+              >
+                {trendScore}
+              </div>
+            </TooltipTrigger>
+            <TooltipContent side="left" className="p-2 text-[10px] space-y-1 min-w-[140px]">
+              <div className="font-bold text-[11px] mb-1">TVI Score: {trendScore}/100</div>
+              <div className="flex justify-between"><span>⚡ Velocity (30%)</span><span className="font-bold">{tviBreakdown.velocity}</span></div>
+              <div className="flex justify-between"><span>💬 Volume (30%)</span><span className="font-bold">{tviBreakdown.volume}</span></div>
+              <div className="flex justify-between"><span>📰 Sources (20%)</span><span className="font-bold">{tviBreakdown.sources}</span></div>
+              <div className="flex justify-between"><span>🌍 Geography (20%)</span><span className="font-bold">{tviBreakdown.geography}</span></div>
+              <div className="border-t border-border pt-1 mt-1 text-[9px] text-muted-foreground">{trendScoreLabel.emoji} {trendScoreLabel.text}</div>
+            </TooltipContent>
+          </Tooltip>
         </div>
 
         {/* === MAIN CONTENT: Click to expand === */}
@@ -510,7 +525,7 @@ const TimelineCard = ({
                     <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
                     <XAxis dataKey="hour" tick={{ fontSize: 9, fill: "hsl(var(--muted-foreground))" }} tickLine={false} axisLine={false} interval={5} />
                     <YAxis tick={{ fontSize: 9, fill: "hsl(var(--muted-foreground))" }} tickLine={false} axisLine={false} width={30} tickFormatter={(v) => v >= 1000 ? `${(v / 1000).toFixed(0)}K` : v} />
-                    <Tooltip
+                    <RechartsTooltip
                       contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: "8px", fontSize: 11 }}
                       formatter={(value: number) => [value >= 1000 ? `${(value / 1000).toFixed(1)}K` : value, metricLabel || "valor"]}
                     />
