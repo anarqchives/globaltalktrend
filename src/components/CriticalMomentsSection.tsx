@@ -1,10 +1,11 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Flame, TrendingUp, Globe, Radio, Shield, X, ExternalLink, Clock, BarChart3, Zap, Bell, Share2 } from "lucide-react";
+import { TrendingUp, Globe, Radio, Shield, ExternalLink, BarChart3, Share2 } from "lucide-react";
 import { AreaChart, Area, ResponsiveContainer } from "recharts";
 import { useLanguage, type LangCode } from "@/contexts/LanguageContext";
 import type { CriticalMoment } from "@/hooks/use-critical-moments";
 import { Progress } from "@/components/ui/progress";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 
 const reasonLabelsByLang: Record<LangCode, Record<string, string>> = {
   pt: { volumeSpike: "Pico de volume", acceleration: "Crescimento rápido", multiSource: "Múltiplas fontes", geographicSpread: "Vários países", verifiedSource: "Fonte verificada" },
@@ -40,6 +41,8 @@ function CriticalCard({ m, i, lang, isExpanded, onToggle }: {
   const trend = m.trend;
   const sparkData = trend.historicalData?.slice(-24) || [];
   const sources = trend.sources || [];
+  // Confidence = score / max_possible_score (rough heuristic)
+  const confidence = Math.min(Math.round((m.score / 8) * 100), 100);
 
   return (
     <motion.div
@@ -54,20 +57,37 @@ function CriticalCard({ m, i, lang, isExpanded, onToggle }: {
       onClick={onToggle}
     >
       <div className="p-3">
-        {/* Status + Score */}
+        {/* Status + Score + Confidence */}
         <div className="flex items-center justify-between mb-1.5">
           <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded text-[8px] font-black bg-destructive/15 text-destructive uppercase tracking-wide">
             🔥 Critical
           </span>
-          <span className="text-[11px] font-black text-destructive">
-            +{Math.round(m.changePercent)}%
-          </span>
+          <div className="flex items-center gap-1.5">
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <span className="text-[9px] font-medium text-muted-foreground cursor-help">
+                  {confidence}% conf.
+                </span>
+              </TooltipTrigger>
+              <TooltipContent side="top" className="text-[10px]">
+                Signal confidence based on source diversity, growth velocity and geographic spread.
+              </TooltipContent>
+            </Tooltip>
+            <span className="text-[11px] font-black text-destructive">
+              +{Math.round(m.changePercent)}%
+            </span>
+          </div>
         </div>
 
         {/* Title */}
-        <h3 className="text-[12px] font-semibold text-foreground leading-tight line-clamp-2 mb-1.5">
+        <h3 className="text-[12px] font-semibold text-foreground leading-tight line-clamp-2 mb-1">
           {trend.title}
         </h3>
+
+        {/* Brief description */}
+        {trend.description && (
+          <p className="text-[10px] text-muted-foreground line-clamp-1 mb-1.5">{trend.description}</p>
+        )}
 
         {/* Metrics row */}
         <div className="flex items-center gap-2 text-[9px] text-muted-foreground flex-wrap mb-1.5">
@@ -133,6 +153,14 @@ function CriticalCard({ m, i, lang, isExpanded, onToggle }: {
                 </div>
               )}
 
+              {/* Propagation hint */}
+              {sources.length >= 2 && (
+                <div className="text-[9px] text-muted-foreground">
+                  <span className="font-semibold">Propagation:</span>{" "}
+                  {sources.slice(0, 4).join(" → ")}
+                </div>
+              )}
+
               {/* Actions */}
               <div className="flex items-center gap-1.5 pt-1" onClick={(e) => e.stopPropagation()}>
                 {trend.sourceUrl && (
@@ -163,43 +191,24 @@ interface Props {
 }
 
 export default function CriticalMomentsSection({ moments, onSelectTrend, onClose, horizontal }: Props) {
-  const { t, lang } = useLanguage();
+  const { lang } = useLanguage();
   const [expandedIdx, setExpandedIdx] = useState<number | null>(null);
 
   if (!moments.length) return null;
 
   return (
-    <div className={horizontal ? "h-full flex flex-col" : ""}>
-      <div className={`border-b border-border ${horizontal ? "h-full flex flex-col" : ""}`}>
-        <div className="px-3 py-2.5">
-          {/* Section header */}
-          <div className="flex items-center gap-2 mb-2">
-            <Flame className="w-3.5 h-3.5 text-destructive animate-pulse" />
-            <span className="text-[10px] font-bold text-destructive uppercase tracking-widest flex-1">
-              Critical Alerts
-              <span className="ml-1.5 px-1.5 py-0.5 rounded-full bg-destructive/15 text-[9px] font-bold">{moments.length}</span>
-            </span>
-            {onClose && (
-              <button onClick={onClose} className="text-muted-foreground hover:text-destructive transition-colors p-1 rounded-md hover:bg-secondary">
-                <X className="w-3 h-3" />
-              </button>
-            )}
-          </div>
-
-          {/* Cards grid: 3 columns on desktop, 2 on tablet, 1 on mobile */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
-            {moments.slice(0, 6).map((m, i) => (
-              <CriticalCard
-                key={`${m.trend.platform}-${m.trend.title.slice(0, 20)}`}
-                m={m}
-                i={i}
-                lang={lang}
-                isExpanded={expandedIdx === i}
-                onToggle={() => setExpandedIdx(expandedIdx === i ? null : i)}
-              />
-            ))}
-          </div>
-        </div>
+    <div className="px-3 py-2">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
+        {moments.slice(0, 6).map((m, i) => (
+          <CriticalCard
+            key={`${m.trend.platform}-${m.trend.title.slice(0, 20)}`}
+            m={m}
+            i={i}
+            lang={lang}
+            isExpanded={expandedIdx === i}
+            onToggle={() => setExpandedIdx(expandedIdx === i ? null : i)}
+          />
+        ))}
       </div>
     </div>
   );

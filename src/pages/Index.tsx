@@ -5,8 +5,7 @@ import TrendHeader from "@/components/TrendHeader";
 import FilterBar, { FilterState, countries } from "@/components/FilterBar";
 import TimelineCard from "@/components/TimelineCard";
 import TrendCardSkeleton from "@/components/TrendCardSkeleton";
-import CriticalMomentsSection from "@/components/CriticalMomentsSection";
-import EmergingTrendsSection from "@/components/EmergingTrendsSection";
+import TrendRadar from "@/components/TrendRadar";
 import TransparencyPanel from "@/components/TransparencyPanel";
 import TemporalHeatmap from "@/components/TemporalHeatmap";
 import { TrendCardProps } from "@/components/TrendCard";
@@ -618,21 +617,14 @@ const Index = () => {
       />
 
       <div className="flex-1 overflow-hidden">
-        {/* Emerging Trends */}
-        {!loading && !emergingDismissed && filteredTrends.length > 3 && (
-          <EmergingTrendsSection
+        {/* Trend Radar: Emerging / Critical / Top Trends */}
+        {!loading && filteredTrends.length > 1 && (
+          <TrendRadar
             trends={filteredTrends}
+            allTrends={allTrends}
+            criticalMoments={criticalMoments}
             onSelectTrend={handleSelectTrend}
-            onClose={() => setEmergingDismissed(true)}
-          />
-        )}
-
-        {/* Critical Moments */}
-        {!loading && criticalMoments.length > 0 && filteredTrends.length > 1 && !criticalDismissed && (
-          <CriticalMomentsSection
-            moments={criticalMoments}
-            onSelectTrend={handleSelectTrend}
-            onClose={() => setCriticalDismissed(true)}
+            onFilterCountry={(code) => setFilters(f => ({ ...f, country: code }))}
           />
         )}
 
