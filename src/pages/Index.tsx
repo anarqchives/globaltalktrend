@@ -636,6 +636,11 @@ const Index = () => {
           />
         )}
 
+        {/* Temporal Heatmap */}
+        {!loading && !heatmapDismissed && filteredTrends.length > 5 && (
+          <TemporalHeatmap trends={allTrends} />
+        )}
+
         {isMobile ? (
           <div className="h-full min-h-0 flex flex-col relative">
             <div className="flex-1 min-h-0 overflow-hidden">
