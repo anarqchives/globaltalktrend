@@ -298,7 +298,8 @@ const TimelineCard = ({
               </div>
             </TooltipTrigger>
             <TooltipContent side="left" className="p-2 text-[10px] space-y-1 min-w-[140px]">
-              <div className="font-bold text-[11px] mb-1">TVI Score: {trendScore}/100</div>
+              <div className="font-bold text-[11px] mb-1">TVI (Trend Velocity Index)</div>
+              <p className="text-muted-foreground/80 mb-2 leading-tight">Mede a velocidade e impacto de uma narrativa.</p>
               <div className="flex justify-between"><span>⚡ Velocity (30%)</span><span className="font-bold">{tviBreakdown.velocity}</span></div>
               <div className="flex justify-between"><span>💬 Volume (30%)</span><span className="font-bold">{tviBreakdown.volume}</span></div>
               <div className="flex justify-between"><span>📰 Sources (20%)</span><span className="font-bold">{tviBreakdown.sources}</span></div>
