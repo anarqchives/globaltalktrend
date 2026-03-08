@@ -6,6 +6,7 @@ import FilterBar, { FilterState, countries } from "@/components/FilterBar";
 import TimelineCard from "@/components/TimelineCard";
 import TrendCardSkeleton from "@/components/TrendCardSkeleton";
 import CriticalMomentsSection from "@/components/CriticalMomentsSection";
+import EmergingTrendsSection from "@/components/EmergingTrendsSection";
 import TransparencyPanel from "@/components/TransparencyPanel";
 import { TrendCardProps } from "@/components/TrendCard";
 import { useTrends } from "@/hooks/use-trends";
