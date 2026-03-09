@@ -595,6 +595,12 @@ const translations: Record<LangCode, Record<TranslationKey, string>> = {
     mapFlowLegendTitle: "Propagazione dei Trend", mapFlowOrigin: "Origine", mapFlowDestination: "Destinazione", mapFlowPropagation: "Propagazione", mapFlowTimeDelta: "Tempo di propagazione", mapFlowClickToFilter: "Clicca per filtrare", mapFlowNoData: "Dati di propagazione insufficienti",
     mapSentLegendTitle: "Paesaggio Emotivo", mapSentPositive: "Positivo", mapSentNegative: "Negativo", mapSentMixed: "Polarizzato", mapSentNeutral: "Neutro", mapSentBreakdown: "Distribuzione del sentimento", mapSentTopTrends: "Top tendenze", mapSentNoData: "Dati di sentimento insufficienti",
     mapSentVolume: "Volume totale", mapSentGrowth: "Crescita media", mapSentActiveTrends: "Trend attive",
+    growth: "Crescita", volumeLabel: "Volume", sourcesLabel: "Fonti", narrativeOrigin: "Origine Narrativa",
+    confidenceLabel: "Affidabilità", confidenceHigh: "Alta", confidenceMedium: "Media", confidenceLow: "Bassa",
+    propagationPath: "Percorso di Propagazione", sourceLabel: "Fonte", sentimentAnalysis: "Analisi del Sentimento",
+    tviGrowthLabel: "Crescita (30%)", tviVolumeLabel: "Volume (30%)", tviSourcesLabel: "Fonti (20%)", tviGeographyLabel: "Geografia (20%)",
+    tviDescription: "Misura la velocità di propagazione basata su:",
+    sourcesSingular: "fonte", sourcesPlural: "fonti",
   },
   zh: {
     trends: "趋势", moreTrends: "更多趋势", filters: "筛选",
