@@ -1147,7 +1147,7 @@ export default function WeeklyPulseDashboard({ trends }: { trends: TrendCardProp
       </AnimatePresence>
 
       {/* ═══════ MOMENTUM + LIVE FEED ═══════ */}
-      <div className="grid grid-cols-2 gap-1.5">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5">
         <div className="rounded-xl border border-border/50 bg-card p-2.5">
           <MomentumGauge categories={analysis.categoryMomentum} lang={lang} />
         </div>
