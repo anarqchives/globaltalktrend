@@ -1608,7 +1608,7 @@ const GoogleMapView = ({
                   <span>{t("mapSizeVolume")}</span>
                 </div>
                 <div className="text-[9px] text-muted-foreground italic">
-                  {lang === "pt" ? "Pulso rápido = crescimento acelerado" : "Fast pulse = rapid growth"}
+                  {t("mapFastPulse")}
                 </div>
                 <div className="mt-2 pt-2 border-t border-border/30 text-[10px] text-muted-foreground">
                   {sentimentBubbles.length} {t("countries")}
