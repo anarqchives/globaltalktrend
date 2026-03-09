@@ -130,6 +130,15 @@ export function useTranslatedTrends(trends: TrendCardProps[], lang: string) {
       return;
     }
 
+    // SHORT-CIRCUIT: When target is Portuguese (default), return originals instantly — zero processing
+    if (lang === "pt") {
+      setTranslated(trends.map(t => ({ ...t, _originalTitle: t.title })));
+      lastLangRef.current = lang;
+      lastTrendsKeyRef.current = "";
+      setIsTranslating(false);
+      return;
+    }
+
     // Generate key to detect changes
     const trendsKey = `${lang}::${trends.length}::${trends.slice(0, 3).map(t => t.title.slice(0, 20)).join("|")}`;
     if (trendsKey === lastTrendsKeyRef.current && lang === lastLangRef.current) {
