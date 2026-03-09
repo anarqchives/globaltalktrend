@@ -44,6 +44,32 @@ interface UpdateProfileInput {
   privacy_settings?: PrivacySettings;
 }
 
+function parseProfile(data: unknown): Profile {
+  const raw = data as Record<string, unknown>;
+  return {
+    id: raw.id as string,
+    user_id: raw.user_id as string,
+    username: raw.username as string | null,
+    display_name: raw.display_name as string | null,
+    bio: raw.bio as string | null,
+    avatar_url: raw.avatar_url as string | null,
+    is_public: raw.is_public as boolean,
+    is_searchable: raw.is_searchable as boolean,
+    privacy_settings: (raw.privacy_settings || {
+      timeline: "public",
+      boards: "public",
+      comments: "public",
+      reports: "followers",
+    }) as PrivacySettings,
+    badges: (raw.badges || []) as Badge[],
+    followers_count: raw.followers_count as number,
+    following_count: raw.following_count as number,
+    boards_count: raw.boards_count as number,
+    created_at: raw.created_at as string,
+    updated_at: raw.updated_at as string,
+  };
+}
+
 export function useProfile(userId: string | null) {
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
@@ -79,7 +105,7 @@ export function useProfile(userId: string | null) {
               .single();
 
             if (!insertError && newProfile) {
-              setProfile(newProfile as Profile);
+              setProfile(parseProfile(newProfile));
             }
           }
         } else {
