@@ -1400,8 +1400,8 @@ const GoogleMapView = ({
   return (
     <div className="w-full h-full relative" style={{ isolation: "isolate" }}>
       {/* Map controls + Top Trends */}
-      <div className="absolute top-3 left-3 z-[5] flex items-start gap-2">
-        <div className="relative flex items-center gap-0 p-0.5 rounded-full bg-white/90 dark:bg-card/90 backdrop-blur-xl border border-border/20 shadow-[0_2px_12px_rgba(0,0,0,0.06)] dark:shadow-[0_2px_12px_rgba(0,0,0,0.2)]">
+      <div className="absolute top-3 left-3 right-3 z-[5] flex items-center justify-between pointer-events-none">
+        <div className="relative flex items-center gap-0 p-0.5 rounded-full bg-white/90 dark:bg-card/90 backdrop-blur-xl border border-border/20 shadow-[0_2px_12px_rgba(0,0,0,0.06)] dark:shadow-[0_2px_12px_rgba(0,0,0,0.2)] pointer-events-auto">
           {/* Sliding pill indicator */}
           <motion.div
             className="absolute top-0.5 bottom-0.5 rounded-full bg-primary shadow-sm"
@@ -1431,6 +1431,15 @@ const GoogleMapView = ({
             </button>
           )}
         </div>
+        {onClose && (
+          <button
+            onClick={onClose}
+            className="w-6 h-6 rounded-full flex items-center justify-center bg-background/80 hover:bg-destructive/15 text-muted-foreground hover:text-destructive border border-border/40 hover:border-destructive/30 shadow-sm backdrop-blur-sm transition-all duration-200 pointer-events-auto mr-8"
+            title={lang === "pt" ? "Fechar Mapa" : "Close Map"}
+          >
+            <X className="w-3 h-3" strokeWidth={2.5} />
+          </button>
+        )}
       </div>
 
       {/* Update notification */}
