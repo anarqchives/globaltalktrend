@@ -341,10 +341,10 @@ function WeeklyPulse({ trends }: { trends: TrendCardProps[] }) {
                 fontSize: "10px",
               }} 
             />
-            <Line type="monotone" dataKey="politica" stroke="#3b82f6" strokeWidth={2} dot={{ r: 2 }} name="Política" />
-            <Line type="monotone" dataKey="tecnologia" stroke="#22c55e" strokeWidth={2} dot={{ r: 2 }} name="Tecnologia" />
-            <Line type="monotone" dataKey="economia" stroke="#f59e0b" strokeWidth={2} dot={{ r: 2 }} name="Economia" />
-            <Line type="monotone" dataKey="criticos" stroke="#ef4444" strokeWidth={2} dot={{ r: 2 }} name="Críticos" />
+            <Line type="monotone" dataKey="politica" stroke="hsl(var(--chart-1))" strokeWidth={2} dot={{ r: 2 }} name="Política" />
+            <Line type="monotone" dataKey="tecnologia" stroke="hsl(var(--chart-2))" strokeWidth={2} dot={{ r: 2 }} name="Tecnologia" />
+            <Line type="monotone" dataKey="entretenimento" stroke="hsl(var(--chart-3))" strokeWidth={2} dot={{ r: 2 }} name="Entretenimento" />
+            <Line type="monotone" dataKey="esportes" stroke="hsl(var(--chart-4))" strokeWidth={2} dot={{ r: 2 }} name="Esportes" />
           </LineChart>
         </ResponsiveContainer>
       </div>
@@ -352,20 +352,29 @@ function WeeklyPulse({ trends }: { trends: TrendCardProps[] }) {
       {/* Legend */}
       <div className="flex flex-wrap items-center gap-3 text-[9px]">
         <span className="flex items-center gap-1">
-          <span className="w-2 h-2 rounded-full bg-blue-500" />
+          <span className="w-2 h-2 rounded-full" style={{ background: "hsl(var(--chart-1))" }} />
           Política
         </span>
         <span className="flex items-center gap-1">
-          <span className="w-2 h-2 rounded-full bg-green-500" />
+          <span className="w-2 h-2 rounded-full" style={{ background: "hsl(var(--chart-2))" }} />
           Tecnologia
         </span>
         <span className="flex items-center gap-1">
-          <span className="w-2 h-2 rounded-full bg-amber-500" />
-          Economia
+          <span className="w-2 h-2 rounded-full" style={{ background: "hsl(var(--chart-3))" }} />
+          Entretenimento
         </span>
         <span className="flex items-center gap-1">
-          <span className="w-2 h-2 rounded-full bg-red-500" />
-          Críticos
+          <span className="w-2 h-2 rounded-full" style={{ background: "hsl(var(--chart-4))" }} />
+          Esportes
+        </span>
+      </div>
+
+      {/* Insight */}
+      <div className="p-2 rounded-lg bg-primary/5 border border-primary/20 text-[10px]">
+        <span className="mr-1">📈</span>
+        <span className="font-medium text-primary">{insights.topCategory}</span>
+        <span className="text-muted-foreground">
+          {" "}{lang === "pt" ? `foi a categoria mais ativa (${insights.growth > 0 ? "+" : ""}${insights.growth}% vs semana anterior)` : `was the most active (${insights.growth > 0 ? "+" : ""}${insights.growth}% vs previous week)`}
         </span>
       </div>
 
