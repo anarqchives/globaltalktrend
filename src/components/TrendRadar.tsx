@@ -547,7 +547,7 @@ export default function TrendRadar({ trends, allTrends, criticalMoments, anomali
             )}
             
             <div className="flex-1 min-h-0 overflow-hidden relative">
-              <TabsContent value="emerging" className="mt-0 h-full flex flex-col">
+              <TabsContent value="emerging" className="absolute inset-0 mt-0 flex flex-col data-[state=inactive]:hidden">
                 <Legend tab="emerging" lang={lang} />
                 <ScrollArea className="flex-1">
                   {hasEmerging ? (
@@ -563,7 +563,7 @@ export default function TrendRadar({ trends, allTrends, criticalMoments, anomali
                 </ScrollArea>
               </TabsContent>
 
-              <TabsContent value="critical" className="mt-0 h-full flex flex-col">
+              <TabsContent value="critical" className="absolute inset-0 mt-0 flex flex-col data-[state=inactive]:hidden">
                 <Legend tab="critical" lang={lang} />
                 <ScrollArea className="flex-1">
                   {hasCritical ? (
@@ -579,7 +579,7 @@ export default function TrendRadar({ trends, allTrends, criticalMoments, anomali
                 </ScrollArea>
               </TabsContent>
 
-              <TabsContent value="top" className="mt-0 h-full flex flex-col">
+              <TabsContent value="top" className="absolute inset-0 mt-0 flex flex-col data-[state=inactive]:hidden">
                 <Legend tab="top" lang={lang} />
                 <ScrollArea className="flex-1">
                   <div className="px-3 py-2">
@@ -588,7 +588,7 @@ export default function TrendRadar({ trends, allTrends, criticalMoments, anomali
                 </ScrollArea>
               </TabsContent>
 
-              <TabsContent value="weekly" className="mt-0 h-full flex flex-col">
+              <TabsContent value="weekly" className="absolute inset-0 mt-0 flex flex-col data-[state=inactive]:hidden">
                 <Legend tab="weekly" lang={lang} />
                 <ScrollArea className="flex-1">
                   <WeeklyPulse trends={allTrends} />
