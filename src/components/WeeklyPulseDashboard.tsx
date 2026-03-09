@@ -233,14 +233,28 @@ export default function WeeklyPulseDashboard({ trends }: { trends: TrendCardProp
         const now = new Date();
         const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
         
-        const { data } = await supabase
-          .from("trend_snapshots")
-          .select("category, snapshot_at, volume_raw, platform, title, country_code")
-          .gte("snapshot_at", sevenDaysAgo.toISOString())
-          .lte("snapshot_at", now.toISOString())
-          .order("snapshot_at", { ascending: true })
-          .limit(1000);
-        if (data) setWeeklyData(data);
+        // Fetch in batches to avoid 1000-row limit
+        let allData: any[] = [];
+        let offset = 0;
+        const batchSize = 1000;
+        let hasMore = true;
+        while (hasMore) {
+          const { data } = await supabase
+            .from("trend_snapshots")
+            .select("category, snapshot_at, volume_raw, platform, title, country_code")
+            .gte("snapshot_at", sevenDaysAgo.toISOString())
+            .lte("snapshot_at", now.toISOString())
+            .order("snapshot_at", { ascending: true })
+            .range(offset, offset + batchSize - 1);
+          if (data && data.length > 0) {
+            allData = allData.concat(data);
+            offset += batchSize;
+            hasMore = data.length === batchSize;
+          } else {
+            hasMore = false;
+          }
+        }
+        setWeeklyData(allData);
       } catch (e) { console.error(e); }
       finally { setLoading(false); }
     };

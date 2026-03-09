@@ -423,7 +423,7 @@ const TimelineCard = ({
                     {trigger.emoji} {t(trigger.labelKey as any)}
                   </span>
                 </TooltipTrigger>
-                <TooltipContent side="top" className="text-[10px]">Gatilho contextual detectado no título</TooltipContent>
+                <TooltipContent side="top" className="text-[10px]">{getTooltip("trigger", lang)}</TooltipContent>
               </Tooltip>
             )}
             {translated && (
