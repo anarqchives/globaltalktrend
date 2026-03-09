@@ -747,7 +747,29 @@ export default function WeeklyPulseDashboard({ trends }: { trends: TrendCardProp
       }
     }
 
-    const topCats = Object.entries(catTotal).sort((a, b) => b[1] - a[1]).slice(0, 6).map(([name]) => name);
+    let topCats = Object.entries(catTotal).sort((a, b) => b[1] - a[1]).slice(0, 6).map(([name]) => name);
+    
+    // Fallback: if no weekly snapshot data, derive categories from live trends
+    if (topCats.length === 0 && trends.length > 0) {
+      const trendCatCounts: Record<string, number> = {};
+      for (const tr of trends) {
+        const cat = normCat(tr.category || "Geral");
+        trendCatCounts[cat] = (trendCatCounts[cat] || 0) + 1;
+      }
+      topCats = Object.entries(trendCatCounts).sort((a, b) => b[1] - a[1]).slice(0, 6).map(([name]) => name);
+      // Populate catDaily with today's data from trends
+      const todayKey = dayLabels[new Date().getDay()];
+      if (!catDaily[todayKey]) catDaily[todayKey] = {};
+      for (const tr of trends) {
+        const cat = normCat(tr.category || "Geral");
+        const vol = parseVol(tr.volume);
+        catDaily[todayKey][cat] = (catDaily[todayKey][cat] || 0) + vol;
+        catTotal[cat] = (catTotal[cat] || 0) + vol;
+        dailyVolumes[todayKey] = (dailyVolumes[todayKey] || 0) + vol;
+        totalVolume += vol;
+      }
+    }
+
     const today = new Date();
     const todayDayKey = dayLabels[today.getDay()];
     const todayIndex = orderedDays.indexOf(todayDayKey);
