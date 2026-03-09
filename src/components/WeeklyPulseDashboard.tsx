@@ -774,12 +774,15 @@ export default function WeeklyPulseDashboard({ trends }: { trends: TrendCardProp
     const todayDayKey = dayLabels[today.getDay()];
     const todayIndex = orderedDays.indexOf(todayDayKey);
 
-    // Chart data
+    // Chart data — use adaptive scaling
+    const maxCatVal = Math.max(...Object.values(catTotal), 1);
+    const divider = maxCatVal >= 10000 ? 1000 : maxCatVal >= 100 ? 10 : 1;
     const chartData = orderedDays.map((day, i) => {
       const isFuture = i > todayIndex && todayIndex >= 0;
       const entry: Record<string, any> = { day, isFuture, _dayKey: day };
       for (const cat of topCats) {
-        entry[cat] = isFuture ? null : Math.round((catDaily[day]?.[cat] || 0) / 1000);
+        const raw = catDaily[day]?.[cat] || 0;
+        entry[cat] = isFuture ? null : (divider > 1 ? Math.round(raw / divider) : raw);
       }
       return entry;
     });
