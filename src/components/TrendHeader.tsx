@@ -236,7 +236,7 @@ const TrendHeader = ({ totalTrends = 0, countriesCount = 0, onRefresh, refreshin
 
             <button
               onClick={() => setDark(!dark)}
-              className="p-1.5 rounded-full text-muted-foreground hover:bg-secondary transition-colors"
+              className="p-1.5 rounded-full text-muted-foreground dark:text-white/80 hover:bg-secondary dark:hover:bg-white/10 transition-colors"
               title={dark ? "Modo claro" : "Modo escuro"}>
 
               {dark ? <Sun className="w-3.5 h-3.5" /> : <Moon className="w-3.5 h-3.5" />}
