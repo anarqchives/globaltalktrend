@@ -7,6 +7,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { LanguageProvider } from "@/contexts/LanguageContext";
 import { UserModeProvider } from "@/contexts/UserModeContext";
 import { toast } from "@/hooks/use-toast";
+import { ErrorBoundary, OfflineBanner } from "./components/ErrorBoundary";
 
 // Eagerly load the main page (critical path)
 import Index from "./pages/Index";
