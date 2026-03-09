@@ -271,6 +271,10 @@ const translations: Record<LangCode, Record<TranslationKey, string>> = {
     trendTableVolume: "Volume",
     trendTableChange: "Change",
     trendTableCountry: "Country",
+    mapFlowMap: "Flow", mapSentiment: "Sentiment", mapHeatmap: "Heatmap",
+    mapFlowLegendTitle: "Trend Propagation", mapFlowOrigin: "Origin", mapFlowDestination: "Destination", mapFlowPropagation: "Propagation", mapFlowTimeDelta: "Propagation time", mapFlowClickToFilter: "Click to filter timeline", mapFlowNoData: "Not enough propagation data for this period",
+    mapSentLegendTitle: "Emotional Landscape", mapSentPositive: "Positive", mapSentNegative: "Negative", mapSentMixed: "Polarized", mapSentNeutral: "Neutral", mapSentBreakdown: "Sentiment breakdown", mapSentTopTrends: "Top trends", mapSentNoData: "Not enough sentiment data",
+    mapSentVolume: "Total volume", mapSentGrowth: "Avg growth", mapSentActiveTrends: "Active trends",
   },
   es: {
     trends: "Tendencias", moreTrends: "Más trends", filters: "Filtros",
