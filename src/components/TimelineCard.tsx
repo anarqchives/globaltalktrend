@@ -35,12 +35,12 @@ const countryCodeToFlag = (code?: string) => {
 };
 
 const trustBadgeKeys: Record<string, { labelKey: string; icon: React.ReactNode; className: string }> = {
-  official: { labelKey: "officialSource", icon: <Shield className="w-2.5 h-2.5" />, className: "bg-blue-100/80 text-blue-700 dark:bg-blue-500/15 dark:text-blue-400" },
-  verified: { labelKey: "verifiedPress", icon: <CheckCircle2 className="w-2.5 h-2.5" />, className: "bg-green-100/80 text-green-700 dark:bg-green-500/15 dark:text-green-400" },
-  scientific: { labelKey: "scientificData", icon: <FlaskConical className="w-2.5 h-2.5" />, className: "bg-purple-100/80 text-purple-700 dark:bg-purple-500/15 dark:text-purple-400" },
-  international: { labelKey: "internationalSource", icon: <Globe className="w-2.5 h-2.5" />, className: "bg-amber-100/80 text-amber-700 dark:bg-amber-500/15 dark:text-amber-500" },
-  press: { labelKey: "verifiedPress", icon: <Newspaper className="w-2.5 h-2.5" />, className: "bg-emerald-100/80 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-400" },
-  hot: { labelKey: "hotTopic", icon: <span className="text-[9px]">🔥</span>, className: "bg-red-100/80 text-red-700 dark:bg-red-500/15 dark:text-red-400" },
+  official: { labelKey: "officialSource", icon: <Shield className="w-2.5 h-2.5" />, className: "bg-blue-50 text-blue-600 dark:bg-blue-500/10 dark:text-blue-400" },
+  verified: { labelKey: "verifiedPress", icon: <CheckCircle2 className="w-2.5 h-2.5" />, className: "bg-emerald-50 text-emerald-600 dark:bg-emerald-500/10 dark:text-emerald-400" },
+  scientific: { labelKey: "scientificData", icon: <FlaskConical className="w-2.5 h-2.5" />, className: "bg-purple-50 text-purple-600 dark:bg-purple-500/10 dark:text-purple-400" },
+  international: { labelKey: "internationalSource", icon: <Globe className="w-2.5 h-2.5" />, className: "bg-amber-50 text-amber-700 dark:bg-amber-500/10 dark:text-amber-400" },
+  press: { labelKey: "verifiedPress", icon: <Newspaper className="w-2.5 h-2.5" />, className: "bg-emerald-50 text-emerald-600 dark:bg-emerald-500/10 dark:text-emerald-400" },
+  hot: { labelKey: "hotTopic", icon: <span className="text-[9px]">🔥</span>, className: "bg-red-50 text-red-600 dark:bg-red-500/10 dark:text-red-400" },
 };
 
 const triggerPatterns: { type: string; emoji: string; labelKey: string; keywords: string[] }[] = [
@@ -77,7 +77,6 @@ interface TimelineCardProps extends TrendCardProps {
 
 const normalizeText = (value: string) => value.toLowerCase().normalize("NFD").replace(/\p{Diacritic}/gu, "").trim();
 
-// Decode HTML entities (e.g. &#39; &amp; &quot;)
 const decodeEntities = (text: string): string => {
   if (!text || (!text.includes("&") && !text.includes("&#"))) return text;
   const el = typeof document !== "undefined" ? document.createElement("textarea") : null;
@@ -128,7 +127,6 @@ function localizeFallbackTime(timeValue: string, lang: string): string {
   return timeValue;
 }
 
-// Signal type detection for tags
 function detectSignalType(platform: string, change?: string): string {
   const ch = Math.abs(parseFloat(change?.replace(/[^0-9.\-]/g, "") || "0"));
   if (ch > 200) return "🔥 Spike";
@@ -162,32 +160,31 @@ const TimelineCard = ({
   const trigger = useMemo(() => detectTriggerFromTitle(title), [title]);
   const signalType = useMemo(() => detectSignalType(platform, change), [platform, change]);
 
-  // TVI Score: 0-100 with decomposition
   const tviBreakdown = useMemo(() => {
     const ch = Math.abs(parseFloat(change?.replace(/[^0-9.\-]/g, "") || "0"));
-    const velocity = Math.min(Math.round(ch / 10), 30); // 0-30
+    const velocity = Math.min(Math.round(ch / 10), 30);
     const volStr = (volume || "0").toLowerCase();
     let vol = parseFloat(volStr.replace(/[^0-9.]/g, "")) || 0;
     if (volStr.includes("m")) vol *= 1_000_000;
     else if (volStr.includes("k")) vol *= 1_000;
-    const volumeScore = Math.min(Math.round(vol / 5000), 30); // 0-30
-    const sourcesScore = Math.min((sources?.length || 1) * 5, 20); // 0-20
+    const volumeScore = Math.min(Math.round(vol / 5000), 30);
+    const sourcesScore = Math.min((sources?.length || 1) * 5, 20);
     let geoScore = 0;
     if (isMultiplatform) geoScore += 15;
     if (crossPlatformCluster && crossPlatformCluster.platformCount > 2) geoScore += 5;
-    geoScore = Math.min(geoScore, 20); // 0-20
+    geoScore = Math.min(geoScore, 20);
     const total = Math.min(velocity + volumeScore + sourcesScore + geoScore, 100);
     return { velocity, volume: volumeScore, sources: sourcesScore, geography: geoScore, total };
   }, [change, volume, sources, isMultiplatform, crossPlatformCluster]);
   const trendScore = tviBreakdown.total;
 
   const trendScoreLabel = trendScore >= 80
-    ? { emoji: "🔥", text: "Explosive", cls: "border-destructive text-destructive bg-destructive/10" }
+    ? { emoji: "🔥", text: "Explosive", cls: "text-destructive bg-destructive/8" }
     : trendScore >= 60
-    ? { emoji: "📈", text: "Rising", cls: "border-orange-500 text-orange-600 dark:text-orange-400 bg-orange-500/10" }
+    ? { emoji: "📈", text: "Rising", cls: "text-orange-600 dark:text-orange-400 bg-orange-500/8" }
     : trendScore >= 40
-    ? { emoji: "➡️", text: "Stable", cls: "border-yellow-500 text-yellow-700 dark:text-yellow-400 bg-yellow-500/10" }
-    : { emoji: "—", text: "Low", cls: "border-muted-foreground/30 text-muted-foreground bg-muted/30" };
+    ? { emoji: "➡️", text: "Stable", cls: "text-amber-600 dark:text-amber-400 bg-amber-500/8" }
+    : { emoji: "—", text: "Low", cls: "text-muted-foreground bg-muted/50" };
 
   const formattedDate = useMemo(() => {
     if (!publishedAt) return null;
@@ -251,7 +248,6 @@ const TimelineCard = ({
     else toast({ title: `🔔 ${t("alertCreated")}`, description: `${t("monitoring")}: ${title.slice(0, 40)}` });
   };
 
-  // Sparkline data for inline micro chart
   const sparkData = useMemo(() => {
     if (!historicalData || historicalData.length === 0) return null;
     return historicalData.slice(-12);
@@ -275,45 +271,51 @@ const TimelineCard = ({
           
           {/* Image (when available) */}
           {thumbnail && !imgError && !compact && (
-            <div className="relative w-full h-36 mb-3 rounded-lg overflow-hidden bg-secondary">
-              <img src={thumbnail} alt="" className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105" loading="lazy" onError={() => setImgError(true)} />
+            <div className="relative w-full h-32 mb-2.5 rounded-xl overflow-hidden bg-secondary/50">
+              <img src={thumbnail} alt="" className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-[1.03]" loading="lazy" onError={() => setImgError(true)} />
             </div>
           )}
 
           {/* === HEADER ROW: Platform + Time === */}
-          <div className="flex items-center gap-2 mb-2">
-            <div
-              className="w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold flex-shrink-0"
-              style={{ background: `${pf.color}12`, color: pf.color }}
+          <div className="flex items-center gap-2 mb-1.5">
+            <button
+              onClick={handlePlatformClick}
+              className="flex items-center gap-1.5 flex-shrink-0 hover:opacity-80 transition-opacity"
             >
-              {pf.emoji}
-            </div>
-            <span className="text-[10px] font-semibold flex-shrink-0" style={{ color: pf.color }}>
-              {platform}
-            </span>
+              <div
+                className="w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold flex-shrink-0"
+                style={{ background: `${pf.color}10`, color: pf.color }}
+              >
+                {pf.emoji}
+              </div>
+              <span className="text-[10px] font-semibold" style={{ color: pf.color }}>
+                {platform}
+              </span>
+            </button>
             <FreshnessIndicator publishedAt={publishedAt} time={time} />
             <span className="text-[10px] text-muted-foreground flex-shrink-0">{localizedTime}</span>
             {flag && <span className="text-[11px] flex-shrink-0">{flag}</span>}
           </div>
+
           {/* Title */}
-          <h3 className={`font-semibold text-foreground leading-snug mb-1 ${compact ? 'text-xs line-clamp-1' : 'text-[14px] line-clamp-2'}`}>
+          <h3 className={`font-semibold text-foreground leading-snug mb-1 ${compact ? 'text-xs line-clamp-1' : 'text-[13px] line-clamp-2'}`}>
             {decodeEntities(title)}
           </h3>
 
-          {/* Contextual Description — the core intelligence layer */}
+          {/* Contextual Description */}
           {displayDescription && !compact && (
-            <p className="text-[12px] text-muted-foreground leading-relaxed line-clamp-2 mb-2">
+            <p className="text-[11px] text-muted-foreground leading-relaxed line-clamp-2 mb-2">
               {decodeEntities(displayDescription)}
             </p>
           )}
 
-          {/* === METRICS BAR: Horizontal, compact === */}
-          <div className="flex items-center gap-2 flex-wrap text-[10px] mb-2">
+          {/* === METRICS BAR === */}
+          <div className="flex items-center gap-1.5 flex-wrap text-[10px] mb-2">
             {/* TVI Badge */}
             <Tooltip>
               <TooltipTrigger asChild>
-                <div className={`flex items-center gap-1.5 px-2 py-0.5 rounded-full font-bold border cursor-help ${trendScoreLabel.cls} bg-transparent`}>
-                  <span className="opacity-70 font-medium">TVI ⓘ</span>
+                <div className={`flex items-center gap-1 px-2 py-0.5 rounded-full font-bold cursor-help ${trendScoreLabel.cls}`}>
+                  <span className="opacity-60 font-medium text-[9px]">TVI</span>
                   <span>{trendScore}</span>
                 </div>
               </TooltipTrigger>
@@ -324,12 +326,10 @@ const TimelineCard = ({
                 <div className="flex justify-between"><span>💬 {t("tviVolumeLabel" as any)}</span><span className="font-bold text-foreground">{tviBreakdown.volume}</span></div>
                 <div className="flex justify-between"><span>📰 {t("tviSourcesLabel" as any)}</span><span className="font-bold text-foreground">{tviBreakdown.sources}</span></div>
                 <div className="flex justify-between"><span>🌍 {t("tviGeographyLabel" as any)}</span><span className="font-bold text-foreground">{tviBreakdown.geography}</span></div>
-                <div className="h-px bg-gradient-to-r from-transparent via-border to-transparent my-2" />
+                <div className="h-px bg-border my-2" />
                 <div className="text-[11px] font-medium text-center text-foreground">{trendScore}% - {trendScoreLabel.text}</div>
               </TooltipContent>
             </Tooltip>
-
-            {/* Growth */}
 
             {/* Region */}
             {countryCode && countryCode !== "GL" && (
@@ -347,7 +347,7 @@ const TimelineCard = ({
             )}
 
             {/* Growth */}
-            <span className={`inline-flex items-center gap-0.5 font-bold ${changePositive ? "text-green-600 dark:text-green-400" : "text-destructive"}`}>
+            <span className={`inline-flex items-center gap-0.5 font-bold ${changePositive ? "text-emerald-600 dark:text-emerald-400" : "text-destructive"}`}>
               <TrendingUp className="w-3 h-3" />
               {change}
             </span>
@@ -369,12 +369,12 @@ const TimelineCard = ({
 
             {/* Micro sparkline */}
             {sparkData && !compact && (
-              <div className="ml-auto flex-shrink-0 w-16 h-4">
+              <div className="ml-auto flex-shrink-0 w-14 h-3.5">
                 <ResponsiveContainer width="100%" height="100%">
                   <AreaChart data={sparkData}>
                     <defs>
                       <linearGradient id={`spark-${gradientId}`} x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="0%" stopColor={pf.color} stopOpacity={0.3} />
+                        <stop offset="0%" stopColor={pf.color} stopOpacity={0.25} />
                         <stop offset="100%" stopColor={pf.color} stopOpacity={0} />
                       </linearGradient>
                     </defs>
@@ -385,11 +385,11 @@ const TimelineCard = ({
             )}
           </div>
 
-          {/* === TAGS ROW with Tooltips — WCAG contrast === */}
-          <div className="flex items-center gap-1 flex-wrap mb-1">
+          {/* === TAGS ROW — WCAG contrast === */}
+          <div className="flex items-center gap-1 flex-wrap mb-1.5">
             <Tooltip>
               <TooltipTrigger asChild>
-                <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-semibold bg-primary/15 text-primary dark:bg-primary/20 dark:text-primary cursor-help">
+                <span className="inline-flex items-center px-1.5 py-0.5 rounded-md text-[9px] font-semibold bg-primary/8 text-primary cursor-help">
                   {localizedCategory}
                 </span>
               </TooltipTrigger>
@@ -397,7 +397,7 @@ const TimelineCard = ({
             </Tooltip>
             <Tooltip>
               <TooltipTrigger asChild>
-                <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-semibold bg-secondary text-secondary-foreground cursor-help">
+                <span className="inline-flex items-center px-1.5 py-0.5 rounded-md text-[9px] font-semibold bg-secondary text-secondary-foreground cursor-help">
                   {signalType}
                 </span>
               </TooltipTrigger>
@@ -406,7 +406,7 @@ const TimelineCard = ({
             {trustBadge && trustBadgeKeys[trustBadge] && (
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <span className={`inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded text-[9px] font-semibold cursor-help ${trustBadgeKeys[trustBadge].className}`}>
+                  <span className={`inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-md text-[9px] font-semibold cursor-help ${trustBadgeKeys[trustBadge].className}`}>
                     {trustBadgeKeys[trustBadge].icon}
                     {t(trustBadgeKeys[trustBadge].labelKey as any)}
                   </span>
@@ -419,7 +419,7 @@ const TimelineCard = ({
             {trigger && (
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-semibold bg-destructive/15 text-destructive cursor-help">
+                  <span className="inline-flex items-center px-1.5 py-0.5 rounded-md text-[9px] font-semibold bg-destructive/8 text-destructive cursor-help">
                     {trigger.emoji} {t(trigger.labelKey as any)}
                   </span>
                 </TooltipTrigger>
@@ -429,7 +429,7 @@ const TimelineCard = ({
             {translated && (
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <span className="text-[9px] font-semibold text-primary bg-primary/10 px-1.5 py-0.5 rounded cursor-help">🌐 {t("autoTranslated")}</span>
+                  <span className="text-[9px] font-semibold text-primary bg-primary/6 px-1.5 py-0.5 rounded-md cursor-help">🌐 {t("autoTranslated")}</span>
                 </TooltipTrigger>
                 <TooltipContent side="top" className="text-[10px]">{t("autoTranslated")}</TooltipContent>
               </Tooltip>
@@ -437,37 +437,34 @@ const TimelineCard = ({
           </div>
         </div>
 
-        {/* Divider */}
-        <div className="h-px w-full bg-gradient-to-r from-transparent via-border to-transparent my-1.5" />
-
-        {/* === ACTION BAR — unified container === */}
-        <div className="flex items-center gap-0.5 bg-muted/30 rounded-lg p-0.5">
+        {/* === ACTION BAR — unified, no borders === */}
+        <div className="flex items-center gap-0.5 bg-secondary/40 rounded-xl p-0.5 mt-1">
           {sourceUrl && (
             <a
               href={sourceUrl}
               target="_blank"
               rel="noopener noreferrer"
               onClick={(e) => e.stopPropagation()}
-              className="inline-flex items-center gap-1 px-2 py-1 min-h-[32px] rounded-md text-[10px] font-medium text-muted-foreground hover:text-foreground hover:bg-card transition-colors"
+              className="inline-flex items-center gap-1 px-2 py-1 min-h-[28px] rounded-lg text-[10px] font-medium text-muted-foreground hover:text-foreground hover:bg-card transition-colors"
             >
               <ExternalLink className="w-3 h-3" />
               {t("viewSource")}
             </a>
           )}
-          <button onClick={handleShare} className="inline-flex items-center gap-1 px-2 py-1 min-h-[32px] rounded-md text-[10px] font-medium text-muted-foreground hover:text-foreground hover:bg-card transition-colors">
+          <button onClick={handleShare} className="inline-flex items-center gap-1 px-2 py-1 min-h-[28px] rounded-lg text-[10px] font-medium text-muted-foreground hover:text-foreground hover:bg-card transition-colors">
             <Share2 className="w-3 h-3" />
             {t("share")}
           </button>
-          <button onClick={(e) => { e.stopPropagation(); onSaveCard?.({ title, platform, category, country_code: countryCode, source_url: sourceUrl, thumbnail, description: displayDescription, volume, change, changePositive, historicalData, platformColor: pf.color, sources }); }} className="inline-flex items-center gap-1 px-2 py-1 min-h-[32px] rounded-md text-[10px] font-medium text-muted-foreground hover:text-foreground hover:bg-card transition-colors">
+          <button onClick={(e) => { e.stopPropagation(); onSaveCard?.({ title, platform, category, country_code: countryCode, source_url: sourceUrl, thumbnail, description: displayDescription, volume, change, changePositive, historicalData, platformColor: pf.color, sources }); }} className="inline-flex items-center gap-1 px-2 py-1 min-h-[28px] rounded-lg text-[10px] font-medium text-muted-foreground hover:text-foreground hover:bg-card transition-colors">
             <Bookmark className="w-3 h-3" />
           </button>
 
           <div className="flex-1" />
 
-          <button onClick={handleAlertClick} className="p-1.5 min-h-[32px] min-w-[32px] flex items-center justify-center rounded-md text-muted-foreground/50 hover:text-primary hover:bg-card transition-colors">
+          <button onClick={handleAlertClick} className="p-1.5 min-h-[28px] min-w-[28px] flex items-center justify-center rounded-lg text-muted-foreground/40 hover:text-primary hover:bg-card transition-colors">
             <Bell className="w-3 h-3" />
           </button>
-          <button onClick={(e) => { e.stopPropagation(); toast({ title: "⚠️ Denúncia enviada", description: `Obrigado por reportar: ${title.slice(0, 40)}` }); }} className="p-1.5 min-h-[32px] min-w-[32px] flex items-center justify-center rounded-md text-muted-foreground/50 hover:text-destructive hover:bg-card transition-colors">
+          <button onClick={(e) => { e.stopPropagation(); toast({ title: "⚠️ Denúncia enviada", description: `Obrigado por reportar: ${title.slice(0, 40)}` }); }} className="p-1.5 min-h-[28px] min-w-[28px] flex items-center justify-center rounded-lg text-muted-foreground/40 hover:text-destructive hover:bg-card transition-colors">
             <Flag className="w-3 h-3" />
           </button>
         </div>
@@ -476,31 +473,29 @@ const TimelineCard = ({
       {/* === EXPANDED CONTENT === */}
       {expanded && (
         <div className="timeline-card-expanded-content">
-          {/* Image (only show in expanded if it was hidden by compact mode) */}
           {thumbnail && !imgError && compact && (
-            <div className="relative w-full mb-3 rounded-lg overflow-hidden bg-secondary aspect-video">
+            <div className="relative w-full mb-3 rounded-xl overflow-hidden bg-secondary/50 aspect-video">
               <img src={thumbnail} alt="" className="w-full h-full object-cover" loading="lazy" onError={() => setImgError(true)} />
             </div>
           )}
 
-          {/* Full description */}
           {details && details !== displayDescription && (
             <p className="text-xs text-muted-foreground mb-3">{details}</p>
           )}
 
           {/* Intelligence Metrics Grid */}
           <div className="grid grid-cols-4 gap-1.5 mb-3">
-            <div className="text-center p-2 rounded-lg bg-secondary/50">
+            <div className="text-center p-2 rounded-xl bg-secondary/50">
               <span className="block text-[8px] text-muted-foreground uppercase tracking-wide mb-0.5">{t("growth" as any)}</span>
-              <span className={`block text-xs font-bold ${changePositive ? "text-green-600 dark:text-green-400" : "text-destructive"}`}>{change}</span>
+              <span className={`block text-xs font-bold ${changePositive ? "text-emerald-600 dark:text-emerald-400" : "text-destructive"}`}>{change}</span>
             </div>
-            <div className="text-center p-2 rounded-lg bg-secondary/50">
+            <div className="text-center p-2 rounded-xl bg-secondary/50">
               <span className="block text-[8px] text-muted-foreground uppercase tracking-wide mb-0.5">{t("volumeLabel" as any)}</span>
               <span className="block text-xs font-bold text-foreground">{volume || "—"}</span>
             </div>
             <Tooltip>
               <TooltipTrigger asChild>
-                <div className="text-center p-2 rounded-lg bg-secondary/50 cursor-help">
+                <div className="text-center p-2 rounded-xl bg-secondary/50 cursor-help">
                   <span className="block text-[8px] text-muted-foreground uppercase tracking-wide mb-0.5">TVI</span>
                   <span className="block text-xs font-bold text-foreground">{trendScore}/100</span>
                 </div>
@@ -513,14 +508,14 @@ const TimelineCard = ({
                 <div className="flex justify-between gap-3"><span>🌍 {t("tviGeographyLabel" as any)}</span><span className="font-bold">{tviBreakdown.geography}</span></div>
               </TooltipContent>
             </Tooltip>
-            <div className="text-center p-2 rounded-lg bg-secondary/50">
+            <div className="text-center p-2 rounded-xl bg-secondary/50">
               <span className="block text-[8px] text-muted-foreground uppercase tracking-wide mb-0.5">{t("sourcesLabel" as any)}</span>
               <span className="block text-xs font-bold text-foreground">{sources?.length || 1}</span>
             </div>
           </div>
 
           {/* Narrative Origin & Signal Confidence */}
-          <div className="flex items-start gap-2 mb-3 p-2 rounded-lg bg-secondary/30 border border-border/50">
+          <div className="flex items-start gap-2 mb-3 p-2.5 rounded-xl bg-secondary/30">
             <div className="flex-1 min-w-0">
               <div className="text-[9px] font-semibold text-muted-foreground uppercase tracking-wide mb-0.5">
                 🗺️ {t("narrativeOrigin" as any)}
@@ -534,14 +529,14 @@ const TimelineCard = ({
               <div className="text-[9px] font-semibold text-muted-foreground uppercase tracking-wide mb-0.5">
                 {t("confidenceLabel" as any)}
               </div>
-              <div className={`text-[11px] font-bold ${trendScore >= 70 ? "text-green-600 dark:text-green-400" : trendScore >= 40 ? "text-amber-600 dark:text-amber-400" : "text-muted-foreground"}`}>
+              <div className={`text-[11px] font-bold ${trendScore >= 70 ? "text-emerald-600 dark:text-emerald-400" : trendScore >= 40 ? "text-amber-600 dark:text-amber-400" : "text-muted-foreground"}`}>
                 {trendScore >= 70 ? t("confidenceHigh" as any) : trendScore >= 40 ? t("confidenceMedium" as any) : t("confidenceLow" as any)}
               </div>
               <div className="text-[9px] text-muted-foreground">{trendScore}%</div>
             </div>
           </div>
 
-          {/* Sources & Propagation (unified — no duplication) */}
+          {/* Sources & Propagation */}
           {sources && sources.length > 0 && (
             <div className="mb-3">
               <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide flex items-center gap-1 mb-1.5">
@@ -550,16 +545,16 @@ const TimelineCard = ({
               <div className="flex items-center gap-1 flex-wrap text-[10px]">
                 {sources.slice(0, 6).map((s, idx) => (
                   <span key={s} className="flex items-center gap-1">
-                    {idx > 0 && <span className="text-muted-foreground/40">→</span>}
-                    <span className="px-2 py-0.5 rounded-full bg-primary/10 text-primary font-medium">{s}</span>
+                    {idx > 0 && <span className="text-muted-foreground/30">→</span>}
+                    <span className="px-2 py-0.5 rounded-full bg-primary/6 text-primary font-medium">{s}</span>
                   </span>
                 ))}
               </div>
             </div>
           )}
 
-          {/* Sentiment Analysis Section — with labeled legend */}
-          <div className="mb-3 p-2.5 rounded-lg bg-secondary/30 border border-border/50">
+          {/* Sentiment Analysis */}
+          <div className="mb-3 p-2.5 rounded-xl bg-secondary/30">
             <span className="text-[9px] font-semibold text-muted-foreground uppercase tracking-wide mb-2 block">
               📊 {t("sentimentAnalysis" as any)}
             </span>
@@ -596,7 +591,7 @@ const TimelineCard = ({
             )}
           </div>
 
-          {/* 24h Chart — with legend */}
+          {/* 24h Chart */}
           {historicalData && historicalData.length > 0 && (
             <div className="mb-3">
               <div className="flex items-center justify-between mb-1.5">
@@ -613,7 +608,7 @@ const TimelineCard = ({
                   <AreaChart data={historicalData}>
                     <defs>
                       <linearGradient id={gradientId} x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="0%" stopColor={pf.color} stopOpacity={0.2} />
+                        <stop offset="0%" stopColor={pf.color} stopOpacity={0.15} />
                         <stop offset="100%" stopColor={pf.color} stopOpacity={0} />
                       </linearGradient>
                     </defs>
@@ -621,7 +616,7 @@ const TimelineCard = ({
                     <XAxis dataKey="hour" tick={{ fontSize: 9, fill: "hsl(var(--muted-foreground))" }} tickLine={false} axisLine={false} interval={5} />
                     <YAxis tick={{ fontSize: 9, fill: "hsl(var(--muted-foreground))" }} tickLine={false} axisLine={false} width={30} tickFormatter={(v: number) => v >= 1000 ? `${(v / 1000).toFixed(0)}K` : String(v)} />
                     <RechartsTooltip
-                      contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: "8px", fontSize: 11 }}
+                      contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: "12px", fontSize: 11 }}
                       formatter={(value: number) => [value >= 1000 ? `${(value / 1000).toFixed(1)}K` : value, metricLabel || "Volume"]}
                     />
                     <Area type="monotone" dataKey="value" stroke={pf.color} strokeWidth={1.5} fill={`url(#${gradientId})`} />
@@ -633,7 +628,7 @@ const TimelineCard = ({
 
           {/* Propagation Timeline (cross-platform) */}
           {isMultiplatform && crossPlatformCluster && crossPlatformCluster.platformCount >= 2 && (
-            <div className="mb-3 border-t border-border pt-2">
+            <div className="mb-3 pt-2">
               <PropagationTimeline cluster={crossPlatformCluster} compact />
             </div>
           )}
