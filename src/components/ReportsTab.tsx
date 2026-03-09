@@ -72,8 +72,8 @@ export default function ReportsTab({ userId }: ReportsTabProps) {
     { value: "today", label: t("today") },
     { value: "7d", label: t("thisWeek") },
     { value: "30d", label: t("thisMonth") },
-    { value: "90d", `${t("thisMonth")} ×3` },
-    { value: "365d", "Anual" },
+    { value: "90d", label: "Trimestral" },
+    { value: "365d", label: "Anual" },
   ];
 
   const categoryOptions = [
