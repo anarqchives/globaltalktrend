@@ -319,11 +319,11 @@ const TimelineCard = ({
               </TooltipTrigger>
               <TooltipContent side="top" className="p-3 text-[11px] space-y-1.5 min-w-[200px] z-50 bg-popover/95 backdrop-blur-md">
                 <div className="font-bold text-[12px] mb-1 text-foreground">Trend Velocity Index (TVI)</div>
-                <p className="text-muted-foreground mb-2 leading-tight">Mede a velocidade de propagação baseada em:</p>
-                <div className="flex justify-between"><span>📈 Crescimento (30%)</span><span className="font-bold text-foreground">{tviBreakdown.velocity}</span></div>
-                <div className="flex justify-between"><span>💬 Volume (30%)</span><span className="font-bold text-foreground">{tviBreakdown.volume}</span></div>
-                <div className="flex justify-between"><span>📰 Fontes (20%)</span><span className="font-bold text-foreground">{tviBreakdown.sources}</span></div>
-                <div className="flex justify-between"><span>🌍 Países (20%)</span><span className="font-bold text-foreground">{tviBreakdown.geography}</span></div>
+                <p className="text-muted-foreground mb-2 leading-tight">{t("tviDescription" as any)}</p>
+                <div className="flex justify-between"><span>📈 {t("tviGrowthLabel" as any)}</span><span className="font-bold text-foreground">{tviBreakdown.velocity}</span></div>
+                <div className="flex justify-between"><span>💬 {t("tviVolumeLabel" as any)}</span><span className="font-bold text-foreground">{tviBreakdown.volume}</span></div>
+                <div className="flex justify-between"><span>📰 {t("tviSourcesLabel" as any)}</span><span className="font-bold text-foreground">{tviBreakdown.sources}</span></div>
+                <div className="flex justify-between"><span>🌍 {t("tviGeographyLabel" as any)}</span><span className="font-bold text-foreground">{tviBreakdown.geography}</span></div>
                 <div className="h-px bg-gradient-to-r from-transparent via-border to-transparent my-2" />
                 <div className="text-[11px] font-medium text-center text-foreground">{trendScore}% - {trendScoreLabel.text}</div>
               </TooltipContent>
