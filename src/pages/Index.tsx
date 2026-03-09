@@ -268,19 +268,40 @@ const Index = () => {
   };
 
   const [refreshing, setRefreshing] = useState(false);
+  const [timeSinceLastFetch, setTimeSinceLastFetch] = useState(0);
+  const [updatePending, setUpdatePending] = useState(false);
+  const isActive = useUserActivity(30000);
+
   const handleRefresh = useCallback(async () => {
     setRefreshing(true);
     await fetchTrends();
     setRefreshing(false);
+    setTimeSinceLastFetch(0);
+    setUpdatePending(false);
   }, [fetchTrends]);
 
-  // Auto-refresh every 60 seconds (non-intrusive: doesn't reset scroll or expanded state)
+  // Smart Auto-refresh
   useEffect(() => {
     const interval = setInterval(() => {
-      fetchTrends();
-    }, 60_000);
+      setTimeSinceLastFetch((prev) => prev + 10);
+    }, 10000);
     return () => clearInterval(interval);
-  }, [fetchTrends]);
+  }, []);
+
+  useEffect(() => {
+    if (timeSinceLastFetch >= 60) {
+      const hasExpandedCard = expandedTrendId !== null;
+      if (!isActive && !hasExpandedCard) {
+        console.log("🔄 Usuário inativo por 30s e sem cards abertos. Atualizando timeline...");
+        fetchTrends().then(() => {
+          setTimeSinceLastFetch(0);
+          setUpdatePending(false);
+        });
+      } else if (!updatePending) {
+        setUpdatePending(true);
+      }
+    }
+  }, [timeSinceLastFetch, isActive, expandedTrendId, fetchTrends, updatePending]);
 
   const [showScrollTop, setShowScrollTop] = useState(false);
 
