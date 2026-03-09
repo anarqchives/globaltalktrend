@@ -487,10 +487,10 @@ export default function TrendRadar({ trends, allTrends, criticalMoments, anomali
   };
 
   return (
-    <div className="flex flex-col overflow-hidden bg-muted/15 border-b border-border/30">
-      <Tabs value={tab} onValueChange={setTab} className="flex flex-col">
+    <div className="flex flex-col overflow-hidden bg-muted/15 h-full">
+      <Tabs value={tab} onValueChange={setTab} className="flex flex-col h-full min-h-0">
         {/* Header bar */}
-        <div className="px-3 py-1.5 flex items-center gap-2 flex-shrink-0 bg-muted/30">
+        <div className="px-3 py-1.5 flex items-center gap-2 flex-shrink-0 border-b border-border/20 bg-muted/30">
           <div className="flex items-center gap-1.5 mr-1 flex-shrink-0">
             <Radar className="w-3.5 h-3.5 text-primary" />
             <span className="text-[10px] font-bold text-primary uppercase tracking-widest hidden sm:inline">Radar</span>
@@ -534,12 +534,9 @@ export default function TrendRadar({ trends, allTrends, criticalMoments, anomali
           </Tooltip>
         </div>
 
-        {/* Content — fixed height, collapsible */}
-        <div
-          className="overflow-hidden transition-all duration-300 ease-in-out"
-          style={{ height: collapsed ? 0 : 280 }}
-        >
-          <div className="h-[280px] relative">
+        {/* Content — fills available space from ResizablePanel */}
+        {!collapsed && (
+          <div className="flex-1 min-h-0 relative">
             <TabsContent value="signals" className="absolute inset-0 mt-0 overflow-y-auto scrollbar-thin data-[state=inactive]:hidden animate-in fade-in-0 duration-200">
               <Legend tab="signals" lang={lang} />
               {!hasSignals && !hasEmerging ? (
@@ -620,7 +617,7 @@ export default function TrendRadar({ trends, allTrends, criticalMoments, anomali
               <WeeklyPulseDashboard trends={allTrends} />
             </TabsContent>
           </div>
-        </div>
+        )}
       </Tabs>
     </div>
   );

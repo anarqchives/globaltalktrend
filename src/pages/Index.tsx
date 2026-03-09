@@ -781,33 +781,49 @@ const Index = () => {
                   <p className="text-sm">{lang === "pt" ? "Clique nas abas laterais para reabrir os painéis." : "Click the side tabs to reopen panels."}</p>
                 </div>
               ) : (
-                <div className="flex-1 min-h-0 flex flex-col">
-                  {/* Trend Radar — fixed section, flush */}
+                <ResizablePanelGroup
+                  direction="vertical"
+                  className="flex-1 min-h-0"
+                  key={`v-${panelVisibility.radar}-${panelVisibility.timeline}-${panelVisibility.map}`}
+                >
+                  {/* Radar Panel — resizable vertically */}
                   {panelVisibility.radar && (
-                    <div className="flex-shrink-0 relative group/radar">
-                      {/* Close button — top-right, inside radar header area */}
-                      <button
-                        onClick={() => togglePanel("radar")}
-                        className="absolute top-1.5 right-2 z-10 opacity-0 group-hover/radar:opacity-100 w-5 h-5 rounded flex items-center justify-center text-muted-foreground/50 hover:text-destructive hover:bg-destructive/10 transition-all duration-200"
-                        title={lang === "pt" ? "Fechar Radar" : "Close Radar"}
+                    <>
+                      <ResizablePanel
+                        defaultSize={30}
+                        minSize={8}
+                        maxSize={70}
+                        collapsible
+                        collapsedSize={5}
                       >
-                        <X className="w-3 h-3" />
-                      </button>
-                      <TrendRadar
-                        trends={filteredTrends}
-                        allTrends={allTrends}
-                        criticalMoments={criticalMoments}
-                        anomalies={anomalies}
-                        onSelectTrend={handleSelectTrend}
-                        onFilterCountry={(code) => setFilters(f => ({ ...f, country: code }))}
-                        onAnomalyClick={handleAnomalyClick}
-                      />
-                    </div>
+                        <div className="h-full relative group/radar">
+                          <button
+                            onClick={() => togglePanel("radar")}
+                            className="absolute top-1.5 right-8 z-10 opacity-0 group-hover/radar:opacity-100 w-5 h-5 rounded flex items-center justify-center text-muted-foreground/50 hover:text-destructive hover:bg-destructive/10 transition-all duration-200"
+                            title={lang === "pt" ? "Fechar Radar" : "Close Radar"}
+                          >
+                            <X className="w-3 h-3" />
+                          </button>
+                          <TrendRadar
+                            trends={filteredTrends}
+                            allTrends={allTrends}
+                            criticalMoments={criticalMoments}
+                            anomalies={anomalies}
+                            onSelectTrend={handleSelectTrend}
+                            onFilterCountry={(code) => setFilters(f => ({ ...f, country: code }))}
+                            onAnomalyClick={handleAnomalyClick}
+                          />
+                        </div>
+                      </ResizablePanel>
+                      {(panelVisibility.timeline || panelVisibility.map) && (
+                        <ResizableHandle withHandle />
+                      )}
+                    </>
                   )}
 
-                  {/* Timeline + Map — takes remaining space */}
+                  {/* Timeline + Map — resizable horizontally inside */}
                   {(panelVisibility.timeline || panelVisibility.map) && (
-                    <div className="flex-1 min-h-0">
+                    <ResizablePanel defaultSize={panelVisibility.radar ? 70 : 100} minSize={20}>
                       <ResizablePanelGroup direction="horizontal" className="h-full" key={`h-${panelVisibility.timeline}-${panelVisibility.map}`}>
                         {panelVisibility.timeline && (
                           <>
@@ -841,9 +857,9 @@ const Index = () => {
                           </ResizablePanel>
                         )}
                       </ResizablePanelGroup>
-                    </div>
+                    </ResizablePanel>
                   )}
-                </div>
+                </ResizablePanelGroup>
               )}
             </div>
           </div>
