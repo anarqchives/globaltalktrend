@@ -289,10 +289,11 @@ const Index = () => {
   }, []);
 
   useEffect(() => {
-    if (timeSinceLastFetch >= 60) {
+    if (timeSinceLastFetch >= 90) {
       const hasExpandedCard = expandedTrendId !== null;
-      if (!isActive && !hasExpandedCard) {
-        console.log("🔄 Usuário inativo por 30s e sem cards abertos. Atualizando timeline...");
+      const hasUserScrolled = scrollRef.current && scrollRef.current.scrollTop > 150;
+      if (!isActive && !hasExpandedCard && !hasUserScrolled) {
+        console.log("🔄 Usuário inativo, sem cards abertos e sem scroll. Atualizando timeline...");
         fetchTrends().then(() => {
           setTimeSinceLastFetch(0);
           setUpdatePending(false);
