@@ -10,6 +10,7 @@ import { toast } from "@/hooks/use-toast";
 
 // Eagerly load the main page (critical path)
 import Index from "./pages/Index";
+import PrivacyPopup from "./components/PrivacyPopup";
 
 // Lazy-load secondary pages to reduce initial bundle / FCP
 const Methodology = lazy(() => import("./pages/Methodology"));
@@ -20,6 +21,7 @@ const NotFound = lazy(() => import("./pages/NotFound"));
 const Teste = lazy(() => import("./pages/Teste"));
 const Admin = lazy(() => import("./pages/Admin"));
 const PublicProfile = lazy(() => import("./pages/PublicProfile"));
+const Privacidade = lazy(() => import("./pages/Privacidade"));
 
 const queryClient = new QueryClient({ defaultOptions: { queries: { retry: 1 } } });
 
@@ -65,6 +67,7 @@ const App = () => {
           <TooltipProvider>
             <Toaster />
             <Sonner />
+            <PrivacyPopup />
             <BrowserRouter>
               <Suspense fallback={<PageLoader />}>
                 <Routes>
@@ -76,6 +79,7 @@ const App = () => {
                   <Route path="/teste" element={<Teste />} />
                   <Route path="/admin" element={<Admin />} />
                   <Route path="/@:username" element={<PublicProfile />} />
+                  <Route path="/privacidade" element={<Privacidade />} />
                   <Route path="*" element={<NotFound />} />
                 </Routes>
               </Suspense>
