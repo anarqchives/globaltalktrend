@@ -5,7 +5,6 @@ import { setOptions, importLibrary } from "@googlemaps/js-api-loader";
 import { supabase } from "@/integrations/supabase/client";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { TrendCardProps } from "./TrendCard";
-import GlobalRanking from "./GlobalRanking";
 import { Map, Flame, Globe, RefreshCw } from "lucide-react";
 
 interface CountryPoint {
@@ -678,9 +677,7 @@ const GoogleMapView = ({
             </>
           )}
         </div>
-        {mapLoaded && trends.length > 0 && (
-          <GlobalRanking trends={trends} onSelectTrend={onSelectTrend} onFilterCountry={onSelectCountry} collapsed={true} />
-        )}
+        {/* GlobalRanking removed to avoid duplication, now exclusively in TrendRadar */}
       </div>
 
       {/* Update notification */}
