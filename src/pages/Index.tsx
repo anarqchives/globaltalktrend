@@ -21,7 +21,8 @@ import { useGamification } from "@/hooks/use-gamification";
 import { useSavedCards } from "@/hooks/use-saved-cards";
 import { useSavedFilters } from "@/hooks/use-saved-filters";
 import { supabase } from "@/integrations/supabase/client";
-import { ChevronRight, X, Map, Newspaper, LayoutList, LayoutGrid } from "lucide-react";
+import { ChevronRight, X, Map, Newspaper, LayoutList, LayoutGrid, RefreshCw } from "lucide-react";
+import { useUserActivity } from "@/hooks/use-user-activity";
 import {
   ResizablePanelGroup,
   ResizablePanel,
@@ -267,19 +268,40 @@ const Index = () => {
   };
 
   const [refreshing, setRefreshing] = useState(false);
+  const [timeSinceLastFetch, setTimeSinceLastFetch] = useState(0);
+  const [updatePending, setUpdatePending] = useState(false);
+  const isActive = useUserActivity(30000);
+
   const handleRefresh = useCallback(async () => {
     setRefreshing(true);
     await fetchTrends();
     setRefreshing(false);
+    setTimeSinceLastFetch(0);
+    setUpdatePending(false);
   }, [fetchTrends]);
 
-  // Auto-refresh every 60 seconds (non-intrusive: doesn't reset scroll or expanded state)
+  // Smart Auto-refresh
   useEffect(() => {
     const interval = setInterval(() => {
-      fetchTrends();
-    }, 60_000);
+      setTimeSinceLastFetch((prev) => prev + 10);
+    }, 10000);
     return () => clearInterval(interval);
-  }, [fetchTrends]);
+  }, []);
+
+  useEffect(() => {
+    if (timeSinceLastFetch >= 60) {
+      const hasExpandedCard = expandedTrendId !== null;
+      if (!isActive && !hasExpandedCard) {
+        console.log("🔄 Usuário inativo por 30s e sem cards abertos. Atualizando timeline...");
+        fetchTrends().then(() => {
+          setTimeSinceLastFetch(0);
+          setUpdatePending(false);
+        });
+      } else if (!updatePending) {
+        setUpdatePending(true);
+      }
+    }
+  }, [timeSinceLastFetch, isActive, expandedTrendId, fetchTrends, updatePending]);
 
   const [showScrollTop, setShowScrollTop] = useState(false);
 
@@ -356,13 +378,25 @@ const Index = () => {
         <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-widest">
           {t("timeline")}
         </span>
-        <button
-          onClick={() => setCompactMode(c => !c)}
-          className="h-6 w-6 flex items-center justify-center rounded-md hover:bg-secondary transition-colors text-muted-foreground hover:text-foreground"
-          title={compactMode ? "Modo expandido" : "Modo compacto"}
-        >
-          {compactMode ? <LayoutGrid className="w-3.5 h-3.5" /> : <LayoutList className="w-3.5 h-3.5" />}
-        </button>
+        <div className="flex items-center gap-2">
+          {updatePending && (
+            <button
+              onClick={handleRefresh}
+              className="flex items-center gap-1.5 text-[10px] font-medium bg-primary/10 text-primary px-2 py-1 rounded-full hover:bg-primary/20 transition-colors animate-pulse"
+              title="Atualização pausada por atividade. Clique para atualizar."
+            >
+              <RefreshCw className={`w-3 h-3 ${refreshing ? "animate-spin" : ""}`} />
+              Atualizar Agora
+            </button>
+          )}
+          <button
+            onClick={() => setCompactMode(c => !c)}
+            className="h-6 w-6 flex items-center justify-center rounded-md hover:bg-secondary transition-colors text-muted-foreground hover:text-foreground"
+            title={compactMode ? "Modo expandido" : "Modo compacto"}
+          >
+            {compactMode ? <LayoutGrid className="w-3.5 h-3.5" /> : <LayoutList className="w-3.5 h-3.5" />}
+          </button>
+        </div>
       </div>
 
       {breadcrumbs.length > 0 && (
