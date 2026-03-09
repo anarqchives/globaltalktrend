@@ -697,6 +697,10 @@ const translations: Record<LangCode, Record<TranslationKey, string>> = {
     signalTooltip: "検出されたシグナルタイプ：Spike、Search、Social、News、Dev、Knowledge。",
     trendTableTitle: "タイトル", trendTablePlatform: "プラットフォーム", trendTableVolume: "ボリューム",
     trendTableChange: "変化", trendTableCountry: "国",
+    mapFlowMap: "フロー", mapSentiment: "感情", mapHeatmap: "ヒートマップ",
+    mapFlowLegendTitle: "トレンド伝播", mapFlowOrigin: "発信元", mapFlowDestination: "宛先", mapFlowPropagation: "伝播", mapFlowTimeDelta: "伝播時間", mapFlowClickToFilter: "クリックでフィルター", mapFlowNoData: "この期間の伝播データが不足しています",
+    mapSentLegendTitle: "感情の風景", mapSentPositive: "ポジティブ", mapSentNegative: "ネガティブ", mapSentMixed: "分極化", mapSentNeutral: "ニュートラル", mapSentBreakdown: "感情分布", mapSentTopTrends: "トップトレンド", mapSentNoData: "感情データが不足しています",
+    mapSentVolume: "合計ボリューム", mapSentGrowth: "平均成長", mapSentActiveTrends: "アクティブトレンド",
   },
   ko: {
     trends: "트렌드", moreTrends: "더 많은 트렌드", filters: "필터",
