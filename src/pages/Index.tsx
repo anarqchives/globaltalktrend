@@ -845,18 +845,8 @@ const Index = () => {
                           <>
                             <ResizablePanel defaultSize={panelVisibility.map ? 65 : 100} minSize={25} maxSize={panelVisibility.map ? 85 : 100}>
                               <div className="h-full min-h-0 overflow-hidden relative" ref={timelinePanelRef}>
-                                <Tooltip>
-                                  <TooltipTrigger asChild>
-                                    <button
-                                      onClick={() => togglePanel("timeline")}
-                                      className="absolute top-2 right-3 z-20 w-6 h-6 rounded-full flex items-center justify-center bg-muted/60 hover:bg-destructive/15 text-muted-foreground hover:text-destructive border border-border/40 hover:border-destructive/30 shadow-sm backdrop-blur-sm transition-all duration-200"
-                                    >
-                                      <X className="w-3 h-3" strokeWidth={2.5} />
-                                    </button>
-                                  </TooltipTrigger>
-                                  <TooltipContent side="left" className="text-[10px]">{lang === "pt" ? "Fechar Timeline" : "Close Timeline"}</TooltipContent>
-                                </Tooltip>
                                 {renderTimeline()}
+                              </div>
                               </div>
                             </ResizablePanel>
                             {panelVisibility.map && <ResizableHandle withHandle />}
