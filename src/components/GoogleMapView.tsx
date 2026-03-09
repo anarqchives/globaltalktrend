@@ -1237,7 +1237,7 @@ const GoogleMapView = ({
 
         const moreCount = trends.filter(tr => tr.countryCode === cp.id).length - 5;
         const moreSection = moreCount > 0
-          ? `<div style="text-align:center;font-size:${isMobile ? '12px' : '10px'};color:${subtext};padding:${isMobile ? '8px' : '6px'};background:${badgeBg};border-radius:8px;margin-bottom:10px;">+ ${moreCount} ${lang === "pt" ? "outras tendências" : "more trends"}</div>`
+          ? `<div style="text-align:center;font-size:${isMobile ? '12px' : '10px'};color:${subtext};padding:${isMobile ? '8px' : '6px'};background:${badgeBg};border-radius:8px;margin-bottom:10px;">+ ${moreCount} ${t("mapMoreTrends")}</div>`
           : '';
 
         const closeBtnSize = isMobile ? '32' : '22';
