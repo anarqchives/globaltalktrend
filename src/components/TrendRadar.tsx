@@ -684,7 +684,7 @@ export default function TrendRadar({ trends, allTrends, criticalMoments, anomali
   }, [tab]);
 
   const hasEmerging = trends.length > 3;
-  const hasCritical = criticalMoments.length > 0 || anomalies.length > 0;
+  const hasCritical = criticalMoments.length > 0;
 
   const labels = {
     collapse: lang === "pt" ? "Recolher radar" : "Collapse radar",
