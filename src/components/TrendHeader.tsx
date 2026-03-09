@@ -249,7 +249,7 @@ const TrendHeader = ({ totalTrends = 0, countriesCount = 0, onRefresh, refreshin
               href="https://buy.stripe.com/fZu7sMgw6cHLeTnbWVdIA00"
               target="_blank"
               rel="noopener noreferrer"
-              className="px-3 h-8 min-h-[32px] max-h-[32px] rounded-full text-[11px] font-semibold transition-all whitespace-nowrap flex items-center hover:scale-105 border border-yellow-400/50 dark:border-yellow-500/40 backdrop-blur-sm shadow-[0_4px_15px_rgba(255,215,0,0.3)] hover:shadow-[0_6px_20px_rgba(255,215,0,0.5)]"
+              className="px-3 h-8 min-h-[32px] max-h-[32px] rounded-full text-[11px] font-semibold transition-all whitespace-nowrap flex items-center hover:scale-105 border border-yellow-400/50 dark:border-yellow-400/60 backdrop-blur-sm shadow-[0_4px_15px_rgba(255,215,0,0.3)] hover:shadow-[0_6px_20px_rgba(255,215,0,0.5)] dark:shadow-[0_4px_15px_rgba(255,215,0,0.2)]"
               style={{ background: "rgba(255, 215, 0, 0.2)", color: "hsl(var(--foreground))" }}>
               Apoie
             </a>
