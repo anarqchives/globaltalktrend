@@ -1107,98 +1107,136 @@ const GoogleMapView = ({
         </div>
       )}
 
-      {/* Dynamic interactive legend — compact on mobile */}
-      <AnimatePresence>
-        {heatmapEnabled && (
+      {/* Dynamic legend — changes based on mapMode */}
+      <AnimatePresence mode="wait">
+        {mapMode === "heatmap" && (
           <motion.div
+            key="legend-heatmap"
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 10 }}
             transition={{ duration: 0.25, ease: "easeOut" }}
             className={`absolute z-20 bg-white/95 dark:bg-card/95 backdrop-blur-[12px] border border-white/50 dark:border-white/10 shadow-[0_4px_20px_rgba(0,0,0,0.08)] dark:shadow-[0_4px_20px_rgba(0,0,0,0.25)] ${
-              isMobile
-                ? 'bottom-2 left-2 right-2 rounded-xl px-3 py-2'
-                : 'bottom-[30px] right-5 rounded-2xl px-3 py-2.5 min-w-[200px]'
+              isMobile ? 'bottom-2 left-2 right-2 rounded-xl px-3 py-2' : 'bottom-[30px] right-5 rounded-2xl px-3 py-2.5 min-w-[200px]'
             }`}
           >
             {isMobile ? (
-              /* Compact mobile legend */
               <div className="flex items-center gap-3">
                 <div className="flex-1">
                   <div className="relative h-3 rounded-full overflow-hidden" style={{ boxShadow: "inset 0 1px 2px rgba(0,0,0,0.1)" }}>
-                    <div
-                      className="w-full h-full"
-                      style={{
-                        background: "linear-gradient(90deg, #00a6ff, #00ff9d, #ffff00, #ffaa00, #ff3300)",
-                      }}
-                    />
+                    <div className="w-full h-full" style={{ background: "linear-gradient(90deg, #00a6ff, #00ff9d, #ffff00, #ffaa00, #ff3300)" }} />
                   </div>
                   <div className="flex justify-between text-[8px] text-muted-foreground uppercase tracking-wider mt-0.5">
-                    <span>{lang === "pt" ? "Baixa" : "Low"}</span>
-                    <span>{lang === "pt" ? "Crítica" : "Critical"}</span>
+                    <span>{t("low")}</span><span>{t("critical")}</span>
                   </div>
                 </div>
                 <div className="flex gap-3 text-center flex-shrink-0">
-                  <div>
-                    <span className="text-xs font-semibold text-foreground tabular-nums">{activeCountries}</span>
-                    <span className="text-[8px] text-muted-foreground block">{lang === "pt" ? "Países" : "Countries"}</span>
-                  </div>
-                  <div>
-                    <span className="text-xs font-semibold text-foreground tabular-nums">{totalTrends}</span>
-                    <span className="text-[8px] text-muted-foreground block">Trends</span>
-                  </div>
+                  <div><span className="text-xs font-semibold text-foreground tabular-nums">{activeCountries}</span><span className="text-[8px] text-muted-foreground block">{t("countries")}</span></div>
+                  <div><span className="text-xs font-semibold text-foreground tabular-nums">{totalTrends}</span><span className="text-[8px] text-muted-foreground block">Trends</span></div>
                 </div>
               </div>
             ) : (
-              /* Full desktop legend */
               <>
-                <p className="text-[11px] font-medium text-foreground mb-1.5 tracking-wide flex items-center gap-1.5">
-                  🌡️ {lang === "pt" ? "Densidade de Trends" : "Trend Density"}
-                </p>
+                <p className="text-[11px] font-medium text-foreground mb-1.5 tracking-wide flex items-center gap-1.5">🌡️ {t("heatmapDensity")}</p>
                 <div className="relative h-5 rounded-[10px] overflow-hidden mb-1.5" style={{ boxShadow: "inset 0 1px 3px rgba(0,0,0,0.1)" }}>
-                  <div
-                    className="w-full h-full"
-                    style={{
-                      background: "linear-gradient(90deg, #00a6ff, #00ff9d, #ffff00, #ffaa00, #ff3300)",
-                      backgroundSize: "200% 100%",
-                      animation: "gradientFlow 8s ease infinite",
-                    }}
-                  />
-                  <div
-                    className="absolute inset-0 pointer-events-none"
-                    style={{
-                      background: "linear-gradient(90deg, rgba(255,255,255,0) 0%, rgba(255,255,255,0.3) 50%, rgba(255,255,255,0) 100%)",
-                      animation: "legendShine 3s infinite",
-                    }}
-                  />
-                  <motion.div
-                    className="absolute top-[-3px] w-1 h-[26px] bg-white border-2 border-foreground/70 rounded-sm"
-                    style={{ left: `${currentMaxIntensity * 100}%` }}
-                    animate={{ left: `${currentMaxIntensity * 100}%` }}
-                    transition={{ type: "spring", stiffness: 200, damping: 20 }}
-                  >
+                  <div className="w-full h-full" style={{ background: "linear-gradient(90deg, #00a6ff, #00ff9d, #ffff00, #ffaa00, #ff3300)", backgroundSize: "200% 100%", animation: "gradientFlow 8s ease infinite" }} />
+                  <div className="absolute inset-0 pointer-events-none" style={{ background: "linear-gradient(90deg, rgba(255,255,255,0) 0%, rgba(255,255,255,0.3) 50%, rgba(255,255,255,0) 100%)", animation: "legendShine 3s infinite" }} />
+                  <motion.div className="absolute top-[-3px] w-1 h-[26px] bg-white border-2 border-foreground/70 rounded-sm" style={{ left: `${currentMaxIntensity * 100}%` }} animate={{ left: `${currentMaxIntensity * 100}%` }} transition={{ type: "spring", stiffness: 200, damping: 20 }}>
                     <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-3 h-3 rounded-full bg-white/50 animate-pulse" />
                   </motion.div>
                 </div>
                 <div className="flex justify-between text-[9px] text-muted-foreground uppercase tracking-wider mb-2">
-                  <span>{lang === "pt" ? "Baixa" : "Low"}</span>
-                  <span>{lang === "pt" ? "Média" : "Medium"}</span>
-                  <span>{lang === "pt" ? "Alta" : "High"}</span>
-                  <span>{lang === "pt" ? "Crítica" : "Critical"}</span>
+                  <span>{t("low")}</span><span>{t("high")}</span><span>{t("critical")}</span>
                 </div>
                 <div className="flex justify-between pt-2 border-t border-border/30">
-                  <div className="flex flex-col items-center">
-                    <span className="text-[9px] text-muted-foreground uppercase tracking-wider">{lang === "pt" ? "Máxima" : "Max"}</span>
-                    <span className="text-sm font-medium text-foreground">{maxCount}</span>
-                  </div>
-                  <div className="flex flex-col items-center">
-                    <span className="text-[9px] text-muted-foreground uppercase tracking-wider">{lang === "pt" ? "Países" : "Countries"}</span>
-                    <span className="text-sm font-medium text-foreground">{activeCountries}</span>
-                  </div>
-                  <div className="flex flex-col items-center">
-                    <span className="text-[9px] text-muted-foreground uppercase tracking-wider">Total</span>
-                    <span className="text-sm font-medium text-foreground">{totalTrends}</span>
-                  </div>
+                  <div className="flex flex-col items-center"><span className="text-[9px] text-muted-foreground uppercase tracking-wider">Max</span><span className="text-sm font-medium text-foreground">{maxCount}</span></div>
+                  <div className="flex flex-col items-center"><span className="text-[9px] text-muted-foreground uppercase tracking-wider">{t("countries")}</span><span className="text-sm font-medium text-foreground">{activeCountries}</span></div>
+                  <div className="flex flex-col items-center"><span className="text-[9px] text-muted-foreground uppercase tracking-wider">Total</span><span className="text-sm font-medium text-foreground">{totalTrends}</span></div>
+                </div>
+              </>
+            )}
+          </motion.div>
+        )}
+
+        {mapMode === "flow" && (
+          <motion.div
+            key="legend-flow"
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 10 }}
+            transition={{ duration: 0.25, ease: "easeOut" }}
+            className={`absolute z-20 bg-white/95 dark:bg-card/95 backdrop-blur-[12px] border border-white/50 dark:border-white/10 shadow-[0_4px_20px_rgba(0,0,0,0.08)] dark:shadow-[0_4px_20px_rgba(0,0,0,0.25)] ${
+              isMobile ? 'bottom-2 left-2 right-2 rounded-xl px-3 py-2' : 'bottom-[30px] right-5 rounded-2xl px-3 py-2.5 min-w-[180px]'
+            }`}
+          >
+            <p className="text-[11px] font-medium text-foreground mb-2 tracking-wide flex items-center gap-1.5">
+              🌐 {t("mapFlowLegendTitle")}
+            </p>
+            {flowArcs.length === 0 ? (
+              <p className="text-[10px] text-muted-foreground">{t("mapFlowNoData")}</p>
+            ) : (
+              <>
+                <div className="flex flex-col gap-1.5 mb-2">
+                  {(["positive", "negative", "mixed", "neutral"] as Sentiment[]).map(s => (
+                    <div key={s} className="flex items-center gap-2">
+                      <div className="w-5 h-[3px] rounded-full" style={{ background: sentimentColors[s] }} />
+                      <span className="text-[9px] text-muted-foreground">{t(`mapSent${s.charAt(0).toUpperCase() + s.slice(1)}` as any)}</span>
+                    </div>
+                  ))}
+                </div>
+                <div className="flex items-center gap-2 text-[9px] text-muted-foreground">
+                  <div className="w-5 h-[2px] rounded-full bg-foreground/20" />
+                  <span>{lang === "pt" ? "Fino = baixo volume" : "Thin = low volume"}</span>
+                </div>
+                <div className="flex items-center gap-2 text-[9px] text-muted-foreground mt-0.5">
+                  <div className="w-5 h-[5px] rounded-full bg-foreground/40" />
+                  <span>{lang === "pt" ? "Grosso = alto volume" : "Thick = high volume"}</span>
+                </div>
+                <div className="mt-2 pt-2 border-t border-border/30 text-[10px] text-muted-foreground">
+                  {flowArcs.length} {lang === "pt" ? "arcos de propagação" : "propagation arcs"}
+                </div>
+              </>
+            )}
+          </motion.div>
+        )}
+
+        {mapMode === "sentiment" && (
+          <motion.div
+            key="legend-sentiment"
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 10 }}
+            transition={{ duration: 0.25, ease: "easeOut" }}
+            className={`absolute z-20 bg-white/95 dark:bg-card/95 backdrop-blur-[12px] border border-white/50 dark:border-white/10 shadow-[0_4px_20px_rgba(0,0,0,0.08)] dark:shadow-[0_4px_20px_rgba(0,0,0,0.25)] ${
+              isMobile ? 'bottom-2 left-2 right-2 rounded-xl px-3 py-2' : 'bottom-[30px] right-5 rounded-2xl px-3 py-2.5 min-w-[180px]'
+            }`}
+          >
+            <p className="text-[11px] font-medium text-foreground mb-2 tracking-wide flex items-center gap-1.5">
+              💭 {t("mapSentLegendTitle")}
+            </p>
+            {sentimentBubbles.length === 0 ? (
+              <p className="text-[10px] text-muted-foreground">{t("mapSentNoData")}</p>
+            ) : (
+              <>
+                <div className="flex flex-col gap-1.5 mb-2">
+                  {(["positive", "negative", "mixed", "neutral"] as Sentiment[]).map(s => (
+                    <div key={s} className="flex items-center gap-2">
+                      <div className="w-3 h-3 rounded-full" style={{ background: sentimentColors[s], opacity: 0.7 }} />
+                      <span className="text-[9px] text-muted-foreground">{t(`mapSent${s.charAt(0).toUpperCase() + s.slice(1)}` as any)}</span>
+                    </div>
+                  ))}
+                </div>
+                <div className="flex items-center gap-2 text-[9px] text-muted-foreground mb-1">
+                  <div className="w-2 h-2 rounded-full bg-foreground/20" />
+                  <span>→</span>
+                  <div className="w-4 h-4 rounded-full bg-foreground/20" />
+                  <span>{lang === "pt" ? "Tamanho = volume" : "Size = volume"}</span>
+                </div>
+                <div className="text-[9px] text-muted-foreground italic">
+                  {lang === "pt" ? "Pulso rápido = crescimento acelerado" : "Fast pulse = rapid growth"}
+                </div>
+                <div className="mt-2 pt-2 border-t border-border/30 text-[10px] text-muted-foreground">
+                  {sentimentBubbles.length} {t("countries")}
                 </div>
               </>
             )}
