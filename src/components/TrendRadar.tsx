@@ -272,26 +272,52 @@ function WeeklyPulse({ trends }: { trends: TrendCardProps[] }) {
 
   // Calculate weekly insights
   const insights = useMemo(() => {
+    if (weeklyData.length === 0) return { topCategory: "Dados", topValue: 0, growth: 0 };
+    
     const totals = {
       politica: weeklyData.reduce((acc, d) => acc + d.politica, 0),
       tecnologia: weeklyData.reduce((acc, d) => acc + d.tecnologia, 0),
-      economia: weeklyData.reduce((acc, d) => acc + d.economia, 0),
-      criticos: weeklyData.reduce((acc, d) => acc + d.criticos, 0),
+      entretenimento: weeklyData.reduce((acc, d) => acc + d.entretenimento, 0),
+      esportes: weeklyData.reduce((acc, d) => acc + d.esportes, 0),
     };
     
     const maxCategory = Object.entries(totals).reduce((a, b) => a[1] > b[1] ? a : b);
     const categoryLabels: Record<string, string> = {
       politica: "Política",
       tecnologia: "Tecnologia",
-      economia: "Economia",
-      criticos: "Alertas Críticos",
+      entretenimento: "Entretenimento",
+      esportes: "Esportes",
     };
+
+    // Calculate growth (compare last 2 days vs previous 2 days)
+    const recent = weeklyData.slice(-2).reduce((acc, d) => acc + d.politica + d.tecnologia + d.entretenimento + d.esportes, 0);
+    const previous = weeklyData.slice(-4, -2).reduce((acc, d) => acc + d.politica + d.tecnologia + d.entretenimento + d.esportes, 0);
+    const growth = previous > 0 ? Math.round(((recent - previous) / previous) * 100) : 0;
 
     return {
       topCategory: categoryLabels[maxCategory[0]] || maxCategory[0],
       topValue: maxCategory[1],
+      growth,
     };
   }, [weeklyData]);
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center py-8 text-muted-foreground">
+        <div className="w-4 h-4 border-2 border-primary/30 border-t-primary rounded-full animate-spin mr-2" />
+        <span className="text-[11px]">{lang === "pt" ? "Carregando dados históricos..." : "Loading historical data..."}</span>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex flex-col items-center justify-center py-8 text-muted-foreground">
+        <Activity className="w-8 h-8 mb-2 opacity-30" />
+        <p className="text-[11px]">{error}</p>
+      </div>
+    );
+  }
 
   return (
     <div className="p-3 space-y-3">
