@@ -368,7 +368,7 @@ function AnomaliesPredictive({ anomalies, lang, onAnomalyClick }: {
       </div>
 
       {/* Anomaly cards */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-2 auto-rows-auto">
+      <div className="columns-2 sm:columns-3 md:columns-4 lg:columns-5 xl:columns-6 gap-2 space-y-0 [&>*]:break-inside-avoid [&>*]:mb-2">
         {anomalies.map((anomaly, i) => {
           const info = anomalyTypeInfo[anomaly.type] || anomalyTypeInfo.spike;
           const changeNum = parseFloat(anomaly.trend.change?.replace(/[^0-9.\-]/g, "") || "0");
