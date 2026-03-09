@@ -185,8 +185,10 @@ const Index = () => {
   // Group visible trends by recency sections
   const SOURCE_PRIORITY: Record<string, number> = {
     "The Guardian": 1, "NPR": 1, "NewsAPI": 2, "GNews": 2, "Bing News": 2, "NewsData": 2,
-    "Google Trends": 3, "YouTube": 4, "Reddit": 5, "Bluesky": 5, "Mastodon": 5,
-    "World Bank": 6, "IBGE": 6, "OpenAlex": 6, "Wikipedia": 7,
+    "Reddit": 3, "Bluesky": 3, "Mastodon": 3, "X (Twitter)": 3, "YouTube": 4,
+    "Hacker News": 5, "Stack Overflow": 5, "GitHub": 5,
+    "Wikipedia": 6, "OpenAlex": 6, "World Bank": 6, "IBGE": 6,
+    "Google Trends": 99,
   };
 
   const groupedTrends = useMemo(() => {

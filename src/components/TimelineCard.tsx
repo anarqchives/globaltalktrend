@@ -374,33 +374,35 @@ const TimelineCard = ({
           </div>
 
           {/* === TAGS ROW === */}
-          <div className="flex items-center gap-1 flex-wrap">
+          <div className="flex items-center gap-1 flex-wrap mb-1">
             <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-medium bg-secondary text-muted-foreground">
               {localizedCategory}
             </span>
             <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-medium bg-secondary text-muted-foreground">
               {signalType}
             </span>
+            {trustBadge && trustBadgeKeys[trustBadge] && (
+              <span className={`inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded text-[9px] font-medium ${trustBadgeKeys[trustBadge].className}`}>
+                {trustBadgeKeys[trustBadge].icon}
+                {t(trustBadgeKeys[trustBadge].labelKey as any)}
+              </span>
+            )}
             {trigger && (
-              <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-medium bg-accent/20 text-accent-foreground">
+              <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-medium bg-accent/10 text-accent-foreground">
                 {trigger.emoji} {t(trigger.labelKey as any)}
               </span>
             )}
-            {isMultiplatform && (
-              <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-bold bg-orange-500/10 text-orange-600 dark:text-orange-400">
-                🔗 Cross-platform
-              </span>
-            )}
-            {trendScore >= 80 && (
-              <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-bold bg-destructive/10 text-destructive">
-                🔥 Explosive
-              </span>
+            {translated && (
+              <span className="text-[9px] text-blue-500" title={t("autoTranslated")}>🌐 Traduzido</span>
             )}
           </div>
         </div>
 
+        {/* Divider gradient */}
+        <div className="h-px w-full bg-gradient-to-r from-transparent via-border to-transparent my-2" />
+
         {/* === ACTION BAR === */}
-        <div className="flex items-center gap-1 mt-2 pt-1.5 border-t border-border/50">
+        <div className="flex items-center gap-1">
           {sourceUrl && (
             <a
               href={sourceUrl}
