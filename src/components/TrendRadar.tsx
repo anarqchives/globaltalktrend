@@ -58,7 +58,7 @@ function Legend({ tab, lang }: { tab: string; lang: string }) {
   );
 }
 
-export default function TrendRadar({ trends, allTrends, criticalMoments, onSelectTrend, onFilterCountry }: TrendRadarProps) {
+export default function TrendRadar({ trends, allTrends, criticalMoments, anomalies = [], onSelectTrend, onFilterCountry, onAnomalyClick }: TrendRadarProps) {
   const { lang, t } = useLanguage();
   const [tab, setTab] = useState("emerging");
   const [collapsed, setCollapsed] = useState(() => {
