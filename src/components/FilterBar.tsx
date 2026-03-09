@@ -264,10 +264,10 @@ const FilterBar = ({ filters, onChange, onForceReset, onSaveFilter, isLoggedIn }
           </Tooltip>
         )}
 
-        <div className="flex items-center gap-1.5 ml-auto flex-shrink-0 whitespace-nowrap">
+        <div className="flex items-center gap-2 ml-auto flex-shrink-0 whitespace-nowrap pl-2 border-l border-border/20">
           <Tooltip>
             <TooltipTrigger asChild>
-              <span className="flex items-center gap-1 cursor-help">
+              <span className="flex items-center gap-1.5 cursor-help">
                 <span className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ background: "hsl(142, 72%, 45%)" }} />
                 <span className="text-[11px] font-medium text-foreground">{t("live")}</span>
               </span>
@@ -276,7 +276,9 @@ const FilterBar = ({ filters, onChange, onForceReset, onSaveFilter, isLoggedIn }
               {t("liveTooltip")}
             </TooltipContent>
           </Tooltip>
+          <span className="text-border/40">·</span>
           <OnlineUsersCount />
+          <span className="text-border/40">·</span>
           <Tooltip>
             <TooltipTrigger asChild>
               <span className="cursor-help">

@@ -1,47 +1,61 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Shield, Check, ExternalLink } from "lucide-react";
+import { Shield, Check, Lock, Eye } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useLanguage } from "@/contexts/LanguageContext";
 
 const STORAGE_KEY = "gtt_privacy_accepted";
 
-const copy: Record<string, { title: string; body: string; items: string[]; detail: string; button: string; link: string }> = {
+const copy: Record<string, { title: string; subtitle: string; body: string; items: { icon: string; text: string }[]; detail: string; button: string; link: string }> = {
   pt: {
-    title: "Privacidade e Transparência",
-    body: "No Global Talk Trend, sua privacidade está em primeiro lugar. Nós NÃO coletamos, armazenamos ou compartilhamos nenhum dado pessoal seu.",
+    title: "Sua privacidade importa",
+    subtitle: "Transparência desde o primeiro acesso",
+    body: "O Global Talk Trend foi projetado para proteger sua privacidade. Não coletamos, armazenamos ou compartilhamos dados pessoais.",
     items: [
-      "Nenhum dado de navegação é retido",
-      "Nenhuma informação pessoal é armazenada",
-      "Você navega de forma 100% anônima",
+      { icon: "🛡️", text: "Nenhum dado de navegação é retido" },
+      { icon: "🔒", text: "Nenhuma informação pessoal é armazenada" },
+      { icon: "👁️", text: "Navegação 100% anônima" },
     ],
-    detail: "Para mais detalhes, consulte nossa",
-    button: "Entendi",
+    detail: "Consulte nossa",
+    button: "Continuar para o Global Talk Trend",
     link: "Política de Privacidade",
   },
   en: {
-    title: "Privacy & Transparency",
-    body: "At Global Talk Trend, your privacy comes first. We do NOT collect, store, or share any of your personal data.",
+    title: "Your privacy matters",
+    subtitle: "Transparency from the first visit",
+    body: "Global Talk Trend is designed to protect your privacy. We do not collect, store, or share personal data.",
     items: [
-      "No browsing data is retained",
-      "No personal information is stored",
-      "You browse 100% anonymously",
+      { icon: "🛡️", text: "No browsing data is retained" },
+      { icon: "🔒", text: "No personal information is stored" },
+      { icon: "👁️", text: "100% anonymous browsing" },
     ],
-    detail: "For more details, see our",
-    button: "Got it",
+    detail: "See our",
+    button: "Continue to Global Talk Trend",
     link: "Privacy Policy",
+  },
+  es: {
+    title: "Tu privacidad importa",
+    subtitle: "Transparencia desde el primer acceso",
+    body: "Global Talk Trend fue diseñado para proteger tu privacidad. No recopilamos, almacenamos ni compartimos datos personales.",
+    items: [
+      { icon: "🛡️", text: "No se retienen datos de navegación" },
+      { icon: "🔒", text: "No se almacena información personal" },
+      { icon: "👁️", text: "Navegación 100% anónima" },
+    ],
+    detail: "Consulta nuestra",
+    button: "Continuar a Global Talk Trend",
+    link: "Política de Privacidad",
   },
 };
 
 export default function PrivacyPopup() {
   const [visible, setVisible] = useState(false);
   const { lang } = useLanguage();
-  const t = copy[lang] || copy.en;
+  const t = copy[lang] || copy[lang.substring(0, 2) as keyof typeof copy] || copy.en;
 
   useEffect(() => {
     if (!localStorage.getItem(STORAGE_KEY)) {
-      // Small delay so the main UI renders first
-      const id = setTimeout(() => setVisible(true), 800);
+      const id = setTimeout(() => setVisible(true), 600);
       return () => clearTimeout(id);
     }
   }, []);
@@ -58,62 +72,70 @@ export default function PrivacyPopup() {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          transition={{ duration: 0.2 }}
-          className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/40 backdrop-blur-sm px-4"
+          transition={{ duration: 0.25 }}
+          className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/30 backdrop-blur-md px-4"
         >
           <motion.div
-            initial={{ opacity: 0, scale: 0.95, y: 16 }}
+            initial={{ opacity: 0, scale: 0.92, y: 24 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.95, y: 16 }}
-            transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
-            className="bg-card border border-border/50 rounded-3xl shadow-2xl max-w-[420px] w-full p-8 text-center"
+            exit={{ opacity: 0, scale: 0.92, y: 24 }}
+            transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
+            className="bg-card border border-border/40 rounded-2xl shadow-2xl max-w-[460px] w-full overflow-hidden"
           >
-            {/* Icon */}
-            <div className="w-14 h-14 rounded-2xl bg-primary/10 flex items-center justify-center mx-auto mb-5">
-              <Shield className="w-7 h-7 text-primary" />
-            </div>
+            {/* Gradient accent bar */}
+            <div className="h-1 w-full bg-gradient-to-r from-primary via-accent to-primary" />
 
-            {/* Title */}
-            <h2 className="text-xl font-bold text-foreground mb-4 tracking-tight">{t.title}</h2>
+            <div className="p-8">
+              {/* Icon */}
+              <div className="w-12 h-12 rounded-xl bg-primary/8 border border-primary/15 flex items-center justify-center mx-auto mb-5">
+                <Shield className="w-6 h-6 text-primary" />
+              </div>
 
-            {/* Body */}
-            <div className="text-left space-y-4 mb-6">
-              <p className="text-sm text-muted-foreground leading-relaxed">{t.body}</p>
+              {/* Title */}
+              <h2 className="text-lg font-bold text-foreground text-center mb-1 tracking-tight">
+                {t.title}
+              </h2>
+              <p className="text-xs text-muted-foreground text-center mb-6">
+                {t.subtitle}
+              </p>
 
-              <ul className="space-y-2.5">
+              {/* Body */}
+              <p className="text-sm text-muted-foreground leading-relaxed mb-5 text-center">
+                {t.body}
+              </p>
+
+              {/* Items */}
+              <div className="space-y-3 mb-6">
                 {t.items.map((item, i) => (
-                  <li key={i} className="flex items-start gap-2.5 text-sm text-foreground/80">
-                    <Check className="w-4 h-4 text-emerald-500 shrink-0 mt-0.5" />
-                    <span>{item}</span>
-                  </li>
+                  <motion.div
+                    key={i}
+                    initial={{ opacity: 0, x: -12 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: 0.3 + i * 0.1, duration: 0.3 }}
+                    className="flex items-center gap-3 p-3 rounded-xl bg-secondary/50 border border-border/30"
+                  >
+                    <span className="text-base flex-shrink-0">{item.icon}</span>
+                    <span className="text-sm text-foreground/80 font-medium">{item.text}</span>
+                  </motion.div>
                 ))}
-              </ul>
+              </div>
 
-              <p className="text-xs text-muted-foreground">
+              {/* Policy link */}
+              <p className="text-xs text-muted-foreground text-center mb-5">
                 {t.detail}{" "}
-                <a
-                  href="/privacidade"
-                  className="text-primary hover:underline font-medium"
-                >
+                <a href="/privacidade" className="text-primary hover:underline font-medium">
                   {t.link}
                 </a>
-                .
               </p>
+
+              {/* Accept button */}
+              <Button
+                onClick={handleAccept}
+                className="w-full h-11 text-sm font-semibold rounded-xl"
+              >
+                {t.button}
+              </Button>
             </div>
-
-            {/* Accept */}
-            <Button onClick={handleAccept} className="w-full h-12 text-base font-semibold rounded-2xl">
-              {t.button}
-            </Button>
-
-            {/* Secondary link */}
-            <a
-              href="/privacidade"
-              className="inline-flex items-center gap-1 mt-4 text-xs text-muted-foreground hover:text-foreground transition-colors"
-            >
-              <ExternalLink className="w-3 h-3" />
-              {t.link}
-            </a>
           </motion.div>
         </motion.div>
       )}
