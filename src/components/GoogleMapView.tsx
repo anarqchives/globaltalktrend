@@ -1123,14 +1123,14 @@ const GoogleMapView = ({
           const hBg = isDark ? "rgba(19,22,32,0.97)" : "rgba(255,255,255,0.97)";
           const hText = isDark ? "#e2e8f0" : "#111827";
           const hSub = isDark ? "#94a3b8" : "#6b7280";
-          const { tag: hTag, color: hColor } = getIntensityLabel(intensity);
+          const { tag: hTag, color: hColor } = getIntensityLabel(intensity, t);
           
           let statusExplain = "";
-          if (intensity > 0.8) statusExplain = lang === "pt" ? "Volume excepcional detectado — múltiplas fontes ativas" : "Exceptional volume — multiple active sources";
-          else if (intensity > 0.6) statusExplain = lang === "pt" ? "Alta atividade — crescimento acelerado em várias plataformas" : "High activity — accelerating across platforms";
-          else if (intensity > 0.4) statusExplain = lang === "pt" ? "Atividade moderada — tendências em desenvolvimento" : "Moderate activity — developing trends";
-          else if (intensity > 0.2) statusExplain = lang === "pt" ? "Baixa atividade — poucos sinais detectados" : "Low activity — few signals detected";
-          else statusExplain = lang === "pt" ? "Monitoramento normal — sem anomalias" : "Normal monitoring — no anomalies";
+          if (intensity > 0.8) statusExplain = t("mapStatusExceptional");
+          else if (intensity > 0.6) statusExplain = t("mapStatusHigh");
+          else if (intensity > 0.4) statusExplain = t("mapStatusModerate");
+          else if (intensity > 0.2) statusExplain = t("mapStatusLow");
+          else statusExplain = t("mapStatusNormal");
           
           hoverInfoRef.current.setContent(`
             <div style="font-family:Inter,system-ui,sans-serif;padding:10px 14px;min-width:190px;max-width:240px;background:${hBg};color:${hText};border-radius:14px;backdrop-filter:blur(16px);border:1px solid ${isDark ? 'rgba(45,51,72,0.5)' : 'rgba(0,0,0,0.08)'}; box-shadow:0 8px 24px rgba(0,0,0,0.12);">
