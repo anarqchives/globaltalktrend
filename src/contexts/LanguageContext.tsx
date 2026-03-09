@@ -484,6 +484,10 @@ const translations: Record<LangCode, Record<TranslationKey, string>> = {
     signalTooltip: "Erkannter Signaltyp: Spike, Search, Social, News, Dev, Knowledge.",
     trendTableTitle: "Titel", trendTablePlatform: "Plattform", trendTableVolume: "Volumen",
     trendTableChange: "Änderung", trendTableCountry: "Land",
+    mapFlowMap: "Fluss", mapSentiment: "Stimmung", mapHeatmap: "Heatmap",
+    mapFlowLegendTitle: "Trend-Verbreitung", mapFlowOrigin: "Ursprung", mapFlowDestination: "Ziel", mapFlowPropagation: "Verbreitung", mapFlowTimeDelta: "Verbreitungszeit", mapFlowClickToFilter: "Klicken zum Filtern", mapFlowNoData: "Nicht genügend Verbreitungsdaten",
+    mapSentLegendTitle: "Emotionale Landschaft", mapSentPositive: "Positiv", mapSentNegative: "Negativ", mapSentMixed: "Polarisiert", mapSentNeutral: "Neutral", mapSentBreakdown: "Stimmungsverteilung", mapSentTopTrends: "Top Trends", mapSentNoData: "Nicht genügend Stimmungsdaten",
+    mapSentVolume: "Gesamtvolumen", mapSentGrowth: "Durchschn. Wachstum", mapSentActiveTrends: "Aktive Trends",
   },
   it: {
     trends: "Tendenze", moreTrends: "Più tendenze", filters: "Filtri",
