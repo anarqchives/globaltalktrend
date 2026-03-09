@@ -616,8 +616,8 @@ const Index = () => {
         }}
       />
 
-      <div className="flex-1 overflow-hidden">
-        {/* Trend Radar: Emerging / Critical / Top Trends */}
+      <div className="flex-1 overflow-hidden flex flex-col">
+        {/* Trend Radar: Emerging / Critical / Top Trends - Fixed height container */}
         {!loading && filteredTrends.length > 1 && (
           <TrendRadar
             trends={filteredTrends}
@@ -628,10 +628,7 @@ const Index = () => {
           />
         )}
 
-        {/* Temporal Heatmap */}
-        {!loading && !heatmapDismissed && filteredTrends.length > 5 && (
-          <TemporalHeatmap trends={allTrends} />
-        )}
+        {/* Main content area - expands to fill remaining space */}
 
         {isMobile ? (
           <div className="h-full min-h-0 flex flex-col relative">
