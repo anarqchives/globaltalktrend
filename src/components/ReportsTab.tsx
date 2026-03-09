@@ -154,7 +154,17 @@ export default function ReportsTab({ userId }: ReportsTabProps) {
 
     const { data, error } = await query;
     if (error) throw error;
-    return (data || []) as SnapshotRow[];
+    
+    // Deduplicate by title (keep highest volume version)
+    const seen = new Map<string, SnapshotRow>();
+    for (const row of (data || []) as SnapshotRow[]) {
+      const key = row.title.toLowerCase().trim().slice(0, 60);
+      const existing = seen.get(key);
+      if (!existing || (row.volume_raw || 0) > (existing.volume_raw || 0)) {
+        seen.set(key, row);
+      }
+    }
+    return Array.from(seen.values()).sort((a, b) => (b.volume_raw || 0) - (a.volume_raw || 0));
   }, [country, category, getTimeRangeForPeriod]);
 
   const fetchReportData = useCallback(() => fetchDataForPeriod(period), [period, fetchDataForPeriod]);
