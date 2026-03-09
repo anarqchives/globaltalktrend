@@ -386,6 +386,10 @@ const translations: Record<LangCode, Record<TranslationKey, string>> = {
     tviGrowthLabel: "Crecimiento (30%)", tviVolumeLabel: "Volumen (30%)", tviSourcesLabel: "Fuentes (20%)", tviGeographyLabel: "Geografía (20%)",
     tviDescription: "Mide la velocidad de propagación basada en:",
     sourcesSingular: "fuente", sourcesPlural: "fuentes",
+    mapMentions: "menciones", mapSimilarity: "similitud", mapThinLowVol: "Fino = bajo volumen", mapThickHighVol: "Grueso = alto volumen", mapPropArcs: "arcos de propagación", mapSizeVolume: "Tamaño = volumen", mapFastPulse: "Pulso rápido = crecimiento acelerado", mapTrendsActiveLabel: "activas", mapClickDetails: "Clic para ver detalles", mapLoadingMap: "Cargando mapa...", mapReconnectMsg: "El mapa se mostrará cuando se restablezca la conexión.", mapRetry: "Reintentar", mapFilterByCountry: "Filtrar timeline por país", mapTopTrendsLabel: "Principales tendencias", mapMoreTrends: "más tendencias", mapCloseMap: "Cerrar Mapa",
+    mapIntCritical: "🔥 CRÍTICO", mapIntHigh: "⚡ ALTO", mapIntModerate: "📊 MODERADO", mapIntAttention: "📈 ATENCIÓN", mapIntNormal: "ℹ️ NORMAL",
+    mapStatusExceptional: "Volumen excepcional — múltiples fuentes activas", mapStatusHigh: "Alta actividad — crecimiento acelerado", mapStatusModerate: "Actividad moderada — tendencias en desarrollo", mapStatusLow: "Baja actividad — pocas señales", mapStatusNormal: "Monitoreo normal — sin anomalías",
+    mapCritVolume: "Volumen excepcionalmente alto", mapCritGrowth: "Crecimiento acelerado", mapCritMultiplatform: "Multiplataforma", mapCritActive: "tendencias activas simultáneamente", mapCritMonitoring: "en monitoreo — actividad normal", mapCritNone: "Sin tendencias activas",
   },
   fr: {
     trends: "Tendances", moreTrends: "Plus de tendances", filters: "Filtres",
