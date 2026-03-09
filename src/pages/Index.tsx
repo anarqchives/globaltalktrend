@@ -654,7 +654,9 @@ const Index = () => {
       />
 
       <div className="flex-1 overflow-hidden flex flex-col">
-        {/* Trend Radar: Always rendered once data exists - independent of timeline refresh */}
+        {/* Gradient divider between filter and radar */}
+        <div className="section-gradient-divider" />
+        {/* Trend Radar */}
         <TrendRadar
           trends={filteredTrends}
           allTrends={allTrends}
