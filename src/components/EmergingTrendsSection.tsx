@@ -96,10 +96,10 @@ export default function EmergingTrendsSection({ trends, onSelectTrend }: Emergin
                     onClick={() => onSelectTrend?.(e.trend)}
                     className="group relative overflow-hidden rounded-lg border border-emerald-500/20 bg-card hover:border-emerald-500/40 transition-all duration-150 text-left p-2.5 hover:shadow-sm"
                   >
-                    {/* Score + Status */}
+                    {/* Score + Category */}
                     <div className="flex items-center justify-between mb-1.5">
-                      <span className="inline-flex items-center gap-0.5 px-1 py-0.5 rounded text-[8px] font-bold bg-emerald-500/15 text-emerald-600 dark:text-emerald-400">
-                        🌱 Emerging
+                      <span className="inline-flex items-center gap-0.5 px-1 py-0.5 rounded text-[8px] font-bold bg-secondary text-muted-foreground">
+                        {e.trend.category || "Geral"}
                       </span>
                       <span className={`text-[10px] font-black ${tviScore >= 70 ? 'text-emerald-600' : 'text-muted-foreground'}`}>
                         {tviScore}
@@ -128,7 +128,7 @@ export default function EmergingTrendsSection({ trends, onSelectTrend }: Emergin
                       )}
                       <span className="inline-flex items-center gap-0.5">
                         <Clock className="w-2 h-2" />
-                        {e.ageMinutes < 60 ? `${e.ageMinutes}m` : `${Math.round(e.ageMinutes / 60)}h`}
+                        {e.ageMinutes < 1 ? "agora" : e.ageMinutes < 60 ? `há ${e.ageMinutes}min` : `há ${Math.round(e.ageMinutes / 60)}h`}
                       </span>
                     </div>
 

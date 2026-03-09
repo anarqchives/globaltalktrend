@@ -119,13 +119,11 @@ export default function CriticalMomentsSection({ moments, onSelectTrend }: Props
                 <p className="text-[9px] text-muted-foreground line-clamp-1 mb-1">{m.summary}</p>
               )}
 
-              {/* Compact metrics */}
+              {/* Compact metrics — show real platform names */}
               <div className="flex items-center gap-1.5 text-[9px] text-muted-foreground mb-1 flex-wrap">
-                {m.mediaTypes.slice(0, 3).map(type => (
-                  <span key={type} className="px-1 py-0 rounded bg-secondary text-[7px] font-medium text-secondary-foreground">
-                    {mediaTypeEmojis[type] || "📌"} {type === "social" ? "Social" : type === "press" ? "Imprensa" : type === "search" ? "Busca" : type === "video" ? "Vídeo" : type}
-                  </span>
-                ))}
+                <span className="px-1 py-0 rounded bg-secondary text-[7px] font-medium text-secondary-foreground">
+                  {trend.platform}
+                </span>
                 {m.platformCount > 1 && (
                   <span className="inline-flex items-center gap-0.5"><Radio className="w-2 h-2" />{m.platformCount}</span>
                 )}

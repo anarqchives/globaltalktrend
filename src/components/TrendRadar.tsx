@@ -33,8 +33,8 @@ const legendText: Record<string, Record<string, string>> = {
     en: "Accelerating trends in the last 2h — detected by anomalous growth.",
   },
   critical: {
-    pt: "Momentos de pico anômalo — alta velocidade de propagação multiplataforma.",
-    en: "Anomalous peak moments — high multi-platform propagation speed.",
+    pt: "⚡ Explosão de sinal — crescimento acima de +150% em menos de 2h.",
+    en: "⚡ Signal burst — growth above +150% in less than 2h.",
   },
   top: {
     pt: "Os 20 assuntos mais discutidos agora — ordenados por volume total.",
@@ -45,8 +45,8 @@ const legendText: Record<string, Record<string, string>> = {
     en: "Weekly intelligence dashboard — volume, categories and trends from the last 7 days.",
   },
   anomalies: {
-    pt: "Análise preditiva de padrões — comportamentos anômalos detectados em múltiplas plataformas.",
-    en: "Predictive pattern analysis — anomalous behaviors detected across multiple platforms.",
+    pt: "🔍 Padrões estatisticamente incomuns — comportamentos inesperados detectados em múltiplas plataformas simultaneamente.",
+    en: "🔍 Statistically unusual patterns — unexpected behaviors detected across multiple platforms simultaneously.",
   },
 };
 
@@ -668,7 +668,7 @@ export default function TrendRadar({ trends, allTrends, criticalMoments, anomali
     localStorage.setItem(RADAR_STORAGE_KEY, String(collapsed));
   }, [collapsed]);
 
-  const totalCriticalItems = criticalMoments.length + anomalies.length;
+  const totalCriticalItems = criticalMoments.length;
 
   // When new critical items arrive and user is NOT on the critical tab, increment unseen
   useEffect(() => {
@@ -684,19 +684,35 @@ export default function TrendRadar({ trends, allTrends, criticalMoments, anomali
   }, [tab]);
 
   const hasEmerging = trends.length > 3;
-  const hasCritical = criticalMoments.length > 0 || anomalies.length > 0;
+  const hasCritical = criticalMoments.length > 0;
 
   const labels = {
     collapse: lang === "pt" ? "Recolher radar" : "Collapse radar",
     expand: lang === "pt" ? "Expandir radar" : "Expand radar",
   };
 
-  // Tab config — anomalies are merged into the Critical tab; no separate Anomalies tab
+  const hasAnomalies = anomalies.length > 0;
+  // Track unseen anomalies separately
+  const [unseenAnomalies, setUnseenAnomalies] = useState(0);
+  const prevAnomalyCountRef = useRef(0);
+
+  useEffect(() => {
+    if (anomalies.length > prevAnomalyCountRef.current && tab !== "anomalies") {
+      setUnseenAnomalies(anomalies.length);
+    }
+    prevAnomalyCountRef.current = anomalies.length;
+  }, [anomalies.length, tab]);
+
+  useEffect(() => {
+    if (tab === "anomalies") setUnseenAnomalies(0);
+  }, [tab]);
+
   const tabConfig = [
-    { value: "emerging", icon: Sprout, label: "Emerging", activeClass: "data-[state=active]:bg-emerald-500/15 data-[state=active]:text-emerald-600 dark:data-[state=active]:text-emerald-400 data-[state=active]:border-emerald-500/30", dot: hasEmerging ? "bg-emerald-500" : null, badge: null, pulse: false },
-    { value: "critical", icon: Flame, label: "Critical", activeClass: "data-[state=active]:bg-rose-500/15 data-[state=active]:text-rose-600 dark:data-[state=active]:text-rose-400 data-[state=active]:border-rose-500/30", dot: null, badge: unseenCritical > 0 ? unseenCritical : (hasCritical ? totalCriticalItems : null), pulse: unseenCritical > 0 },
+    { value: "emerging", icon: Sprout, label: lang === "pt" ? "Emergentes" : "Emerging", activeClass: "data-[state=active]:bg-emerald-500/15 data-[state=active]:text-emerald-600 dark:data-[state=active]:text-emerald-400 data-[state=active]:border-emerald-500/30", dot: hasEmerging ? "bg-emerald-500" : null, badge: null, pulse: false },
+    { value: "critical", icon: Flame, label: lang === "pt" ? "Crítico" : "Critical", activeClass: "data-[state=active]:bg-rose-500/15 data-[state=active]:text-rose-600 dark:data-[state=active]:text-rose-400 data-[state=active]:border-rose-500/30", dot: null, badge: unseenCritical > 0 ? unseenCritical : (criticalMoments.length > 0 ? criticalMoments.length : null), pulse: unseenCritical > 0 },
+    { value: "anomalies", icon: AlertTriangle, label: lang === "pt" ? "Anomalias" : "Anomalies", activeClass: "data-[state=active]:bg-red-500/15 data-[state=active]:text-red-600 dark:data-[state=active]:text-red-400 data-[state=active]:border-red-500/30", dot: null, badge: unseenAnomalies > 0 ? unseenAnomalies : (hasAnomalies ? anomalies.length : null), pulse: unseenAnomalies > 0 },
     { value: "top", icon: Trophy, label: "Top", activeClass: "data-[state=active]:bg-amber-500/15 data-[state=active]:text-amber-600 dark:data-[state=active]:text-amber-400 data-[state=active]:border-amber-500/30", dot: null, badge: null, pulse: false },
-    { value: "weekly", icon: Activity, label: "Weekly", activeClass: "data-[state=active]:bg-sky-500/15 data-[state=active]:text-sky-600 dark:data-[state=active]:text-sky-400 data-[state=active]:border-sky-500/30", dot: null, badge: null, pulse: false },
+    { value: "weekly", icon: Activity, label: lang === "pt" ? "Semana" : "Weekly", activeClass: "data-[state=active]:bg-sky-500/15 data-[state=active]:text-sky-600 dark:data-[state=active]:text-sky-400 data-[state=active]:border-sky-500/30", dot: null, badge: null, pulse: false },
   ];
 
   return (
@@ -783,26 +799,25 @@ export default function TrendRadar({ trends, allTrends, criticalMoments, anomali
                 <Legend tab="critical" lang={lang} />
                 <ScrollArea className="flex-1">
                   {hasCritical ? (
-                    <div className="space-y-0">
-                      {criticalMoments.length > 0 && (
-                        <CriticalMomentsSection moments={criticalMoments} onSelectTrend={onSelectTrend} />
-                      )}
-                      {anomalies.length > 0 && (
-                        <div className="px-3 py-2">
-                          <div className="flex items-center gap-1.5 mb-2">
-                            <AlertTriangle className="w-3 h-3 text-destructive" />
-                            <span className="text-[10px] font-bold text-destructive uppercase tracking-wider">
-                              {lang === "pt" ? "Anomalias Detectadas" : "Detected Anomalies"}
-                            </span>
-                          </div>
-                          <AnomaliesPredictive anomalies={anomalies} lang={lang} onAnomalyClick={onAnomalyClick} />
-                        </div>
-                      )}
-                    </div>
+                    <CriticalMomentsSection moments={criticalMoments} onSelectTrend={onSelectTrend} />
                   ) : (
                     <div className="flex flex-col items-center justify-center py-8 text-muted-foreground">
                       <Flame className="w-8 h-8 mb-2 opacity-30" />
                       <p className="text-[11px]">{lang === "pt" ? "Nenhum alerta crítico no momento." : "No critical alerts."}</p>
+                    </div>
+                  )}
+                </ScrollArea>
+              </TabsContent>
+
+              <TabsContent value="anomalies" className="absolute inset-0 mt-0 flex flex-col data-[state=inactive]:hidden animate-in fade-in-0 duration-300">
+                <Legend tab="anomalies" lang={lang} />
+                <ScrollArea className="flex-1">
+                  {hasAnomalies ? (
+                    <AnomaliesPredictive anomalies={anomalies} lang={lang} onAnomalyClick={onAnomalyClick} />
+                  ) : (
+                    <div className="flex flex-col items-center justify-center py-8 text-muted-foreground">
+                      <AlertTriangle className="w-8 h-8 mb-2 opacity-30" />
+                      <p className="text-[11px]">{lang === "pt" ? "Nenhuma anomalia detectada no momento." : "No anomalies detected."}</p>
                     </div>
                   )}
                 </ScrollArea>
@@ -824,7 +839,7 @@ export default function TrendRadar({ trends, allTrends, criticalMoments, anomali
                 </ScrollArea>
               </TabsContent>
 
-              {/* Anomalies tab removed — anomalies are now shown inside Critical Alerts tab */}
+              
             </div>
           </div>
         )}

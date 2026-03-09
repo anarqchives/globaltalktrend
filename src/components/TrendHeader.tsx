@@ -191,7 +191,7 @@ const TrendHeader = ({ totalTrends = 0, countriesCount = 0, onRefresh, refreshin
               <span className="text-muted-foreground hidden md:inline lg:hidden text-[13px]">Monitor em Tempo Real</span>
             </h1>
             {totalTrends > 1 && countriesCount > 0 ?
-            <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-primary/10 text-primary text-[11px] font-bold tabular-nums flex-shrink-0 hidden sm:inline-flex">
+            <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-primary/10 text-accent dark:text-accent text-[11px] font-bold tabular-nums flex-shrink-0 hidden sm:inline-flex">
                 {totalTrends} {t("trends")} · {countriesCount} {countriesCount > 1 ? t("countries") : t("country")}
               </span> :
 
@@ -206,7 +206,7 @@ const TrendHeader = ({ totalTrends = 0, countriesCount = 0, onRefresh, refreshin
             <button
               onClick={onRefresh}
               disabled={refreshing}
-              className="p-1.5 rounded-full text-muted-foreground hover:bg-secondary transition-colors disabled:opacity-50"
+              className="p-1.5 rounded-full text-muted-foreground dark:text-white/70 hover:bg-secondary dark:hover:bg-white/10 transition-colors disabled:opacity-50"
               title={t("updated")}>
 
                 <RefreshCw className={`w-3.5 h-3.5 ${refreshing ? "animate-spin" : ""}`} />
@@ -216,9 +216,9 @@ const TrendHeader = ({ totalTrends = 0, countriesCount = 0, onRefresh, refreshin
             {/* Compact language selector with dropdown */}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <button className="flex items-center gap-1 px-2.5 h-8 min-h-[32px] max-h-[32px] rounded-full bg-secondary text-[11px] font-medium text-foreground justify-center hover:bg-muted transition-colors">
+                <button className="flex items-center gap-1 px-2.5 h-8 min-h-[32px] max-h-[32px] rounded-full bg-secondary dark:bg-white/10 dark:border dark:border-white/20 text-[11px] font-medium text-foreground justify-center hover:bg-muted dark:hover:bg-white/15 transition-colors">
                   🌐 {lang.toUpperCase()}
-                  <ChevronDown className="w-3 h-3 text-muted-foreground" />
+                  <ChevronDown className="w-3 h-3 text-muted-foreground dark:text-white/60" />
                 </button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="min-w-[180px] max-h-[300px] overflow-y-auto">
@@ -236,54 +236,20 @@ const TrendHeader = ({ totalTrends = 0, countriesCount = 0, onRefresh, refreshin
 
             <button
               onClick={() => setDark(!dark)}
-              className="p-1.5 rounded-full text-muted-foreground hover:bg-secondary transition-colors"
+              className="p-1.5 rounded-full text-muted-foreground dark:text-white/80 hover:bg-secondary dark:hover:bg-white/10 transition-colors"
               title={dark ? "Modo claro" : "Modo escuro"}>
 
               {dark ? <Sun className="w-3.5 h-3.5" /> : <Moon className="w-3.5 h-3.5" />}
             </button>
 
-            <div className="w-px h-5 bg-border mx-1" />
-
-            {/* Anomaly alerts badge */}
-            {anomalyCount > 0 &&
-            <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <button className="relative p-1.5 rounded-full text-muted-foreground hover:bg-secondary transition-colors">
-                    <AlertTriangle className="w-3.5 h-3.5 text-destructive" />
-                    <span className="absolute -top-0.5 -right-0.5 w-3.5 h-3.5 rounded-full bg-destructive text-[8px] text-white flex items-center justify-center font-bold">
-                      {anomalyCount}
-                    </span>
-                  </button>
-                </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-72 max-h-64 overflow-y-auto">
-                  <div className="px-2 py-1.5">
-                    <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">🚨 Anomalias detectadas</span>
-                  </div>
-                  {anomalies.map((a, i) => {
-                  const anomalyTrendId = `${a.trend.platform}-${a.trend.title.slice(0, 20)}`;
-                  return (
-                    <DropdownMenuItem key={i} className="text-xs gap-2 justify-between cursor-pointer" onSelect={() => {
-                      onAnomalyClick?.(anomalyTrendId);
-                    }}>
-                        <span className="truncate flex-1">{a.message.slice(0, 80)}</span>
-                        <button
-                        onClick={(e) => {e.stopPropagation();onDismissAnomaly?.(a.trend.title);}}
-                        className="text-muted-foreground hover:text-foreground p-0.5 shrink-0">
-                          <X className="w-3 h-3" />
-                        </button>
-                      </DropdownMenuItem>);
-
-                })}
-                </DropdownMenuContent>
-              </DropdownMenu>
-            }
+            <div className="w-px h-5 bg-border/50 dark:bg-white/15 mx-1" />
 
             {/* Support button - yellow liquid glass */}
             <a
               href="https://buy.stripe.com/fZu7sMgw6cHLeTnbWVdIA00"
               target="_blank"
               rel="noopener noreferrer"
-              className="px-3 h-8 min-h-[32px] max-h-[32px] rounded-full text-[11px] font-semibold transition-all whitespace-nowrap flex items-center hover:scale-105 border border-yellow-400/50 dark:border-yellow-500/40 backdrop-blur-sm shadow-[0_4px_15px_rgba(255,215,0,0.3)] hover:shadow-[0_6px_20px_rgba(255,215,0,0.5)]"
+              className="px-3 h-8 min-h-[32px] max-h-[32px] rounded-full text-[11px] font-semibold transition-all whitespace-nowrap flex items-center hover:scale-105 border border-yellow-400/50 dark:border-yellow-400/60 backdrop-blur-sm shadow-[0_4px_15px_rgba(255,215,0,0.3)] hover:shadow-[0_6px_20px_rgba(255,215,0,0.5)] dark:shadow-[0_4px_15px_rgba(255,215,0,0.2)]"
               style={{ background: "rgba(255, 215, 0, 0.2)", color: "hsl(var(--foreground))" }}>
               Apoie
             </a>
