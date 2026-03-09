@@ -381,7 +381,7 @@ function AnomaliesPredictive({ anomalies, lang, onAnomalyClick }: {
                       )}
                       <div className="flex items-center gap-1.5" onClick={e => e.stopPropagation()}>
                         <button
-                          onClick={() => onAnomalyClick?.(anomaly.id)}
+                          onClick={() => onAnomalyClick?.(`${anomaly.trend.platform}-${anomaly.trend.title.slice(0, 20)}`)}
                           className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-primary text-primary-foreground text-[8px] font-semibold hover:bg-primary/90 transition-colors"
                         >
                           <Eye className="w-2.5 h-2.5" /> {lang === "pt" ? "Ver na timeline" : "View in timeline"}
