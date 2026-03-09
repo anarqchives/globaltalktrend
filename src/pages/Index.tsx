@@ -21,7 +21,7 @@ import { useGamification } from "@/hooks/use-gamification";
 import { useSavedCards } from "@/hooks/use-saved-cards";
 import { useSavedFilters } from "@/hooks/use-saved-filters";
 import { supabase } from "@/integrations/supabase/client";
-import { ChevronRight, X, Map, Newspaper, LayoutList, LayoutGrid, RefreshCw, ChevronsUp, ChevronsDown, Radar, MapPin, FileText, Minimize2, Maximize2 } from "lucide-react";
+import { ChevronRight, X, Map, Newspaper, RefreshCw, ChevronsUp, ChevronsDown, Radar, MapPin, FileText } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import TagLegend from "@/components/TagLegend";
 import WatchlistPanel from "@/components/WatchlistPanel";
@@ -395,45 +395,45 @@ const Index = () => {
   const renderTimeline = () => (
     <div ref={(el) => { (scrollRef as any).current = el; (gridRef as any).current = el; }} className={`flex flex-col gap-0.5 p-2 h-full overflow-y-auto overflow-x-hidden scrollbar-thin relative transition-opacity duration-200 w-full max-w-full ${filterTransitioning ? 'opacity-60' : 'opacity-100'}`}>
       {/* Timeline header with controls */}
-      <div className="px-1.5 py-1 flex items-center justify-between sticky top-0 bg-background/95 backdrop-blur-sm z-10 rounded-md">
-        <span className="text-[9px] font-bold text-muted-foreground uppercase tracking-widest flex items-center gap-1.5">
-          <FileText className="w-3 h-3" />
+      <div className="px-1.5 h-8 flex items-center justify-between sticky top-0 bg-background/95 backdrop-blur-sm z-10 rounded-md">
+        <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest flex items-center gap-1.5">
+          <FileText className="w-3.5 h-3.5" />
           {t("timeline")}
         </span>
         <div className="flex items-center gap-1">
           {updatePending && (
             <button
               onClick={handleRefresh}
-              className="flex items-center gap-1 text-[9px] font-medium bg-primary/10 text-primary px-2 py-0.5 rounded-full hover:bg-primary/20 transition-colors animate-pulse"
+              className="flex items-center gap-1 text-[10px] font-medium bg-primary/10 text-primary px-2 py-0.5 rounded-full hover:bg-primary/20 transition-colors animate-pulse"
             >
-              <RefreshCw className={`w-2.5 h-2.5 ${refreshing ? "animate-spin" : ""}`} />
+              <RefreshCw className={`w-3 h-3 ${refreshing ? "animate-spin" : ""}`} />
               {lang === "pt" ? "Atualizar" : "Update"}
             </button>
           )}
           <TagLegend />
-          {/* Single unified view toggle */}
-          <div className="flex items-center bg-muted/50 rounded-md p-0.5 gap-0.5">
+          {/* Single unified view toggle — segmented control */}
+          <div className="flex items-center bg-muted/40 rounded-md p-0.5 gap-0.5">
             <Tooltip>
               <TooltipTrigger asChild>
                 <button
                   onClick={() => { setAllExpanded(true); setAllCollapsed(false); setCompactMode(false); }}
-                  className={`flex items-center justify-center w-5 h-5 rounded transition-all ${allExpanded && !compactMode ? 'bg-card text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}
+                  className={`flex items-center justify-center w-6 h-6 rounded transition-all ${allExpanded && !compactMode ? 'bg-card text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}
                 >
-                  <ChevronsDown className="w-3 h-3" />
+                  <ChevronsDown className="w-3.5 h-3.5" />
                 </button>
               </TooltipTrigger>
-              <TooltipContent side="bottom" className="text-[9px]">{lang === "pt" ? "Expandir todos" : "Expand all"}</TooltipContent>
+              <TooltipContent side="bottom" className="text-[10px]">{lang === "pt" ? "Expandir todos" : "Expand all"}</TooltipContent>
             </Tooltip>
             <Tooltip>
               <TooltipTrigger asChild>
                 <button
                   onClick={() => { setAllCollapsed(true); setAllExpanded(false); setCompactMode(true); }}
-                  className={`flex items-center justify-center w-5 h-5 rounded transition-all ${allCollapsed || compactMode ? 'bg-card text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}
+                  className={`flex items-center justify-center w-6 h-6 rounded transition-all ${allCollapsed || compactMode ? 'bg-card text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}
                 >
-                  <ChevronsUp className="w-3 h-3" />
+                  <ChevronsUp className="w-3.5 h-3.5" />
                 </button>
               </TooltipTrigger>
-              <TooltipContent side="bottom" className="text-[9px]">{lang === "pt" ? "Compactar todos" : "Collapse all"}</TooltipContent>
+              <TooltipContent side="bottom" className="text-[10px]">{lang === "pt" ? "Compactar todos" : "Collapse all"}</TooltipContent>
             </Tooltip>
           </div>
         </div>
@@ -675,7 +675,7 @@ const Index = () => {
         onAnomalyClick={handleAnomalyClick}
       />
 
-      {/* Fixed Filters — visually separated */}
+      {/* Fixed Filters */}
       <FilterBar
         filters={filters}
         onChange={setFilters}
@@ -693,7 +693,7 @@ const Index = () => {
       <div className="flex-1 overflow-hidden flex flex-col min-h-0">
         {isMobile ? (
           <>
-            {/* Trend Radar — collapsed by default */}
+            {/* Trend Radar */}
             <TrendRadar
               trends={filteredTrends}
               allTrends={allTrends}
@@ -703,7 +703,7 @@ const Index = () => {
               onFilterCountry={(code) => setFilters(f => ({ ...f, country: code }))}
               onAnomalyClick={handleAnomalyClick}
             />
-            {/* Timeline/Map — flush against radar */}
+            {/* Timeline/Map */}
             <div className="flex-1 min-h-0 flex flex-col relative">
               <div className="flex-1 min-h-0 overflow-hidden">
                 {viewMode === "timeline" ? renderTimeline() : (
@@ -727,52 +727,60 @@ const Index = () => {
         ) : (
           <div className="flex-1 min-h-0 flex">
             {/* Closed panel tabs — sleek vertical sidebar */}
-            {closedPanels > 0 && (
-              <div className="flex flex-col bg-muted/10 border-r border-border/20 py-1 gap-0.5 flex-shrink-0 w-8">
-                {!panelVisibility.radar && (
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <button
-                        onClick={() => togglePanel("radar")}
-                        className="flex flex-col items-center justify-center py-3 text-primary/60 hover:text-primary hover:bg-primary/5 transition-all rounded-r-md mx-0.5"
-                      >
-                        <Radar className="w-3.5 h-3.5" />
-                        <span className="text-[7px] font-bold uppercase tracking-wider mt-1" style={{ writingMode: "vertical-lr" }}>Radar</span>
-                      </button>
-                    </TooltipTrigger>
-                    <TooltipContent side="right" className="text-[9px]">{lang === "pt" ? "Abrir Radar" : "Open Radar"}</TooltipContent>
-                  </Tooltip>
-                )}
-                {!panelVisibility.timeline && (
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <button
-                        onClick={() => togglePanel("timeline")}
-                        className="flex flex-col items-center justify-center py-3 text-primary/60 hover:text-primary hover:bg-primary/5 transition-all rounded-r-md mx-0.5"
-                      >
-                        <FileText className="w-3.5 h-3.5" />
-                        <span className="text-[7px] font-bold uppercase tracking-wider mt-1" style={{ writingMode: "vertical-lr" }}>Timeline</span>
-                      </button>
-                    </TooltipTrigger>
-                    <TooltipContent side="right" className="text-[9px]">{lang === "pt" ? "Abrir Timeline" : "Open Timeline"}</TooltipContent>
-                  </Tooltip>
-                )}
-                {!panelVisibility.map && (
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <button
-                        onClick={() => togglePanel("map")}
-                        className="flex flex-col items-center justify-center py-3 text-primary/60 hover:text-primary hover:bg-primary/5 transition-all rounded-r-md mx-0.5"
-                      >
-                        <MapPin className="w-3.5 h-3.5" />
-                        <span className="text-[7px] font-bold uppercase tracking-wider mt-1" style={{ writingMode: "vertical-lr" }}>{lang === "pt" ? "Mapa" : "Map"}</span>
-                      </button>
-                    </TooltipTrigger>
-                    <TooltipContent side="right" className="text-[9px]">{lang === "pt" ? "Abrir Mapa" : "Open Map"}</TooltipContent>
-                  </Tooltip>
-                )}
-              </div>
-            )}
+            <AnimatePresence>
+              {closedPanels > 0 && (
+                <motion.div
+                  initial={{ width: 0, opacity: 0 }}
+                  animate={{ width: 32, opacity: 1 }}
+                  exit={{ width: 0, opacity: 0 }}
+                  transition={{ duration: 0.2, ease: "easeInOut" }}
+                  className="flex flex-col bg-muted/10 border-r border-border/20 py-2 gap-1 flex-shrink-0 overflow-hidden"
+                >
+                  {!panelVisibility.radar && (
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <button
+                          onClick={() => togglePanel("radar")}
+                          className="flex flex-col items-center justify-center py-3 text-primary/60 hover:text-primary hover:bg-primary/5 transition-all rounded-r-md mx-0.5"
+                        >
+                          <Radar className="w-3.5 h-3.5" />
+                          <span className="text-[7px] font-bold uppercase tracking-wider mt-1" style={{ writingMode: "vertical-lr" }}>Radar</span>
+                        </button>
+                      </TooltipTrigger>
+                      <TooltipContent side="right" className="text-[10px]">{lang === "pt" ? "Abrir Radar" : "Open Radar"}</TooltipContent>
+                    </Tooltip>
+                  )}
+                  {!panelVisibility.timeline && (
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <button
+                          onClick={() => togglePanel("timeline")}
+                          className="flex flex-col items-center justify-center py-3 text-primary/60 hover:text-primary hover:bg-primary/5 transition-all rounded-r-md mx-0.5"
+                        >
+                          <FileText className="w-3.5 h-3.5" />
+                          <span className="text-[7px] font-bold uppercase tracking-wider mt-1" style={{ writingMode: "vertical-lr" }}>Timeline</span>
+                        </button>
+                      </TooltipTrigger>
+                      <TooltipContent side="right" className="text-[10px]">{lang === "pt" ? "Abrir Timeline" : "Open Timeline"}</TooltipContent>
+                    </Tooltip>
+                  )}
+                  {!panelVisibility.map && (
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <button
+                          onClick={() => togglePanel("map")}
+                          className="flex flex-col items-center justify-center py-3 text-primary/60 hover:text-primary hover:bg-primary/5 transition-all rounded-r-md mx-0.5"
+                        >
+                          <MapPin className="w-3.5 h-3.5" />
+                          <span className="text-[7px] font-bold uppercase tracking-wider mt-1" style={{ writingMode: "vertical-lr" }}>{lang === "pt" ? "Mapa" : "Map"}</span>
+                        </button>
+                      </TooltipTrigger>
+                      <TooltipContent side="right" className="text-[10px]">{lang === "pt" ? "Abrir Mapa" : "Open Map"}</TooltipContent>
+                    </Tooltip>
+                  )}
+                </motion.div>
+              )}
+            </AnimatePresence>
 
             {/* Main content */}
             <div className="flex-1 min-h-0 flex flex-col">
@@ -796,14 +804,7 @@ const Index = () => {
                         collapsible
                         collapsedSize={5}
                       >
-                        <div className="h-full relative group/radar">
-                          <button
-                            onClick={() => togglePanel("radar")}
-                            className="absolute top-1.5 right-8 z-10 opacity-0 group-hover/radar:opacity-100 w-5 h-5 rounded flex items-center justify-center text-muted-foreground/50 hover:text-destructive hover:bg-destructive/10 transition-all duration-200"
-                            title={lang === "pt" ? "Fechar Radar" : "Close Radar"}
-                          >
-                            <X className="w-3 h-3" />
-                          </button>
+                        <div className="h-full border-b border-border/20 bg-muted/8">
                           <TrendRadar
                             trends={filteredTrends}
                             allTrends={allTrends}
@@ -812,6 +813,7 @@ const Index = () => {
                             onSelectTrend={handleSelectTrend}
                             onFilterCountry={(code) => setFilters(f => ({ ...f, country: code }))}
                             onAnomalyClick={handleAnomalyClick}
+                            onClose={() => togglePanel("radar")}
                           />
                         </div>
                       </ResizablePanel>
@@ -829,13 +831,17 @@ const Index = () => {
                           <>
                             <ResizablePanel defaultSize={panelVisibility.map ? 65 : 100} minSize={25} maxSize={panelVisibility.map ? 85 : 100}>
                               <div className="h-full min-h-0 overflow-hidden relative group/timeline" ref={timelinePanelRef}>
-                                <button
-                                  onClick={() => togglePanel("timeline")}
-                                  className="absolute top-1.5 right-1.5 z-10 opacity-0 group-hover/timeline:opacity-100 w-5 h-5 rounded flex items-center justify-center text-muted-foreground/50 hover:text-destructive hover:bg-destructive/10 transition-all duration-200"
-                                  title={lang === "pt" ? "Fechar Timeline" : "Close Timeline"}
-                                >
-                                  <X className="w-3 h-3" />
-                                </button>
+                                <Tooltip>
+                                  <TooltipTrigger asChild>
+                                    <button
+                                      onClick={() => togglePanel("timeline")}
+                                      className="absolute top-1 right-1 z-10 opacity-0 group-hover/timeline:opacity-100 w-6 h-6 rounded-md flex items-center justify-center text-muted-foreground/50 hover:text-destructive hover:bg-destructive/10 transition-all duration-200"
+                                    >
+                                      <X className="w-3 h-3" />
+                                    </button>
+                                  </TooltipTrigger>
+                                  <TooltipContent side="bottom" className="text-[10px]">{lang === "pt" ? "Fechar Timeline" : "Close Timeline"}</TooltipContent>
+                                </Tooltip>
                                 {renderTimeline()}
                               </div>
                             </ResizablePanel>
@@ -845,13 +851,17 @@ const Index = () => {
                         {panelVisibility.map && (
                           <ResizablePanel defaultSize={panelVisibility.timeline ? 35 : 100} minSize={15} maxSize={panelVisibility.timeline ? 60 : 100}>
                             <div className="h-full relative group/map">
-                              <button
-                                onClick={() => togglePanel("map")}
-                                className="absolute top-1.5 right-1.5 z-10 opacity-0 group-hover/map:opacity-100 w-5 h-5 rounded flex items-center justify-center text-muted-foreground/50 hover:text-destructive hover:bg-destructive/10 transition-all duration-200"
-                                title={lang === "pt" ? "Fechar Mapa" : "Close Map"}
-                              >
-                                <X className="w-3 h-3" />
-                              </button>
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <button
+                                    onClick={() => togglePanel("map")}
+                                    className="absolute top-1 right-1 z-10 opacity-0 group-hover/map:opacity-100 w-6 h-6 rounded-md flex items-center justify-center text-muted-foreground/50 hover:text-destructive hover:bg-destructive/10 transition-all duration-200"
+                                  >
+                                    <X className="w-3 h-3" />
+                                  </button>
+                                </TooltipTrigger>
+                                <TooltipContent side="bottom" className="text-[10px]">{lang === "pt" ? "Fechar Mapa" : "Close Map"}</TooltipContent>
+                              </Tooltip>
                               {renderMap()}
                             </div>
                           </ResizablePanel>

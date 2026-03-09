@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Sprout, Flame, Trophy, Info, ChevronUp, ChevronDown, Activity, AlertTriangle, ExternalLink, TrendingUp, Zap, Globe2, Radio, BarChart3, Eye, Target, Radar, ArrowRight, Sparkles, Clock, Crown, Medal, Award, GripHorizontal, Loader2, Minimize2, Maximize2 } from "lucide-react";
+import { Sprout, Flame, Trophy, Info, ChevronUp, ChevronDown, Activity, AlertTriangle, ExternalLink, TrendingUp, Zap, Globe2, Radio, BarChart3, Eye, Target, Radar, ArrowRight, Sparkles, Clock, Crown, Medal, Award, GripHorizontal, Loader2, Minimize2, Maximize2, X } from "lucide-react";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { AreaChart, Area, ResponsiveContainer } from "recharts";
@@ -21,6 +21,7 @@ interface TrendRadarProps {
   onSelectTrend?: (trend: TrendCardProps) => void;
   onFilterCountry?: (code: string) => void;
   onAnomalyClick?: (id: string) => void;
+  onClose?: () => void;
 }
 
 const RADAR_STORAGE_KEY = "globaltalktrend-radar-collapsed";
@@ -52,7 +53,7 @@ function Legend({ tab, lang }: { tab: string; lang: string }) {
   const text = legendText[tab]?.[lang] || legendText[tab]?.en || "";
   if (!text) return null;
   return (
-    <div className="text-[10px] text-muted-foreground/60 leading-relaxed px-3 py-1 flex-shrink-0 flex items-center gap-1.5">
+    <div className="text-[10px] text-muted-foreground/60 leading-relaxed px-3 py-1.5 flex-shrink-0 flex items-center gap-1.5">
       <Info className="w-3 h-3 opacity-30 flex-shrink-0" />
       <span>{text}</span>
     </div>
@@ -400,7 +401,7 @@ function AnomaliesPredictive({ anomalies, lang, onAnomalyClick }: {
 }
 
 // ─── MAIN COMPONENT ─────────────────────────────────────────────────────
-export default function TrendRadar({ trends, allTrends, criticalMoments, anomalies = [], onSelectTrend, onFilterCountry, onAnomalyClick }: TrendRadarProps) {
+export default function TrendRadar({ trends, allTrends, criticalMoments, anomalies = [], onSelectTrend, onFilterCountry, onAnomalyClick, onClose }: TrendRadarProps) {
   const { lang } = useLanguage();
   const [tab, setTab] = useState("signals");
   const [collapsed, setCollapsed] = useState(() => {
@@ -487,15 +488,17 @@ export default function TrendRadar({ trends, allTrends, criticalMoments, anomali
   };
 
   return (
-    <div className="flex flex-col overflow-hidden bg-muted/15 h-full">
+    <div className="flex flex-col overflow-hidden h-full rounded-b-lg">
       <Tabs value={tab} onValueChange={setTab} className="flex flex-col h-full min-h-0">
-        {/* Header bar */}
-        <div className="px-3 py-1.5 flex items-center gap-2 flex-shrink-0 border-b border-border/20 bg-muted/30">
+        {/* Unified header bar — part of the module block */}
+        <div className="px-3 h-9 flex items-center gap-2 flex-shrink-0 bg-muted/20 border-b border-border/15">
+          {/* Label */}
           <div className="flex items-center gap-1.5 mr-1 flex-shrink-0">
             <Radar className="w-3.5 h-3.5 text-primary" />
             <span className="text-[10px] font-bold text-primary uppercase tracking-widest hidden sm:inline">Radar</span>
           </div>
 
+          {/* Tabs */}
           <TabsList className="h-7 bg-background/60 p-0.5 gap-0.5 rounded-lg border border-border/20 flex-shrink-0">
             {tabConfig.map(tc => {
               const Icon = tc.icon;
@@ -518,25 +521,53 @@ export default function TrendRadar({ trends, allTrends, criticalMoments, anomali
             })}
           </TabsList>
 
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <button
-                onClick={() => setCollapsed(c => !c)}
-                className="ml-auto w-6 h-6 rounded-md flex items-center justify-center text-muted-foreground hover:text-primary hover:bg-primary/10 transition-all duration-200"
-                aria-label={collapsed ? labels.expand : labels.collapse}
-              >
-                {collapsed ? <Maximize2 className="w-3.5 h-3.5" /> : <Minimize2 className="w-3.5 h-3.5" />}
-              </button>
-            </TooltipTrigger>
-            <TooltipContent side="bottom" className="text-[10px]">
-              {collapsed ? labels.expand : labels.collapse}
-            </TooltipContent>
-          </Tooltip>
+          {/* Controls — predictable top-right */}
+          <div className="ml-auto flex items-center gap-0.5">
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <button
+                  onClick={() => setCollapsed(c => !c)}
+                  className="w-6 h-6 rounded-md flex items-center justify-center text-muted-foreground hover:text-primary hover:bg-primary/10 transition-all duration-200"
+                  aria-label={collapsed ? labels.expand : labels.collapse}
+                >
+                  {collapsed ? <Maximize2 className="w-3 h-3" /> : <Minimize2 className="w-3 h-3" />}
+                </button>
+              </TooltipTrigger>
+              <TooltipContent side="bottom" className="text-[10px]">
+                {collapsed ? labels.expand : labels.collapse}
+              </TooltipContent>
+            </Tooltip>
+            {onClose && (
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <button
+                    onClick={onClose}
+                    className="w-6 h-6 rounded-md flex items-center justify-center text-muted-foreground/50 hover:text-destructive hover:bg-destructive/10 transition-all duration-200"
+                    aria-label={lang === "pt" ? "Fechar Radar" : "Close Radar"}
+                  >
+                    <X className="w-3 h-3" />
+                  </button>
+                </TooltipTrigger>
+                <TooltipContent side="bottom" className="text-[10px]">
+                  {lang === "pt" ? "Fechar" : "Close"}
+                </TooltipContent>
+              </Tooltip>
+            )}
+          </div>
         </div>
 
-        {/* Content — fills available space from ResizablePanel */}
-        {!collapsed && (
-          <div className="flex-1 min-h-0 relative">
+        {/* Content — smooth expand/collapse with CSS transition */}
+        <motion.div
+          initial={false}
+          animate={{ 
+            height: collapsed ? 0 : "100%",
+            opacity: collapsed ? 0 : 1
+          }}
+          transition={{ duration: 0.25, ease: [0.4, 0, 0.2, 1] }}
+          className="overflow-hidden flex-1 min-h-0"
+          style={{ flexGrow: collapsed ? 0 : 1 }}
+        >
+          <div className="h-full relative">
             <TabsContent value="signals" className="absolute inset-0 mt-0 overflow-y-auto scrollbar-thin data-[state=inactive]:hidden animate-in fade-in-0 duration-200">
               <Legend tab="signals" lang={lang} />
               {!hasSignals && !hasEmerging ? (
@@ -617,7 +648,7 @@ export default function TrendRadar({ trends, allTrends, criticalMoments, anomali
               <WeeklyPulseDashboard trends={allTrends} />
             </TabsContent>
           </div>
-        )}
+        </motion.div>
       </Tabs>
     </div>
   );
