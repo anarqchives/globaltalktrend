@@ -1,8 +1,8 @@
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo, useCallback, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   AreaChart, Area, ResponsiveContainer, XAxis, YAxis,
-  Tooltip as RTooltip, CartesianGrid,
+  Tooltip as RTooltip, CartesianGrid, BarChart, Bar, Cell,
 } from "recharts";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -13,10 +13,11 @@ import {
   Sparkles, TrendingUp, ArrowUp, ArrowDown, Minus, Activity,
   Zap, BarChart3, Radio, AlertTriangle, Flame, Target,
   Globe, Layers, Brain, MapPin, GitBranch, Orbit, Timer, Eye,
+  ChevronLeft, RefreshCw, Clock, Search,
 } from "lucide-react";
 import { calculateMomentum, getTooltip, resolveSource } from "@/lib/format-utils";
 
-// ── Design tokens ──
+/* ─── Design tokens ─── */
 const CAT_COLORS: Record<string, string> = {
   Tecnologia: "hsl(210, 100%, 50%)", Technology: "hsl(210, 100%, 50%)",
   Entretenimento: "hsl(280, 70%, 55%)", Entertainment: "hsl(280, 70%, 55%)",
@@ -30,7 +31,7 @@ const CAT_COLORS: Record<string, string> = {
 };
 const normCat = (c: string) => c.replace(/^[a-z]/, ch => ch.toUpperCase()).slice(0, 14);
 const getCatColor = (cat: string) => CAT_COLORS[cat] || "hsl(var(--muted-foreground))";
-const fmtNum = (n: number) => n >= 1_000_000 ? `${(n / 1_000_000).toFixed(1)}M` : n >= 1000 ? `${(n / 1000).toFixed(1)}K` : String(n);
+const fmtNum = (n: number) => n >= 1_000_000 ? `${(n / 1_000_000).toFixed(1)}M` : n >= 1000 ? `${(n / 1000).toFixed(1)}K` : String(Math.round(n));
 const t = (lang: string, pt: string, en: string, es?: string) =>
   lang === "pt" ? pt : lang === "es" ? (es || en) : en;
 
@@ -57,9 +58,7 @@ const LIFECYCLE_ICONS: Record<string, string> = {
   emerging: "🌱", accelerating: "🚀", peak: "🔥", declining: "📉",
 };
 
-// ══════════════════════════════════════════════════════════════════════════
-// Shared types
-// ══════════════════════════════════════════════════════════════════════════
+/* ─── Types ─── */
 interface DetectedSignal {
   term: string;
   type: "emerging" | "viral" | "anomaly";
@@ -84,9 +83,9 @@ interface NarrativeCluster {
   lifecycle: string;
 }
 
-// ══════════════════════════════════════════════════════════════════════════
-// STORY #1 — KPI Card
-// ══════════════════════════════════════════════════════════════════════════
+/* ══════════════════════════════════════════════════════════════════════════
+ * KPI Card
+ * ══════════════════════════════════════════════════════════════════════════ */
 function KPICard({ icon, value, label, delta, tooltip, color, delay = 0 }: {
   icon: React.ReactNode; value: string | number; label: string;
   delta?: { value: number; label: string }; tooltip: string;
@@ -121,9 +120,9 @@ function KPICard({ icon, value, label, delta, tooltip, color, delay = 0 }: {
   );
 }
 
-// ══════════════════════════════════════════════════════════════════════════
-// STORY #2 — Momentum Gauge
-// ══════════════════════════════════════════════════════════════════════════
+/* ══════════════════════════════════════════════════════════════════════════
+ * Momentum Gauge
+ * ══════════════════════════════════════════════════════════════════════════ */
 function MomentumGauge({ categories, lang }: {
   categories: { name: string; volumes: Record<string, number> }[];
   lang: string;
@@ -133,7 +132,7 @@ function MomentumGauge({ categories, lang }: {
     <div className="space-y-1">
       <span className="text-[9px] font-bold text-muted-foreground uppercase tracking-wider flex items-center gap-1">
         <Activity className="w-3 h-3" />
-        {t(lang, "Momentum por Categoria", "Category Momentum")}
+        {t(lang, "Momentum por Categoria", "Category Momentum", "Momentum por Categoría")}
       </span>
       {categories.slice(0, 5).map((cat, i) => {
         const vals = orderedDays.map(d => cat.volumes[d] || 0);
@@ -162,9 +161,9 @@ function MomentumGauge({ categories, lang }: {
   );
 }
 
-// ══════════════════════════════════════════════════════════════════════════
-// STORY #3 — Live Signal Feed
-// ══════════════════════════════════════════════════════════════════════════
+/* ══════════════════════════════════════════════════════════════════════════
+ * Live Signal Feed
+ * ══════════════════════════════════════════════════════════════════════════ */
 function LiveSignalFeed({ signals, lang }: {
   signals: { term: string; category: string; volume: number; momentum: number; platform: string; time: string; lifecycle: string }[];
   lang: string;
@@ -173,7 +172,7 @@ function LiveSignalFeed({ signals, lang }: {
     <div className="space-y-1">
       <span className="text-[9px] font-bold text-muted-foreground uppercase tracking-wider flex items-center gap-1">
         <Radio className="w-3 h-3 text-emerald-500 animate-pulse" />
-        {t(lang, "Feed de Sinais ao Vivo", "Live Signal Feed")}
+        {t(lang, "Feed de Sinais ao Vivo", "Live Signal Feed", "Feed de Señales en Vivo")}
       </span>
       <ScrollArea className="h-[120px]">
         <AnimatePresence mode="popLayout">
@@ -206,9 +205,9 @@ function LiveSignalFeed({ signals, lang }: {
   );
 }
 
-// ══════════════════════════════════════════════════════════════════════════
-// STORY #5 — Heatmap Matrix
-// ══════════════════════════════════════════════════════════════════════════
+/* ══════════════════════════════════════════════════════════════════════════
+ * Heatmap Matrix
+ * ══════════════════════════════════════════════════════════════════════════ */
 function TrendPulseMatrix({ data, topCats, lang, dailyTotals }: {
   data: Record<string, Record<string, number>>; topCats: string[]; lang: string;
   dailyTotals: Record<string, number>;
@@ -253,7 +252,7 @@ function TrendPulseMatrix({ data, topCats, lang, dailyTotals }: {
                     <div className="font-bold">{cat} · {days[di]}</div>
                     <div>Volume: {fmtNum(v)}</div>
                     {dod !== 0 && <div className={dod > 0 ? "text-emerald-500" : "text-red-500"}>DoD: {dod > 0 ? "+" : ""}{dod}%</div>}
-                    {pct > 0 && <div className="text-muted-foreground">{pct}% {t(lang, "do total", "of total")}</div>}
+                    {pct > 0 && <div className="text-muted-foreground">{pct}% {t(lang, "do total", "of total", "del total")}</div>}
                   </TooltipContent>
                 </Tooltip>
               );
@@ -262,17 +261,17 @@ function TrendPulseMatrix({ data, topCats, lang, dailyTotals }: {
         ))}
       </div>
       <div className="flex items-center gap-1 mt-1 justify-end">
-        <span className="text-[6px] text-muted-foreground">{t(lang, "Baixo", "Low")}</span>
+        <span className="text-[6px] text-muted-foreground">{t(lang, "Baixo", "Low", "Bajo")}</span>
         {[0.05, 0.2, 0.4, 0.6, 0.8].map(i => <div key={i} className="w-2.5 h-1.5 rounded-sm" style={{ backgroundColor: getColor(i * maxVal) }} />)}
-        <span className="text-[6px] text-muted-foreground">{t(lang, "Alto", "High")}</span>
+        <span className="text-[6px] text-muted-foreground">{t(lang, "Alto", "High", "Alto")}</span>
       </div>
     </div>
   );
 }
 
-// ══════════════════════════════════════════════════════════════════════════
-// STORY #6 — Term Cloud with drill-down
-// ══════════════════════════════════════════════════════════════════════════
+/* ══════════════════════════════════════════════════════════════════════════
+ * Term Cloud with drill-down
+ * ══════════════════════════════════════════════════════════════════════════ */
 function TermCloud({ words, lang }: {
   words: { text: string; count: number; category: string; momentum: number; relatedTerms: string[] }[];
   lang: string;
@@ -301,38 +300,40 @@ function TermCloud({ words, lang }: {
           );
         })}
       </div>
-      {selectedWord && (
-        <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }}
-          className="mt-1 p-1.5 rounded-lg bg-muted/20 border border-border/30 text-[8px]">
-          <div className="font-bold text-foreground mb-0.5">{selectedWord.text}</div>
-          <div className="text-muted-foreground">
-            {t(lang, "Categoria", "Category")}: {selectedWord.category} · Volume: {fmtNum(selectedWord.count)} ·
-            Momentum: {selectedWord.momentum > 0 ? "+" : ""}{selectedWord.momentum}%
-          </div>
-          {selectedWord.relatedTerms.length > 0 && (
-            <div className="flex flex-wrap gap-0.5 mt-0.5">
-              {selectedWord.relatedTerms.slice(0, 5).map(rt => (
-                <span key={rt} className="px-1 py-0.5 rounded bg-primary/10 text-primary text-[7px] cursor-pointer hover:bg-primary/20"
-                  onClick={() => setSelected(rt)}>{rt}</span>
-              ))}
+      <AnimatePresence>
+        {selectedWord && (
+          <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }}
+            className="mt-1 p-1.5 rounded-lg bg-muted/20 border border-border/30 text-[8px]">
+            <div className="font-bold text-foreground mb-0.5">{selectedWord.text}</div>
+            <div className="text-muted-foreground">
+              {t(lang, "Categoria", "Category", "Categoría")}: {selectedWord.category} · Volume: {fmtNum(selectedWord.count)} ·
+              Momentum: {selectedWord.momentum > 0 ? "+" : ""}{selectedWord.momentum}%
             </div>
-          )}
-        </motion.div>
-      )}
+            {selectedWord.relatedTerms.length > 0 && (
+              <div className="flex flex-wrap gap-0.5 mt-0.5">
+                {selectedWord.relatedTerms.slice(0, 5).map(rt => (
+                  <span key={rt} className="px-1 py-0.5 rounded bg-primary/10 text-primary text-[7px] cursor-pointer hover:bg-primary/20"
+                    onClick={() => setSelected(rt)}>{rt}</span>
+                ))}
+              </div>
+            )}
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
 
-// ══════════════════════════════════════════════════════════════════════════
-// STORY #5 — Narrative Clusters
-// ══════════════════════════════════════════════════════════════════════════
+/* ══════════════════════════════════════════════════════════════════════════
+ * Narrative Clusters
+ * ══════════════════════════════════════════════════════════════════════════ */
 function NarrativeClusters({ clusters, lang }: { clusters: NarrativeCluster[]; lang: string }) {
   if (clusters.length === 0) return null;
   return (
     <div className="space-y-1.5">
       <span className="text-[9px] font-bold text-muted-foreground uppercase tracking-wider flex items-center gap-1">
         <GitBranch className="w-3 h-3" />
-        {t(lang, "Clusters Narrativos", "Narrative Clusters")}
+        {t(lang, "Clusters Narrativos", "Narrative Clusters", "Clusters Narrativos")}
         <span className="ml-1 px-1.5 py-0.5 rounded-full bg-primary/10 text-primary text-[8px] font-bold">{clusters.length}</span>
       </span>
       <ScrollArea className="h-[110px]">
@@ -379,9 +380,9 @@ function NarrativeClusters({ clusters, lang }: { clusters: NarrativeCluster[]; l
   );
 }
 
-// ══════════════════════════════════════════════════════════════════════════
-// STORY #9 — Geographic Distribution
-// ══════════════════════════════════════════════════════════════════════════
+/* ══════════════════════════════════════════════════════════════════════════
+ * Geographic Distribution
+ * ══════════════════════════════════════════════════════════════════════════ */
 function GeoDistribution({ regions, lang }: {
   regions: { name: string; volume: number; trends: number; topTrend: string }[];
   lang: string;
@@ -391,7 +392,7 @@ function GeoDistribution({ regions, lang }: {
     <div className="space-y-1">
       <span className="text-[9px] font-bold text-muted-foreground uppercase tracking-wider flex items-center gap-1">
         <MapPin className="w-3 h-3" />
-        {t(lang, "Distribuição Geográfica", "Geographic Distribution")}
+        {t(lang, "Distribuição Geográfica", "Geographic Distribution", "Distribución Geográfica")}
       </span>
       {regions.slice(0, 6).map((r, i) => (
         <Tooltip key={r.name}>
@@ -399,19 +400,19 @@ function GeoDistribution({ regions, lang }: {
             <motion.div initial={{ opacity: 0, x: -6 }} animate={{ opacity: 1, x: 0 }}
               transition={{ delay: i * 0.04 }}
               className="flex items-center gap-2 cursor-help">
-              <span className="text-[8px] text-foreground w-16 truncate font-medium">{r.name}</span>
-              <div className="flex-1 h-2.5 bg-muted/20 rounded-full overflow-hidden">
-                <motion.div className="h-full rounded-full bg-primary/60"
-                  initial={{ width: 0 }} animate={{ width: `${(r.volume / maxVol) * 100}%` }}
+              <span className="text-[9px] text-foreground w-16 truncate font-medium">{r.name}</span>
+              <div className="flex-1 h-2 bg-muted/30 rounded-full overflow-hidden">
+                <motion.div className="h-full rounded-full bg-primary/60" initial={{ width: 0 }}
+                  animate={{ width: `${(r.volume / maxVol) * 100}%` }}
                   transition={{ duration: 0.5, delay: i * 0.06 }} />
               </div>
-              <span className="text-[8px] font-bold text-foreground w-10 text-right">{fmtNum(r.volume)}</span>
+              <span className="text-[8px] text-muted-foreground font-medium w-8 text-right">{fmtNum(r.volume)}</span>
             </motion.div>
           </TooltipTrigger>
           <TooltipContent className="text-[9px]">
             <div className="font-bold">{r.name}</div>
-            <div>{t(lang, "Tendências", "Trends")}: {r.trends}</div>
-            <div>Top: {r.topTrend}</div>
+            <div>{r.trends} trends · {fmtNum(r.volume)} vol</div>
+            <div className="text-muted-foreground">{t(lang, "Top", "Top")}: {r.topTrend}</div>
           </TooltipContent>
         </Tooltip>
       ))}
@@ -419,44 +420,32 @@ function GeoDistribution({ regions, lang }: {
   );
 }
 
-// ══════════════════════════════════════════════════════════════════════════
-// STORY #10 — Trend Lifecycle Overview
-// ══════════════════════════════════════════════════════════════════════════
-function LifecycleOverview({ counts, lang }: {
-  counts: Record<string, number>; lang: string;
-}) {
+/* ══════════════════════════════════════════════════════════════════════════
+ * Lifecycle Overview
+ * ══════════════════════════════════════════════════════════════════════════ */
+function LifecycleOverview({ counts, lang }: { counts: Record<string, number>; lang: string }) {
   const stages = ["emerging", "accelerating", "peak", "declining"];
-  const total = Object.values(counts).reduce((a, b) => a + b, 0) || 1;
+  const total = stages.reduce((s, k) => s + (counts[k] || 0), 0) || 1;
   return (
     <div className="space-y-1">
       <span className="text-[9px] font-bold text-muted-foreground uppercase tracking-wider flex items-center gap-1">
         <Timer className="w-3 h-3" />
-        {t(lang, "Ciclo de Vida das Tendências", "Trend Lifecycle")}
+        {t(lang, "Ciclo de Vida das Tendências", "Trend Lifecycle", "Ciclo de Vida")}
       </span>
-      <div className="flex gap-1 h-3 rounded-full overflow-hidden">
-        {stages.map(s => {
-          const pct = Math.max((counts[s] || 0) / total * 100, 2);
-          const colors: Record<string, string> = {
-            emerging: "bg-emerald-500", accelerating: "bg-amber-500", peak: "bg-red-500", declining: "bg-muted-foreground/40",
-          };
-          return (
-            <Tooltip key={s}>
-              <TooltipTrigger asChild>
-                <motion.div className={`${colors[s]} rounded-sm cursor-help`}
-                  initial={{ width: 0 }} animate={{ width: `${pct}%` }}
-                  transition={{ duration: 0.5 }} />
-              </TooltipTrigger>
-              <TooltipContent className="text-[9px]">
-                {LIFECYCLE_ICONS[s]} {LIFECYCLE_LABELS[s]?.[lang] || s}: {counts[s] || 0} trends ({Math.round(pct)}%)
-              </TooltipContent>
-            </Tooltip>
-          );
+      <div className="flex gap-0.5 h-3 rounded-full overflow-hidden">
+        {stages.map(stage => {
+          const pct = ((counts[stage] || 0) / total) * 100;
+          if (pct === 0) return null;
+          const colors: Record<string, string> = { emerging: "bg-emerald-500", accelerating: "bg-amber-500", peak: "bg-red-500", declining: "bg-muted-foreground/40" };
+          return <motion.div key={stage} className={`${colors[stage]} h-full`}
+            initial={{ width: 0 }} animate={{ width: `${pct}%` }} transition={{ duration: 0.6 }}
+            title={`${LIFECYCLE_LABELS[stage]?.[lang] || stage}: ${counts[stage] || 0}`} />;
         })}
       </div>
-      <div className="flex items-center justify-between">
+      <div className="flex items-center gap-3 justify-center">
         {stages.map(s => (
-          <span key={s} className={`text-[7px] flex items-center gap-0.5 ${LIFECYCLE_COLORS[s]}`}>
-            {LIFECYCLE_ICONS[s]} {counts[s] || 0}
+          <span key={s} className="flex items-center gap-0.5 text-[7px] text-muted-foreground">
+            {LIFECYCLE_ICONS[s]} {LIFECYCLE_LABELS[s]?.[lang] || s}: <b>{counts[s] || 0}</b>
           </span>
         ))}
       </div>
@@ -464,38 +453,50 @@ function LifecycleOverview({ counts, lang }: {
   );
 }
 
-// ══════════════════════════════════════════════════════════════════════════
-// STORIES #7-#9 — Signal Detection Panel
-// ══════════════════════════════════════════════════════════════════════════
+/* ══════════════════════════════════════════════════════════════════════════
+ * Signal Detection Panel
+ * ══════════════════════════════════════════════════════════════════════════ */
 function SignalDetectionPanel({ signals, lang }: { signals: DetectedSignal[]; lang: string }) {
-  const typeConfig = {
-    emerging: { icon: <Zap className="w-3 h-3" />, label: t(lang, "Emergente", "Emerging"), color: "text-emerald-500", bg: "bg-emerald-500/10 border-emerald-500/20" },
-    viral: { icon: <Flame className="w-3 h-3" />, label: "Viral", color: "text-orange-500", bg: "bg-orange-500/10 border-orange-500/20" },
-    anomaly: { icon: <AlertTriangle className="w-3 h-3" />, label: t(lang, "Anomalia", "Anomaly"), color: "text-red-500", bg: "bg-red-500/10 border-red-500/20" },
+  const typeLabels: Record<string, Record<string, string>> = {
+    emerging: { pt: "Emergente", en: "Emerging", es: "Emergente" },
+    viral: { pt: "Viral", en: "Viral", es: "Viral" },
+    anomaly: { pt: "Anomalia", en: "Anomaly", es: "Anomalía" },
   };
-  const predLabel = { up: "↑", stable: "→", down: "↓" };
-  if (signals.length === 0) return null;
+  const typeIcons: Record<string, React.ReactNode> = {
+    emerging: <Zap className="w-3 h-3 text-emerald-500" />,
+    viral: <Flame className="w-3 h-3 text-orange-500" />,
+    anomaly: <AlertTriangle className="w-3 h-3 text-red-500" />,
+  };
+  const predLabel: Record<string, string> = { up: "↑", stable: "→", down: "↓" };
+  if (signals.length === 0) return (
+    <div className="text-center py-4 text-[9px] text-muted-foreground">
+      <Search className="w-4 h-4 mx-auto mb-1 opacity-40" />
+      {t(lang, "Nenhum sinal significativo detectado", "No significant signals detected", "Ninguna señal significativa detectada")}
+    </div>
+  );
   return (
-    <div className="space-y-1.5">
+    <div className="space-y-1">
       <span className="text-[9px] font-bold text-muted-foreground uppercase tracking-wider flex items-center gap-1">
-        <Brain className="w-3 h-3" />
-        {t(lang, "Detecção Inteligente de Sinais", "Intelligent Signal Detection")}
-        <span className="ml-1 px-1.5 py-0.5 rounded-full bg-primary/10 text-primary text-[8px] font-bold">{signals.length}</span>
+        <Eye className="w-3 h-3" />
+        {t(lang, "Detecção de Sinais", "Signal Detection", "Detección de Señales")}
+        <span className="ml-1 px-1.5 py-0.5 rounded-full bg-destructive/10 text-destructive text-[8px] font-bold animate-pulse">
+          {signals.length}
+        </span>
       </span>
-      <ScrollArea className="h-[120px]">
+      <ScrollArea className="h-[160px]">
         {signals.map((sig, i) => {
-          const cfg = typeConfig[sig.type];
-          const lcLabel = LIFECYCLE_LABELS[sig.lifecycle]?.[lang] || sig.lifecycle;
           const lcColor = LIFECYCLE_COLORS[sig.lifecycle] || "text-muted-foreground";
           return (
-            <motion.div key={`${sig.term}-${sig.type}`} initial={{ opacity: 0, y: 8 }}
-              animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.04 }}
-              className={`rounded-lg border p-2 mb-1.5 ${cfg.bg}`}>
+            <motion.div key={`${sig.term}-${i}`} initial={{ opacity: 0, y: 4 }} animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: i * 0.04 }}
+              className="p-2 rounded-lg border border-border/30 bg-card/50 mb-1.5 hover:border-primary/20 transition-colors">
               <div className="flex items-center justify-between mb-0.5">
-                <div className="flex items-center gap-1">
-                  <span className={cfg.color}>{cfg.icon}</span>
-                  <span className={`text-[7px] font-bold uppercase ${cfg.color}`}>{cfg.label}</span>
-                  <span className="text-[9px] font-bold text-foreground truncate max-w-[120px]">{sig.term}</span>
+                <div className="flex items-center gap-1.5">
+                  {typeIcons[sig.type]}
+                  <span className="text-[10px] font-bold text-foreground">{sig.term}</span>
+                  <span className={`text-[7px] px-1 py-0.5 rounded-full font-semibold ${sig.type === "emerging" ? "bg-emerald-500/10 text-emerald-600" : sig.type === "viral" ? "bg-orange-500/10 text-orange-600" : "bg-red-500/10 text-red-600"}`}>
+                    {typeLabels[sig.type]?.[lang] || sig.type}
+                  </span>
                 </div>
                 <div className="flex items-center gap-1">
                   <span className={`text-[7px] ${lcColor}`}>{LIFECYCLE_ICONS[sig.lifecycle]}</span>
@@ -528,9 +529,82 @@ function SignalDetectionPanel({ signals, lang }: { signals: DetectedSignal[]; la
   );
 }
 
-// ══════════════════════════════════════════════════════════════════════════
-// AI Insight Card
-// ══════════════════════════════════════════════════════════════════════════
+/* ══════════════════════════════════════════════════════════════════════════
+ * Story #2 — 24h Drill-Down Chart
+ * ══════════════════════════════════════════════════════════════════════════ */
+function HourlyDrillDown({ dayKey, dayLabel, hourlyData, topCats, lang, onClose }: {
+  dayKey: string; dayLabel: string;
+  hourlyData: Record<string, Record<string, number>>;
+  topCats: string[]; lang: string; onClose: () => void;
+}) {
+  const hours = Array.from({ length: 24 }, (_, i) => `${String(i).padStart(2, "0")}h`);
+  let maxHourVal = 0;
+  const chartData = hours.map(h => {
+    const entry: Record<string, any> = { hour: h };
+    let hourTotal = 0;
+    for (const cat of topCats) {
+      const v = hourlyData[h]?.[cat] || 0;
+      entry[cat] = v;
+      hourTotal += v;
+    }
+    entry.total = hourTotal;
+    if (hourTotal > maxHourVal) maxHourVal = hourTotal;
+    return entry;
+  });
+
+  // Find spike hours (>2x average)
+  const avgHourVol = chartData.reduce((s, d) => s + (d.total || 0), 0) / 24;
+  const spikeHours = chartData.filter(d => d.total > avgHourVol * 2).map(d => d.hour);
+
+  return (
+    <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }}
+      className="rounded-xl border border-primary/20 bg-card p-2.5 space-y-1.5">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-1.5">
+          <button onClick={onClose} className="p-0.5 rounded hover:bg-muted/50 transition-colors">
+            <ChevronLeft className="w-3.5 h-3.5 text-muted-foreground" />
+          </button>
+          <Clock className="w-3 h-3 text-primary" />
+          <span className="text-[10px] font-bold text-foreground">
+            {t(lang, `Drill-down 24h · ${dayLabel}`, `24h Drill-down · ${dayLabel}`)}
+          </span>
+        </div>
+        {spikeHours.length > 0 && (
+          <span className="text-[7px] px-1.5 py-0.5 rounded-full bg-destructive/10 text-destructive font-semibold flex items-center gap-0.5">
+            <Zap className="w-2.5 h-2.5" />
+            {spikeHours.length} {t(lang, "picos", "spikes", "picos")}
+          </span>
+        )}
+      </div>
+      <div className="h-[90px]">
+        <ResponsiveContainer width="100%" height="100%">
+          <BarChart data={chartData} margin={{ top: 2, right: 2, left: -22, bottom: 0 }}>
+            <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+            <XAxis dataKey="hour" tick={{ fontSize: 6, fill: "hsl(var(--muted-foreground))" }} tickLine={false} axisLine={false}
+              interval={2} />
+            <YAxis tick={{ fontSize: 6, fill: "hsl(var(--muted-foreground))" }} tickLine={false} axisLine={false}
+              tickFormatter={(v: number) => fmtNum(v)} />
+            <RTooltip contentStyle={{ background: "hsl(var(--popover))", border: "1px solid hsl(var(--border))", borderRadius: "8px", fontSize: "9px" }}
+              formatter={(v: any, name: string) => [fmtNum(Number(v)), name]} />
+            {topCats.map(cat => (
+              <Bar key={cat} dataKey={cat} stackId="a" fill={getCatColor(cat)} radius={0} />
+            ))}
+          </BarChart>
+        </ResponsiveContainer>
+      </div>
+      {spikeHours.length > 0 && (
+        <div className="text-[7px] text-muted-foreground flex items-center gap-1">
+          <AlertTriangle className="w-2.5 h-2.5 text-amber-500" />
+          {t(lang, "Picos detectados em", "Spikes detected at", "Picos detectados en")}: {spikeHours.join(", ")}
+        </div>
+      )}
+    </motion.div>
+  );
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+ * AI Insight Card
+ * ══════════════════════════════════════════════════════════════════════════ */
 function InsightCard({ icon, text, delay = 0 }: { icon: string; text: string; delay?: number }) {
   return (
     <motion.div initial={{ opacity: 0, x: -8 }} animate={{ opacity: 1, x: 0 }}
@@ -542,47 +616,55 @@ function InsightCard({ icon, text, delay = 0 }: { icon: string; text: string; de
   );
 }
 
-// ══════════════════════════════════════════════════════════════════════════
-// MAIN COMPONENT
-// ══════════════════════════════════════════════════════════════════════════
+/* ══════════════════════════════════════════════════════════════════════════
+ * MAIN COMPONENT
+ * ══════════════════════════════════════════════════════════════════════════ */
 export default function WeeklyPulseDashboard({ trends }: { trends: TrendCardProps[] }) {
   const { lang } = useLanguage();
   const [weeklyData, setWeeklyData] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [drillDownDay, setDrillDownDay] = useState<string | null>(null);
+  const [lastRefresh, setLastRefresh] = useState<Date>(new Date());
+  const refreshTimerRef = useRef<NodeJS.Timeout | null>(null);
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const now = new Date();
-        const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
-        let allData: any[] = [];
-        let offset = 0;
-        const batchSize = 1000;
-        let hasMore = true;
-        while (hasMore) {
-          const { data } = await supabase
-            .from("trend_snapshots")
-            .select("category, snapshot_at, volume_raw, platform, title, country_code, change_percent")
-            .gte("snapshot_at", sevenDaysAgo.toISOString())
-            .lte("snapshot_at", now.toISOString())
-            .order("snapshot_at", { ascending: true })
-            .range(offset, offset + batchSize - 1);
-          if (data && data.length > 0) { allData = allData.concat(data); offset += batchSize; hasMore = data.length === batchSize; }
-          else { hasMore = false; }
-        }
-        setWeeklyData(allData);
-      } catch (e) { console.error(e); }
-      finally { setLoading(false); }
-    };
-    fetchData();
+  const fetchData = useCallback(async () => {
+    try {
+      const now = new Date();
+      const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+      let allData: any[] = [];
+      let offset = 0;
+      const batchSize = 1000;
+      let hasMore = true;
+      while (hasMore) {
+        const { data } = await supabase
+          .from("trend_snapshots")
+          .select("category, snapshot_at, volume_raw, platform, title, country_code, change_percent")
+          .gte("snapshot_at", sevenDaysAgo.toISOString())
+          .lte("snapshot_at", now.toISOString())
+          .order("snapshot_at", { ascending: true })
+          .range(offset, offset + batchSize - 1);
+        if (data && data.length > 0) { allData = allData.concat(data); offset += batchSize; hasMore = data.length === batchSize; }
+        else { hasMore = false; }
+      }
+      setWeeklyData(allData);
+      setLastRefresh(new Date());
+    } catch (e) { console.error(e); }
+    finally { setLoading(false); }
   }, []);
+
+  // Initial fetch + auto-refresh every 5 minutes
+  useEffect(() => {
+    fetchData();
+    refreshTimerRef.current = setInterval(fetchData, 5 * 60 * 1000);
+    return () => { if (refreshTimerRef.current) clearInterval(refreshTimerRef.current); };
+  }, [fetchData]);
 
   const dayLabels = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
   const orderedDays = ["Seg", "Ter", "Qua", "Qui", "Sex", "Sáb", "Dom"];
 
-  // ══════════════════════════════════════════════════════════════════════════
-  // MASTER ANALYSIS PIPELINE
-  // ══════════════════════════════════════════════════════════════════════════
+  /* ══════════════════════════════════════════════════════════════════════════
+   * MASTER ANALYSIS PIPELINE
+   * ══════════════════════════════════════════════════════════════════════════ */
   const analysis = useMemo(() => {
     const catDaily: Record<string, Record<string, number>> = {};
     const catTotal: Record<string, number> = {};
@@ -595,6 +677,8 @@ export default function WeeklyPulseDashboard({ trends }: { trends: TrendCardProp
     const titleCats: Record<string, string> = {};
     const titleCountries: Record<string, Set<string>> = {};
     const regionVolumes: Record<string, { volume: number; trends: Set<string>; topTitle: string; topVol: number }> = {};
+    // Hourly data for drill-down
+    const hourlyByCatByDay: Record<string, Record<string, Record<string, number>>> = {};
     let totalVolume = 0;
     let emergingCount = 0;
 
@@ -605,6 +689,7 @@ export default function WeeklyPulseDashboard({ trends }: { trends: TrendCardProp
       const cat = normCat(row.category || "Geral");
       const d = new Date(row.snapshot_at);
       const dayKey = dayLabels[d.getDay()];
+      const hourKey = `${String(d.getHours()).padStart(2, "0")}h`;
       const vol = row.volume_raw || 1;
       const change = Number(row.change_percent) || 0;
       const titleKey = (row.title || "").toLowerCase().slice(0, 50);
@@ -617,6 +702,11 @@ export default function WeeklyPulseDashboard({ trends }: { trends: TrendCardProp
       totalVolume += vol;
       platformCounts[row.platform] = (platformCounts[row.platform] || 0) + 1;
 
+      // Hourly drill-down data
+      if (!hourlyByCatByDay[dayKey]) hourlyByCatByDay[dayKey] = {};
+      if (!hourlyByCatByDay[dayKey][hourKey]) hourlyByCatByDay[dayKey][hourKey] = {};
+      hourlyByCatByDay[dayKey][hourKey][cat] = (hourlyByCatByDay[dayKey][hourKey][cat] || 0) + vol;
+
       if (!titlePlatforms[titleKey]) titlePlatforms[titleKey] = new Set();
       titlePlatforms[titleKey].add(row.platform);
       titleVolumes[titleKey] = (titleVolumes[titleKey] || 0) + vol;
@@ -626,7 +716,6 @@ export default function WeeklyPulseDashboard({ trends }: { trends: TrendCardProp
       if (!titleCountries[titleKey]) titleCountries[titleKey] = new Set();
       if (row.country_code) titleCountries[titleKey].add(row.country_code);
 
-      // Geographic
       if (!regionVolumes[region]) regionVolumes[region] = { volume: 0, trends: new Set(), topTitle: "", topVol: 0 };
       regionVolumes[region].volume += vol;
       regionVolumes[region].trends.add(titleKey);
@@ -666,16 +755,16 @@ export default function WeeklyPulseDashboard({ trends }: { trends: TrendCardProp
     // Chart data
     const chartData = orderedDays.map((day, i) => {
       const isFuture = i > todayIndex && todayIndex >= 0;
-      const entry: Record<string, any> = { day, isFuture };
+      const entry: Record<string, any> = { day, isFuture, _dayKey: day };
       for (const cat of topCats) {
         entry[cat] = isFuture ? null : Math.round((catDaily[day]?.[cat] || 0) / 1000);
       }
       return entry;
     });
 
-    // ── Lifecycle classification (#10) ──
+    // Lifecycle classification
     const classifyLifecycle = (growths: number[], vol: number): string => {
-      if (growths.length < 2) return vol > 500 ? "emerging" : "emerging";
+      if (growths.length < 2) return "emerging";
       const recent = growths.slice(-Math.ceil(growths.length / 2));
       const earlier = growths.slice(0, Math.ceil(growths.length / 2));
       const recentAvg = recent.reduce((a, b) => a + b, 0) / recent.length;
@@ -689,7 +778,7 @@ export default function WeeklyPulseDashboard({ trends }: { trends: TrendCardProp
 
     const lifecycleCounts: Record<string, number> = { emerging: 0, accelerating: 0, peak: 0, declining: 0 };
 
-    // ── Signal detection ──
+    // Signal detection
     const detectedSignals: DetectedSignal[] = [];
     const titleEntries = Object.entries(titleVolumes).sort((a, b) => b[1] - a[1]).slice(0, 100);
 
@@ -718,7 +807,8 @@ export default function WeeklyPulseDashboard({ trends }: { trends: TrendCardProp
           growth: Math.round(avgGrowth), platforms: [...platforms], lifecycle, category: cat,
           reason: t(lang,
             `Crescimento de ${Math.round(avgGrowth)}% em ${platformCount} plataforma(s). Velocidade acima do normal.`,
-            `${Math.round(avgGrowth)}% growth across ${platformCount} platform(s). Above-normal velocity.`),
+            `${Math.round(avgGrowth)}% growth across ${platformCount} platform(s). Above-normal velocity.`,
+            `Crecimiento de ${Math.round(avgGrowth)}% en ${platformCount} plataforma(s).`),
           prediction: { direction: predDirection, confidence: predConfidence },
         });
       } else if (viralScore >= 65 && platformCount >= 2) {
@@ -727,7 +817,8 @@ export default function WeeklyPulseDashboard({ trends }: { trends: TrendCardProp
           growth: Math.round(avgGrowth), platforms: [...platforms], lifecycle, category: cat,
           reason: t(lang,
             `Score viral ${viralScore}/100. Presente em ${platformCount} plataformas.`,
-            `Viral score ${viralScore}/100. Present on ${platformCount} platforms.`),
+            `Viral score ${viralScore}/100. Present on ${platformCount} platforms.`,
+            `Score viral ${viralScore}/100. Presente en ${platformCount} plataformas.`),
           prediction: { direction: predDirection, confidence: predConfidence },
         });
       } else if (Math.abs(avgGrowth) > 200 || (platformCount >= 4 && vol > 1000)) {
@@ -736,13 +827,14 @@ export default function WeeklyPulseDashboard({ trends }: { trends: TrendCardProp
           growth: Math.round(avgGrowth), platforms: [...platforms], lifecycle, category: cat,
           reason: t(lang,
             `Padrão anômalo: ${platformCount >= 4 ? `${platformCount} plataformas simultâneas` : `variação de ${Math.round(avgGrowth)}%`}.`,
-            `Anomalous: ${platformCount >= 4 ? `${platformCount} simultaneous platforms` : `${Math.round(avgGrowth)}% variation`}.`),
+            `Anomalous: ${platformCount >= 4 ? `${platformCount} simultaneous platforms` : `${Math.round(avgGrowth)}% variation`}.`,
+            `Patrón anómalo: ${platformCount >= 4 ? `${platformCount} plataformas simultáneas` : `variación de ${Math.round(avgGrowth)}%`}.`),
           prediction: { direction: predDirection, confidence: predConfidence },
         });
       }
     }
 
-    // ── Narrative clustering (#5) ──
+    // Narrative clustering
     const titleWords: Record<string, Set<string>> = {};
     for (const [titleKey] of titleEntries) {
       titleWords[titleKey] = new Set(titleKey.split(/\s+/).filter(w => w.length > 4 && !stopWords.has(w)));
@@ -798,7 +890,7 @@ export default function WeeklyPulseDashboard({ trends }: { trends: TrendCardProp
     }
     narrativeClusters.sort((a, b) => b.volume - a.volume);
 
-    // ── Word cloud with related terms ──
+    // Word cloud
     const wordCloudRaw = Object.entries(wordFreq).sort((a, b) => b[1].count - a[1].count).slice(0, 40);
     const wordCloud = wordCloudRaw.map(([text, data]) => {
       const topCat = Object.entries(data.cats).sort((a, b) => b[1] - a[1])[0]?.[0] || "Geral";
@@ -806,12 +898,8 @@ export default function WeeklyPulseDashboard({ trends }: { trends: TrendCardProp
       const momentum = total > 0 ? Math.round((data.positive / total) * 100) : 0;
       const relatedTerms = wordCloudRaw
         .filter(([t2]) => t2 !== text)
-        .filter(([, d2]) => {
-          const sharedCats = Object.keys(data.cats).filter(c => d2.cats[c]);
-          return sharedCats.length > 0;
-        })
-        .slice(0, 5)
-        .map(([t2]) => t2);
+        .filter(([, d2]) => Object.keys(data.cats).some(c => d2.cats[c]))
+        .slice(0, 5).map(([t2]) => t2);
       return { text, count: data.count, category: topCat, momentum, relatedTerms };
     });
 
@@ -821,7 +909,7 @@ export default function WeeklyPulseDashboard({ trends }: { trends: TrendCardProp
       volumes: Object.fromEntries(orderedDays.map(d => [d, catDaily[d]?.[cat] || 0])),
     }));
 
-    // Live feed signals with lifecycle
+    // Live feed
     const liveSignals = trends
       .sort((a, b) => parseVol(b.volume) - parseVol(a.volume))
       .slice(0, 12)
@@ -839,7 +927,7 @@ export default function WeeklyPulseDashboard({ trends }: { trends: TrendCardProp
         };
       });
 
-    // Geographic distribution (#9)
+    // Geo
     const geoRegions = Object.entries(regionVolumes)
       .map(([name, data]) => ({
         name, volume: data.volume,
@@ -848,36 +936,43 @@ export default function WeeklyPulseDashboard({ trends }: { trends: TrendCardProp
       }))
       .sort((a, b) => b.volume - a.volume);
 
-    // ── Insights (#11 + #12) ──
+    // Insights
     const insights: { icon: string; text: string }[] = [];
     if (topCats.length > 0) {
       const pct = totalVolume > 0 ? Math.round(((catTotal[topCats[0]] || 0) / totalVolume) * 100) : 0;
-      insights.push({ icon: "🏆", text: t(lang, `Categoria dominante: ${topCats[0]} (${pct}% do volume).`, `Dominant category: ${topCats[0]} (${pct}% of volume).`) });
+      insights.push({ icon: "🏆", text: t(lang, `Categoria dominante: ${topCats[0]} (${pct}% do volume).`, `Dominant category: ${topCats[0]} (${pct}% of volume).`, `Categoría dominante: ${topCats[0]} (${pct}% del volumen).`) });
     }
     let peakDay = orderedDays[0], peakVol = 0;
     for (const day of orderedDays) {
       const dayTotal = Object.values(catDaily[day] || {}).reduce((s, v) => s + v, 0);
       if (dayTotal > peakVol) { peakVol = dayTotal; peakDay = day; }
     }
-    if (peakVol > 0) insights.push({ icon: "📈", text: t(lang, `Pico: ${peakDay} (${fmtNum(peakVol)}).`, `Peak: ${peakDay} (${fmtNum(peakVol)}).`) });
+    if (peakVol > 0) insights.push({ icon: "📈", text: t(lang, `Pico de atividade: ${peakDay} (${fmtNum(peakVol)} menções).`, `Peak activity: ${peakDay} (${fmtNum(peakVol)} mentions).`, `Pico de actividad: ${peakDay} (${fmtNum(peakVol)} menciones).`) });
 
     const momentumResult = calculateMomentum(dailyVolumes, orderedDays, todayIndex, lang);
     if (momentumResult.isReliable && Math.abs(momentumResult.value) > 5) {
-      insights.push({ icon: momentumResult.value > 0 ? "🔥" : "📉", text: t(lang, `Momentum: ${momentumResult.display}.`, `Momentum: ${momentumResult.display}.`) });
+      insights.push({ icon: momentumResult.value > 0 ? "🔥" : "📉", text: t(lang, `Momentum semanal: ${momentumResult.display}.`, `Weekly momentum: ${momentumResult.display}.`) });
     }
     const emergingSigs = detectedSignals.filter(s => s.type === "emerging").length;
     const anomalySigs = detectedSignals.filter(s => s.type === "anomaly").length;
-    if (emergingSigs > 0) insights.push({ icon: "⚡", text: t(lang, `${emergingSigs} sinais emergentes detectados.`, `${emergingSigs} emerging signals detected.`) });
-    if (anomalySigs > 0) insights.push({ icon: "🔍", text: t(lang, `${anomalySigs} anomalias identificadas.`, `${anomalySigs} anomalies identified.`) });
+    const viralSigs = detectedSignals.filter(s => s.type === "viral").length;
+    if (emergingSigs > 0) insights.push({ icon: "⚡", text: t(lang, `${emergingSigs} sinais emergentes detectados com crescimento acima de 80%.`, `${emergingSigs} emerging signals detected with growth above 80%.`) });
+    if (viralSigs > 0) insights.push({ icon: "🔥", text: t(lang, `${viralSigs} tendências com potencial viral (score ≥65, multi-plataforma).`, `${viralSigs} trends with viral potential (score ≥65, multi-platform).`) });
+    if (anomalySigs > 0) insights.push({ icon: "🔍", text: t(lang, `${anomalySigs} anomalias estatísticas identificadas.`, `${anomalySigs} statistical anomalies identified.`) });
     if (narrativeClusters.length > 0) {
       const topCluster = narrativeClusters[0];
-      insights.push({ icon: "🧬", text: t(lang, `Cluster dominante: "${topCluster.label}" (${topCluster.terms.length} termos, ${fmtNum(topCluster.volume)} vol).`, `Dominant cluster: "${topCluster.label}" (${topCluster.terms.length} terms, ${fmtNum(topCluster.volume)} vol).`) });
+      insights.push({ icon: "🧬", text: t(lang, `Cluster narrativo dominante: "${topCluster.label}" (${topCluster.terms.length} termos, ${fmtNum(topCluster.volume)} vol).`, `Dominant narrative cluster: "${topCluster.label}" (${topCluster.terms.length} terms, ${fmtNum(topCluster.volume)} vol).`) });
     }
     if (geoRegions.length > 1) {
-      insights.push({ icon: "🌍", text: t(lang, `${geoRegions.length} regiões ativas. Líder: ${geoRegions[0].name} (${fmtNum(geoRegions[0].volume)}).`, `${geoRegions.length} active regions. Leader: ${geoRegions[0].name} (${fmtNum(geoRegions[0].volume)}).`) });
+      insights.push({ icon: "🌍", text: t(lang, `Sinais em ${geoRegions.length} regiões. Líder: ${geoRegions[0].name} (${fmtNum(geoRegions[0].volume)}).`, `Signals in ${geoRegions.length} regions. Leader: ${geoRegions[0].name} (${fmtNum(geoRegions[0].volume)}).`) });
+    }
+    // Lifecycle insight
+    const accCount = lifecycleCounts.accelerating || 0;
+    const declCount = lifecycleCounts.declining || 0;
+    if (accCount > 0 || declCount > 0) {
+      insights.push({ icon: "📊", text: t(lang, `Ciclo de vida: ${accCount} tendências acelerando, ${declCount} em declínio.`, `Lifecycle: ${accCount} trends accelerating, ${declCount} declining.`) });
     }
 
-    const historicalAvg = Math.round(totalVolume * 0.85);
     const growthVsPrev = prevWeekVol > 0 ? Math.round(((totalVolume - prevWeekVol) / prevWeekVol) * 100) : 0;
     const catByDay: Record<string, Record<string, number>> = {};
     for (const cat of topCats) {
@@ -886,14 +981,13 @@ export default function WeeklyPulseDashboard({ trends }: { trends: TrendCardProp
     }
 
     return {
-      chartData, topCats, wordCloud, catByDay, insights, totalVolume, historicalAvg,
+      chartData, topCats, wordCloud, catByDay, insights, totalVolume,
       totalSnapshots: weeklyData.length, totalTrends: trends.length,
       momentumResult, dailyVolumes, todayIndex, emergingCount,
       detectedSignals: detectedSignals.sort((a, b) => b.score - a.score).slice(0, 10),
       liveSignals, categoryMomentum, growthVsPrev, platformCounts,
       narrativeClusters: narrativeClusters.slice(0, 8),
-      geoRegions,
-      lifecycleCounts,
+      geoRegions, lifecycleCounts, hourlyByCatByDay,
     };
   }, [weeklyData, trends, lang]);
 
@@ -907,29 +1001,44 @@ export default function WeeklyPulseDashboard({ trends }: { trends: TrendCardProp
 
   const { momentumResult } = analysis;
   const platformCount = Object.keys(analysis.platformCounts).length;
+  const refreshAgo = Math.round((Date.now() - lastRefresh.getTime()) / 60000);
 
   return (
     <div className="p-2.5 space-y-2.5">
+      {/* ═══════ HEADER STATUS BAR ═══════ */}
+      <div className="flex items-center justify-between px-1">
+        <span className="text-[8px] text-muted-foreground flex items-center gap-1">
+          <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+          {t(lang, "Atualização automática a cada 5 min", "Auto-refresh every 5 min", "Actualización automática cada 5 min")}
+          {refreshAgo > 0 && <span className="text-muted-foreground/60">· {refreshAgo}m {t(lang, "atrás", "ago", "hace")}</span>}
+        </span>
+        <button onClick={() => { setLoading(true); fetchData(); }}
+          className="flex items-center gap-1 text-[8px] text-primary hover:text-primary/80 transition-colors">
+          <RefreshCw className="w-2.5 h-2.5" />
+          {t(lang, "Atualizar", "Refresh", "Actualizar")}
+        </button>
+      </div>
+
       {/* ═══════ KPI ROW ═══════ */}
       <div className="grid grid-cols-5 gap-1.5">
         <KPICard icon={<BarChart3 className="w-3.5 h-3.5" />}
           value={fmtNum(analysis.totalVolume)}
-          label={t(lang, "Volume total", "Total Volume")}
+          label={t(lang, "Volume total", "Total Volume", "Volumen total")}
           delta={analysis.growthVsPrev !== 0 ? { value: analysis.growthVsPrev, label: "" } : undefined}
           tooltip={getTooltip("volume", lang) || t(lang, "Volume total de menções na semana", "Total mention volume this week")}
           delay={0} />
         <KPICard icon={<Layers className="w-3.5 h-3.5" />}
-          value={analysis.totalTrends} label={t(lang, "Trends ativas", "Active Trends")}
+          value={analysis.totalTrends} label={t(lang, "Trends ativas", "Active Trends", "Trends activas")}
           tooltip={t(lang, "Tendências detectadas em todas as fontes", "Trends detected across all sources")} delay={0.04} />
         <KPICard icon={<Zap className="w-3.5 h-3.5" />}
-          value={analysis.emergingCount} label={t(lang, "Emergentes", "Emerging")}
+          value={analysis.emergingCount} label={t(lang, "Emergentes", "Emerging", "Emergentes")}
           tooltip={getTooltip("emerging", lang)} color="text-emerald-500" delay={0.08} />
         <KPICard icon={<Activity className="w-3.5 h-3.5" />}
           value={momentumResult.display} label="Momentum"
           delta={momentumResult.isReliable && momentumResult.value !== 0 ? { value: momentumResult.value, label: "" } : undefined}
           tooltip={getTooltip("momentum", lang)} color={momentumResult.color} delay={0.12} />
         <KPICard icon={<Globe className="w-3.5 h-3.5" />}
-          value={platformCount} label={t(lang, "Plataformas", "Platforms")}
+          value={platformCount} label={t(lang, "Plataformas", "Platforms", "Plataformas")}
           tooltip={t(lang, "Plataformas com sinais ativos", "Platforms with active signals")} delay={0.16} />
       </div>
 
@@ -938,45 +1047,70 @@ export default function WeeklyPulseDashboard({ trends }: { trends: TrendCardProp
         <LifecycleOverview counts={analysis.lifecycleCounts} lang={lang} />
       </div>
 
-      {/* ═══════ CHART ═══════ */}
-      <div className="rounded-xl border border-border/50 bg-card p-2.5">
-        <span className="text-[9px] font-bold text-muted-foreground uppercase tracking-wider flex items-center gap-1 mb-1.5">
-          <TrendingUp className="w-3 h-3" />
-          {t(lang, "Evolução Semanal", "Weekly Evolution")}
-        </span>
-        <div className="h-[100px]">
-          <ResponsiveContainer width="100%" height="100%">
-            <AreaChart data={analysis.chartData} margin={{ top: 4, right: 4, left: -22, bottom: 0 }}>
-              <defs>
-                {analysis.topCats.map(cat => (
-                  <linearGradient key={cat} id={`wg-${cat.replace(/\s/g, "")}`} x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor={getCatColor(cat)} stopOpacity={0.25} />
-                    <stop offset="100%" stopColor={getCatColor(cat)} stopOpacity={0.02} />
-                  </linearGradient>
-                ))}
-              </defs>
-              <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-              <XAxis dataKey="day" tick={{ fontSize: 8, fill: "hsl(var(--muted-foreground))" }} tickLine={false} axisLine={false} />
-              <YAxis tick={{ fontSize: 7, fill: "hsl(var(--muted-foreground))" }} tickLine={false} axisLine={false}
-                tickFormatter={(v: number) => v >= 1000 ? `${(v / 1000).toFixed(0)}M` : `${v}K`} />
-              <RTooltip contentStyle={{ background: "hsl(var(--popover))", border: "1px solid hsl(var(--border))", borderRadius: "8px", fontSize: "9px" }}
-                formatter={(v: any, name: string) => [v !== null ? fmtNum(v * 1000) : t(lang, "Sem dados", "No data"), name]} />
+      {/* ═══════ CHART + 24H DRILL-DOWN ═══════ */}
+      <AnimatePresence mode="wait">
+        {drillDownDay ? (
+          <HourlyDrillDown
+            key="drilldown"
+            dayKey={drillDownDay}
+            dayLabel={drillDownDay}
+            hourlyData={analysis.hourlyByCatByDay[drillDownDay] || {}}
+            topCats={analysis.topCats}
+            lang={lang}
+            onClose={() => setDrillDownDay(null)}
+          />
+        ) : (
+          <motion.div key="weekly-chart" className="rounded-xl border border-border/50 bg-card p-2.5">
+            <div className="flex items-center justify-between mb-1.5">
+              <span className="text-[9px] font-bold text-muted-foreground uppercase tracking-wider flex items-center gap-1">
+                <TrendingUp className="w-3 h-3" />
+                {t(lang, "Evolução Semanal", "Weekly Evolution", "Evolución Semanal")}
+              </span>
+              <span className="text-[7px] text-muted-foreground/60">
+                {t(lang, "Clique em um dia para drill-down 24h", "Click a day for 24h drill-down", "Haga clic en un día para drill-down 24h")}
+              </span>
+            </div>
+            <div className="h-[100px]">
+              <ResponsiveContainer width="100%" height="100%">
+                <AreaChart data={analysis.chartData} margin={{ top: 4, right: 4, left: -22, bottom: 0 }}
+                  onClick={(e: any) => {
+                    if (e?.activeLabel) setDrillDownDay(e.activeLabel);
+                  }}>
+                  <defs>
+                    {analysis.topCats.map(cat => (
+                      <linearGradient key={cat} id={`wg-${cat.replace(/\s/g, "")}`} x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0%" stopColor={getCatColor(cat)} stopOpacity={0.25} />
+                        <stop offset="100%" stopColor={getCatColor(cat)} stopOpacity={0.02} />
+                      </linearGradient>
+                    ))}
+                  </defs>
+                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                  <XAxis dataKey="day" tick={{ fontSize: 8, fill: "hsl(var(--muted-foreground))" }} tickLine={false} axisLine={false}
+                    cursor="pointer" />
+                  <YAxis tick={{ fontSize: 7, fill: "hsl(var(--muted-foreground))" }} tickLine={false} axisLine={false}
+                    tickFormatter={(v: number) => v >= 1000 ? `${(v / 1000).toFixed(0)}M` : `${v}K`} />
+                  <RTooltip contentStyle={{ background: "hsl(var(--popover))", border: "1px solid hsl(var(--border))", borderRadius: "8px", fontSize: "9px" }}
+                    formatter={(v: any, name: string) => [v !== null ? fmtNum(v * 1000) : t(lang, "Sem dados", "No data"), name]}
+                    labelFormatter={(l: string) => `${l} — ${t(lang, "clique para explorar", "click to explore")}`} />
+                  {analysis.topCats.map(cat => (
+                    <Area key={cat} type="monotone" dataKey={cat} stroke={getCatColor(cat)} strokeWidth={1.5}
+                      fill={`url(#wg-${cat.replace(/\s/g, "")})`} dot={{ r: 2, fill: getCatColor(cat), strokeWidth: 0 }}
+                      connectNulls={false} animationDuration={700}
+                      style={{ cursor: "pointer" }} />
+                  ))}
+                </AreaChart>
+              </ResponsiveContainer>
+            </div>
+            <div className="flex items-center gap-2 flex-wrap mt-1">
               {analysis.topCats.map(cat => (
-                <Area key={cat} type="monotone" dataKey={cat} stroke={getCatColor(cat)} strokeWidth={1.5}
-                  fill={`url(#wg-${cat.replace(/\s/g, "")})`} dot={{ r: 2, fill: getCatColor(cat), strokeWidth: 0 }}
-                  connectNulls={false} animationDuration={700} />
+                <span key={cat} className="flex items-center gap-0.5 text-[7px] text-muted-foreground">
+                  <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: getCatColor(cat) }} />{cat}
+                </span>
               ))}
-            </AreaChart>
-          </ResponsiveContainer>
-        </div>
-        <div className="flex items-center gap-2 flex-wrap mt-1">
-          {analysis.topCats.map(cat => (
-            <span key={cat} className="flex items-center gap-0.5 text-[7px] text-muted-foreground">
-              <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: getCatColor(cat) }} />{cat}
-            </span>
-          ))}
-        </div>
-      </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* ═══════ MOMENTUM + LIVE FEED ═══════ */}
       <div className="grid grid-cols-2 gap-1.5">
@@ -1014,7 +1148,7 @@ export default function WeeklyPulseDashboard({ trends }: { trends: TrendCardProp
         <div className="rounded-xl border border-border/50 bg-card p-2.5">
           <span className="text-[9px] font-bold text-muted-foreground uppercase tracking-wider flex items-center gap-1 mb-1">
             <Sparkles className="w-3 h-3" />
-            {t(lang, "Mapa de Termos", "Term Map")}
+            {t(lang, "Mapa de Termos", "Term Map", "Mapa de Términos")}
           </span>
           <div className="text-[6px] text-muted-foreground/60 mb-0.5">
             {t(lang, "Tamanho = volume · Cor = categoria · ● = emergente · Clique para explorar", "Size = volume · Color = category · ● = emerging · Click to explore")}
@@ -1028,7 +1162,7 @@ export default function WeeklyPulseDashboard({ trends }: { trends: TrendCardProp
         <div className="space-y-1.5">
           <span className="text-[9px] font-bold text-muted-foreground uppercase tracking-wider flex items-center gap-1 px-1">
             <Brain className="w-3 h-3" />
-            {t(lang, "Inteligência Semanal Automatizada", "Automated Weekly Intelligence")}
+            {t(lang, "Inteligência Semanal Automatizada", "Automated Weekly Intelligence", "Inteligencia Semanal Automatizada")}
           </span>
           {analysis.insights.map((insight, i) => (
             <InsightCard key={i} icon={insight.icon} text={insight.text} delay={i * 0.06} />
