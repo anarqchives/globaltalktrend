@@ -378,13 +378,25 @@ const Index = () => {
         <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-widest">
           {t("timeline")}
         </span>
-        <button
-          onClick={() => setCompactMode(c => !c)}
-          className="h-6 w-6 flex items-center justify-center rounded-md hover:bg-secondary transition-colors text-muted-foreground hover:text-foreground"
-          title={compactMode ? "Modo expandido" : "Modo compacto"}
-        >
-          {compactMode ? <LayoutGrid className="w-3.5 h-3.5" /> : <LayoutList className="w-3.5 h-3.5" />}
-        </button>
+        <div className="flex items-center gap-2">
+          {updatePending && (
+            <button
+              onClick={handleRefresh}
+              className="flex items-center gap-1.5 text-[10px] font-medium bg-primary/10 text-primary px-2 py-1 rounded-full hover:bg-primary/20 transition-colors animate-pulse"
+              title="Atualização pausada por atividade. Clique para atualizar."
+            >
+              <RefreshCw className={`w-3 h-3 ${refreshing ? "animate-spin" : ""}`} />
+              Atualizar Agora
+            </button>
+          )}
+          <button
+            onClick={() => setCompactMode(c => !c)}
+            className="h-6 w-6 flex items-center justify-center rounded-md hover:bg-secondary transition-colors text-muted-foreground hover:text-foreground"
+            title={compactMode ? "Modo expandido" : "Modo compacto"}
+          >
+            {compactMode ? <LayoutGrid className="w-3.5 h-3.5" /> : <LayoutList className="w-3.5 h-3.5" />}
+          </button>
+        </div>
       </div>
 
       {breadcrumbs.length > 0 && (
