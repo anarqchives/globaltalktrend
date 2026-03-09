@@ -638,6 +638,7 @@ function TrendRadarInner({ trends, allTrends, criticalMoments, anomalies = [], o
       </Tabs>
     </div>
   );
-});
+}
 
+const TrendRadar = memo(TrendRadarInner);
 export default TrendRadar;
