@@ -1558,11 +1558,11 @@ const GoogleMapView = ({
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 10 }}
             transition={{ duration: 0.25, ease: "easeOut" }}
-            className={`absolute z-20 bg-white/95 dark:bg-card/95 backdrop-blur-[12px] border border-white/50 dark:border-white/10 shadow-[0_4px_20px_rgba(0,0,0,0.08)] dark:shadow-[0_4px_20px_rgba(0,0,0,0.25)] ${
-              isMobile ? 'bottom-2 left-2 right-2 rounded-xl px-3 py-2' : 'bottom-[30px] right-5 rounded-2xl px-3 py-2.5 min-w-[180px]'
+            className={`absolute z-20 bg-white/90 dark:bg-card/90 backdrop-blur-xl border border-border/15 shadow-[0_2px_12px_rgba(0,0,0,0.06)] dark:shadow-[0_2px_12px_rgba(0,0,0,0.2)] ${
+              isMobile ? 'bottom-2 left-2 right-2 rounded-lg px-2.5 py-1.5' : 'bottom-[30px] right-5 rounded-xl px-2.5 py-2 max-w-[160px]'
             }`}
           >
-            <p className="text-[11px] font-medium text-foreground mb-2 tracking-wide flex items-center gap-1.5">
+            <p className="text-[9px] font-semibold text-foreground mb-1.5 tracking-wide flex items-center gap-1">
               💭 {t("mapSentLegendTitle")}
             </p>
             {sentimentBubbles.length === 0 ? (

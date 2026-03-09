@@ -867,11 +867,11 @@ const Index = () => {
                             <div className="h-full relative group/map">
                               <Tooltip>
                                 <TooltipTrigger asChild>
-                                  <button
+                              <button
                                     onClick={() => togglePanel("map")}
-                                    className="absolute top-1 right-1 z-10 opacity-0 group-hover/map:opacity-100 w-6 h-6 rounded-md flex items-center justify-center text-muted-foreground/50 hover:text-destructive hover:bg-destructive/10 transition-all duration-200"
+                                    className="absolute top-2 right-2 z-20 opacity-0 group-hover/map:opacity-100 w-7 h-7 rounded-lg flex items-center justify-center bg-background/80 backdrop-blur-sm border border-border/30 text-muted-foreground hover:text-destructive hover:bg-destructive/10 shadow-sm transition-all duration-200"
                                   >
-                                    <X className="w-3 h-3" />
+                                    <X className="w-3.5 h-3.5" />
                                   </button>
                                 </TooltipTrigger>
                                 <TooltipContent side="bottom" className="text-[10px]">{lang === "pt" ? "Fechar Mapa" : "Close Map"}</TooltipContent>
