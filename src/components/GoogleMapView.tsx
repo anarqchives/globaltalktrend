@@ -1466,9 +1466,9 @@ const GoogleMapView = ({
           <div className="text-center p-6 bg-card/80 backdrop-blur-xl rounded-2xl border border-border/30 shadow-lg max-w-xs">
             <div className="text-3xl mb-3">🗺️</div>
             <p className="text-sm font-medium text-foreground mb-1">{mapError}</p>
-            <p className="text-xs text-muted-foreground/60 mb-4">O mapa será exibido assim que a conexão for restabelecida.</p>
+            <p className="text-xs text-muted-foreground/60 mb-4">{t("mapReconnectMsg")}</p>
             <button onClick={retryMap} className="px-4 py-2 rounded-full bg-primary hover:bg-primary/90 text-primary-foreground text-xs font-semibold transition-colors shadow-sm">
-              🔄 Tentar novamente
+              🔄 {t("mapRetry")}
             </button>
           </div>
         </div>
