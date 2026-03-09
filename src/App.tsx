@@ -79,6 +79,7 @@ const App = () => {
                   <Route path="/teste" element={<Teste />} />
                   <Route path="/admin" element={<Admin />} />
                   <Route path="/@:username" element={<PublicProfile />} />
+                  <Route path="/privacidade" element={<Privacidade />} />
                   <Route path="*" element={<NotFound />} />
                 </Routes>
               </Suspense>
