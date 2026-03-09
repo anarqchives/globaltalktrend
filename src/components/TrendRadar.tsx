@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Sprout, Flame, Trophy, Info, ChevronUp, ChevronDown } from "lucide-react";
+import { Sprout, Flame, Trophy, Info, ChevronUp, ChevronDown, Activity, AlertTriangle } from "lucide-react";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -8,34 +8,42 @@ import EmergingTrendsSection from "./EmergingTrendsSection";
 import CriticalMomentsSection from "./CriticalMomentsSection";
 import { TrendCardProps } from "./TrendCard";
 import { CriticalMoment } from "@/hooks/use-critical-moments";
+import { AnomalyAlert } from "@/hooks/use-anomaly-alerts";
 import { useLanguage } from "@/contexts/LanguageContext";
 
 interface TrendRadarProps {
   trends: TrendCardProps[];
   allTrends: TrendCardProps[];
   criticalMoments: CriticalMoment[];
+  anomalies?: AnomalyAlert[];
   onSelectTrend?: (trend: TrendCardProps) => void;
   onFilterCountry?: (code: string) => void;
+  onAnomalyClick?: (id: string) => void;
 }
 
 const RADAR_STORAGE_KEY = "globaltalktrend-radar-collapsed";
-const RADAR_HEIGHT = 280; // Fixed height in pixels
+const RADAR_HEIGHT = 350; // Fixed height in pixels
 
 const legendText: Record<string, Record<string, string>> = {
   emerging: {
-    pt: "Sinais Emergentes representam tópicos que começaram a ganhar atenção incomum nas últimas horas, detectados em múltiplas plataformas.",
-    en: "Emerging Signals represent topics that began gaining unusual attention within the last hours based on signals detected across multiple platforms.",
-    es: "Las Señales Emergentes representan temas que comenzaron a ganar atención inusual en las últimas horas.",
+    pt: "Emerging Signals: Tendências em aceleração.",
+    en: "Emerging Signals: Accelerating trends.",
+    es: "Emerging Signals: Tendencias en aceleración.",
   },
   critical: {
-    pt: "Alertas Críticos representam tópicos em crescimento explosivo confirmado em múltiplas fontes de informação.",
-    en: "Critical Alerts represent topics experiencing rapid global growth across multiple information sources.",
-    es: "Las Alertas Críticas representan temas en crecimiento explosivo confirmado en múltiples fuentes.",
+    pt: "Critical Alerts: Momentos de pico anômalo.",
+    en: "Critical Alerts: Anomalous peak moments.",
+    es: "Critical Alerts: Momentos de pico anómalo.",
   },
   top: {
-    pt: "Top Trends mostram os tópicos com maior atenção global no período selecionado, considerando volume, fontes e abrangência geográfica.",
-    en: "Top Trends show the topics receiving the highest global attention across multiple sources.",
-    es: "Las Top Trends muestran los temas con mayor atención global en el período seleccionado.",
+    pt: "Top Trends: Assuntos mais discutidos agora.",
+    en: "Top Trends: Most discussed topics right now.",
+    es: "Top Trends: Temas más discutidos ahora.",
+  },
+  weekly: {
+    pt: "Weekly Pulse: Evolução semanal das principais tendências.",
+    en: "Weekly Pulse: Weekly evolution of top trends.",
+    es: "Weekly Pulse: Evolución semanal de tendencias principales.",
   },
 };
 
@@ -50,7 +58,7 @@ function Legend({ tab, lang }: { tab: string; lang: string }) {
   );
 }
 
-export default function TrendRadar({ trends, allTrends, criticalMoments, onSelectTrend, onFilterCountry }: TrendRadarProps) {
+export default function TrendRadar({ trends, allTrends, criticalMoments, anomalies = [], onSelectTrend, onFilterCountry, onAnomalyClick }: TrendRadarProps) {
   const { lang, t } = useLanguage();
   const [tab, setTab] = useState("emerging");
   const [collapsed, setCollapsed] = useState(() => {
@@ -106,6 +114,13 @@ export default function TrendRadar({ trends, allTrends, criticalMoments, onSelec
               <span className="hidden sm:inline">Top Trends</span>
             </TabsTrigger>
           </TabsList>
+          
+          <TabsList className="h-7 bg-secondary/50 p-0.5 gap-0.5 ml-1">
+            <TabsTrigger value="weekly" className="h-6 px-2.5 text-[10px] font-semibold data-[state=active]:bg-blue-500/15 data-[state=active]:text-blue-600 dark:data-[state=active]:text-blue-400 gap-1">
+              <Activity className="w-3 h-3" />
+              <span className="hidden sm:inline">Weekly</span>
+            </TabsTrigger>
+          </TabsList>
 
           <div className="ml-auto flex items-center gap-1">
             <Tooltip>
@@ -143,7 +158,32 @@ export default function TrendRadar({ trends, allTrends, criticalMoments, onSelec
 
         {/* Content - Scrollable area with fixed height */}
         {!collapsed && (
-          <div className="flex-1 min-h-0 overflow-hidden">
+          <div className="flex-1 min-h-0 flex flex-col overflow-hidden">
+            {anomalies.length > 0 && (
+              <div className="px-3 py-2 bg-destructive/10 border-b border-destructive/20 flex-shrink-0">
+                <div className="flex items-center gap-1.5 text-destructive mb-1.5">
+                  <AlertTriangle className="w-3.5 h-3.5" />
+                  <span className="text-[10px] font-bold uppercase tracking-wider">Anomalias Detectadas</span>
+                </div>
+                <div className="flex flex-col gap-1">
+                  {anomalies.map((anomaly, i) => {
+                    const trendId = `${anomaly.trend.platform}-${anomaly.trend.title.slice(0, 20)}`;
+                    return (
+                      <button
+                        key={i}
+                        onClick={() => onAnomalyClick?.(trendId)}
+                        className="text-left bg-background/50 hover:bg-background/80 rounded px-2 py-1.5 text-[11px] transition-colors border border-destructive/10 flex items-center justify-between"
+                      >
+                        <span className="font-medium truncate mr-2">{anomaly.trend.title}</span>
+                        <span className="text-destructive font-bold whitespace-nowrap">+{anomaly.trend.change}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+            
+            <div className="flex-1 min-h-0 overflow-hidden relative">
             <TabsContent value="emerging" className="mt-0 h-full flex flex-col">
               <Legend tab="emerging" lang={lang} />
               <ScrollArea className="flex-1">
@@ -178,6 +218,18 @@ export default function TrendRadar({ trends, allTrends, criticalMoments, onSelec
                 </div>
               </ScrollArea>
             </TabsContent>
+
+            <TabsContent value="weekly" className="mt-0 h-full flex flex-col">
+              <Legend tab="weekly" lang={lang} />
+              <ScrollArea className="flex-1">
+                <div className="p-4 flex flex-col items-center justify-center text-muted-foreground min-h-[160px]">
+                  <Activity className="w-8 h-8 mb-2 opacity-50 text-blue-500" />
+                  <p className="text-[11px] font-medium">Evolução semanal de tendências</p>
+                  <p className="text-[10px] mt-1 opacity-70">Gráfico de visualização semanal será carregado aqui.</p>
+                </div>
+              </ScrollArea>
+            </TabsContent>
+          </div>
           </div>
         )}
       </Tabs>
@@ -239,7 +291,13 @@ function TopTrendsGrid({ trends, onSelectTrend, onFilterCountry }: {
             initial={{ opacity: 0, y: 4 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: i * 0.02 }}
-            onClick={() => onSelectTrend?.(trend)}
+            onClick={() => {
+              if (trend.sourceUrl) {
+                window.open(trend.sourceUrl, "_blank", "noopener,noreferrer");
+              } else {
+                onSelectTrend?.(trend);
+              }
+            }}
             className="flex items-center gap-2 p-2 rounded-lg hover:bg-secondary/60 transition-all text-left group"
           >
             <span className="text-[10px] font-bold text-muted-foreground w-5 text-right flex-shrink-0">

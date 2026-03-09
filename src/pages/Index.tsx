@@ -623,8 +623,10 @@ const Index = () => {
             trends={filteredTrends}
             allTrends={allTrends}
             criticalMoments={criticalMoments}
+            anomalies={anomalies}
             onSelectTrend={handleSelectTrend}
             onFilterCountry={(code) => setFilters(f => ({ ...f, country: code }))}
+            onAnomalyClick={handleAnomalyClick}
           />
         )}
 
