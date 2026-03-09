@@ -330,16 +330,30 @@ const Index = () => {
     setExpandedTrendId(trendId);
     setHighlightedTrendId(trendId);
     setViewMode("timeline");
-    setTimeout(() => {
+
+    // Ensure the trend is within visible count by finding its index
+    const trendIndex = filteredTrends.findIndex(t =>
+      `${t.platform}-${t.title.slice(0, 20)}` === trendId
+    );
+    if (trendIndex >= 0 && trendIndex >= visibleCount) {
+      setVisibleCount(trendIndex + 5);
+    }
+
+    // Retry scrolling with increasing delays to account for DOM rendering
+    const tryScroll = (attempt: number) => {
       const el = document.getElementById(`trend-card-${trendId}`);
       if (el) {
         el.scrollIntoView({ behavior: "smooth", block: "center" });
+      } else if (attempt < 3) {
+        setTimeout(() => tryScroll(attempt + 1), 300);
+        return;
       } else {
         scrollRef.current?.scrollTo({ top: 0, behavior: "smooth" });
       }
       setTimeout(() => setHighlightedTrendId(null), 2500);
-    }, 150);
-  }, []);
+    };
+    setTimeout(() => tryScroll(0), 200);
+  }, [filteredTrends, visibleCount]);
 
   const handleAnomalyClick = useCallback((trendId: string) => {
     setExpandedTrendId(trendId);

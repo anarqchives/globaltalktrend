@@ -315,6 +315,11 @@ function AnomaliesPredictive({ anomalies, lang, onAnomalyClick }: {
     );
   }
 
+  const countryCodeToFlagLocal = (code?: string) => {
+    if (!code || code.length !== 2) return null;
+    return String.fromCodePoint(...[...code.toUpperCase()].map(c => 0x1F1E6 + c.charCodeAt(0) - 65));
+  };
+
   return (
     <div className="px-3 space-y-2">
       {/* Prediction card */}
@@ -335,13 +340,23 @@ function AnomaliesPredictive({ anomalies, lang, onAnomalyClick }: {
         </div>
       </div>
 
-      {/* Anomaly cards */}
-      <div className="space-y-1">
+      {/* Anomaly cards — intelligence hierarchy */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
         {anomalies.map((anomaly, i) => {
           const info = anomalyTypeInfo[anomaly.type] || anomalyTypeInfo.spike;
           const pf = platformIcons[anomaly.trend.platform] || { emoji: "●", color: "hsl(var(--muted-foreground))" };
           const isExpanded = expandedIdx === i;
           const changeNum = parseFloat(anomaly.trend.change?.replace(/[^0-9.\-]/g, "") || "0");
+          const flag = countryCodeToFlagLocal(anomaly.trend.countryCode);
+
+          // Generate why explanation
+          const whyText = lang === "pt"
+            ? `${info.label}: +${Math.round(changeNum)}% de variação detectada em ${anomaly.trend.platform}`
+            : `${info.label}: +${Math.round(changeNum)}% variation detected on ${anomaly.trend.platform}`;
+
+          // Generate where
+          const whereParts = [anomaly.trend.platform];
+          if (flag) whereParts.push(`${flag} ${anomaly.trend.countryCode}`);
 
           return (
             <motion.div
@@ -350,23 +365,38 @@ function AnomaliesPredictive({ anomalies, lang, onAnomalyClick }: {
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: i * 0.03 }}
               onClick={() => setExpandedIdx(isExpanded ? null : i)}
-              className={`rounded-lg border border-border/30 bg-card/80 p-2 cursor-pointer transition-all hover:border-primary/20 ${isExpanded ? "ring-1 ring-primary/15" : ""}`}
+              className={`rounded-xl border border-border/30 bg-card/80 p-3 cursor-pointer transition-all hover:border-primary/20 flex flex-col gap-1.5 ${isExpanded ? "ring-1 ring-primary/15" : ""}`}
             >
-              <div className="flex items-start gap-1.5">
-                <span className="text-sm flex-shrink-0">{info.emoji}</span>
-                <div className="flex-1 min-w-0">
-                  <p className="text-[10px] font-semibold text-foreground leading-tight line-clamp-1">{anomaly.trend.title}</p>
-                  <div className="flex items-center gap-1 mt-0.5">
-                    <span className={`text-[8px] font-bold ${info.color}`}>{info.label}</span>
-                    <span className="text-[8px] text-muted-foreground/40">·</span>
-                    <span className="text-[8px]" style={{ color: pf.color }}>{pf.emoji} {anomaly.trend.platform}</span>
-                    {changeNum !== 0 && (
-                      <span className={`text-[8px] font-bold ml-auto ${changeNum > 0 ? "text-emerald-500" : "text-destructive"}`}>
-                        {changeNum > 0 ? "+" : ""}{Math.round(changeNum)}%
-                      </span>
-                    )}
-                  </div>
-                </div>
+              {/* WHAT — Title */}
+              <div>
+                <p className="text-[11px] font-bold text-foreground leading-tight line-clamp-2">{anomaly.trend.title}</p>
+                <p className="text-[9px] text-muted-foreground/70 italic mt-0.5">
+                  {anomaly.trend.category || "Geral"} · {anomaly.trend.platform}
+                </p>
+              </div>
+
+              {/* WHY — Explanation */}
+              <div className="rounded-md bg-amber-500/8 border border-amber-500/15 px-2 py-1">
+                <p className="text-[9px] text-amber-700 dark:text-amber-300 leading-relaxed">
+                  {whyText}
+                </p>
+              </div>
+
+              {/* WHERE */}
+              <p className="text-[9px] text-muted-foreground flex items-center gap-1">
+                <Globe2 className="w-2.5 h-2.5 flex-shrink-0" />
+                {whereParts.join(" · ")}
+              </p>
+
+              {/* Actions */}
+              <div className="flex items-center justify-between mt-auto pt-1 border-t border-border/15">
+                <span className={`text-[8px] font-bold ${info.color}`}>{info.emoji} {info.label}</span>
+                <button
+                  onClick={(ev) => { ev.stopPropagation(); onAnomalyClick?.(`${anomaly.trend.platform}-${anomaly.trend.title.slice(0, 20)}`); }}
+                  className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded bg-primary text-primary-foreground text-[8px] font-semibold hover:bg-primary/90 transition-colors"
+                >
+                  <Eye className="w-2 h-2" /> Timeline
+                </button>
               </div>
 
               <AnimatePresence>
@@ -378,18 +408,10 @@ function AnomaliesPredictive({ anomalies, lang, onAnomalyClick }: {
                     transition={{ duration: 0.15 }}
                     className="overflow-hidden"
                   >
-                    <div className="mt-1.5 pt-1.5 border-t border-border/20 space-y-1">
+                    <div className="mt-1 pt-1.5 border-t border-border/20 space-y-1">
                       {anomaly.trend.description && (
                         <p className="text-[9px] text-muted-foreground leading-relaxed line-clamp-3">{anomaly.trend.description}</p>
                       )}
-                      <div className="flex items-center gap-1.5" onClick={e => e.stopPropagation()}>
-                        <button
-                          onClick={() => onAnomalyClick?.(`${anomaly.trend.platform}-${anomaly.trend.title.slice(0, 20)}`)}
-                          className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-primary text-primary-foreground text-[8px] font-semibold hover:bg-primary/90 transition-colors"
-                        >
-                          <Eye className="w-2.5 h-2.5" /> {lang === "pt" ? "Ver na timeline" : "View in timeline"}
-                        </button>
-                      </div>
                     </div>
                   </motion.div>
                 )}
