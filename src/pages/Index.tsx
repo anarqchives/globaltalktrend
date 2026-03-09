@@ -893,6 +893,7 @@ const Index = () => {
                   </ResizablePanel>
                 )}
               </ResizablePanelGroup>
+              )}
             </div>
           </div>
         )}
