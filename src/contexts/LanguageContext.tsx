@@ -981,6 +981,10 @@ const translations: Record<LangCode, Record<TranslationKey, string>> = {
     signalTooltip: "Тип обнаруженного сигнала: Spike, Search, Social, News, Dev, Knowledge.",
     trendTableTitle: "Заголовок", trendTablePlatform: "Платформа", trendTableVolume: "Объём",
     trendTableChange: "Изменение", trendTableCountry: "Страна",
+    mapFlowMap: "Поток", mapSentiment: "Настроение", mapHeatmap: "Тепловая карта",
+    mapFlowLegendTitle: "Распространение трендов", mapFlowOrigin: "Источник", mapFlowDestination: "Назначение", mapFlowPropagation: "Распространение", mapFlowTimeDelta: "Время распространения", mapFlowClickToFilter: "Нажмите для фильтрации", mapFlowNoData: "Недостаточно данных о распространении",
+    mapSentLegendTitle: "Эмоциональный ландшафт", mapSentPositive: "Позитивный", mapSentNegative: "Негативный", mapSentMixed: "Поляризованный", mapSentNeutral: "Нейтральный", mapSentBreakdown: "Распределение настроений", mapSentTopTrends: "Топ трендов", mapSentNoData: "Недостаточно данных о настроениях",
+    mapSentVolume: "Общий объём", mapSentGrowth: "Средний рост", mapSentActiveTrends: "Активные тренды",
   },
 };
 
