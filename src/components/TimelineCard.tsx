@@ -389,7 +389,7 @@ const TimelineCard = ({
           <div className="flex items-center gap-1 flex-wrap mb-1">
             <Tooltip>
               <TooltipTrigger asChild>
-                <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-medium bg-secondary text-muted-foreground cursor-help">
+                <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-semibold bg-primary/10 text-primary cursor-help">
                   {localizedCategory}
                 </span>
               </TooltipTrigger>
@@ -397,7 +397,7 @@ const TimelineCard = ({
             </Tooltip>
             <Tooltip>
               <TooltipTrigger asChild>
-                <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-medium bg-secondary text-muted-foreground cursor-help">
+                <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-semibold bg-accent/15 text-accent-foreground dark:bg-accent/20 dark:text-accent cursor-help">
                   {signalType}
                 </span>
               </TooltipTrigger>
@@ -406,7 +406,7 @@ const TimelineCard = ({
             {trustBadge && trustBadgeKeys[trustBadge] && (
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <span className={`inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded text-[9px] font-medium cursor-help ${trustBadgeKeys[trustBadge].className}`}>
+                  <span className={`inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded text-[9px] font-semibold cursor-help ${trustBadgeKeys[trustBadge].className}`}>
                     {trustBadgeKeys[trustBadge].icon}
                     {t(trustBadgeKeys[trustBadge].labelKey as any)}
                   </span>
@@ -419,7 +419,7 @@ const TimelineCard = ({
             {trigger && (
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-medium bg-accent/10 text-accent-foreground cursor-help">
+                  <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-semibold bg-destructive/10 text-destructive dark:bg-destructive/20 cursor-help">
                     {trigger.emoji} {t(trigger.labelKey as any)}
                   </span>
                 </TooltipTrigger>
@@ -429,7 +429,7 @@ const TimelineCard = ({
             {translated && (
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <span className="text-[9px] text-blue-500 cursor-help">🌐 Traduzido</span>
+                  <span className="text-[9px] font-semibold text-blue-600 dark:text-blue-400 bg-blue-500/10 px-1.5 py-0.5 rounded cursor-help">🌐 {t("autoTranslated")}</span>
                 </TooltipTrigger>
                 <TooltipContent side="top" className="text-[10px]">{t("autoTranslated")}</TooltipContent>
               </Tooltip>
