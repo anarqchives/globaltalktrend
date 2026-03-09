@@ -45,8 +45,8 @@ const legendText: Record<string, Record<string, string>> = {
     en: "Weekly intelligence dashboard — volume, categories and trends from the last 7 days.",
   },
   anomalies: {
-    pt: "Análise preditiva de padrões — comportamentos anômalos detectados em múltiplas plataformas.",
-    en: "Predictive pattern analysis — anomalous behaviors detected across multiple platforms.",
+    pt: "🔍 Padrões estatisticamente incomuns — comportamentos inesperados detectados em múltiplas plataformas simultaneamente.",
+    en: "🔍 Statistically unusual patterns — unexpected behaviors detected across multiple platforms simultaneously.",
   },
 };
 
