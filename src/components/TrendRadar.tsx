@@ -8,34 +8,42 @@ import EmergingTrendsSection from "./EmergingTrendsSection";
 import CriticalMomentsSection from "./CriticalMomentsSection";
 import { TrendCardProps } from "./TrendCard";
 import { CriticalMoment } from "@/hooks/use-critical-moments";
+import { AnomalyAlert } from "@/hooks/use-anomaly-alerts";
 import { useLanguage } from "@/contexts/LanguageContext";
 
 interface TrendRadarProps {
   trends: TrendCardProps[];
   allTrends: TrendCardProps[];
   criticalMoments: CriticalMoment[];
+  anomalies?: AnomalyAlert[];
   onSelectTrend?: (trend: TrendCardProps) => void;
   onFilterCountry?: (code: string) => void;
+  onAnomalyClick?: (id: string) => void;
 }
 
 const RADAR_STORAGE_KEY = "globaltalktrend-radar-collapsed";
-const RADAR_HEIGHT = 280; // Fixed height in pixels
+const RADAR_HEIGHT = 350; // Fixed height in pixels
 
 const legendText: Record<string, Record<string, string>> = {
   emerging: {
-    pt: "Sinais Emergentes representam tópicos que começaram a ganhar atenção incomum nas últimas horas, detectados em múltiplas plataformas.",
-    en: "Emerging Signals represent topics that began gaining unusual attention within the last hours based on signals detected across multiple platforms.",
-    es: "Las Señales Emergentes representan temas que comenzaron a ganar atención inusual en las últimas horas.",
+    pt: "Emerging Signals: Tendências em aceleração.",
+    en: "Emerging Signals: Accelerating trends.",
+    es: "Emerging Signals: Tendencias en aceleración.",
   },
   critical: {
-    pt: "Alertas Críticos representam tópicos em crescimento explosivo confirmado em múltiplas fontes de informação.",
-    en: "Critical Alerts represent topics experiencing rapid global growth across multiple information sources.",
-    es: "Las Alertas Críticas representan temas en crecimiento explosivo confirmado en múltiples fuentes.",
+    pt: "Critical Alerts: Momentos de pico anômalo.",
+    en: "Critical Alerts: Anomalous peak moments.",
+    es: "Critical Alerts: Momentos de pico anómalo.",
   },
   top: {
-    pt: "Top Trends mostram os tópicos com maior atenção global no período selecionado, considerando volume, fontes e abrangência geográfica.",
-    en: "Top Trends show the topics receiving the highest global attention across multiple sources.",
-    es: "Las Top Trends muestran los temas con mayor atención global en el período seleccionado.",
+    pt: "Top Trends: Assuntos mais discutidos agora.",
+    en: "Top Trends: Most discussed topics right now.",
+    es: "Top Trends: Temas más discutidos ahora.",
+  },
+  weekly: {
+    pt: "Weekly Pulse: Evolução semanal das principais tendências.",
+    en: "Weekly Pulse: Weekly evolution of top trends.",
+    es: "Weekly Pulse: Evolución semanal de tendencias principales.",
   },
 };
 
