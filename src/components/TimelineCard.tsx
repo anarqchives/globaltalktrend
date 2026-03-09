@@ -412,11 +412,7 @@ const TimelineCard = ({
                   </span>
                 </TooltipTrigger>
                 <TooltipContent side="top" className="text-[10px]">
-                  {trustBadge === "verified" ? "Fonte verificada – alta confiabilidade" :
-                   trustBadge === "official" ? "Fonte oficial – dados governamentais" :
-                   trustBadge === "scientific" ? "Fonte científica – dados revisados" :
-                   trustBadge === "press" ? "Imprensa verificada" :
-                   "Fonte internacional"}
+                  {getTooltip(trustBadge === "verified" ? "trustVerified" : trustBadge === "official" ? "trustOfficial" : trustBadge === "scientific" ? "trustScientific" : trustBadge === "press" ? "trustPress" : "trustInternational", lang)}
                 </TooltipContent>
               </Tooltip>
             )}
