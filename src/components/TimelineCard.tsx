@@ -603,14 +603,17 @@ const TimelineCard = ({
             )}
           </div>
 
-          {/* 24h Chart */}
+          {/* 24h Chart — with legend */}
           {historicalData && historicalData.length > 0 && (
             <div className="mb-3">
               <div className="flex items-center justify-between mb-1.5">
                 <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">
                   {t("evolution24h")}
                 </span>
-                <span className="text-[10px] text-muted-foreground">{metricLabel}</span>
+                <span className="text-[9px] text-muted-foreground flex items-center gap-1.5">
+                  <span className="w-2 h-0.5 rounded-full" style={{ background: pf.color }} />
+                  {metricLabel || "Volume"}
+                </span>
               </div>
               <div className="h-24 -mx-1">
                 <ResponsiveContainer width="100%" height="100%">
@@ -623,10 +626,10 @@ const TimelineCard = ({
                     </defs>
                     <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
                     <XAxis dataKey="hour" tick={{ fontSize: 9, fill: "hsl(var(--muted-foreground))" }} tickLine={false} axisLine={false} interval={5} />
-                    <YAxis tick={{ fontSize: 9, fill: "hsl(var(--muted-foreground))" }} tickLine={false} axisLine={false} width={30} tickFormatter={(v) => v >= 1000 ? `${(v / 1000).toFixed(0)}K` : v} />
+                    <YAxis tick={{ fontSize: 9, fill: "hsl(var(--muted-foreground))" }} tickLine={false} axisLine={false} width={30} tickFormatter={(v: number) => v >= 1000 ? `${(v / 1000).toFixed(0)}K` : String(v)} />
                     <RechartsTooltip
                       contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: "8px", fontSize: 11 }}
-                      formatter={(value: number) => [value >= 1000 ? `${(value / 1000).toFixed(1)}K` : value, metricLabel || "valor"]}
+                      formatter={(value: number) => [value >= 1000 ? `${(value / 1000).toFixed(1)}K` : value, metricLabel || "Volume"]}
                     />
                     <Area type="monotone" dataKey="value" stroke={pf.color} strokeWidth={1.5} fill={`url(#${gradientId})`} />
                   </AreaChart>
