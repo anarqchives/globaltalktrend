@@ -36,6 +36,7 @@ export default defineConfig(({ mode }) => ({
       "@supabase/supabase-js",
       "framer-motion",
       "@googlemaps/js-api-loader",
+      "@radix-ui/react-tabs",
     ],
   },
 }));
