@@ -458,3 +458,27 @@
   20% { transform: translateX(100%); }
   100% { transform: translateX(100%); }
 }
+
+/* Dark mode: header stays white with liquid glass — outside @layer for higher specificity */
+.dark .glass-header {
+  background: hsl(0 0% 100% / 0.88) !important;
+  backdrop-filter: blur(24px) !important;
+  -webkit-backdrop-filter: blur(24px) !important;
+  box-shadow: 0 1px 0 0 hsl(0 0% 0% / 0.08), 0 4px 16px -4px hsl(0 0% 0% / 0.1) !important;
+}
+.dark .glass-header,
+.dark .glass-header h1,
+.dark .glass-header span,
+.dark .glass-header button,
+.dark .glass-header a {
+  color: hsl(220, 20%, 12%) !important;
+}
+.dark .glass-header .text-muted-foreground {
+  color: hsl(220, 10%, 40%) !important;
+}
+.dark .glass-header button:hover {
+  background: hsl(0 0% 0% / 0.06) !important;
+}
+.dark .glass-header [style*="background: rgba(255, 215, 0"] {
+  color: hsl(30, 80%, 30%) !important;
+}
