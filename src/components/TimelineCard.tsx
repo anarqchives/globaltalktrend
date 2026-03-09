@@ -373,27 +373,58 @@ const TimelineCard = ({
             )}
           </div>
 
-          {/* === TAGS ROW === */}
+          {/* === TAGS ROW with Tooltips === */}
           <div className="flex items-center gap-1 flex-wrap mb-1">
-            <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-medium bg-secondary text-muted-foreground">
-              {localizedCategory}
-            </span>
-            <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-medium bg-secondary text-muted-foreground">
-              {signalType}
-            </span>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-medium bg-secondary text-muted-foreground cursor-help">
+                  {localizedCategory}
+                </span>
+              </TooltipTrigger>
+              <TooltipContent side="top" className="text-[10px]">Categoria da trend</TooltipContent>
+            </Tooltip>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-medium bg-secondary text-muted-foreground cursor-help">
+                  {signalType}
+                </span>
+              </TooltipTrigger>
+              <TooltipContent side="top" className="text-[10px]">Tipo de sinal detectado</TooltipContent>
+            </Tooltip>
             {trustBadge && trustBadgeKeys[trustBadge] && (
-              <span className={`inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded text-[9px] font-medium ${trustBadgeKeys[trustBadge].className}`}>
-                {trustBadgeKeys[trustBadge].icon}
-                {t(trustBadgeKeys[trustBadge].labelKey as any)}
-              </span>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <span className={`inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded text-[9px] font-medium cursor-help ${trustBadgeKeys[trustBadge].className}`}>
+                    {trustBadgeKeys[trustBadge].icon}
+                    {t(trustBadgeKeys[trustBadge].labelKey as any)}
+                  </span>
+                </TooltipTrigger>
+                <TooltipContent side="top" className="text-[10px]">
+                  {trustBadge === "verified" ? "Fonte verificada – alta confiabilidade" :
+                   trustBadge === "official" ? "Fonte oficial – dados governamentais" :
+                   trustBadge === "scientific" ? "Fonte científica – dados revisados" :
+                   trustBadge === "press" ? "Imprensa verificada" :
+                   "Fonte internacional"}
+                </TooltipContent>
+              </Tooltip>
             )}
             {trigger && (
-              <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-medium bg-accent/10 text-accent-foreground">
-                {trigger.emoji} {t(trigger.labelKey as any)}
-              </span>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-medium bg-accent/10 text-accent-foreground cursor-help">
+                    {trigger.emoji} {t(trigger.labelKey as any)}
+                  </span>
+                </TooltipTrigger>
+                <TooltipContent side="top" className="text-[10px]">Gatilho contextual detectado no título</TooltipContent>
+              </Tooltip>
             )}
             {translated && (
-              <span className="text-[9px] text-blue-500" title={t("autoTranslated")}>🌐 Traduzido</span>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <span className="text-[9px] text-blue-500 cursor-help">🌐 Traduzido</span>
+                </TooltipTrigger>
+                <TooltipContent side="top" className="text-[10px]">{t("autoTranslated")}</TooltipContent>
+              </Tooltip>
             )}
           </div>
         </div>
