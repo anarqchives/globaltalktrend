@@ -748,7 +748,7 @@ export default function TrendRadar({ trends, allTrends, criticalMoments, anomali
         {!collapsed && (
           <div className="flex-1 min-h-0 flex flex-col overflow-hidden">
             <div className="flex-1 min-h-0 overflow-hidden relative">
-              <TabsContent value="emerging" className="absolute inset-0 mt-0 flex flex-col data-[state=inactive]:hidden">
+              <TabsContent value="emerging" className="absolute inset-0 mt-0 flex flex-col data-[state=inactive]:hidden animate-in fade-in-0 duration-300">
                 <Legend tab="emerging" lang={lang} />
                 <ScrollArea className="flex-1">
                   {hasEmerging ? (
