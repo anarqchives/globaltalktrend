@@ -1393,19 +1393,17 @@ const GoogleMapView = ({
     <div className="w-full h-full relative" style={{ isolation: "isolate" }}>
       {/* Map controls + Top Trends */}
       <div className="absolute top-3 left-3 z-[5] flex items-start gap-2">
-        <div className="flex items-center gap-1 p-1 rounded-full bg-white/95 dark:bg-card/95 backdrop-blur-[12px] border border-white/50 dark:border-white/10 shadow-[0_8px_24px_rgba(0,0,0,0.08)] dark:shadow-[0_8px_24px_rgba(0,0,0,0.3)]">
+        <div className="flex items-center gap-0.5 p-0.5 rounded-full bg-white/90 dark:bg-card/90 backdrop-blur-xl border border-border/20 shadow-[0_2px_12px_rgba(0,0,0,0.06)] dark:shadow-[0_2px_12px_rgba(0,0,0,0.2)]">
           <button onClick={() => setMapMode("heatmap")} className={controlBtnClass(mapMode === "heatmap")} title={t("mapHeatmap")}>
-            <Flame className="w-3.5 h-3.5" />
+            <Flame className="w-3 h-3" />
             <span className="hidden sm:inline">{t("mapHeatmap")}</span>
           </button>
-          <div className="w-px h-5 bg-border/40 mx-0.5" />
           <button onClick={() => setMapMode("flow")} className={controlBtnClass(mapMode === "flow")} title={t("mapFlowMap")}>
-            <GitBranch className="w-3.5 h-3.5" />
+            <GitBranch className="w-3 h-3" />
             <span className="hidden sm:inline">{t("mapFlowMap")}</span>
           </button>
-          <div className="w-px h-5 bg-border/40 mx-0.5" />
           <button onClick={() => setMapMode("sentiment")} className={controlBtnClass(mapMode === "sentiment")} title={t("mapSentiment")}>
-            <Heart className="w-3.5 h-3.5" />
+            <Heart className="w-3 h-3" />
             <span className="hidden sm:inline">{t("mapSentiment")}</span>
           </button>
           {selectedCountry !== "global" && (
