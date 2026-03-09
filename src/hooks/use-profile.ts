@@ -148,13 +148,20 @@ export function useProfile(userId: string | null) {
         }
       }
 
+      const updateData: Record<string, unknown> = {
+        updated_at: new Date().toISOString(),
+      };
+      if (input.username !== undefined) updateData.username = input.username.toLowerCase();
+      if (input.display_name !== undefined) updateData.display_name = input.display_name;
+      if (input.bio !== undefined) updateData.bio = input.bio;
+      if (input.avatar_url !== undefined) updateData.avatar_url = input.avatar_url;
+      if (input.is_public !== undefined) updateData.is_public = input.is_public;
+      if (input.is_searchable !== undefined) updateData.is_searchable = input.is_searchable;
+      if (input.privacy_settings !== undefined) updateData.privacy_settings = input.privacy_settings;
+
       const { error } = await supabase
         .from("profiles")
-        .update({
-          ...input,
-          username: input.username?.toLowerCase(),
-          updated_at: new Date().toISOString(),
-        })
+        .update(updateData)
         .eq("user_id", userId);
 
       if (error) {
