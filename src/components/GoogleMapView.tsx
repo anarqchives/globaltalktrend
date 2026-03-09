@@ -1138,7 +1138,7 @@ const GoogleMapView = ({
                 <span style="font-size:20px;">${flag}</span>
                 <div>
                   <div style="font-size:13px;font-weight:700;letter-spacing:-0.01em;">${cp.name}</div>
-                  <div style="font-size:10px;color:${hSub};margin-top:1px;">${count} trend${count !== 1 ? 's' : ''} ${lang === "pt" ? "ativas" : "active"}</div>
+                  <div style="font-size:10px;color:${hSub};margin-top:1px;">${count} trend${count !== 1 ? 's' : ''} ${t("mapTrendsActiveLabel")}</div>
                 </div>
               </div>
               <div style="display:flex;align-items:center;gap:6px;margin-bottom:6px;">
