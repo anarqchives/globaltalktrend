@@ -548,33 +548,17 @@ const TimelineCard = ({
             </div>
           </div>
 
-          {/* Propagation path (always show if multi-source) */}
-          {sources && sources.length >= 2 && (
-            <div className="mb-3">
-              <span className="text-[9px] font-semibold text-muted-foreground uppercase tracking-wide flex items-center gap-1 mb-1">
-                <Radio className="w-2.5 h-2.5" /> Propagation path
-              </span>
-              <div className="flex items-center gap-1 flex-wrap text-[9px]">
-                {sources.slice(0, 5).map((s, idx) => (
-                  <span key={s} className="flex items-center gap-1">
-                    {idx > 0 && <span className="text-muted-foreground/40">→</span>}
-                    <span className="px-1.5 py-0.5 rounded-full bg-primary/10 text-primary font-medium">{s}</span>
-                  </span>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* Sources list (full) */}
+          {/* Sources & Propagation (unified — no duplication) */}
           {sources && sources.length > 0 && (
             <div className="mb-3">
               <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide flex items-center gap-1 mb-1.5">
-                <BarChart3 className="w-3 h-3" /> Verified Sources
+                <Radio className="w-2.5 h-2.5" /> {sources.length >= 2 ? "Propagation Path" : "Source"}
               </span>
-              <div className="flex flex-wrap gap-1">
-                {sources.slice(0, 5).map((s) => (
-                  <span key={s} className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium bg-primary/10 text-primary">
-                    {s}
+              <div className="flex items-center gap-1 flex-wrap text-[10px]">
+                {sources.slice(0, 6).map((s, idx) => (
+                  <span key={s} className="flex items-center gap-1">
+                    {idx > 0 && <span className="text-muted-foreground/40">→</span>}
+                    <span className="px-2 py-0.5 rounded-full bg-primary/10 text-primary font-medium">{s}</span>
                   </span>
                 ))}
               </div>
