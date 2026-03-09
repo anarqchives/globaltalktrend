@@ -1183,7 +1183,7 @@ const GoogleMapView = ({
         const border = isDark ? "rgba(45,51,72,0.5)" : "rgba(0,0,0,0.06)";
         const badgeBg = isDark ? "rgba(30,41,59,0.8)" : "rgba(241,245,249,0.8)";
         const hoverBg = isDark ? "rgba(30,41,59,0.5)" : "rgba(248,250,252,1)";
-        const { tag: critTag, color: critColor } = getIntensityLabel(intensity);
+        const { tag: critTag, color: critColor } = getIntensityLabel(intensity, t);
 
         // Calculate criticality from real trend data
         const totalVolume = countryTrends.reduce((acc, tr) => {
