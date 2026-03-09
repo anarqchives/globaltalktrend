@@ -839,6 +839,10 @@ const translations: Record<LangCode, Record<TranslationKey, string>> = {
     signalTooltip: "نوع الإشارة المكتشفة: Spike وSearch وSocial وNews وDev وKnowledge.",
     trendTableTitle: "العنوان", trendTablePlatform: "المنصة", trendTableVolume: "الحجم",
     trendTableChange: "التغيير", trendTableCountry: "البلد",
+    mapFlowMap: "تدفق", mapSentiment: "مشاعر", mapHeatmap: "خريطة حرارية",
+    mapFlowLegendTitle: "انتشار الاتجاهات", mapFlowOrigin: "المصدر", mapFlowDestination: "الوجهة", mapFlowPropagation: "الانتشار", mapFlowTimeDelta: "وقت الانتشار", mapFlowClickToFilter: "انقر للتصفية", mapFlowNoData: "بيانات انتشار غير كافية",
+    mapSentLegendTitle: "المشهد العاطفي", mapSentPositive: "إيجابي", mapSentNegative: "سلبي", mapSentMixed: "مستقطب", mapSentNeutral: "محايد", mapSentBreakdown: "توزيع المشاعر", mapSentTopTrends: "أهم الاتجاهات", mapSentNoData: "بيانات مشاعر غير كافية",
+    mapSentVolume: "الحجم الإجمالي", mapSentGrowth: "متوسط النمو", mapSentActiveTrends: "اتجاهات نشطة",
   },
   hi: {
     trends: "रुझान", moreTrends: "और रुझान", filters: "फ़िल्टर",
