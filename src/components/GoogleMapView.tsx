@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { setOptions, importLibrary } from "@googlemaps/js-api-loader";
 import { supabase } from "@/integrations/supabase/client";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { TrendCardProps } from "./TrendCard";
 import { Map, Flame, Globe, RefreshCw } from "lucide-react";
 
