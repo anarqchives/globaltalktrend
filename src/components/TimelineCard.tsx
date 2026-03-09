@@ -13,6 +13,7 @@ import TrendFeedback from "./TrendFeedback";
 import PropagationTimeline from "./PropagationTimeline";
 import FreshnessIndicator from "./FreshnessIndicator";
 import { CrossPlatformCluster } from "@/hooks/use-cross-platform";
+import { getTooltip } from "@/lib/format-utils";
 
 const platformIcons: Record<string, { emoji: string; color: string }> = {
   YouTube: { emoji: "▶", color: "hsl(0, 72%, 51%)" },
@@ -392,7 +393,7 @@ const TimelineCard = ({
                   {localizedCategory}
                 </span>
               </TooltipTrigger>
-              <TooltipContent side="top" className="text-[10px]">Categoria da trend</TooltipContent>
+              <TooltipContent side="top" className="text-[10px]">{getTooltip("category", lang)}</TooltipContent>
             </Tooltip>
             <Tooltip>
               <TooltipTrigger asChild>
@@ -400,7 +401,7 @@ const TimelineCard = ({
                   {signalType}
                 </span>
               </TooltipTrigger>
-              <TooltipContent side="top" className="text-[10px]">Tipo de sinal detectado</TooltipContent>
+              <TooltipContent side="top" className="text-[10px]">{getTooltip("signalType", lang)}</TooltipContent>
             </Tooltip>
             {trustBadge && trustBadgeKeys[trustBadge] && (
               <Tooltip>
@@ -411,11 +412,7 @@ const TimelineCard = ({
                   </span>
                 </TooltipTrigger>
                 <TooltipContent side="top" className="text-[10px]">
-                  {trustBadge === "verified" ? "Fonte verificada – alta confiabilidade" :
-                   trustBadge === "official" ? "Fonte oficial – dados governamentais" :
-                   trustBadge === "scientific" ? "Fonte científica – dados revisados" :
-                   trustBadge === "press" ? "Imprensa verificada" :
-                   "Fonte internacional"}
+                  {getTooltip(trustBadge === "verified" ? "trustVerified" : trustBadge === "official" ? "trustOfficial" : trustBadge === "scientific" ? "trustScientific" : trustBadge === "press" ? "trustPress" : "trustInternational", lang)}
                 </TooltipContent>
               </Tooltip>
             )}
@@ -426,7 +423,7 @@ const TimelineCard = ({
                     {trigger.emoji} {t(trigger.labelKey as any)}
                   </span>
                 </TooltipTrigger>
-                <TooltipContent side="top" className="text-[10px]">Gatilho contextual detectado no título</TooltipContent>
+                <TooltipContent side="top" className="text-[10px]">{getTooltip("trigger", lang)}</TooltipContent>
               </Tooltip>
             )}
             {translated && (
