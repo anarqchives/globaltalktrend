@@ -199,9 +199,9 @@ const FilterBar = ({ filters, onChange, onForceReset, onSaveFilter, isLoggedIn }
         </div>
 
         <div className="relative flex-shrink-0">
-          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[11px] text-muted-foreground pointer-events-none">{t("filterSource")}:</span>
+          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[11px] text-muted-foreground pointer-events-none hidden md:inline">{t("filterSource")}:</span>
           <select
-            className={`${selectClass} pl-[52px]`}
+            className={`${selectClass} md:pl-[52px]`}
             value={filters.type}
             onChange={(e) => update("type", e.target.value)}
             aria-label={t("type")}
