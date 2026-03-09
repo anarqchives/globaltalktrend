@@ -6,7 +6,11 @@ import { supabase } from "@/integrations/supabase/client";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { TrendCardProps } from "./TrendCard";
-import { Map, Flame, Globe, RefreshCw } from "lucide-react";
+import { Map, Flame, Globe, RefreshCw, GitBranch, Heart } from "lucide-react";
+import {
+  computeFlowArcs, computeSentimentBubbles, computeCurvePoints,
+  sentimentColors, type FlowArc, type SentimentBubble, type Sentiment,
+} from "@/lib/map-visualizations";
 
 interface CountryPoint {
   id: string;
