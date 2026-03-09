@@ -667,7 +667,8 @@ const Index = () => {
           onAnomalyClick={handleAnomalyClick}
         />
 
-        {/* Main content area - expands to fill remaining space */}
+        {/* Gradient divider between radar and content */}
+        <div className="section-gradient-divider" />
 
         {isMobile ? (
           <div className="flex-1 min-h-0 flex flex-col relative">

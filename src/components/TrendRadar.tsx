@@ -698,7 +698,7 @@ export default function TrendRadar({ trends, allTrends, criticalMoments, anomali
             <Radar className="w-3 h-3" /> Trend Radar
           </span>
 
-          <TabsList className="h-7 bg-muted/40 p-0.5 gap-0.5 border border-border/30 rounded-lg">
+          <TabsList className="h-8 bg-muted/50 p-0.5 gap-1 rounded-xl backdrop-blur-sm">
             {tabConfig.map(tc => {
               const Icon = tc.icon;
               return (
@@ -706,7 +706,7 @@ export default function TrendRadar({ trends, allTrends, criticalMoments, anomali
                   <TooltipTrigger asChild>
                     <TabsTrigger
                       value={tc.value}
-                      className={`h-6 px-2.5 text-[10px] font-semibold gap-1 rounded-md border border-transparent transition-all ${tc.activeClass}`}
+                      className={`h-7 px-3 text-[10px] font-semibold gap-1.5 rounded-lg transition-all duration-200 ${tc.activeClass} data-[state=active]:shadow-sm`}
                     >
                       <Icon className="w-3 h-3" />
                       <span className="hidden sm:inline">{tc.label}</span>
