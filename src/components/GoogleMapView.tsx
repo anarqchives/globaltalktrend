@@ -1145,7 +1145,7 @@ const GoogleMapView = ({
                 <span style="background:${hColor};color:#fff;padding:2px 10px;border-radius:12px;font-size:9px;font-weight:700;letter-spacing:0.5px;">${hTag}</span>
               </div>
               <div style="font-size:10px;color:${hSub};line-height:1.4;margin-bottom:8px;">${statusExplain}</div>
-              <div style="font-size:9px;color:${isDark ? '#60a5fa' : '#3b82f6'};text-align:center;font-weight:600;padding-top:6px;border-top:1px solid ${isDark ? 'rgba(45,51,72,0.4)' : 'rgba(0,0,0,0.06)'};">👆 ${lang === "pt" ? "Clique para ver detalhes" : "Click for details"}</div>
+              <div style="font-size:9px;color:${isDark ? '#60a5fa' : '#3b82f6'};text-align:center;font-weight:600;padding-top:6px;border-top:1px solid ${isDark ? 'rgba(45,51,72,0.4)' : 'rgba(0,0,0,0.06)'};">👆 ${t("mapClickDetails")}</div>
             </div>
           `);
           hoverInfoRef.current.open({ anchor: marker, map });
