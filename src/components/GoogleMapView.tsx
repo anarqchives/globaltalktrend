@@ -75,6 +75,7 @@ const countryPoints: CountryPoint[] = [
 ];
 
 type MapViewType = "roadmap" | "satellite" | "terrain";
+type MapMode = "heatmap" | "flow" | "sentiment";
 
 // Apple Maps–inspired light style
 const lightStyles: google.maps.MapTypeStyle[] = [
