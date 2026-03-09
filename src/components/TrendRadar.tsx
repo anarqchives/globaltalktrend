@@ -395,7 +395,7 @@ function AnomaliesPredictive({ anomalies, lang, onAnomalyClick }: {
               transition={{ delay: i * 0.03, layout: { duration: 0.2, type: "spring", stiffness: 300, damping: 30 } }}
               onClick={() => setExpandedIdx(isExpanded ? null : i)}
               className={`rounded-lg border border-destructive/15 bg-card p-2.5 cursor-pointer transition-all hover:border-destructive/30 hover:shadow-sm ${
-                isExpanded ? "col-span-2 row-span-2 shadow-md ring-1 ring-destructive/15 bg-destructive/5" : ""
+                isExpanded ? "shadow-md ring-1 ring-destructive/15 bg-destructive/5" : ""
               }`}
             >
               {/* Badge + change */}
