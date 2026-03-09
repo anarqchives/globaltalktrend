@@ -73,6 +73,8 @@ const Index = () => {
   const [user, setUser] = useState<any>(null);
   const [viewMode, setViewMode] = useState<"timeline" | "map">("timeline");
   const [compactMode, setCompactMode] = useState(false);
+  const [allExpanded, setAllExpanded] = useState(false);
+  const [allCollapsed, setAllCollapsed] = useState(false);
   const timelinePanelRef = useRef<HTMLDivElement>(null);
   const { timelineRef: gridRef, columns: gridColumns } = useTimelineColumns();
 
