@@ -1,6 +1,8 @@
 import { useState, useEffect, useCallback } from "react";
-import { RotateCcw, ChevronDown, Bell } from "lucide-react";
+import { RotateCcw, ChevronDown, Bell, Info } from "lucide-react";
 import { useLanguage, LangCode } from "@/contexts/LanguageContext";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+
 const defaultFilters: FilterState = {
   country: "global",
   period: "Hoje",
@@ -154,6 +156,7 @@ const FilterBar = ({ filters, onChange, onForceReset, onSaveFilter, isLoggedIn }
             className={selectClass}
             value={filters.country}
             onChange={(e) => update("country", e.target.value)}
+            aria-label={t("country")}
           >
             {countries.map((group) => (
               <optgroup key={group.group} label={group.group}>
@@ -171,6 +174,7 @@ const FilterBar = ({ filters, onChange, onForceReset, onSaveFilter, isLoggedIn }
             className={selectClass}
             value={filters.period}
             onChange={(e) => update("period", e.target.value)}
+            aria-label={t("period")}
           >
             {periodOptions.map((p) => (
               <option key={p.value} value={p.value}>{p.label}</option>
@@ -185,6 +189,7 @@ const FilterBar = ({ filters, onChange, onForceReset, onSaveFilter, isLoggedIn }
             className={`${selectClass} pl-[80px]`}
             value={filters.category}
             onChange={(e) => update("category", e.target.value)}
+            aria-label={t("category")}
           >
             {categoryOptions.map((c) => (
               <option key={c.value} value={c.value}>{c.label}</option>
@@ -199,6 +204,7 @@ const FilterBar = ({ filters, onChange, onForceReset, onSaveFilter, isLoggedIn }
             className={`${selectClass} pl-[52px]`}
             value={filters.type}
             onChange={(e) => update("type", e.target.value)}
+            aria-label={t("type")}
           >
             {typeOptions.map((opt) => (
               <option key={opt.value} value={opt.value}>{opt.label}</option>
@@ -208,40 +214,79 @@ const FilterBar = ({ filters, onChange, onForceReset, onSaveFilter, isLoggedIn }
         </div>
 
         {isFiltered && (
-          <button
-            onClick={() => onChange(defaultFilters)}
-            className="flex items-center gap-1 px-3 h-8 min-h-[32px] max-h-[32px] rounded-full text-[12px] font-medium text-primary hover:bg-muted/50 transition-colors flex-shrink-0 focus:outline-none"
-            title="Limpar filtros"
-          >
-            <RotateCcw className="w-3 h-3" />
-            Reset
-          </button>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <button
+                onClick={() => onChange(defaultFilters)}
+                className="flex items-center gap-1 px-3 h-8 min-h-[32px] max-h-[32px] rounded-full text-[12px] font-medium text-primary hover:bg-muted/50 transition-colors flex-shrink-0 focus:outline-none"
+                aria-label={t("all")}
+              >
+                <RotateCcw className="w-3 h-3" />
+                Reset
+              </button>
+            </TooltipTrigger>
+            <TooltipContent side="bottom" className="max-w-[200px] text-xs">
+              Limpar todos os filtros e voltar ao padrão (Global · Hoje · Todas categorias)
+            </TooltipContent>
+          </Tooltip>
         )}
 
-        <button
-          onClick={() => onForceReset?.()}
-          className="flex items-center gap-1 px-3 h-8 min-h-[32px] max-h-[32px] rounded-full text-[12px] font-medium text-muted-foreground hover:bg-muted/50 transition-colors flex-shrink-0 focus:outline-none"
-          title="Reset forçado"
-        >
-          <RotateCcw className="w-3 h-3" />
-        </button>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <button
+              onClick={() => onForceReset?.()}
+              className="flex items-center gap-1 px-3 h-8 min-h-[32px] max-h-[32px] rounded-full text-[12px] font-medium text-muted-foreground hover:bg-muted/50 transition-colors flex-shrink-0 focus:outline-none"
+              aria-label="Reset forçado"
+            >
+              <RotateCcw className="w-3 h-3" />
+            </button>
+          </TooltipTrigger>
+          <TooltipContent side="bottom" className="max-w-[240px] text-xs">
+            {t("forceResetTooltip")}
+          </TooltipContent>
+        </Tooltip>
 
         {isLoggedIn && onSaveFilter && (
-          <button
-            onClick={onSaveFilter}
-            className="flex items-center gap-1.5 px-3.5 h-8 min-h-[32px] max-h-[32px] rounded-full text-[12px] font-medium border-[1.5px] border-primary text-primary bg-transparent hover:bg-primary hover:text-primary-foreground transition-all flex-shrink-0 focus:outline-none"
-            title="Criar alerta personalizado"
-          >
-            <Bell className="w-3 h-3" />
-            Criar alerta
-          </button>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <button
+                onClick={onSaveFilter}
+                className="flex items-center gap-1.5 px-3.5 h-8 min-h-[32px] max-h-[32px] rounded-full text-[12px] font-medium border-[1.5px] border-primary text-primary bg-transparent hover:bg-primary hover:text-primary-foreground transition-all flex-shrink-0 focus:outline-none"
+                aria-label={t("createAlert")}
+              >
+                <Bell className="w-3 h-3" />
+                {t("createAlert")}
+              </button>
+            </TooltipTrigger>
+            <TooltipContent side="bottom" className="max-w-[220px] text-xs">
+              Salvar filtros atuais e criar um alerta para receber notificações quando estes critérios forem atingidos.
+            </TooltipContent>
+          </Tooltip>
         )}
 
         <div className="flex items-center gap-1.5 ml-auto flex-shrink-0 whitespace-nowrap">
-          <span className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ background: "hsl(142, 72%, 45%)" }} />
-          <span className="text-[11px] font-medium text-foreground">{t("live")}</span>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <span className="flex items-center gap-1 cursor-help">
+                <span className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ background: "hsl(142, 72%, 45%)" }} />
+                <span className="text-[11px] font-medium text-foreground">{t("live")}</span>
+              </span>
+            </TooltipTrigger>
+            <TooltipContent side="bottom" className="max-w-[240px] text-xs">
+              {t("liveTooltip")}
+            </TooltipContent>
+          </Tooltip>
           <OnlineUsersCount />
-          <CountdownTimer />
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <span className="cursor-help">
+                <CountdownTimer />
+              </span>
+            </TooltipTrigger>
+            <TooltipContent side="bottom" className="max-w-[240px] text-xs">
+              {t("countdownTooltip")}
+            </TooltipContent>
+          </Tooltip>
         </div>
       </div>
     </div>
@@ -302,7 +347,6 @@ const CountdownTimer = () => {
 
   const mins = Math.floor(seconds / 60);
   const secs = seconds % 60;
-  const progress = ((REFRESH_INTERVAL_SECONDS - seconds) / REFRESH_INTERVAL_SECONDS) * 100;
 
   return (
     <span

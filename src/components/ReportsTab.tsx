@@ -5,6 +5,7 @@ import { toast } from "@/hooks/use-toast";
 import { countries } from "@/components/FilterBar";
 import { format } from "date-fns";
 import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, AreaChart, Area, Legend } from "recharts";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface ReportsTabProps {
   userId: string;
@@ -49,23 +50,6 @@ interface SavedReport {
   created_at: string;
 }
 
-const periodOptions = [
-  { value: "1h", label: "Última hora" },
-  { value: "today", label: "Hoje" },
-  { value: "7d", label: "Esta semana" },
-  { value: "30d", label: "Este mês" },
-  { value: "90d", label: "Trimestral" },
-  { value: "365d", label: "Anual" },
-];
-
-const categoryOptions = [
-  "Todas", "Política", "Entretenimento", "Tecnologia", "Esportes", "Cultura", "Negócios/Finanças", "Ciência",
-];
-
-const typeOptions = [
-  "Todas mídias", "Redes sociais", "Imprensa", "Buscas (Google)", "Multiplataforma",
-];
-
 const PIE_COLORS = [
   "hsl(210, 100%, 50%)", "hsl(142, 60%, 45%)", "hsl(40, 90%, 50%)",
   "hsl(0, 72%, 51%)", "hsl(270, 60%, 55%)", "hsl(200, 60%, 45%)",
@@ -73,14 +57,46 @@ const PIE_COLORS = [
 ];
 
 const sentimentEmoji: Record<string, string> = { positive: "🟢", negative: "🔴", neutral: "🟡" };
-const sentimentLabel: Record<string, string> = { positive: "Positivo", negative: "Negativo", neutral: "Neutro" };
-const confidenceLabel: Record<string, string> = { high: "🟢 Alta", medium: "🟡 Média", low: "🔴 Baixa" };
+const confidenceLabel: Record<string, (t: (k: any) => string) => string> = {
+  high: (t) => `🟢 ${t("impactHigh")}`,
+  medium: (t) => `🟡 ${t("impactMedium")}`,
+  low: (t) => `🔴 ${t("impactLow")}`,
+};
 const patternEmoji: Record<string, string> = { propagation: "🔄", sentiment: "💬", influencer: "📡" };
 
 export default function ReportsTab({ userId }: ReportsTabProps) {
+  const { t } = useLanguage();
+
+  const periodOptions = [
+    { value: "1h", label: t("lastHour") },
+    { value: "today", label: t("today") },
+    { value: "7d", label: t("thisWeek") },
+    { value: "30d", label: t("thisMonth") },
+    { value: "90d", `${t("thisMonth")} ×3` },
+    { value: "365d", "Anual" },
+  ];
+
+  const categoryOptions = [
+    t("all"), t("politics"), t("entertainment"), t("technology"),
+    t("sports"), t("culture"), t("business"), t("science"),
+  ];
+  // keep internal values mapped to Portuguese for DB filtering
+  const categoryValues = [
+    "Todas", "Política", "Entretenimento", "Tecnologia",
+    "Esportes", "Cultura", "Negócios/Finanças", "Ciência",
+  ];
+
+  const typeOptions = [
+    { value: "Todas mídias", label: t("allMedia") },
+    { value: "Redes sociais", label: t("socialMedia") },
+    { value: "Imprensa", label: t("press") },
+    { value: "Buscas (Google)", label: t("searches") },
+    { value: "Multiplataforma", label: "🔄 Multiplataforma" },
+  ];
+
   const [period, setPeriod] = useState("today");
   const [country, setCountry] = useState("global");
-  const [category, setCategory] = useState("Todas");
+  const [categoryIdx, setCategoryIdx] = useState(0);
   const [mediaType, setMediaType] = useState("Todas mídias");
   const [generating, setGenerating] = useState<string | null>(null);
   const [report, setReport] = useState<ReportData | null>(null);
@@ -98,12 +114,14 @@ export default function ReportsTab({ userId }: ReportsTabProps) {
   const [showHistory, setShowHistory] = useState(false);
   const [loadingHistory, setLoadingHistory] = useState(false);
 
+  const category = categoryValues[categoryIdx] ?? "Todas";
+
   const countryLabel = (code: string) => {
     for (const g of countries) {
       const c = g.items.find(i => i.value === code);
       if (c) return c.label.replace(/^[^\s]+\s/, "");
     }
-    return code === "global" ? "Global" : code;
+    return code === "global" ? t("global") : code;
   };
 
   const getTimeRangeForPeriod = useCallback((p: string) => {
@@ -141,7 +159,6 @@ export default function ReportsTab({ userId }: ReportsTabProps) {
 
   const fetchReportData = useCallback(() => fetchDataForPeriod(period), [period, fetchDataForPeriod]);
 
-  // Load saved reports
   const loadSavedReports = useCallback(async () => {
     setLoadingHistory(true);
     try {
@@ -164,11 +181,10 @@ export default function ReportsTab({ userId }: ReportsTabProps) {
     loadSavedReports();
   }, [loadSavedReports]);
 
-  // Save report to history
   const saveReport = async (reportData: ReportData, data: SnapshotRow[]) => {
     try {
       const periodLabel = periodOptions.find(p => p.value === period)?.label || period;
-      const title = `Relatório ${periodLabel} — ${countryLabel(country)} — ${format(new Date(), "dd/MM/yyyy HH:mm")}`;
+      const title = `${t("reportTitle")} ${periodLabel} — ${countryLabel(country)} — ${format(new Date(), "dd/MM/yyyy HH:mm")}`;
 
       await supabase.from("report_history").insert({
         user_id: userId,
@@ -187,7 +203,7 @@ export default function ReportsTab({ userId }: ReportsTabProps) {
   const deleteSavedReport = async (id: string) => {
     await supabase.from("report_history").delete().eq("id", id);
     setSavedReports(prev => prev.filter(r => r.id !== id));
-    toast({ title: "Relatório excluído" });
+    toast({ title: t("reportDeleted") });
   };
 
   const loadSavedReport = (saved: SavedReport) => {
@@ -196,11 +212,12 @@ export default function ReportsTab({ userId }: ReportsTabProps) {
     if (saved.filters) {
       setPeriod(saved.filters.period || "today");
       setCountry(saved.filters.country || "global");
-      setCategory(saved.filters.category || "Todas");
+      const idx = categoryValues.indexOf(saved.filters.category || "Todas");
+      setCategoryIdx(idx >= 0 ? idx : 0);
       setMediaType(saved.filters.mediaType || "Todas mídias");
     }
     setShowHistory(false);
-    toast({ title: "📂 Relatório carregado", description: saved.title });
+    toast({ title: t("reportLoaded"), description: saved.title });
   };
 
   const callAI = async (data: SnapshotRow[]) => {
@@ -247,7 +264,7 @@ export default function ReportsTab({ userId }: ReportsTabProps) {
     try {
       const data = await fetchReportData();
       if (!data.length) {
-        toast({ title: "Sem dados", description: "Nenhum dado encontrado para os filtros selecionados." });
+        toast({ title: t("error"), description: t("reportNoData") });
         setGenerating(null);
         return;
       }
@@ -257,10 +274,8 @@ export default function ReportsTab({ userId }: ReportsTabProps) {
       setReport(result);
       setGeneratedAt(new Date());
 
-      // Save to history
       await saveReport(result, data);
 
-      // If compare mode, also generate compare report
       if (compareMode) {
         const compareData = await fetchDataForPeriod(comparePeriod);
         setCompareRawData(compareData);
@@ -270,10 +285,10 @@ export default function ReportsTab({ userId }: ReportsTabProps) {
         }
       }
 
-      toast({ title: "✅ Relatório gerado!", description: `Análise de ${data.length} trends com IA concluída.${compareMode ? " Comparação incluída." : ""}` });
+      toast({ title: t("reportSaved"), description: `${t("reportTrendsAnalyzed")}: ${data.length}${compareMode ? `. ${t("reportComparison")}.` : ""}` });
     } catch (err: any) {
       console.error("Report error:", err);
-      toast({ title: "Erro", description: err.message || "Erro ao gerar relatório", variant: "destructive" });
+      toast({ title: t("error"), description: err.message || t("error"), variant: "destructive" });
     } finally {
       setGenerating(null);
     }
@@ -283,9 +298,9 @@ export default function ReportsTab({ userId }: ReportsTabProps) {
     setGenerating("csv");
     try {
       const data = rawData.length ? rawData : await fetchReportData();
-      if (!data.length) { toast({ title: "Sem dados" }); setGenerating(null); return; }
+      if (!data.length) { toast({ title: t("error"), description: t("reportNoData") }); setGenerating(null); return; }
 
-      const headers = ["#", "Título", "Plataforma", "Categoria", "País", "Volume", "Variação %", "Fontes", "Data"];
+      const headers = ["#", t("trendTableTitle"), t("trendTablePlatform"), t("category"), t("country"), t("trendTableVolume"), `${t("trendTableChange")} %`, t("reportSources"), t("reportGeneratedAt")];
       const rows = data.map((d, i) => [
         i + 1, `"${(d.title || "").replace(/"/g, '""')}"`, d.platform, d.category || "", d.country_code || "",
         d.volume_raw || 0, d.change_percent || 0, d.source_count || 1, format(new Date(d.snapshot_at), "dd/MM/yyyy HH:mm"),
@@ -297,9 +312,9 @@ export default function ReportsTab({ userId }: ReportsTabProps) {
       const a = document.createElement("a");
       a.href = url; a.download = `relatorio-trends-${format(new Date(), "yyyyMMdd-HHmm")}.csv`; a.click();
       URL.revokeObjectURL(url);
-      toast({ title: "✅ CSV exportado!" });
+      toast({ title: `✅ ${t("reportExportCsv")}` });
     } catch (err: any) {
-      toast({ title: "Erro", description: err.message, variant: "destructive" });
+      toast({ title: t("error"), description: err.message, variant: "destructive" });
     } finally {
       setGenerating(null);
     }
@@ -309,7 +324,7 @@ export default function ReportsTab({ userId }: ReportsTabProps) {
     setGenerating("pdf");
     try {
       const data = rawData.length ? rawData : await fetchReportData();
-      if (!data.length) { toast({ title: "Sem dados" }); setGenerating(null); return; }
+      if (!data.length) { toast({ title: t("error"), description: t("reportNoData") }); setGenerating(null); return; }
 
       const { default: jsPDF } = await import("jspdf");
       const { default: autoTable } = await import("jspdf-autotable");
@@ -318,74 +333,71 @@ export default function ReportsTab({ userId }: ReportsTabProps) {
       const periodLbl = periodOptions.find(p => p.value === period)?.label || period;
 
       doc.setFontSize(20); doc.setTextColor(40, 40, 40);
-      doc.text("RELATÓRIO DE TENDÊNCIAS", 14, 22);
+      doc.text(t("reportTitle").replace("📊 ", ""), 14, 22);
       doc.setFontSize(10); doc.setTextColor(120, 120, 120);
-      doc.text(`Período: ${periodLbl} | País: ${countryLabel(country)} | Categoria: ${category} | Fonte: ${mediaType}`, 14, 30);
-      doc.text(`Gerado em: ${format(new Date(), "dd/MM/yyyy HH:mm")} | Total de trends: ${data.length}`, 14, 36);
+      doc.text(`${t("reportPeriod").replace("📅 ", "")}: ${periodLbl} | ${t("reportCountry").replace("🌎 ", "")}: ${countryLabel(country)} | ${t("category")}: ${categoryOptions[categoryIdx]} | ${t("reportSource").replace("📡 ", "")}: ${typeOptions.find(o => o.value === mediaType)?.label || mediaType}`, 14, 30);
+      doc.text(`${t("reportGeneratedAt").replace("🕐 ", "")}: ${format(new Date(), "dd/MM/yyyy HH:mm")} | ${t("reportTrendsAnalyzed").replace("📈 ", "")}: ${data.length}`, 14, 36);
       doc.line(14, 40, 196, 40);
 
       if (report?.executiveSummary) {
-        doc.setFontSize(13); doc.setTextColor(40, 40, 40); doc.text("RESUMO EXECUTIVO", 14, 48);
+        doc.setFontSize(13); doc.setTextColor(40, 40, 40); doc.text(t("reportExecutiveSummary"), 14, 48);
         doc.setFontSize(9); doc.setTextColor(80, 80, 80);
         const lines = doc.splitTextToSize(report.executiveSummary, 180);
         doc.text(lines, 14, 55);
       }
 
       const startY = report?.executiveSummary ? 55 + (doc.splitTextToSize(report.executiveSummary, 180).length * 4) + 8 : 48;
-      doc.setFontSize(13); doc.setTextColor(40, 40, 40); doc.text("TOP 10 TRENDS", 14, startY);
+      doc.setFontSize(13); doc.setTextColor(40, 40, 40); doc.text(t("reportTop10"), 14, startY);
 
       autoTable(doc, {
         startY: startY + 4,
-        head: [["#", "Título", "Plataforma", "Volume", "Variação", "Categoria", "País"]],
+        head: [["#", t("trendTableTitle"), t("trendTablePlatform"), t("trendTableVolume"), t("trendTableChange"), t("category"), t("country")]],
         body: data.slice(0, 10).map((d, i) => [
           i + 1, (d.title || "").slice(0, 45), d.platform,
           d.volume_raw?.toLocaleString("pt-BR") || "0",
           `${(d.change_percent || 0) > 0 ? "+" : ""}${d.change_percent || 0}%`,
-          d.category || "Geral", d.country_code || "N/A",
+          d.category || t("general"), d.country_code || "N/A",
         ]),
         styles: { fontSize: 8, cellPadding: 2 },
         headStyles: { fillColor: [59, 130, 246] },
       });
 
-      // Comparison page
       if (compareMode && compareReport) {
         doc.addPage();
         doc.setFontSize(16); doc.setTextColor(40, 40, 40);
-        doc.text("COMPARAÇÃO ENTRE PERÍODOS", 14, 22);
+        doc.text(t("reportComparison"), 14, 22);
 
         const compLbl = periodOptions.find(p => p.value === comparePeriod)?.label || comparePeriod;
         doc.setFontSize(10); doc.setTextColor(80, 80, 80);
-        doc.text(`Período A: ${periodLbl} (${report?.stats.totalTrends || 0} trends) vs Período B: ${compLbl} (${compareReport.stats.totalTrends} trends)`, 14, 30);
+        doc.text(`${t("reportCurrentPeriod")}: ${periodLbl} (${report?.stats.totalTrends || 0}) vs ${t("reportPreviousPeriod")}: ${compLbl} (${compareReport.stats.totalTrends})`, 14, 30);
 
         const diffTrends = (report?.stats.totalTrends || 0) - compareReport.stats.totalTrends;
         const diffPct = compareReport.stats.totalTrends > 0 ? ((diffTrends / compareReport.stats.totalTrends) * 100).toFixed(1) : "N/A";
-        doc.text(`Variação: ${diffTrends > 0 ? "+" : ""}${diffTrends} trends (${diffPct}%)`, 14, 36);
+        doc.text(`${t("trendTableChange")}: ${diffTrends > 0 ? "+" : ""}${diffTrends} (${diffPct}%)`, 14, 36);
       }
 
-      // Methodology
       doc.addPage();
-      doc.setFontSize(13); doc.setTextColor(40, 40, 40); doc.text("METODOLOGIA E TRANSPARÊNCIA", 14, 22);
+      doc.setFontSize(13); doc.setTextColor(40, 40, 40); doc.text(t("reportMethodology"), 14, 22);
       doc.setFontSize(9); doc.setTextColor(80, 80, 80);
       const methodText = [
-        `Fontes analisadas: ${Object.keys(report?.stats?.platformCounts || {}).join(", ") || "Diversas"}`,
-        `Total de registros processados: ${data.length}`,
-        `Análise gerada por IA (Lovable AI Gateway)`,
-        `Dados coletados de APIs públicas, RSS feeds e fontes oficiais.`,
-        `⚠️ Limitações: análise de sentimento é estimada por heurísticas e IA.`,
+        `${t("reportSources")}: ${Object.keys(report?.stats?.platformCounts || {}).join(", ") || "—"}`,
+        `${t("reportTotalRecords")}: ${data.length}`,
+        `${t("reportAiAnalysis")}: Lovable AI Gateway (Gemini)`,
+        `⚠️ ${t("reportLimitations")}`,
       ];
       methodText.forEach((line, i) => doc.text(line, 14, 30 + i * 6));
 
       const pageCount = doc.getNumberOfPages();
       for (let i = 1; i <= pageCount; i++) {
         doc.setPage(i); doc.setFontSize(8); doc.setTextColor(150, 150, 150);
-        doc.text(`Global Talk Trends — Relatório Analítico — Página ${i}/${pageCount}`, 14, 290);
+        doc.text(`Global Talk Trends — ${t("reportTitle").replace("📊 ", "")} — ${i}/${pageCount}`, 14, 290);
       }
 
       doc.save(`relatorio-analitico-${format(new Date(), "yyyyMMdd-HHmm")}.pdf`);
-      toast({ title: "✅ PDF gerado!" });
+      toast({ title: `✅ ${t("reportExportPdf")}` });
     } catch (err: any) {
       console.error("PDF error:", err);
-      toast({ title: "Erro ao gerar PDF", description: err.message, variant: "destructive" });
+      toast({ title: t("error"), description: err.message, variant: "destructive" });
     } finally {
       setGenerating(null);
     }
@@ -399,10 +411,9 @@ export default function ReportsTab({ userId }: ReportsTabProps) {
     if (mediaType !== "Todas mídias") params.set("type", mediaType);
     const url = `${window.location.origin}/?${params.toString()}`;
     navigator.clipboard.writeText(url);
-    toast({ title: "🔗 Link copiado!" });
+    toast({ title: t("linkCopied") });
   };
 
-  // Derived chart data
   const categoryChartData = useMemo(() => {
     if (!report?.stats?.catCounts) return [];
     return Object.entries(report.stats.catCounts).sort((a, b) => b[1] - a[1]).slice(0, 8).map(([name, value]) => ({ name, value }));
@@ -422,11 +433,12 @@ export default function ReportsTab({ userId }: ReportsTabProps) {
     if (!report?.sentimentByCategory) return [];
     return Object.entries(report.sentimentByCategory).map(([cat, s]) => ({
       name: cat.length > 12 ? cat.slice(0, 12) + "…" : cat,
-      Positivo: s.positive || 0, Neutro: s.neutral || 0, Negativo: s.negative || 0,
+      [t("positive")]: s.positive || 0,
+      [t("neutral")]: s.neutral || 0,
+      [t("negative")]: s.negative || 0,
     }));
-  }, [report]);
+  }, [report, t]);
 
-  // Comparison derived data
   const comparisonData = useMemo(() => {
     if (!report || !compareReport) return null;
     const a = report.stats;
@@ -434,23 +446,20 @@ export default function ReportsTab({ userId }: ReportsTabProps) {
     const diffTrends = a.totalTrends - b.totalTrends;
     const diffPct = b.totalTrends > 0 ? ((diffTrends / b.totalTrends) * 100).toFixed(1) : "0";
 
-    // Merge categories for comparison chart
     const allCats = new Set([...Object.keys(a.catCounts || {}), ...Object.keys(b.catCounts || {})]);
     const catComparison = Array.from(allCats).map(cat => ({
       name: cat.length > 14 ? cat.slice(0, 14) + "…" : cat,
-      "Período atual": (a.catCounts || {})[cat] || 0,
-      "Período anterior": (b.catCounts || {})[cat] || 0,
-    })).sort((x, y) => y["Período atual"] - x["Período atual"]).slice(0, 8);
+      [t("reportCurrentPeriod")]: (a.catCounts || {})[cat] || 0,
+      [t("reportPreviousPeriod")]: (b.catCounts || {})[cat] || 0,
+    })).sort((x, y) => y[t("reportCurrentPeriod")] - x[t("reportCurrentPeriod")]).slice(0, 8);
 
-    // Merge platforms
     const allPlats = new Set([...Object.keys(a.platformCounts || {}), ...Object.keys(b.platformCounts || {})]);
     const platComparison = Array.from(allPlats).map(p => ({
       name: p.length > 12 ? p.slice(0, 12) + "…" : p,
-      "Período atual": (a.platformCounts || {})[p] || 0,
-      "Período anterior": (b.platformCounts || {})[p] || 0,
-    })).sort((x, y) => y["Período atual"] - x["Período atual"]).slice(0, 8);
+      [t("reportCurrentPeriod")]: (a.platformCounts || {})[p] || 0,
+      [t("reportPreviousPeriod")]: (b.platformCounts || {})[p] || 0,
+    })).sort((x, y) => y[t("reportCurrentPeriod")] - x[t("reportCurrentPeriod")]).slice(0, 8);
 
-    // Sentiment comparison
     const sentA = report.sentimentByCategory || {};
     const sentB = compareReport.sentimentByCategory || {};
     const sumSent = (s: Record<string, { positive: number; neutral: number; negative: number }>) => {
@@ -468,11 +477,11 @@ export default function ReportsTab({ userId }: ReportsTabProps) {
       catComparison,
       platComparison,
       sentimentComparison: [
-        { name: "Período atual", Positivo: sentSumA.pos, Neutro: sentSumA.neu, Negativo: sentSumA.neg },
-        { name: "Período anterior", Positivo: sentSumB.pos, Neutro: sentSumB.neu, Negativo: sentSumB.neg },
+        { name: t("reportCurrentPeriod"), [t("positive")]: sentSumA.pos, [t("neutral")]: sentSumA.neu, [t("negative")]: sentSumA.neg },
+        { name: t("reportPreviousPeriod"), [t("positive")]: sentSumB.pos, [t("neutral")]: sentSumB.neu, [t("negative")]: sentSumB.neg },
       ],
     };
-  }, [report, compareReport]);
+  }, [report, compareReport, t]);
 
   const selectClass = "w-full appearance-none bg-secondary text-foreground text-xs font-medium px-3 py-2 rounded-lg cursor-pointer border border-border focus:outline-none focus:ring-1 focus:ring-primary/30";
 
@@ -481,12 +490,12 @@ export default function ReportsTab({ userId }: ReportsTabProps) {
       {/* Filters */}
       <div className="bg-card rounded-xl border border-border/50 p-4 space-y-3">
         <h3 className="text-xs font-semibold text-foreground flex items-center gap-1.5">
-          <FileText className="w-3.5 h-3.5" /> Gerar Relatório Analítico
+          <FileText className="w-3.5 h-3.5" /> {t("reportGenerate")}
         </h3>
 
         <div className="grid grid-cols-2 gap-3">
           <div>
-            <label className="text-[10px] text-muted-foreground font-medium mb-1 block">Período</label>
+            <label className="text-[10px] text-muted-foreground font-medium mb-1 block">{t("period")}</label>
             <div className="relative">
               <select className={selectClass} value={period} onChange={(e) => setPeriod(e.target.value)}>
                 {periodOptions.map((p) => <option key={p.value} value={p.value}>{p.label}</option>)}
@@ -496,7 +505,7 @@ export default function ReportsTab({ userId }: ReportsTabProps) {
           </div>
 
           <div>
-            <label className="text-[10px] text-muted-foreground font-medium mb-1 block">País</label>
+            <label className="text-[10px] text-muted-foreground font-medium mb-1 block">{t("country")}</label>
             <div className="relative">
               <select className={selectClass} value={country} onChange={(e) => setCountry(e.target.value)}>
                 {countries.map((group) => (
@@ -510,20 +519,20 @@ export default function ReportsTab({ userId }: ReportsTabProps) {
           </div>
 
           <div>
-            <label className="text-[10px] text-muted-foreground font-medium mb-1 block">Categoria</label>
+            <label className="text-[10px] text-muted-foreground font-medium mb-1 block">{t("category")}</label>
             <div className="relative">
-              <select className={selectClass} value={category} onChange={(e) => setCategory(e.target.value)}>
-                {categoryOptions.map((c) => <option key={c} value={c}>{c}</option>)}
+              <select className={selectClass} value={categoryIdx} onChange={(e) => setCategoryIdx(Number(e.target.value))}>
+                {categoryOptions.map((label, i) => <option key={i} value={i}>{label}</option>)}
               </select>
               <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 w-3 h-3 text-muted-foreground pointer-events-none" />
             </div>
           </div>
 
           <div>
-            <label className="text-[10px] text-muted-foreground font-medium mb-1 block">Fonte</label>
+            <label className="text-[10px] text-muted-foreground font-medium mb-1 block">{t("filterSource")}</label>
             <div className="relative">
               <select className={selectClass} value={mediaType} onChange={(e) => setMediaType(e.target.value)}>
-                {typeOptions.map((t) => <option key={t} value={t}>{t}</option>)}
+                {typeOptions.map((opt) => <option key={opt.value} value={opt.value}>{opt.label}</option>)}
               </select>
               <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 w-3 h-3 text-muted-foreground pointer-events-none" />
             </div>
@@ -537,7 +546,7 @@ export default function ReportsTab({ userId }: ReportsTabProps) {
             className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[10px] font-semibold transition-colors border ${compareMode ? "bg-primary text-primary-foreground border-primary" : "bg-secondary text-foreground border-border hover:bg-secondary/80"}`}
           >
             <ArrowLeftRight className="w-3 h-3" />
-            Comparar períodos
+            {t("reportComparePeriods")}
           </button>
           {compareMode && (
             <div className="relative flex-1">
@@ -556,22 +565,22 @@ export default function ReportsTab({ userId }: ReportsTabProps) {
           className="w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 transition-colors disabled:opacity-50"
         >
           {generating === "report" ? (
-            <><div className="w-4 h-4 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full animate-spin" /> Analisando com IA…</>
+            <><div className="w-4 h-4 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full animate-spin" /> {t("reportGenerating")}</>
           ) : (
-            <><Sparkles className="w-4 h-4" /> Gerar Relatório com IA{compareMode ? " (com comparação)" : ""}</>
+            <><Sparkles className="w-4 h-4" /> {t("reportGenerate")}{compareMode ? t("reportWithComparison") : ""}</>
           )}
         </button>
 
         {/* Export buttons */}
         <div className="flex gap-2">
-          <button onClick={generatePDF} disabled={generating !== null} className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl bg-secondary text-foreground text-xs font-semibold hover:bg-secondary/80 transition-colors disabled:opacity-50">
-            {generating === "pdf" ? <div className="w-3 h-3 border-2 border-foreground/30 border-t-foreground rounded-full animate-spin" /> : <Download className="w-3 h-3" />} PDF
+          <button onClick={generatePDF} disabled={generating !== null} className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl bg-secondary text-foreground text-xs font-semibold hover:bg-secondary/80 transition-colors disabled:opacity-50" title="Exportar como PDF">
+            {generating === "pdf" ? <div className="w-3 h-3 border-2 border-foreground/30 border-t-foreground rounded-full animate-spin" /> : <Download className="w-3 h-3" />} {t("reportExportPdf")}
           </button>
-          <button onClick={generateCSV} disabled={generating !== null} className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl bg-secondary text-foreground text-xs font-semibold hover:bg-secondary/80 transition-colors disabled:opacity-50">
-            {generating === "csv" ? <div className="w-3 h-3 border-2 border-foreground/30 border-t-foreground rounded-full animate-spin" /> : <Download className="w-3 h-3" />} CSV
+          <button onClick={generateCSV} disabled={generating !== null} className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl bg-secondary text-foreground text-xs font-semibold hover:bg-secondary/80 transition-colors disabled:opacity-50" title="Exportar como CSV">
+            {generating === "csv" ? <div className="w-3 h-3 border-2 border-foreground/30 border-t-foreground rounded-full animate-spin" /> : <Download className="w-3 h-3" />} {t("reportExportCsv")}
           </button>
-          <button onClick={generateLink} className="flex items-center justify-center gap-1.5 px-4 py-2 rounded-xl bg-secondary text-foreground text-xs font-semibold hover:bg-secondary/80 transition-colors">
-            <Link2 className="w-3 h-3" /> Link
+          <button onClick={generateLink} className="flex items-center justify-center gap-1.5 px-4 py-2 rounded-xl bg-secondary text-foreground text-xs font-semibold hover:bg-secondary/80 transition-colors" title={t("copyLinkFilters")}>
+            <Link2 className="w-3 h-3" /> {t("reportShareLink")}
           </button>
         </div>
 
@@ -581,7 +590,7 @@ export default function ReportsTab({ userId }: ReportsTabProps) {
           className="w-full flex items-center justify-center gap-1.5 py-2 rounded-xl bg-muted/50 text-foreground text-xs font-semibold hover:bg-muted transition-colors border border-border/50"
         >
           <History className="w-3.5 h-3.5" />
-          Histórico de Relatórios ({savedReports.length})
+          {t("reportHistory")} ({savedReports.length})
         </button>
       </div>
 
@@ -589,12 +598,12 @@ export default function ReportsTab({ userId }: ReportsTabProps) {
       {showHistory && (
         <div className="bg-card rounded-xl border border-border/50 p-4 space-y-2 animate-fade-in">
           <h3 className="text-xs font-semibold text-foreground flex items-center gap-1.5 mb-2">
-            <History className="w-3.5 h-3.5" /> Relatórios Salvos
+            <History className="w-3.5 h-3.5" /> {t("reportSavedReports")}
           </h3>
           {loadingHistory ? (
-            <div className="text-[11px] text-muted-foreground py-4 text-center">Carregando…</div>
+            <div className="text-[11px] text-muted-foreground py-4 text-center">{t("reportLoading")}</div>
           ) : savedReports.length === 0 ? (
-            <div className="text-[11px] text-muted-foreground py-4 text-center">Nenhum relatório salvo ainda. Gere seu primeiro relatório acima.</div>
+            <div className="text-[11px] text-muted-foreground py-4 text-center">{t("reportNoSaved")}</div>
           ) : (
             savedReports.map((r) => (
               <div key={r.id} className="flex items-center gap-2 p-2.5 rounded-lg bg-muted/30 border border-border/50 hover:bg-muted/50 transition-colors">
@@ -604,7 +613,7 @@ export default function ReportsTab({ userId }: ReportsTabProps) {
                     {format(new Date(r.created_at), "dd/MM/yyyy HH:mm")} • {r.snapshot_count} trends
                   </p>
                 </button>
-                <button onClick={() => deleteSavedReport(r.id)} className="p-1.5 rounded-lg hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-colors">
+                <button onClick={() => deleteSavedReport(r.id)} className="p-1.5 rounded-lg hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-colors" title={t("reportDeleted")}>
                   <Trash2 className="w-3.5 h-3.5" />
                 </button>
               </div>
@@ -616,25 +625,24 @@ export default function ReportsTab({ userId }: ReportsTabProps) {
       {/* Comparison Section */}
       {compareMode && report && compareReport && comparisonData && (
         <div className="space-y-4 animate-fade-in">
-          <ReportSection icon={<ArrowLeftRight className="w-3.5 h-3.5" />} title="COMPARAÇÃO ENTRE PERÍODOS" color="blue">
-            {/* Summary cards */}
+          <ReportSection icon={<ArrowLeftRight className="w-3.5 h-3.5" />} title={t("reportComparison")} color="blue">
             <div className="grid grid-cols-3 gap-2 mb-4">
               <CompareCard
-                label="Total Trends"
+                label="Trends"
                 valA={comparisonData.a.total}
                 valB={comparisonData.b.total}
                 diff={comparisonData.diffTrends}
                 diffPct={comparisonData.diffPct}
               />
               <CompareCard
-                label="Críticos"
+                label={t("critical")}
                 valA={comparisonData.a.critical}
                 valB={comparisonData.b.critical}
                 diff={comparisonData.a.critical - comparisonData.b.critical}
                 diffPct={comparisonData.b.critical > 0 ? (((comparisonData.a.critical - comparisonData.b.critical) / comparisonData.b.critical) * 100).toFixed(0) : "N/A"}
               />
               <CompareCard
-                label="Multiplataf."
+                label={t("reportCrossplatform").replace("🌐 ", "")}
                 valA={comparisonData.a.cross}
                 valB={comparisonData.b.cross}
                 diff={comparisonData.a.cross - comparisonData.b.cross}
@@ -642,10 +650,9 @@ export default function ReportsTab({ userId }: ReportsTabProps) {
               />
             </div>
 
-            {/* Category comparison chart */}
             {comparisonData.catComparison.length > 0 && (
               <div className="mb-4">
-                <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-2">Categorias por Período</p>
+                <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-2">{t("reportCatsByPeriod")}</p>
                 <div className="h-48">
                   <ResponsiveContainer width="100%" height="100%">
                     <BarChart data={comparisonData.catComparison} margin={{ left: 0, right: 8 }}>
@@ -653,18 +660,17 @@ export default function ReportsTab({ userId }: ReportsTabProps) {
                       <YAxis tick={{ fontSize: 9, fill: "hsl(var(--muted-foreground))" }} tickLine={false} axisLine={false} width={30} />
                       <Tooltip contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: "8px", fontSize: 11 }} />
                       <Legend wrapperStyle={{ fontSize: 10 }} />
-                      <Bar dataKey="Período atual" fill="hsl(210, 100%, 50%)" radius={[4, 4, 0, 0]} maxBarSize={20} />
-                      <Bar dataKey="Período anterior" fill="hsl(210, 50%, 70%)" radius={[4, 4, 0, 0]} maxBarSize={20} />
+                      <Bar dataKey={t("reportCurrentPeriod")} fill="hsl(210, 100%, 50%)" radius={[4, 4, 0, 0]} maxBarSize={20} />
+                      <Bar dataKey={t("reportPreviousPeriod")} fill="hsl(210, 50%, 70%)" radius={[4, 4, 0, 0]} maxBarSize={20} />
                     </BarChart>
                   </ResponsiveContainer>
                 </div>
               </div>
             )}
 
-            {/* Platform comparison chart */}
             {comparisonData.platComparison.length > 0 && (
               <div className="mb-4">
-                <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-2">Plataformas por Período</p>
+                <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-2">{t("reportPlatformsByPeriod")}</p>
                 <div className="h-48">
                   <ResponsiveContainer width="100%" height="100%">
                     <BarChart data={comparisonData.platComparison} layout="vertical" margin={{ left: 0, right: 8 }}>
@@ -672,18 +678,17 @@ export default function ReportsTab({ userId }: ReportsTabProps) {
                       <YAxis type="category" dataKey="name" tick={{ fontSize: 9, fill: "hsl(var(--muted-foreground))" }} tickLine={false} axisLine={false} width={80} />
                       <Tooltip contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: "8px", fontSize: 11 }} />
                       <Legend wrapperStyle={{ fontSize: 10 }} />
-                      <Bar dataKey="Período atual" fill="hsl(142, 60%, 45%)" radius={[0, 4, 4, 0]} maxBarSize={14} />
-                      <Bar dataKey="Período anterior" fill="hsl(142, 30%, 70%)" radius={[0, 4, 4, 0]} maxBarSize={14} />
+                      <Bar dataKey={t("reportCurrentPeriod")} fill="hsl(142, 60%, 45%)" radius={[0, 4, 4, 0]} maxBarSize={14} />
+                      <Bar dataKey={t("reportPreviousPeriod")} fill="hsl(142, 30%, 70%)" radius={[0, 4, 4, 0]} maxBarSize={14} />
                     </BarChart>
                   </ResponsiveContainer>
                 </div>
               </div>
             )}
 
-            {/* Sentiment comparison */}
             {comparisonData.sentimentComparison.length > 0 && (
               <div>
-                <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-2">Sentimento: Atual vs Anterior</p>
+                <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-2">{t("reportSentimentCurrentVsPrev")}</p>
                 <div className="h-40">
                   <ResponsiveContainer width="100%" height="100%">
                     <BarChart data={comparisonData.sentimentComparison} margin={{ left: 0, right: 8 }}>
@@ -691,9 +696,9 @@ export default function ReportsTab({ userId }: ReportsTabProps) {
                       <YAxis tick={{ fontSize: 9, fill: "hsl(var(--muted-foreground))" }} tickLine={false} axisLine={false} width={30} />
                       <Tooltip contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: "8px", fontSize: 11 }} />
                       <Legend wrapperStyle={{ fontSize: 10 }} />
-                      <Bar dataKey="Positivo" fill="hsl(142, 60%, 45%)" radius={[4, 4, 0, 0]} />
-                      <Bar dataKey="Neutro" fill="hsl(40, 90%, 50%)" radius={[4, 4, 0, 0]} />
-                      <Bar dataKey="Negativo" fill="hsl(0, 72%, 51%)" radius={[4, 4, 0, 0]} />
+                      <Bar dataKey={t("positive")} fill="hsl(142, 60%, 45%)" radius={[4, 4, 0, 0]} />
+                      <Bar dataKey={t("neutral")} fill="hsl(40, 90%, 50%)" radius={[4, 4, 0, 0]} />
+                      <Bar dataKey={t("negative")} fill="hsl(0, 72%, 51%)" radius={[4, 4, 0, 0]} />
                     </BarChart>
                   </ResponsiveContainer>
                 </div>
@@ -710,26 +715,26 @@ export default function ReportsTab({ userId }: ReportsTabProps) {
           <div className="bg-card rounded-xl border border-border/50 p-4">
             <div className="flex items-center gap-2 mb-2">
               <FileText className="w-4 h-4 text-primary" />
-              <h2 className="text-sm font-bold text-foreground">📊 RELATÓRIO DE TENDÊNCIAS</h2>
+              <h2 className="text-sm font-bold text-foreground">{t("reportTitle")}</h2>
             </div>
             <div className="grid grid-cols-2 gap-2 text-[11px] text-muted-foreground">
-              <span>📅 Período: {periodOptions.find(p => p.value === period)?.label}</span>
-              <span>🌎 País: {countryLabel(country)}</span>
-              <span>📁 Categoria: {category}</span>
-              <span>📡 Fonte: {mediaType}</span>
-              <span>📈 Trends analisadas: {report.stats.totalTrends}</span>
-              <span>🕐 Gerado: {generatedAt ? format(generatedAt, "dd/MM/yyyy HH:mm") : ""}</span>
-              {report.stats.criticalCount > 0 && <span>🔥 Momentos críticos: {report.stats.criticalCount}</span>}
-              {report.stats.crossPlatformCount > 0 && <span>🌐 Multiplataforma: {report.stats.crossPlatformCount}</span>}
+              <span>{t("reportPeriod")}: {periodOptions.find(p => p.value === period)?.label}</span>
+              <span>{t("reportCountry")}: {countryLabel(country)}</span>
+              <span>{t("reportCategory")}: {categoryOptions[categoryIdx]}</span>
+              <span>{t("reportSource")}: {typeOptions.find(o => o.value === mediaType)?.label || mediaType}</span>
+              <span>{t("reportTrendsAnalyzed")}: {report.stats.totalTrends}</span>
+              <span>{t("reportGeneratedAt")}: {generatedAt ? format(generatedAt, "dd/MM/yyyy HH:mm") : ""}</span>
+              {report.stats.criticalCount > 0 && <span>{t("reportCriticalMoments")}: {report.stats.criticalCount}</span>}
+              {report.stats.crossPlatformCount > 0 && <span>{t("reportCrossplatform")}: {report.stats.crossPlatformCount}</span>}
             </div>
           </div>
 
           {/* Section 1: Executive Summary */}
-          <ReportSection icon={<Brain className="w-3.5 h-3.5" />} title="RESUMO EXECUTIVO" color="primary">
+          <ReportSection icon={<Brain className="w-3.5 h-3.5" />} title={t("reportExecutiveSummary")} color="primary">
             <p className="text-xs text-foreground/90 leading-relaxed whitespace-pre-line">{report.executiveSummary}</p>
             {report.highlights && report.highlights.length > 0 && (
               <div className="mt-3 space-y-2">
-                <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">📌 Destaques</p>
+                <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">{t("reportHighlights")}</p>
                 {report.highlights.map((h, i) => (
                   <div key={i} className="flex items-start gap-2 p-2 rounded-lg bg-primary/5 border border-primary/10">
                     <span className="text-[10px] font-bold text-primary mt-0.5">•</span>
@@ -745,18 +750,18 @@ export default function ReportsTab({ userId }: ReportsTabProps) {
           </ReportSection>
 
           {/* Section 2: Top 10 */}
-          <ReportSection icon={<TrendingUp className="w-3.5 h-3.5" />} title="TOP 10 TRENDS" color="blue">
+          <ReportSection icon={<TrendingUp className="w-3.5 h-3.5" />} title={t("reportTop10")} color="blue">
             <div className="overflow-x-auto">
               <table className="w-full text-[10px]">
                 <thead>
                   <tr className="border-b border-border">
                     <th className="py-1.5 text-left font-semibold text-muted-foreground">#</th>
-                    <th className="py-1.5 text-left font-semibold text-muted-foreground">Título</th>
-                    <th className="py-1.5 text-left font-semibold text-muted-foreground">Plataforma</th>
-                    <th className="py-1.5 text-right font-semibold text-muted-foreground">Volume</th>
-                    <th className="py-1.5 text-right font-semibold text-muted-foreground">Variação</th>
-                    <th className="py-1.5 text-left font-semibold text-muted-foreground">Categoria</th>
-                    <th className="py-1.5 text-left font-semibold text-muted-foreground">País</th>
+                    <th className="py-1.5 text-left font-semibold text-muted-foreground">{t("trendTableTitle")}</th>
+                    <th className="py-1.5 text-left font-semibold text-muted-foreground">{t("trendTablePlatform")}</th>
+                    <th className="py-1.5 text-right font-semibold text-muted-foreground">{t("trendTableVolume")}</th>
+                    <th className="py-1.5 text-right font-semibold text-muted-foreground">{t("trendTableChange")}</th>
+                    <th className="py-1.5 text-left font-semibold text-muted-foreground">{t("category")}</th>
+                    <th className="py-1.5 text-left font-semibold text-muted-foreground">{t("trendTableCountry")}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -769,7 +774,7 @@ export default function ReportsTab({ userId }: ReportsTabProps) {
                       <td className={`py-1.5 text-right font-medium ${(d.change_percent || 0) > 0 ? "text-green-600" : "text-red-500"}`}>
                         {(d.change_percent || 0) > 0 ? "+" : ""}{d.change_percent || 0}%
                       </td>
-                      <td className="py-1.5 text-muted-foreground">{d.category || "Geral"}</td>
+                      <td className="py-1.5 text-muted-foreground">{d.category || t("general")}</td>
                       <td className="py-1.5 text-muted-foreground">{d.country_code || "N/A"}</td>
                     </tr>
                   ))}
@@ -780,14 +785,14 @@ export default function ReportsTab({ userId }: ReportsTabProps) {
 
           {/* Section 3: Critical Moments */}
           {report.criticalAnalysis && report.criticalAnalysis.length > 0 && (
-            <ReportSection icon={<AlertTriangle className="w-3.5 h-3.5" />} title="MOMENTOS CRÍTICOS" color="red">
+            <ReportSection icon={<AlertTriangle className="w-3.5 h-3.5" />} title={t("reportCritical")} color="red">
               <div className="space-y-3">
                 {report.criticalAnalysis.map((c, i) => (
                   <div key={i} className="p-3 rounded-lg bg-red-500/5 border border-red-500/10">
                     <p className="text-[11px] font-semibold text-foreground">🔥 "{c.title}"</p>
-                    <p className="text-[10px] text-muted-foreground mt-1">⚡ Gatilho: {c.trigger}</p>
+                    <p className="text-[10px] text-muted-foreground mt-1">{t("reportSentTrigger")}: {c.trigger}</p>
                     <div className="flex gap-3 mt-1 text-[10px]">
-                      <span>{sentimentEmoji[c.sentiment] || "🟡"} {sentimentLabel[c.sentiment] || "Neutro"}</span>
+                      <span>{sentimentEmoji[c.sentiment] || "🟡"} {c.sentiment === "positive" ? t("positive") : c.sentiment === "negative" ? t("negative") : t("neutral")}</span>
                       <span className="text-muted-foreground">📊 {c.evolution}</span>
                     </div>
                   </div>
@@ -797,11 +802,11 @@ export default function ReportsTab({ userId }: ReportsTabProps) {
           )}
 
           {/* Section 4: Charts */}
-          <ReportSection icon={<BarChart3 className="w-3.5 h-3.5" />} title="GRÁFICOS ANALÍTICOS" color="green">
+          <ReportSection icon={<BarChart3 className="w-3.5 h-3.5" />} title={t("reportCharts")} color="green">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {categoryChartData.length > 0 && (
                 <div>
-                  <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-2">Distribuição por Categoria</p>
+                  <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-2">{t("reportCatDistribution")}</p>
                   <div className="h-48">
                     <ResponsiveContainer width="100%" height="100%">
                       <PieChart>
@@ -817,7 +822,7 @@ export default function ReportsTab({ userId }: ReportsTabProps) {
 
               {platformChartData.length > 0 && (
                 <div>
-                  <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-2">Volume por Plataforma</p>
+                  <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-2">{t("reportVolByPlatform")}</p>
                   <div className="h-48">
                     <ResponsiveContainer width="100%" height="100%">
                       <BarChart data={platformChartData} layout="vertical" margin={{ left: 0, right: 8 }}>
@@ -833,7 +838,7 @@ export default function ReportsTab({ userId }: ReportsTabProps) {
 
               {countryChartData.length > 0 && (
                 <div>
-                  <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-2">Top Países</p>
+                  <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-2">{t("reportTopCountries")}</p>
                   <div className="h-48">
                     <ResponsiveContainer width="100%" height="100%">
                       <BarChart data={countryChartData} margin={{ left: 0, right: 8 }}>
@@ -849,7 +854,7 @@ export default function ReportsTab({ userId }: ReportsTabProps) {
 
               {sentimentChartData.length > 0 && (
                 <div>
-                  <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-2">Sentimento por Categoria</p>
+                  <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-2">{t("reportSentimentByCat")}</p>
                   <div className="h-48">
                     <ResponsiveContainer width="100%" height="100%">
                       <BarChart data={sentimentChartData} margin={{ left: 0, right: 8 }}>
@@ -857,9 +862,9 @@ export default function ReportsTab({ userId }: ReportsTabProps) {
                         <YAxis tick={{ fontSize: 9, fill: "hsl(var(--muted-foreground))" }} tickLine={false} axisLine={false} width={30} />
                         <Tooltip contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: "8px", fontSize: 11 }} />
                         <Legend wrapperStyle={{ fontSize: 10 }} />
-                        <Bar dataKey="Positivo" stackId="a" fill="hsl(142, 60%, 45%)" />
-                        <Bar dataKey="Neutro" stackId="a" fill="hsl(40, 90%, 50%)" />
-                        <Bar dataKey="Negativo" stackId="a" fill="hsl(0, 72%, 51%)" />
+                        <Bar dataKey={t("positive")} stackId="a" fill="hsl(142, 60%, 45%)" />
+                        <Bar dataKey={t("neutral")} stackId="a" fill="hsl(40, 90%, 50%)" />
+                        <Bar dataKey={t("negative")} stackId="a" fill="hsl(0, 72%, 51%)" />
                       </BarChart>
                     </ResponsiveContainer>
                   </div>
@@ -870,7 +875,7 @@ export default function ReportsTab({ userId }: ReportsTabProps) {
 
           {/* Section 5: Patterns */}
           {report.patterns && report.patterns.length > 0 && (
-            <ReportSection icon={<Eye className="w-3.5 h-3.5" />} title="PADRÕES IDENTIFICADOS" color="purple">
+            <ReportSection icon={<Eye className="w-3.5 h-3.5" />} title={t("reportPatterns")} color="purple">
               <div className="space-y-2">
                 {report.patterns.map((p, i) => (
                   <div key={i} className="flex items-start gap-2 p-2.5 rounded-lg bg-muted/30 border border-border/50">
@@ -884,16 +889,16 @@ export default function ReportsTab({ userId }: ReportsTabProps) {
 
           {/* Section 6: Predictions */}
           {report.predictions && report.predictions.length > 0 && (
-            <ReportSection icon={<Sparkles className="w-3.5 h-3.5" />} title="PREVISÕES E INSIGHTS" color="amber">
+            <ReportSection icon={<Sparkles className="w-3.5 h-3.5" />} title={t("reportPredictions")} color="amber">
               <div className="space-y-2">
                 {report.predictions.map((p, i) => (
                   <div key={i} className="p-3 rounded-lg bg-amber-500/5 border border-amber-500/10">
                     <div className="flex items-center gap-2 mb-1">
                       <span className="text-[11px] font-semibold text-foreground">🔮 "{p.topic}"</span>
-                      <span className="text-[10px] text-muted-foreground">{confidenceLabel[p.confidence] || p.confidence}</span>
+                      <span className="text-[10px] text-muted-foreground">{confidenceLabel[p.confidence]?.(t) || p.confidence}</span>
                     </div>
                     <p className="text-[10px] text-muted-foreground">{p.prediction}</p>
-                    <span className="text-[10px] text-muted-foreground/70">⏱️ Janela: {p.timeframe}</span>
+                    <span className="text-[10px] text-muted-foreground/70">{t("reportWindow")}: {p.timeframe}</span>
                   </div>
                 ))}
               </div>
@@ -901,14 +906,14 @@ export default function ReportsTab({ userId }: ReportsTabProps) {
           )}
 
           {/* Section 7: Methodology */}
-          <ReportSection icon={<ClipboardList className="w-3.5 h-3.5" />} title="METODOLOGIA E TRANSPARÊNCIA" color="muted">
+          <ReportSection icon={<ClipboardList className="w-3.5 h-3.5" />} title={t("reportMethodology")} color="muted">
             <div className="space-y-2 text-[11px] text-muted-foreground">
-              <p><strong className="text-foreground">Fontes analisadas:</strong> {Object.keys(report.stats.platformCounts).join(", ")}</p>
-              <p><strong className="text-foreground">Total de registros:</strong> {report.stats.totalTrends}</p>
-              <p><strong className="text-foreground">Distribuição geográfica:</strong> {Object.keys(report.stats.countryCounts).filter(k => k !== "N/A").length} países</p>
-              <p><strong className="text-foreground">Análise IA:</strong> Resumo executivo, padrões e previsões gerados por Lovable AI (Gemini)</p>
+              <p><strong className="text-foreground">{t("reportSources")}:</strong> {Object.keys(report.stats.platformCounts).join(", ")}</p>
+              <p><strong className="text-foreground">{t("reportTotalRecords")}:</strong> {report.stats.totalTrends}</p>
+              <p><strong className="text-foreground">{t("reportGeoDistribution")}:</strong> {Object.keys(report.stats.countryCounts).filter(k => k !== "N/A").length} {t("countries")}</p>
+              <p><strong className="text-foreground">{t("reportAiAnalysis")}:</strong> {t("reportGenerating").replace("…", "")} — Lovable AI (Gemini)</p>
               <div className="mt-2 p-2 rounded-lg bg-muted/50 border border-border/50">
-                <p className="text-[10px]">⚠️ <strong>Limitações:</strong> A análise de sentimento é estimada por heurísticas. Previsões são baseadas em padrões recentes e não garantem resultados futuros. Dados podem ter atraso de até 15 minutos.</p>
+                <p className="text-[10px]">⚠️ <strong>{t("reportLimitations")}</strong></p>
               </div>
             </div>
           </ReportSection>
@@ -919,7 +924,7 @@ export default function ReportsTab({ userId }: ReportsTabProps) {
       {!report && !showHistory && (
         <div className="bg-card rounded-xl border border-border/50 p-4">
           <p className="text-[11px] text-muted-foreground leading-relaxed">
-            📊 O relatório analítico inclui: resumo executivo gerado por IA, top 10 trends com contexto, momentos críticos, análise multiplataforma, gráficos interativos, padrões de propagação, previsões emergentes, comparação entre períodos e metodologia transparente. Relatórios são salvos automaticamente no histórico. Exporte em PDF, CSV ou compartilhe via link.
+            {t("reportInfoText")}
           </p>
         </div>
       )}
