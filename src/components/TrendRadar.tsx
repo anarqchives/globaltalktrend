@@ -397,9 +397,6 @@ export default function TrendRadar({ trends, allTrends, criticalMoments, anomali
                 {tabDescriptions.top[lang as keyof typeof tabDescriptions.top] || tabDescriptions.top.en}
               </TooltipContent>
             </Tooltip>
-          </TabsList>
-          
-          <TabsList className="h-7 bg-secondary/50 p-0.5 gap-0.5 ml-1">
             <Tooltip>
               <TooltipTrigger asChild>
                 <TabsTrigger value="weekly" className="h-6 px-2.5 text-[10px] font-semibold data-[state=active]:bg-blue-500/15 data-[state=active]:text-blue-600 dark:data-[state=active]:text-blue-400 gap-1">
