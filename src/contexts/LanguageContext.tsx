@@ -872,6 +872,10 @@ const translations: Record<LangCode, Record<TranslationKey, string>> = {
     tviGrowthLabel: "성장 (30%)", tviVolumeLabel: "볼륨 (30%)", tviSourcesLabel: "출처 (20%)", tviGeographyLabel: "지리 (20%)",
     tviDescription: "다음에 기반한 전파 속도 측정:",
     sourcesSingular: "출처", sourcesPlural: "출처",
+    mapMentions: "언급", mapSimilarity: "유사도", mapThinLowVol: "얇음 = 낮은 볼륨", mapThickHighVol: "두꺼움 = 높은 볼륨", mapPropArcs: "전파 아크", mapSizeVolume: "크기 = 볼륨", mapFastPulse: "빠른 맥동 = 빠른 성장", mapTrendsActiveLabel: "활성", mapClickDetails: "상세 보기 클릭", mapLoadingMap: "지도 로딩 중...", mapReconnectMsg: "연결이 복구되면 지도가 표시됩니다.", mapRetry: "재시도", mapFilterByCountry: "국가별 타임라인 필터", mapTopTrendsLabel: "주요 트렌드", mapMoreTrends: "추가 트렌드", mapCloseMap: "지도 닫기",
+    mapIntCritical: "🔥 긴급", mapIntHigh: "⚡ 높음", mapIntModerate: "📊 보통", mapIntAttention: "📈 주의", mapIntNormal: "ℹ️ 정상",
+    mapStatusExceptional: "이례적 볼륨 — 다수 소스 활성", mapStatusHigh: "높은 활동 — 가속 성장", mapStatusModerate: "보통 활동 — 발전 중인 트렌드", mapStatusLow: "낮은 활동 — 적은 신호", mapStatusNormal: "정상 모니터링 — 이상 없음",
+    mapCritVolume: "이례적으로 높은 볼륨", mapCritGrowth: "가속 성장", mapCritMultiplatform: "멀티플랫폼", mapCritActive: "동시 활성 트렌드", mapCritMonitoring: "모니터링 — 정상 활동", mapCritNone: "활성 트렌드 없음",
   },
   ar: {
     trends: "الاتجاهات", moreTrends: "المزيد", filters: "التصفية",
