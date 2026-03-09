@@ -267,7 +267,7 @@ const PublicProfile = () => {
               <OverviewTab savedCards={savedCards} reports={reports} profile={profile} />
             )}
             {activeTab === "boards" && (
-              <BoardsTab cards={savedCards} />
+              <BoardsTab cards={savedCards} currentUserId={currentUserId} />
             )}
             {activeTab === "reports" && (
               <ReportsListTab reports={reports} />
