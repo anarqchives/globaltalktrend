@@ -903,6 +903,12 @@ const translations: Record<LangCode, Record<TranslationKey, string>> = {
     mapFlowLegendTitle: "انتشار الاتجاهات", mapFlowOrigin: "المصدر", mapFlowDestination: "الوجهة", mapFlowPropagation: "الانتشار", mapFlowTimeDelta: "وقت الانتشار", mapFlowClickToFilter: "انقر للتصفية", mapFlowNoData: "بيانات انتشار غير كافية",
     mapSentLegendTitle: "المشهد العاطفي", mapSentPositive: "إيجابي", mapSentNegative: "سلبي", mapSentMixed: "مستقطب", mapSentNeutral: "محايد", mapSentBreakdown: "توزيع المشاعر", mapSentTopTrends: "أهم الاتجاهات", mapSentNoData: "بيانات مشاعر غير كافية",
     mapSentVolume: "الحجم الإجمالي", mapSentGrowth: "متوسط النمو", mapSentActiveTrends: "اتجاهات نشطة",
+    growth: "النمو", volumeLabel: "الحجم", sourcesLabel: "المصادر", narrativeOrigin: "أصل السرد",
+    confidenceLabel: "الثقة", confidenceHigh: "عالية", confidenceMedium: "متوسطة", confidenceLow: "منخفضة",
+    propagationPath: "مسار الانتشار", sourceLabel: "المصدر", sentimentAnalysis: "تحليل المشاعر",
+    tviGrowthLabel: "النمو (30%)", tviVolumeLabel: "الحجم (30%)", tviSourcesLabel: "المصادر (20%)", tviGeographyLabel: "الجغرافيا (20%)",
+    tviDescription: "يقيس سرعة الانتشار بناءً على:",
+    sourcesSingular: "مصدر", sourcesPlural: "مصادر",
   },
   hi: {
     trends: "रुझान", moreTrends: "और रुझान", filters: "फ़िल्टर",
