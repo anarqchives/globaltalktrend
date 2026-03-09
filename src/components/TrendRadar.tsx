@@ -691,13 +691,12 @@ export default function TrendRadar({ trends, allTrends, criticalMoments, anomali
     expand: lang === "pt" ? "Expandir radar" : "Expand radar",
   };
 
-  // Tab config with colors
+  // Tab config — anomalies are merged into the Critical tab; no separate Anomalies tab
   const tabConfig = [
-    { value: "emerging", icon: Sprout, label: "Emerging", activeClass: "data-[state=active]:bg-emerald-500/15 data-[state=active]:text-emerald-600 dark:data-[state=active]:text-emerald-400 data-[state=active]:border-emerald-500/30", dot: hasEmerging ? "bg-emerald-500" : null, badge: null },
-    { value: "critical", icon: Flame, label: "Critical", activeClass: "data-[state=active]:bg-rose-500/15 data-[state=active]:text-rose-600 dark:data-[state=active]:text-rose-400 data-[state=active]:border-rose-500/30", dot: null, badge: hasCritical ? criticalMoments.length : null },
-    { value: "top", icon: Trophy, label: "Top", activeClass: "data-[state=active]:bg-amber-500/15 data-[state=active]:text-amber-600 dark:data-[state=active]:text-amber-400 data-[state=active]:border-amber-500/30", dot: null, badge: null },
-    { value: "weekly", icon: Activity, label: "Weekly", activeClass: "data-[state=active]:bg-sky-500/15 data-[state=active]:text-sky-600 dark:data-[state=active]:text-sky-400 data-[state=active]:border-sky-500/30", dot: null, badge: null },
-    ...(hasAnomalies ? [{ value: "anomalies", icon: AlertTriangle, label: "Anomalias", activeClass: "data-[state=active]:bg-red-500/15 data-[state=active]:text-red-600 dark:data-[state=active]:text-red-400 data-[state=active]:border-red-500/30", dot: null, badge: anomalies.length }] : []),
+    { value: "emerging", icon: Sprout, label: "Emerging", activeClass: "data-[state=active]:bg-emerald-500/15 data-[state=active]:text-emerald-600 dark:data-[state=active]:text-emerald-400 data-[state=active]:border-emerald-500/30", dot: hasEmerging ? "bg-emerald-500" : null, badge: null, pulse: false },
+    { value: "critical", icon: Flame, label: "Critical", activeClass: "data-[state=active]:bg-rose-500/15 data-[state=active]:text-rose-600 dark:data-[state=active]:text-rose-400 data-[state=active]:border-rose-500/30", dot: null, badge: unseenCritical > 0 ? unseenCritical : (hasCritical ? totalCriticalItems : null), pulse: unseenCritical > 0 },
+    { value: "top", icon: Trophy, label: "Top", activeClass: "data-[state=active]:bg-amber-500/15 data-[state=active]:text-amber-600 dark:data-[state=active]:text-amber-400 data-[state=active]:border-amber-500/30", dot: null, badge: null, pulse: false },
+    { value: "weekly", icon: Activity, label: "Weekly", activeClass: "data-[state=active]:bg-sky-500/15 data-[state=active]:text-sky-600 dark:data-[state=active]:text-sky-400 data-[state=active]:border-sky-500/30", dot: null, badge: null, pulse: false },
   ];
 
   return (
