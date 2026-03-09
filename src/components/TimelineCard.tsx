@@ -363,7 +363,7 @@ const TimelineCard = ({
             {sources && sources.length > 0 && (
               <span className="text-muted-foreground font-medium inline-flex items-center gap-0.5">
                 <Radio className="w-2.5 h-2.5" />
-                {sources.length} {sources.length === 1 ? "fonte" : "fontes"}
+                {sources.length} {sources.length === 1 ? t("sourcesSingular" as any) : t("sourcesPlural" as any)}
               </span>
             )}
 
