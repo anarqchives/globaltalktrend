@@ -545,7 +545,7 @@ const TimelineCard = ({
           {sources && sources.length > 0 && (
             <div className="mb-3">
               <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide flex items-center gap-1 mb-1.5">
-                <Radio className="w-2.5 h-2.5" /> {sources.length >= 2 ? "Propagation Path" : "Source"}
+                <Radio className="w-2.5 h-2.5" /> {sources.length >= 2 ? t("propagationPath" as any) : t("sourceLabel" as any)}
               </span>
               <div className="flex items-center gap-1 flex-wrap text-[10px]">
                 {sources.slice(0, 6).map((s, idx) => (
