@@ -1035,9 +1035,19 @@ const GoogleMapView = ({
       {/* Map controls + Top Trends */}
       <div className="absolute top-3 left-3 z-[5] flex items-start gap-2">
         <div className="flex items-center gap-1 p-1 rounded-full bg-white/95 dark:bg-card/95 backdrop-blur-[12px] border border-white/50 dark:border-white/10 shadow-[0_8px_24px_rgba(0,0,0,0.08)] dark:shadow-[0_8px_24px_rgba(0,0,0,0.3)]">
-          <button onClick={() => setHeatmapEnabled(!heatmapEnabled)} className={controlBtnClass(heatmapEnabled)} title="Heatmap">
+          <button onClick={() => setMapMode("heatmap")} className={controlBtnClass(mapMode === "heatmap")} title={t("mapHeatmap")}>
             <Flame className="w-3.5 h-3.5" />
-            <span className="hidden sm:inline">Heatmap</span>
+            <span className="hidden sm:inline">{t("mapHeatmap")}</span>
+          </button>
+          <div className="w-px h-5 bg-border/40 mx-0.5" />
+          <button onClick={() => setMapMode("flow")} className={controlBtnClass(mapMode === "flow")} title={t("mapFlowMap")}>
+            <GitBranch className="w-3.5 h-3.5" />
+            <span className="hidden sm:inline">{t("mapFlowMap")}</span>
+          </button>
+          <div className="w-px h-5 bg-border/40 mx-0.5" />
+          <button onClick={() => setMapMode("sentiment")} className={controlBtnClass(mapMode === "sentiment")} title={t("mapSentiment")}>
+            <Heart className="w-3.5 h-3.5" />
+            <span className="hidden sm:inline">{t("mapSentiment")}</span>
           </button>
           {selectedCountry !== "global" && (
             <>
@@ -1052,7 +1062,6 @@ const GoogleMapView = ({
             </>
           )}
         </div>
-        {/* GlobalRanking removed to avoid duplication, now exclusively in TrendRadar */}
       </div>
 
       {/* Update notification */}
