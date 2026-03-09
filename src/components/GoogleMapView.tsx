@@ -588,9 +588,9 @@ const GoogleMapView = ({
                   <span style="font-size:10px;color:${sub};">~${arc.timeDelta}h ${t("mapFlowTimeDelta")}</span>
                 </div>
                 <div style="display:flex;align-items:center;gap:6px;padding:8px 10px;background:${isDark ? 'rgba(30,41,59,0.4)' : 'rgba(241,245,249,0.6)'};border-radius:8px;margin-bottom:8px;">
-                  <span style="font-size:10px;color:${sub};">📊 ${arc.volume.toLocaleString()} ${lang === "pt" ? "menções" : "mentions"}</span>
+                  <span style="font-size:10px;color:${sub};">📊 ${arc.volume.toLocaleString()} ${t("mapMentions")}</span>
                   <span style="font-size:10px;color:${sub};">·</span>
-                  <span style="font-size:10px;color:${sub};">${Math.round(arc.similarity * 100)}% ${lang === "pt" ? "similaridade" : "similarity"}</span>
+                  <span style="font-size:10px;color:${sub};">${Math.round(arc.similarity * 100)}% ${t("mapSimilarity")}</span>
                 </div>
                 <div style="font-size:10px;color:${isDark ? '#60a5fa' : '#3b82f6'};text-align:center;font-weight:600;padding-top:8px;border-top:1px solid ${border};">👆 ${t("mapFlowClickToFilter")}</div>
               </div>
