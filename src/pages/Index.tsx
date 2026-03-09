@@ -869,7 +869,7 @@ const Index = () => {
                                 <TooltipTrigger asChild>
                                   <button
                                     onClick={() => togglePanel("map")}
-                                    className="absolute top-2 right-2 z-20 w-6 h-6 rounded-full flex items-center justify-center bg-muted/60 hover:bg-destructive/15 text-muted-foreground hover:text-destructive border border-border/40 hover:border-destructive/30 shadow-sm backdrop-blur-sm transition-all duration-200"
+                                    className="absolute top-3 right-14 z-20 w-6 h-6 rounded-full flex items-center justify-center bg-muted/60 hover:bg-destructive/15 text-muted-foreground hover:text-destructive border border-border/40 hover:border-destructive/30 shadow-sm backdrop-blur-sm transition-all duration-200"
                                   >
                                     <X className="w-3 h-3" strokeWidth={2.5} />
                                   </button>
