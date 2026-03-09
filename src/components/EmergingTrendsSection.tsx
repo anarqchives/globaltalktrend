@@ -62,6 +62,14 @@ function getSignalLabel(platform: string): string {
   return "📊 Signal";
 }
 
+const decodeEntities = (text: string): string => {
+  if (!text || (!text.includes("&") && !text.includes("&#"))) return text;
+  const el = typeof document !== "undefined" ? document.createElement("textarea") : null;
+  if (!el) return text;
+  el.innerHTML = text;
+  return el.value;
+};
+
 export default function EmergingTrendsSection({ trends, onSelectTrend }: EmergingTrendsSectionProps) {
   const { t } = useLanguage();
   const emerging = useMemo(() => detectEmergingTrends(trends), [trends]);
