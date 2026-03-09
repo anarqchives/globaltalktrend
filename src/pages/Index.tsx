@@ -631,7 +631,7 @@ const Index = () => {
         {/* Main content area - expands to fill remaining space */}
 
         {isMobile ? (
-          <div className="h-full min-h-0 flex flex-col relative">
+          <div className="flex-1 min-h-0 flex flex-col relative">
             <div className="flex-1 min-h-0 overflow-hidden">
               {viewMode === "timeline" ? renderTimeline() : (
                 <div className="h-full">{renderMap()}</div>
@@ -649,7 +649,7 @@ const Index = () => {
             </button>
           </div>
         ) : (
-          <ResizablePanelGroup direction="horizontal" className="h-full">
+          <ResizablePanelGroup direction="horizontal" className="flex-1 min-h-0">
             <ResizablePanel defaultSize={65} minSize={40} maxSize={85}>
               <div className="h-full min-h-0 overflow-hidden" ref={timelinePanelRef}>
                 {renderTimeline()}
