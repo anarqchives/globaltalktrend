@@ -1407,16 +1407,13 @@ const GoogleMapView = ({
             <span className="hidden sm:inline">{t("mapSentiment")}</span>
           </button>
           {selectedCountry !== "global" && (
-            <>
-              <div className="w-px h-5 bg-border/40 mx-0.5" />
-              <button
-                onClick={() => { onSelectCountry("global"); googleMapRef.current?.panTo({ lat: 20, lng: 0 }); googleMapRef.current?.setZoom(2.5); }}
-                className={controlBtnClass(false)}
-                title={t("global")}
-              >
-                <Globe className="w-3.5 h-3.5" />
-              </button>
-            </>
+            <button
+              onClick={() => { onSelectCountry("global"); googleMapRef.current?.panTo({ lat: 20, lng: 0 }); googleMapRef.current?.setZoom(2.5); }}
+              className={controlBtnClass(false)}
+              title={t("global")}
+            >
+              <Globe className="w-3 h-3" />
+            </button>
           )}
         </div>
       </div>
