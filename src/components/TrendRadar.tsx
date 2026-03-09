@@ -789,7 +789,7 @@ export default function TrendRadar({ trends, allTrends, criticalMoments, anomali
               <TabsContent value="weekly" className="absolute inset-0 mt-0 flex flex-col data-[state=inactive]:hidden animate-in fade-in-0 duration-300">
                 <Legend tab="weekly" lang={lang} />
                 <ScrollArea className="flex-1">
-                  <WeeklyDashboard trends={allTrends} />
+                  <WeeklyPulseDashboard trends={allTrends} />
                 </ScrollArea>
               </TabsContent>
 
