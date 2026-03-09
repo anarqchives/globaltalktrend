@@ -710,6 +710,10 @@ const translations: Record<LangCode, Record<TranslationKey, string>> = {
     tviGrowthLabel: "增长 (30%)", tviVolumeLabel: "量 (30%)", tviSourcesLabel: "来源 (20%)", tviGeographyLabel: "地理 (20%)",
     tviDescription: "基于以下指标衡量传播速度：",
     sourcesSingular: "来源", sourcesPlural: "来源",
+    mapMentions: "提及", mapSimilarity: "相似度", mapThinLowVol: "细线 = 低量", mapThickHighVol: "粗线 = 高量", mapPropArcs: "传播弧线", mapSizeVolume: "大小 = 量", mapFastPulse: "快速脉冲 = 加速增长", mapTrendsActiveLabel: "活跃", mapClickDetails: "点击查看详情", mapLoadingMap: "加载地图中...", mapReconnectMsg: "连接恢复后地图将显示。", mapRetry: "重试", mapFilterByCountry: "按国家筛选时间线", mapTopTrendsLabel: "热门趋势", mapMoreTrends: "更多趋势", mapCloseMap: "关闭地图",
+    mapIntCritical: "🔥 紧急", mapIntHigh: "⚡ 高", mapIntModerate: "📊 中等", mapIntAttention: "📈 关注", mapIntNormal: "ℹ️ 正常",
+    mapStatusExceptional: "异常量级 — 多个来源活跃", mapStatusHigh: "高活跃度 — 多平台加速增长", mapStatusModerate: "中等活跃度 — 发展中趋势", mapStatusLow: "低活跃度 — 信号较少", mapStatusNormal: "正常监控 — 无异常",
+    mapCritVolume: "异常高量级", mapCritGrowth: "加速增长", mapCritMultiplatform: "多平台", mapCritActive: "同时活跃趋势", mapCritMonitoring: "监控中 — 正常活跃度", mapCritNone: "暂无活跃趋势",
   },
   ja: {
     trends: "トレンド", moreTrends: "もっと見る", filters: "フィルター",
