@@ -1,8 +1,9 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Sprout, Flame, Trophy, Info } from "lucide-react";
+import { Sprout, Flame, Trophy, Info, ChevronUp, ChevronDown } from "lucide-react";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import EmergingTrendsSection from "./EmergingTrendsSection";
 import CriticalMomentsSection from "./CriticalMomentsSection";
 import GlobalRanking from "./GlobalRanking";
@@ -17,6 +18,9 @@ interface TrendRadarProps {
   onSelectTrend?: (trend: TrendCardProps) => void;
   onFilterCountry?: (code: string) => void;
 }
+
+const RADAR_STORAGE_KEY = "globaltalktrend-radar-collapsed";
+const RADAR_HEIGHT = 280; // Fixed height in pixels
 
 const legendText: Record<string, Record<string, string>> = {
   emerging: {
@@ -40,28 +44,50 @@ function Legend({ tab, lang }: { tab: string; lang: string }) {
   const text = legendText[tab]?.[lang] || legendText[tab]?.en || legendText[tab]?.pt || "";
   if (!text) return null;
   return (
-    <motion.p
-      initial={{ opacity: 0, y: -4 }}
-      animate={{ opacity: 1, y: 0 }}
-      className="text-[10px] text-muted-foreground leading-relaxed px-3 pb-2 border-b border-border/50"
-    >
+    <div className="text-[10px] text-muted-foreground leading-relaxed px-3 py-2 border-b border-border/50 flex-shrink-0">
       <Info className="w-3 h-3 inline mr-1 text-muted-foreground/60" />
       {text}
-    </motion.p>
+    </div>
   );
 }
 
 export default function TrendRadar({ trends, allTrends, criticalMoments, onSelectTrend, onFilterCountry }: TrendRadarProps) {
-  const { lang } = useLanguage();
+  const { lang, t } = useLanguage();
   const [tab, setTab] = useState("emerging");
+  const [collapsed, setCollapsed] = useState(() => {
+    if (typeof window !== "undefined") {
+      return localStorage.getItem(RADAR_STORAGE_KEY) === "true";
+    }
+    return false;
+  });
+
+  // Persist collapse state
+  useEffect(() => {
+    localStorage.setItem(RADAR_STORAGE_KEY, String(collapsed));
+  }, [collapsed]);
 
   const hasEmerging = trends.length > 3;
   const hasCritical = criticalMoments.length > 0;
 
+  const collapseLabels = {
+    pt: { collapse: "Recolher radar", expand: "Expandir radar" },
+    en: { collapse: "Collapse radar", expand: "Expand radar" },
+    es: { collapse: "Contraer radar", expand: "Expandir radar" },
+  };
+  const labels = collapseLabels[lang as keyof typeof collapseLabels] || collapseLabels.en;
+
   return (
-    <div className="border-b border-border">
-      <Tabs value={tab} onValueChange={setTab}>
-        <div className="px-3 pt-2 pb-0 flex items-center gap-2">
+    <div 
+      className="border-b border-border bg-background flex-shrink-0 transition-all duration-300 ease-out overflow-hidden"
+      style={{ 
+        height: collapsed ? 40 : RADAR_HEIGHT,
+        minHeight: collapsed ? 40 : RADAR_HEIGHT,
+        maxHeight: collapsed ? 40 : RADAR_HEIGHT,
+      }}
+    >
+      <Tabs value={tab} onValueChange={setTab} className="h-full flex flex-col">
+        {/* Header - Fixed height, always visible */}
+        <div className="px-3 pt-2 pb-1.5 flex items-center gap-2 flex-shrink-0 bg-background z-10">
           <span className="text-[10px] font-bold text-primary uppercase tracking-widest mr-1">
             Trend Radar
           </span>
@@ -82,53 +108,79 @@ export default function TrendRadar({ trends, allTrends, criticalMoments, onSelec
             </TabsTrigger>
           </TabsList>
 
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <button className="ml-auto p-1 rounded-md text-muted-foreground/50 hover:text-muted-foreground transition-colors">
-                <Info className="w-3.5 h-3.5" />
-              </button>
-            </TooltipTrigger>
-            <TooltipContent side="bottom" className="max-w-[240px] text-[10px]">
-              <p className="font-semibold mb-1">Trend Radar</p>
-              <p className="text-muted-foreground">
-                {lang === "pt"
-                  ? "Módulo de detecção inteligente que monitora sinais emergentes, alertas críticos e tendências globais em tempo real."
-                  : "Intelligent detection module monitoring emerging signals, critical alerts and global trends in real time."}
-              </p>
-            </TooltipContent>
-          </Tooltip>
+          <div className="ml-auto flex items-center gap-1">
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <button className="p-1 rounded-md text-muted-foreground/50 hover:text-muted-foreground transition-colors">
+                  <Info className="w-3.5 h-3.5" />
+                </button>
+              </TooltipTrigger>
+              <TooltipContent side="bottom" className="max-w-[240px] text-[10px]">
+                <p className="font-semibold mb-1">Trend Radar</p>
+                <p className="text-muted-foreground">
+                  {lang === "pt"
+                    ? "Módulo de detecção inteligente que monitora sinais emergentes, alertas críticos e tendências globais em tempo real."
+                    : "Intelligent detection module monitoring emerging signals, critical alerts and global trends in real time."}
+                </p>
+              </TooltipContent>
+            </Tooltip>
+
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <button 
+                  onClick={() => setCollapsed(c => !c)}
+                  className="p-1 rounded-md text-muted-foreground/50 hover:text-muted-foreground hover:bg-secondary/60 transition-colors"
+                  aria-label={collapsed ? labels.expand : labels.collapse}
+                >
+                  {collapsed ? <ChevronDown className="w-4 h-4" /> : <ChevronUp className="w-4 h-4" />}
+                </button>
+              </TooltipTrigger>
+              <TooltipContent side="bottom" className="text-[10px]">
+                {collapsed ? labels.expand : labels.collapse}
+              </TooltipContent>
+            </Tooltip>
+          </div>
         </div>
 
-        <AnimatePresence mode="wait">
-          <TabsContent value="emerging" className="mt-0">
-            <Legend tab="emerging" lang={lang} />
-            {hasEmerging ? (
-              <EmergingTrendsSection trends={trends} onSelectTrend={onSelectTrend} />
-            ) : (
-              <p className="text-[11px] text-muted-foreground px-3 py-4 text-center">
-                {lang === "pt" ? "Nenhum sinal emergente detectado no momento." : "No emerging signals detected at this time."}
-              </p>
-            )}
-          </TabsContent>
+        {/* Content - Scrollable area with fixed height */}
+        {!collapsed && (
+          <div className="flex-1 min-h-0 overflow-hidden">
+            <TabsContent value="emerging" className="mt-0 h-full flex flex-col">
+              <Legend tab="emerging" lang={lang} />
+              <ScrollArea className="flex-1">
+                {hasEmerging ? (
+                  <EmergingTrendsSection trends={trends} onSelectTrend={onSelectTrend} />
+                ) : (
+                  <p className="text-[11px] text-muted-foreground px-3 py-4 text-center">
+                    {lang === "pt" ? "Nenhum sinal emergente detectado no momento." : "No emerging signals detected at this time."}
+                  </p>
+                )}
+              </ScrollArea>
+            </TabsContent>
 
-          <TabsContent value="critical" className="mt-0">
-            <Legend tab="critical" lang={lang} />
-            {hasCritical ? (
-              <CriticalMomentsSection moments={criticalMoments} onSelectTrend={onSelectTrend} />
-            ) : (
-              <p className="text-[11px] text-muted-foreground px-3 py-4 text-center">
-                {lang === "pt" ? "Nenhum alerta crítico no momento." : "No critical alerts at this time."}
-              </p>
-            )}
-          </TabsContent>
+            <TabsContent value="critical" className="mt-0 h-full flex flex-col">
+              <Legend tab="critical" lang={lang} />
+              <ScrollArea className="flex-1">
+                {hasCritical ? (
+                  <CriticalMomentsSection moments={criticalMoments} onSelectTrend={onSelectTrend} />
+                ) : (
+                  <p className="text-[11px] text-muted-foreground px-3 py-4 text-center">
+                    {lang === "pt" ? "Nenhum alerta crítico no momento." : "No critical alerts at this time."}
+                  </p>
+                )}
+              </ScrollArea>
+            </TabsContent>
 
-          <TabsContent value="top" className="mt-0">
-            <Legend tab="top" lang={lang} />
-            <div className="px-3 py-2">
-              <TopTrendsGrid trends={allTrends} onSelectTrend={onSelectTrend} onFilterCountry={onFilterCountry} />
-            </div>
-          </TabsContent>
-        </AnimatePresence>
+            <TabsContent value="top" className="mt-0 h-full flex flex-col">
+              <Legend tab="top" lang={lang} />
+              <ScrollArea className="flex-1">
+                <div className="px-3 py-2">
+                  <TopTrendsGrid trends={allTrends} onSelectTrend={onSelectTrend} onFilterCountry={onFilterCountry} />
+                </div>
+              </ScrollArea>
+            </TabsContent>
+          </div>
+        )}
       </Tabs>
     </div>
   );
