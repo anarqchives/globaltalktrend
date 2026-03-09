@@ -910,6 +910,10 @@ const translations: Record<LangCode, Record<TranslationKey, string>> = {
     signalTooltip: "पहचाना सिग्नल प्रकार: Spike, Search, Social, News, Dev, Knowledge।",
     trendTableTitle: "शीर्षक", trendTablePlatform: "प्लेटफ़ॉर्म", trendTableVolume: "मात्रा",
     trendTableChange: "बदलाव", trendTableCountry: "देश",
+    mapFlowMap: "प्रवाह", mapSentiment: "भावना", mapHeatmap: "हीटमैप",
+    mapFlowLegendTitle: "ट्रेंड प्रसार", mapFlowOrigin: "मूल", mapFlowDestination: "गंतव्य", mapFlowPropagation: "प्रसार", mapFlowTimeDelta: "प्रसार समय", mapFlowClickToFilter: "फ़िल्टर करने के लिए क्लिक करें", mapFlowNoData: "इस अवधि के लिए पर्याप्त प्रसार डेटा नहीं",
+    mapSentLegendTitle: "भावनात्मक परिदृश्य", mapSentPositive: "सकारात्मक", mapSentNegative: "नकारात्मक", mapSentMixed: "ध्रुवीकृत", mapSentNeutral: "तटस्थ", mapSentBreakdown: "भावना वितरण", mapSentTopTrends: "शीर्ष रुझान", mapSentNoData: "भावना डेटा अपर्याप्त",
+    mapSentVolume: "कुल मात्रा", mapSentGrowth: "औसत वृद्धि", mapSentActiveTrends: "सक्रिय रुझान",
   },
   ru: {
     trends: "Тренды", moreTrends: "Больше трендов", filters: "Фильтры",
