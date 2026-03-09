@@ -30,7 +30,7 @@ export default function FreshnessIndicator({ publishedAt, time }: FreshnessIndic
       }
     }
 
-    if (!ts) ts = now - 7_200_000; // default 2h
+    if (!ts) ts = now - 7_200_000;
 
     const diffMin = Math.floor((now - ts) / 60_000);
     const date = new Date(ts);
@@ -39,13 +39,28 @@ export default function FreshnessIndicator({ publishedAt, time }: FreshnessIndic
       minute: "2-digit",
     });
 
+    const freshLabels: Record<string, { fresh: string; recent: string; old: string }> = {
+      pt: { fresh: "🟢 Dados frescos", recent: "🟡 Dados recentes", old: "🔴 Dados antigos" },
+      en: { fresh: "🟢 Fresh data", recent: "🟡 Recent data", old: "🔴 Older data" },
+      es: { fresh: "🟢 Datos frescos", recent: "🟡 Datos recientes", old: "🔴 Datos antiguos" },
+    };
+    const fl = freshLabels[lang] || freshLabels.pt;
+
+    const ageLabels: Record<string, { age: string; time: string }> = {
+      pt: { age: "Idade", time: "Hora" },
+      en: { age: "Age", time: "Time" },
+      es: { age: "Edad", time: "Hora" },
+    };
+    const al = ageLabels[lang] || ageLabels.pt;
+
     if (diffMin < 10) {
-      return { color: "bg-green-500", label: "< 10min", exactTime: exact, ageMinutes: diffMin };
+      const ageText = diffMin < 1 ? (lang === "pt" ? "agora" : "now") : `${diffMin}min`;
+      return { color: "bg-green-500", label: fl.fresh, exactTime: exact, ageMinutes: diffMin, ageText, al };
     } else if (diffMin < 60) {
-      return { color: "bg-yellow-500", label: `${diffMin}min`, exactTime: exact, ageMinutes: diffMin };
+      return { color: "bg-yellow-500", label: fl.recent, exactTime: exact, ageMinutes: diffMin, ageText: `${diffMin}min`, al };
     } else {
       const hours = Math.floor(diffMin / 60);
-      return { color: "bg-red-500", label: `${hours}h+`, exactTime: exact, ageMinutes: diffMin };
+      return { color: "bg-red-500", label: fl.old, exactTime: exact, ageMinutes: diffMin, ageText: `${hours}h+`, al };
     }
   }, [publishedAt, time, lang]);
 
@@ -57,11 +72,8 @@ export default function FreshnessIndicator({ publishedAt, time }: FreshnessIndic
         </span>
       </TooltipTrigger>
       <TooltipContent side="top" className="text-[10px] space-y-0.5">
-        <div className="font-semibold">
-          {ageMinutes < 10 ? "🟢 Dados frescos" : ageMinutes < 60 ? "🟡 Dados recentes" : "🔴 Dados antigos"}
-        </div>
-        <div className="text-muted-foreground">Idade: {label}</div>
-        <div className="text-muted-foreground">Hora: {exactTime}</div>
+        <div className="font-semibold">{label}</div>
+        <div className="text-muted-foreground">{exactTime}</div>
       </TooltipContent>
     </Tooltip>
   );

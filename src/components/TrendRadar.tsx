@@ -349,16 +349,27 @@ function WeeklyDashboard({ trends }: { trends: TrendCardProps[] }) {
     <div className="p-3 space-y-3">
       <div className="grid grid-cols-4 gap-2">
         {[
-          { label: lang === "pt" ? "Tendências ativas" : "Active trends", value: stats.totalTrends, icon: "📊" },
-          { label: lang === "pt" ? "Snapshots 7d" : "7d Snapshots", value: stats.totalSnapshots > 999 ? `${(stats.totalSnapshots / 1000).toFixed(1)}k` : stats.totalSnapshots, icon: "📸" },
-          { label: lang === "pt" ? "Plataformas" : "Platforms", value: stats.topPlatforms.length, icon: "📡" },
-          { label: "Momentum", value: `${stats.momentum > 0 ? "+" : ""}${stats.momentum}%`, icon: stats.momentum > 0 ? "🔥" : "📉" },
-        ].map((kpi, i) => (
-          <div key={i} className="rounded-lg border border-border/40 bg-card p-2 text-center">
-            <span className="text-sm block">{kpi.icon}</span>
-            <span className="text-[13px] font-black text-foreground block">{kpi.value}</span>
-            <span className="text-[8px] text-muted-foreground">{kpi.label}</span>
-          </div>
+          { label: lang === "pt" ? "Tendências ativas" : "Active trends", value: stats.totalTrends, icon: "📊", tooltip: lang === "pt" ? "Total de tendências monitoradas" : "Total trends monitored" },
+          { label: lang === "pt" ? "Snapshots 7d" : "7d Snapshots", value: stats.totalSnapshots > 999 ? `${(stats.totalSnapshots / 1000).toFixed(1)}k` : stats.totalSnapshots, icon: "📸", tooltip: lang === "pt" ? "Capturas de dados nos últimos 7 dias" : "Data captures in last 7 days" },
+          { label: lang === "pt" ? "Plataformas" : "Platforms", value: stats.topPlatforms.length, icon: "📡", tooltip: lang === "pt" ? "Número de plataformas monitoradas" : "Number of platforms monitored" },
+          {
+            label: "Momentum",
+            value: stats.totalSnapshots < 50 ? "—" : (Math.abs(stats.momentum) > 99 ? "⚠️" : `${stats.momentum > 0 ? "+" : ""}${stats.momentum}%`),
+            icon: stats.totalSnapshots < 50 ? "⏳" : (stats.momentum > 5 ? "🔥" : stats.momentum < -5 ? "📉" : "➡️"),
+            tooltip: lang === "pt" ? "Variação do volume entre a 1ª e 2ª metade da semana" : "Volume change between first and second half of the week",
+            cls: stats.totalSnapshots < 50 ? "text-muted-foreground" : (stats.momentum > 5 ? "text-green-600 dark:text-green-400" : stats.momentum < -5 ? "text-destructive" : "text-muted-foreground"),
+          },
+        ].map((kpi: any, i) => (
+          <Tooltip key={i}>
+            <TooltipTrigger asChild>
+              <div className="rounded-lg border border-border/40 bg-card p-2 text-center cursor-help">
+                <span className="text-sm block">{kpi.icon}</span>
+                <span className={`text-[13px] font-black block ${kpi.cls || "text-foreground"}`}>{kpi.value}</span>
+                <span className="text-[8px] text-muted-foreground">{kpi.label}</span>
+              </div>
+            </TooltipTrigger>
+            <TooltipContent side="top" className="text-[10px] max-w-[200px]">{kpi.tooltip}</TooltipContent>
+          </Tooltip>
         ))}
       </div>
 

@@ -1,11 +1,12 @@
 import React, { useState, useEffect, useMemo, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { AreaChart, Area, ResponsiveContainer, XAxis, YAxis, Tooltip as RTooltip, CartesianGrid } from "recharts";
+import { AreaChart, Area, LineChart, Line, ResponsiveContainer, XAxis, YAxis, Tooltip as RTooltip, CartesianGrid } from "recharts";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { TrendCardProps } from "./TrendCard";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { supabase } from "@/integrations/supabase/client";
-import { Sparkles, TrendingUp, Clock } from "lucide-react";
+import { Sparkles, TrendingUp, Clock, ArrowUp, ArrowDown, Minus } from "lucide-react";
+import { calculateMomentum, getTooltip } from "@/lib/format-utils";
 
 // ── Category colors ──
 const CAT_COLORS: Record<string, string> = {
@@ -32,46 +33,59 @@ const CAT_COLORS: Record<string, string> = {
 const normCat = (c: string) => c.replace(/^[a-z]/, ch => ch.toUpperCase()).slice(0, 14);
 const getCatColor = (cat: string) => CAT_COLORS[cat] || "hsl(var(--muted-foreground))";
 
-// ── Sentiment color helper ──
 const sentimentColor = (score: number) => {
   if (score > 0.3) return "hsl(142, 60%, 45%)";
   if (score < -0.3) return "hsl(0, 84%, 60%)";
   return "hsl(var(--muted-foreground))";
 };
 
-// ── Progress Ring ──
-function ProgressRing({ value, max, size = 72 }: { value: number; max: number; size?: number }) {
+// ── Progress Ring with label ──
+function ProgressRing({ value, max, size = 72, lang }: { value: number; max: number; size?: number; lang: string }) {
   const r = (size - 8) / 2;
   const c = 2 * Math.PI * r;
   const pct = Math.min(value / (max || 1), 2);
   const dash = pct * c;
-  const label = pct >= 1 ? `${Math.round(pct * 100)}%` : `${Math.round(pct * 100)}%`;
+  const label = `${Math.round(pct * 100)}%`;
   const color = pct >= 1.2 ? "hsl(142, 60%, 45%)" : pct >= 0.8 ? "hsl(210, 100%, 50%)" : "hsl(var(--destructive))";
+
+  const activityLabel = lang === "pt" ? "Taxa de atividade" : lang === "es" ? "Tasa de actividad" : "Activity rate";
+  const comparedTo = lang === "pt" ? "da média" : lang === "es" ? "del promedio" : "of average";
+  const aboveBelow = pct >= 1
+    ? (lang === "pt" ? "Acima da média ↑" : lang === "es" ? "Sobre el promedio ↑" : "Above average ↑")
+    : (lang === "pt" ? "Abaixo da média ↓" : lang === "es" ? "Bajo el promedio ↓" : "Below average ↓");
 
   return (
     <Tooltip>
       <TooltipTrigger asChild>
-        <div className="relative cursor-help" style={{ width: size, height: size }}>
-          <svg viewBox={`0 0 ${size} ${size}`} className="w-full h-full -rotate-90">
-            <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke="hsl(var(--border))" strokeWidth="6" />
-            <motion.circle
-              cx={size / 2} cy={size / 2} r={r} fill="none"
-              stroke={color} strokeWidth="6" strokeLinecap="round"
-              initial={{ strokeDasharray: `0 ${c}` }}
-              animate={{ strokeDasharray: `${dash} ${c - dash}` }}
-              transition={{ duration: 0.8, ease: [0.25, 0.1, 0.25, 1] }}
-            />
-          </svg>
-          <div className="absolute inset-0 flex items-center justify-center">
-            <span className="text-[11px] font-bold text-foreground">{label}</span>
+        <div className="relative cursor-help flex flex-col items-center" style={{ width: size }}>
+          <div className="relative" style={{ width: size, height: size }}>
+            <svg viewBox={`0 0 ${size} ${size}`} className="w-full h-full -rotate-90">
+              <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke="hsl(var(--border))" strokeWidth="6" />
+              <motion.circle
+                cx={size / 2} cy={size / 2} r={r} fill="none"
+                stroke={color} strokeWidth="6" strokeLinecap="round"
+                initial={{ strokeDasharray: `0 ${c}` }}
+                animate={{ strokeDasharray: `${dash} ${c - dash}` }}
+                transition={{ duration: 0.8, ease: [0.25, 0.1, 0.25, 1] }}
+              />
+            </svg>
+            <div className="absolute inset-0 flex items-center justify-center">
+              <span className="text-[11px] font-bold text-foreground">{label}</span>
+            </div>
           </div>
+          <span className="text-[7px] text-muted-foreground mt-0.5 text-center leading-tight">{activityLabel}</span>
         </div>
       </TooltipTrigger>
-      <TooltipContent side="top" className="text-[10px] space-y-1 max-w-[200px]">
-        <div className="font-bold">Volume semanal vs. média</div>
-        <div>Esta semana: {value >= 1000 ? `${(value / 1000).toFixed(1)}K` : value}</div>
-        <div>Média histórica: {max >= 1000 ? `${(max / 1000).toFixed(1)}K` : max}</div>
-        <div className="text-muted-foreground">{pct >= 1 ? "Acima da média ↑" : "Abaixo da média ↓"}</div>
+      <TooltipContent side="top" className="text-[10px] space-y-1 max-w-[220px]">
+        <div className="font-bold">{activityLabel}</div>
+        <div>{label} {comparedTo}</div>
+        <div>
+          {lang === "pt" ? "Esta semana" : "This week"}: {value >= 1000 ? `${(value / 1000).toFixed(1)}K` : value}
+        </div>
+        <div>
+          {lang === "pt" ? "Média histórica" : "Historical avg"}: {max >= 1000 ? `${(max / 1000).toFixed(1)}K` : max}
+        </div>
+        <div className="text-muted-foreground">{aboveBelow}</div>
       </TooltipContent>
     </Tooltip>
   );
@@ -105,13 +119,19 @@ function WordCloud({ words }: { words: { text: string; count: number; sentiment:
 }
 
 // ── Category × Day Heatmap Matrix ──
-function TrendPulseMatrix({ data, topCats, onFilter }: { data: Record<string, Record<string, number>>; topCats: string[]; onFilter?: (cat: string, day: string) => void }) {
-  const days = ["Seg", "Ter", "Qua", "Qui", "Sex", "Sáb", "Dom"];
+function TrendPulseMatrix({ data, topCats, lang }: { data: Record<string, Record<string, number>>; topCats: string[]; lang: string }) {
+  const days = lang === "en" ? ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"] :
+               lang === "es" ? ["Lun", "Mar", "Mié", "Jue", "Vie", "Sáb", "Dom"] :
+               ["Seg", "Ter", "Qua", "Qui", "Sex", "Sáb", "Dom"];
+  const dayKeys = ["Seg", "Ter", "Qua", "Qui", "Sex", "Sáb", "Dom"];
+
   let maxVal = 0;
+  let totalVol = 0;
   for (const cat of topCats) {
-    for (const day of days) {
+    for (const day of dayKeys) {
       const v = data[cat]?.[day] || 0;
       if (v > maxVal) maxVal = v;
+      totalVol += v;
     }
   }
 
@@ -130,7 +150,7 @@ function TrendPulseMatrix({ data, topCats, onFilter }: { data: Record<string, Re
     <div className="overflow-x-auto">
       <div className="grid gap-px" style={{ gridTemplateColumns: `80px repeat(${days.length}, 1fr)` }}>
         <div />
-        {days.map(d => (
+        {days.map((d, i) => (
           <div key={d} className="text-[8px] text-muted-foreground text-center font-semibold py-0.5">{d}</div>
         ))}
         {topCats.map(cat => (
@@ -139,23 +159,30 @@ function TrendPulseMatrix({ data, topCats, onFilter }: { data: Record<string, Re
               <span className="w-2 h-2 rounded-full flex-shrink-0 mr-1" style={{ backgroundColor: getCatColor(cat) }} />
               {cat}
             </div>
-            {days.map(day => {
+            {dayKeys.map((day, di) => {
               const v = data[cat]?.[day] || 0;
+              const dayPct = totalVol > 0 ? Math.round((v / totalVol) * 100) : 0;
               return (
                 <Tooltip key={`${cat}-${day}`}>
                   <TooltipTrigger asChild>
                     <motion.div
-                      className="h-5 rounded-sm cursor-pointer transition-all hover:ring-1 hover:ring-primary/30 flex items-center justify-center"
-                      style={{ backgroundColor: getColor(v) }}
+                      className="h-5 rounded-sm cursor-help transition-all hover:ring-1 hover:ring-primary/30 flex items-center justify-center"
+                      style={{ backgroundColor: v > 0 ? getColor(v) : undefined }}
                       whileHover={{ scale: 1.1 }}
-                      onClick={() => onFilter?.(cat, day)}
                     >
-                      {v > 0 && <span className="text-[7px] font-bold text-foreground/70">{v >= 1000000 ? `${(v / 1000000).toFixed(0)}M` : v >= 1000 ? `${(v / 1000).toFixed(0)}K` : v}</span>}
+                      {v > 0 ? (
+                        <span className="text-[7px] font-bold text-foreground/70">
+                          {v >= 1000000 ? `${(v / 1000000).toFixed(0)}M` : v >= 1000 ? `${(v / 1000).toFixed(0)}K` : v}
+                        </span>
+                      ) : (
+                        <span className="text-[7px] text-muted-foreground/40">—</span>
+                      )}
                     </motion.div>
                   </TooltipTrigger>
                   <TooltipContent side="top" className="text-[9px]">
-                    <div className="font-bold">{cat} · {day}</div>
+                    <div className="font-bold">{cat} · {days[di]}</div>
                     <div>Volume: {v >= 1000000 ? `${(v / 1000000).toFixed(1)}M` : v >= 1000 ? `${(v / 1000).toFixed(1)}K` : v}</div>
+                    {dayPct > 0 && <div className="text-muted-foreground">{dayPct}% {lang === "pt" ? "do total" : "of total"}</div>}
                   </TooltipContent>
                 </Tooltip>
               );
@@ -163,13 +190,16 @@ function TrendPulseMatrix({ data, topCats, onFilter }: { data: Record<string, Re
           </React.Fragment>
         ))}
       </div>
-      {/* Color legend */}
+      {/* Legend */}
       <div className="flex items-center gap-1 mt-1.5 justify-end">
-        <span className="text-[7px] text-muted-foreground">Low</span>
+        <span className="text-[7px] text-muted-foreground">{lang === "pt" ? "Baixo" : "Low"}</span>
         {[0.05, 0.2, 0.4, 0.6, 0.8].map((i) => (
           <div key={i} className="w-3 h-2 rounded-sm" style={{ backgroundColor: getColor(i * maxVal) }} />
         ))}
-        <span className="text-[7px] text-muted-foreground">High</span>
+        <span className="text-[7px] text-muted-foreground">{lang === "pt" ? "Alto" : "High"}</span>
+      </div>
+      <div className="text-[7px] text-muted-foreground/60 mt-0.5 text-right">
+        {lang === "pt" ? "Cada célula = volume de menções por categoria e dia" : "Each cell = mention volume by category and day"}
       </div>
     </div>
   );
@@ -199,10 +229,15 @@ export default function WeeklyPulseDashboard({ trends }: { trends: TrendCardProp
   useEffect(() => {
     const fetchData = async () => {
       try {
+        // Fetch last 7 days of data with correct date range
+        const now = new Date();
+        const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+        
         const { data } = await supabase
           .from("trend_snapshots")
           .select("category, snapshot_at, volume_raw, platform, title, country_code")
-          .gte("snapshot_at", new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString())
+          .gte("snapshot_at", sevenDaysAgo.toISOString())
+          .lte("snapshot_at", now.toISOString())
           .order("snapshot_at", { ascending: true })
           .limit(1000);
         if (data) setWeeklyData(data);
@@ -216,32 +251,24 @@ export default function WeeklyPulseDashboard({ trends }: { trends: TrendCardProp
   const orderedDays = ["Seg", "Ter", "Qua", "Qui", "Sex", "Sáb", "Dom"];
 
   const analysis = useMemo(() => {
-    // Category daily evolution for stacked area
     const catDaily: Record<string, Record<string, number>> = {};
     const catTotal: Record<string, number> = {};
     const wordFreq: Record<string, { count: number; positive: number; negative: number }> = {};
-    const heatmap: Record<string, Record<number, number>> = {};
+    const dailyVolumes: Record<string, number> = {};
     let totalVolume = 0;
 
     for (const row of weeklyData) {
       const cat = normCat(row.category || "Geral");
       const d = new Date(row.snapshot_at);
       const dayKey = dayLabels[d.getDay()];
-      const hour = d.getHours();
       const vol = row.volume_raw || 1;
 
-      // Cat daily
       if (!catDaily[dayKey]) catDaily[dayKey] = {};
       catDaily[dayKey][cat] = (catDaily[dayKey][cat] || 0) + vol;
       catTotal[cat] = (catTotal[cat] || 0) + vol;
+      dailyVolumes[dayKey] = (dailyVolumes[dayKey] || 0) + vol;
       totalVolume += vol;
 
-      // Heatmap
-      if (!heatmap[dayKey]) heatmap[dayKey] = {};
-      const hBucket = Math.floor(hour / 3) * 3;
-      heatmap[dayKey][hBucket] = (heatmap[dayKey][hBucket] || 0) + 1;
-
-      // Word extraction
       const words = (row.title || "").toLowerCase().split(/\s+/).filter((w: string) => w.length > 4 && !["about", "after", "their", "which", "could", "would", "there", "where", "being", "entre", "sobre", "desde", "ainda", "muito", "antes", "parte"].includes(w));
       for (const w of words) {
         if (!wordFreq[w]) wordFreq[w] = { count: 0, positive: 0, negative: 0 };
@@ -249,7 +276,6 @@ export default function WeeklyPulseDashboard({ trends }: { trends: TrendCardProp
       }
     }
 
-    // Also process current trends for words
     for (const t of trends) {
       const words = t.title.toLowerCase().split(/\s+/).filter(w => w.length > 4);
       for (const w of words) {
@@ -260,22 +286,28 @@ export default function WeeklyPulseDashboard({ trends }: { trends: TrendCardProp
       }
     }
 
-    // Top categories
     const topCats = Object.entries(catTotal)
       .sort((a, b) => b[1] - a[1])
       .slice(0, 6)
       .map(([name]) => name);
 
-    // Stacked area data
-    const stackedData = orderedDays.map(day => {
-      const entry: Record<string, any> = { day };
+    // Determine which day of the week "today" is to know available data
+    const today = new Date();
+    const todayDayKey = dayLabels[today.getDay()];
+    const todayIndex = orderedDays.indexOf(todayDayKey);
+
+    // Chart data: lines instead of stacked areas, with "no data" handling
+    const stackedData = orderedDays.map((day, i) => {
+      const hasData = dailyVolumes[day] !== undefined && dailyVolumes[day] > 0;
+      const isFuture = i > todayIndex && todayIndex >= 0;
+      const entry: Record<string, any> = { day, hasData, isFuture };
       for (const cat of topCats) {
-        entry[cat] = Math.round((catDaily[day]?.[cat] || 0) / 1_000_000 * 100) / 100;
+        const rawVal = catDaily[day]?.[cat] || 0;
+        entry[cat] = isFuture ? null : Math.round(rawVal / 1_000_000 * 100) / 100;
       }
       return entry;
     });
 
-    // Word cloud
     const wordCloud = Object.entries(wordFreq)
       .sort((a, b) => b[1].count - a[1].count)
       .slice(0, 30)
@@ -285,53 +317,50 @@ export default function WeeklyPulseDashboard({ trends }: { trends: TrendCardProp
         return { text, count: data.count, sentiment };
       });
 
-    // AI insights
+    // AI Insights
     const insights: { icon: string; text: string }[] = [];
     if (topCats.length > 0) {
       const topCat = topCats[0];
       const topVol = catTotal[topCat] || 0;
       const pct = totalVolume > 0 ? Math.round((topVol / totalVolume) * 100) : 0;
       insights.push({
-        icon: "📊",
+        icon: "🏆",
         text: lang === "pt"
-          ? `${topCat} dominou a semana com ${pct}% do volume total.`
-          : `${topCat} dominated the week with ${pct}% of total volume.`,
+          ? `Categoria dominante: ${topCat} liderou com ${pct}% do volume total da semana.`
+          : lang === "es"
+          ? `Categoría dominante: ${topCat} lideró con ${pct}% del volumen total.`
+          : `Dominant category: ${topCat} led with ${pct}% of total volume.`,
       });
     }
 
-    // Find peak day
     let peakDay = orderedDays[0];
     let peakVol = 0;
     for (const day of orderedDays) {
       const dayTotal = Object.values(catDaily[day] || {}).reduce((s, v) => s + v, 0);
       if (dayTotal > peakVol) { peakVol = dayTotal; peakDay = day; }
     }
-    insights.push({
-      icon: "📈",
-      text: lang === "pt"
-        ? `Pico de atividade em ${peakDay} com ${peakVol >= 1_000_000 ? `${(peakVol / 1_000_000).toFixed(1)}M` : `${(peakVol / 1000).toFixed(0)}K`} de volume.`
-        : `Peak activity on ${peakDay} with ${peakVol >= 1_000_000 ? `${(peakVol / 1_000_000).toFixed(1)}M` : `${(peakVol / 1000).toFixed(0)}K`} volume.`,
-    });
-
-    // Momentum insight
-    const recentDays = orderedDays.slice(4);
-    const olderDays = orderedDays.slice(0, 4);
-    const recentVol = recentDays.reduce((s, d) => s + Object.values(catDaily[d] || {}).reduce((a, v) => a + v, 0), 0);
-    const olderVol = olderDays.reduce((s, d) => s + Object.values(catDaily[d] || {}).reduce((a, v) => a + v, 0), 0);
-    const momentum = olderVol > 0 ? Math.round(((recentVol - olderVol) / olderVol) * 100) : 0;
-    if (Math.abs(momentum) > 5) {
+    if (peakVol > 0) {
       insights.push({
-        icon: momentum > 0 ? "🔥" : "📉",
+        icon: "📈",
         text: lang === "pt"
-          ? `Momentum ${momentum > 0 ? "positivo" : "negativo"}: ${momentum > 0 ? "+" : ""}${momentum}% na metade mais recente da semana.`
-          : `${momentum > 0 ? "Positive" : "Negative"} momentum: ${momentum > 0 ? "+" : ""}${momentum}% in the most recent half of the week.`,
+          ? `Pico de atividade: ${peakDay} com ${peakVol >= 1_000_000 ? `${(peakVol / 1_000_000).toFixed(1)}M` : `${(peakVol / 1000).toFixed(0)}K`} de volume.`
+          : `Peak activity: ${peakDay} with ${peakVol >= 1_000_000 ? `${(peakVol / 1_000_000).toFixed(1)}M` : `${(peakVol / 1000).toFixed(0)}K`} volume.`,
       });
     }
 
-    // Historical average (rough estimate: use current week's average as baseline * 0.85)
+    // Momentum via utility
+    const momentumResult = calculateMomentum(dailyVolumes, orderedDays, todayIndex, lang);
+    if (momentumResult.isReliable && Math.abs(momentumResult.value) > 5) {
+      insights.push({
+        icon: momentumResult.value > 0 ? "🔥" : "📉",
+        text: lang === "pt"
+          ? `Momentum ${momentumResult.value > 0 ? "positivo" : "negativo"}: ${momentumResult.display} na metade mais recente da semana.`
+          : `${momentumResult.value > 0 ? "Positive" : "Negative"} momentum: ${momentumResult.display} in the most recent half.`,
+      });
+    }
+
     const historicalAvg = Math.round(totalVolume * 0.85);
 
-    // Category × Day matrix
     const catByDay: Record<string, Record<string, number>> = {};
     for (const cat of topCats) {
       catByDay[cat] = {};
@@ -344,14 +373,15 @@ export default function WeeklyPulseDashboard({ trends }: { trends: TrendCardProp
       stackedData,
       topCats,
       wordCloud,
-      heatmap,
       catByDay,
       insights,
       totalVolume,
       historicalAvg,
       totalSnapshots: weeklyData.length,
       totalTrends: trends.length,
-      momentum,
+      momentumResult,
+      dailyVolumes,
+      todayIndex,
     };
   }, [weeklyData, trends, lang]);
 
@@ -359,21 +389,40 @@ export default function WeeklyPulseDashboard({ trends }: { trends: TrendCardProp
     return (
       <div className="flex items-center justify-center py-8 text-muted-foreground">
         <div className="w-4 h-4 border-2 border-primary/30 border-t-primary rounded-full animate-spin mr-2" />
-        <span className="text-[11px]">{lang === "pt" ? "Carregando painel semanal..." : "Loading weekly dashboard..."}</span>
+        <span className="text-[11px]">{lang === "pt" ? "Carregando painel semanal..." : lang === "es" ? "Cargando panel semanal..." : "Loading weekly dashboard..."}</span>
       </div>
     );
   }
+
+  const { momentumResult } = analysis;
 
   return (
     <div className="p-3 space-y-3">
       {/* ── Row 1: KPIs + Progress Ring ── */}
       <div className="flex items-center gap-3">
-        <ProgressRing value={analysis.totalVolume} max={analysis.historicalAvg} size={64} />
+        <ProgressRing value={analysis.totalVolume} max={analysis.historicalAvg} size={64} lang={lang} />
         <div className="flex-1 grid grid-cols-3 gap-2">
           {[
-            { label: lang === "pt" ? "Trends ativas" : "Active trends", value: analysis.totalTrends, icon: "📊", tooltip: lang === "pt" ? "Total de tendências monitoradas agora" : "Total trends currently monitored" },
-            { label: lang === "pt" ? "Snapshots 7d" : "7d Snapshots", value: analysis.totalSnapshots > 999 ? `${(analysis.totalSnapshots / 1000).toFixed(1)}k` : analysis.totalSnapshots, icon: "📸", tooltip: lang === "pt" ? "Número de capturas de dados nos últimos 7 dias" : "Number of data captures in the last 7 days" },
-            { label: "Momentum", value: analysis.totalSnapshots < 50 ? "—" : `${analysis.momentum > 0 ? "+" : ""}${analysis.momentum}%`, icon: analysis.momentum > 0 ? "🔥" : analysis.totalSnapshots < 50 ? "⏳" : "📉", tooltip: lang === "pt" ? "Variação do volume entre a 1ª e 2ª metade da semana" : "Volume variation between first and second half of the week" },
+            {
+              label: lang === "pt" ? "Trends ativas" : lang === "es" ? "Trends activas" : "Active trends",
+              value: analysis.totalTrends,
+              icon: "📊",
+              tooltip: getTooltip("tvi", lang) || (lang === "pt" ? "Total de tendências monitoradas agora" : "Total trends currently monitored"),
+            },
+            {
+              label: lang === "pt" ? "Snapshots 7d" : "7d Snapshots",
+              value: analysis.totalSnapshots > 999 ? `${(analysis.totalSnapshots / 1000).toFixed(1)}k` : analysis.totalSnapshots,
+              icon: "📸",
+              tooltip: getTooltip("snapshots7d", lang),
+            },
+            {
+              label: "Momentum",
+              value: momentumResult.display,
+              icon: momentumResult.arrow === "↑" ? "🔥" : momentumResult.arrow === "↓" ? "📉" : "⏳",
+              tooltip: getTooltip("momentum", lang),
+              subtitle: momentumResult.subtitle,
+              valueColor: momentumResult.color,
+            },
           ].map((kpi: any, i: number) => (
             <Tooltip key={i}>
               <TooltipTrigger asChild>
@@ -384,11 +433,12 @@ export default function WeeklyPulseDashboard({ trends }: { trends: TrendCardProp
                   className="rounded-lg border border-border/40 bg-card p-2 text-center cursor-help"
                 >
                   <span className="text-sm block">{kpi.icon}</span>
-                  <span className="text-[13px] font-black text-foreground block">{kpi.value}</span>
-                  <span className="text-[7px] text-muted-foreground">{kpi.label}</span>
+                  <span className={`text-[13px] font-black block ${kpi.valueColor || "text-foreground"}`}>{kpi.value}</span>
+                  <span className="text-[7px] text-muted-foreground block">{kpi.label}</span>
+                  {kpi.subtitle && <span className="text-[6px] text-muted-foreground/60 block">{kpi.subtitle}</span>}
                 </motion.div>
               </TooltipTrigger>
-              <TooltipContent side="top" className="text-[10px] max-w-[200px]">
+              <TooltipContent side="top" className="text-[10px] max-w-[220px]">
                 {kpi.tooltip || kpi.label}
               </TooltipContent>
             </Tooltip>
@@ -396,38 +446,38 @@ export default function WeeklyPulseDashboard({ trends }: { trends: TrendCardProp
         </div>
       </div>
 
-      {/* ── Row 2: Stacked Area Chart ── */}
+      {/* ── Row 2: Category Evolution Chart (Lines instead of stacked area) ── */}
       <div className="rounded-lg border border-border/40 bg-card p-2">
         <span className="text-[9px] font-bold text-muted-foreground uppercase tracking-wider flex items-center gap-1 mb-1">
           <TrendingUp className="w-3 h-3" />
-          {lang === "pt" ? "Evolução por categoria" : "Category evolution"}
+          {lang === "pt" ? "Evolução por categoria" : lang === "es" ? "Evolución por categoría" : "Category evolution"}
         </span>
         <div className="h-[90px]">
           <ResponsiveContainer width="100%" height="100%">
-            <AreaChart data={analysis.stackedData} margin={{ top: 2, right: 2, left: -20, bottom: 0 }}>
+            <LineChart data={analysis.stackedData} margin={{ top: 2, right: 2, left: -20, bottom: 0 }}>
               <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
               <XAxis dataKey="day" tick={{ fontSize: 8, fill: "hsl(var(--muted-foreground))" }} tickLine={false} axisLine={false} />
               <YAxis tick={{ fontSize: 8, fill: "hsl(var(--muted-foreground))" }} tickLine={false} axisLine={false} />
               <RTooltip
                 contentStyle={{ background: "hsl(var(--popover))", border: "1px solid hsl(var(--border))", borderRadius: "8px", fontSize: "9px" }}
-                formatter={(v: number, name: string) => [`${v}M`, name]}
+                formatter={(v: any, name: string) => [v !== null ? `${v}M` : (lang === "pt" ? "Sem dados" : "No data"), name]}
               />
               {analysis.topCats.map((cat, i) => (
-                <Area
+                <Line
                   key={cat}
                   type="monotone"
                   dataKey={cat}
-                  stackId="1"
                   stroke={getCatColor(cat)}
-                  fill={getCatColor(cat)}
-                  fillOpacity={0.3 - i * 0.03}
                   strokeWidth={1.5}
+                  dot={{ r: 2, fill: getCatColor(cat) }}
+                  connectNulls={false}
+                  strokeDasharray={undefined}
                 />
               ))}
-            </AreaChart>
+            </LineChart>
           </ResponsiveContainer>
         </div>
-        {/* Category legend */}
+        {/* Category legend - clickable appearance */}
         <div className="flex items-center gap-2 flex-wrap mt-1">
           {analysis.topCats.map(cat => (
             <span key={cat} className="flex items-center gap-1 text-[8px] text-muted-foreground">
@@ -443,17 +493,20 @@ export default function WeeklyPulseDashboard({ trends }: { trends: TrendCardProp
         <div className="rounded-lg border border-border/40 bg-card p-2">
           <span className="text-[9px] font-bold text-muted-foreground uppercase tracking-wider flex items-center gap-1 mb-1">
             <Sparkles className="w-3 h-3" />
-            {lang === "pt" ? "Termos da semana" : "Weekly terms"}
+            {lang === "pt" ? "Termos da semana" : lang === "es" ? "Términos de la semana" : "Weekly terms"}
           </span>
+          <div className="text-[7px] text-muted-foreground/60 mb-1">
+            {lang === "pt" ? "Termos mais mencionados — tamanho = frequência" : "Most mentioned — size = frequency"}
+          </div>
           <WordCloud words={analysis.wordCloud} />
         </div>
 
         <div className="rounded-lg border border-border/40 bg-card p-2">
           <span className="text-[9px] font-bold text-muted-foreground uppercase tracking-wider flex items-center gap-1 mb-1">
             <Clock className="w-3 h-3" />
-            {lang === "pt" ? "Trend Pulse Matrix" : "Trend Pulse Matrix"}
+            Trend Pulse Matrix
           </span>
-          <TrendPulseMatrix data={analysis.catByDay} topCats={analysis.topCats} />
+          <TrendPulseMatrix data={analysis.catByDay} topCats={analysis.topCats} lang={lang} />
         </div>
       </div>
 
@@ -462,7 +515,7 @@ export default function WeeklyPulseDashboard({ trends }: { trends: TrendCardProp
         <div className="space-y-1.5">
           <span className="text-[9px] font-bold text-muted-foreground uppercase tracking-wider flex items-center gap-1 px-1">
             <Sparkles className="w-3 h-3" />
-            {lang === "pt" ? "Insights da semana" : "Weekly insights"}
+            {lang === "pt" ? "Insights da semana" : lang === "es" ? "Insights de la semana" : "Weekly insights"}
           </span>
           {analysis.insights.map((insight, i) => (
             <InsightCard key={i} icon={insight.icon} text={insight.text} delay={i * 0.1} />
