@@ -226,7 +226,7 @@ function TopTrendsGrid({ trends, onSelectTrend }: { trends: TrendCardProps[]; on
               transition={{ delay: i * 0.02, layout: { duration: 0.2 } }}
               onClick={() => setExpandedIdx(isExpanded ? null : idx)}
               className={`rounded-lg border border-border/40 bg-card p-2 cursor-pointer transition-all hover:border-primary/30 hover:shadow-sm ${
-                isExpanded ? "col-span-2 shadow-md ring-1 ring-primary/20" : ""
+                isExpanded ? "shadow-md ring-1 ring-primary/20" : ""
               }`}
             >
               <div className="flex items-start gap-1.5">
