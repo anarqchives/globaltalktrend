@@ -561,7 +561,11 @@ export default function TrendRadar({ trends, allTrends, criticalMoments, anomali
     };
     const handleEnd = () => {
       isDragging.current = false;
-      localStorage.setItem(RADAR_HEIGHT_KEY, String(radarHeight));
+      // Use ref to get latest height
+      setRadarHeight(prev => {
+        localStorage.setItem(RADAR_HEIGHT_KEY, String(prev));
+        return prev;
+      });
       window.removeEventListener("mousemove", handleMove);
       window.removeEventListener("mouseup", handleEnd);
       window.removeEventListener("touchmove", handleMove);
