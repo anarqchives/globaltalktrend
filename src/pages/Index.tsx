@@ -514,10 +514,8 @@ const Index = () => {
                         <span className="text-[10px] font-normal text-muted-foreground ml-1">({agora.length})</span>
                       </span>
                     </motion.div>
-                    <div className="grid gap-4" style={gridStyle}>
-                      <AnimatePresence mode="popLayout">
+                    <div style={gridStyle}>
                         {agora.map((trend) => renderCard(trend, globalIndex++))}
-                      </AnimatePresence>
                     </div>
                   </>
                 )}
