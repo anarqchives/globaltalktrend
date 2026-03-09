@@ -149,8 +149,8 @@ const FilterBar = ({ filters, onChange, onForceReset, onSaveFilter, isLoggedIn }
   ];
 
   return (
-    <div className="px-2 md:px-6 py-1.5 sticky top-12 z-40 bg-background/95 backdrop-blur-sm border-b border-border/30">
-      <div className="flex items-center gap-0.5 md:gap-1 overflow-x-auto scrollbar-thin flex-nowrap pb-1 md:pb-0" style={{ WebkitOverflowScrolling: 'touch' }}>
+    <div className="px-3 md:px-6 py-1.5 sticky top-12 z-40 bg-muted/40 backdrop-blur-sm border-b border-border/20 shadow-sm">
+      <div className="flex items-center gap-1 md:gap-1.5 overflow-x-auto scrollbar-thin flex-nowrap pb-1 md:pb-0" style={{ WebkitOverflowScrolling: 'touch' }}>
         <div className="relative flex-shrink-0">
           <select
             className={selectClass}
