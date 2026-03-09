@@ -145,7 +145,7 @@ function WeeklyHeatmap({ data }: { data: Record<string, Record<number, number>> 
                 </Tooltip>
               );
             })}
-          </>
+          </React.Fragment>
         ))}
       </div>
     </div>
