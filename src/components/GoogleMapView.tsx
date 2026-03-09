@@ -194,7 +194,7 @@ const GoogleMapView = ({
   const [mapError, setMapError] = useState<string | null>(null);
   const [mapViewType, setMapViewType] = useState<MapViewType>("roadmap");
   const [mapMode, setMapMode] = useState<MapMode>("heatmap");
-  const [heatmapEnabled, setHeatmapEnabled] = useState(true);
+  const heatmapEnabled = mapMode === "heatmap"; // derived from mapMode
   const [isDark, setIsDark] = useState(() => document.documentElement.classList.contains("dark"));
   const [updateNotif, setUpdateNotif] = useState<{ countries: number; trends: number } | null>(null);
   const [mapRetry, setMapRetry] = useState(0);
