@@ -60,7 +60,12 @@ type TranslationKey =
   | "reportInfoText" | "reportSentTrigger" | "reportWindow"
   | "tviTooltip" | "forceResetTooltip" | "liveTooltip" | "countdownTooltip"
   | "signalTooltip" | "trendTableTitle" | "trendTablePlatform" | "trendTableVolume"
-  | "trendTableChange" | "trendTableCountry";
+  | "trendTableChange" | "trendTableCountry"
+  // Map visualization modes
+  | "mapFlowMap" | "mapSentiment" | "mapHeatmap"
+  | "mapFlowLegendTitle" | "mapFlowOrigin" | "mapFlowDestination" | "mapFlowPropagation" | "mapFlowTimeDelta" | "mapFlowClickToFilter" | "mapFlowNoData"
+  | "mapSentLegendTitle" | "mapSentPositive" | "mapSentNegative" | "mapSentMixed" | "mapSentNeutral" | "mapSentBreakdown" | "mapSentTopTrends" | "mapSentNoData"
+  | "mapSentVolume" | "mapSentGrowth" | "mapSentActiveTrends";
 
 const translations: Record<LangCode, Record<TranslationKey, string>> = {
   pt: {
