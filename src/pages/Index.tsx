@@ -847,7 +847,6 @@ const Index = () => {
                               <div className="h-full min-h-0 overflow-hidden relative" ref={timelinePanelRef}>
                                 {renderTimeline()}
                               </div>
-                              </div>
                             </ResizablePanel>
                             {panelVisibility.map && <ResizableHandle withHandle />}
                           </>
