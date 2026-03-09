@@ -1197,17 +1197,17 @@ const GoogleMapView = ({
 
         let critReason = "";
         if (totalVolume > 10000) {
-          critReason = `🔥 Volume excepcionalmente alto: ${totalVolume.toLocaleString()} menções detectadas`;
+          critReason = `🔥 ${t("mapCritVolume")}: ${totalVolume.toLocaleString()} ${t("mapMentions")}`;
         } else if (avgChange > 100) {
-          critReason = `⚡ Crescimento acelerado: +${Math.round(avgChange)}% de variação média`;
+          critReason = `⚡ ${t("mapCritGrowth")}: +${Math.round(avgChange)}%`;
         } else if (platforms.length > 3) {
-          critReason = `📊 Multiplataforma: presente em ${platforms.join(', ')}`;
+          critReason = `📊 ${t("mapCritMultiplatform")}: ${platforms.join(', ')}`;
         } else if (count > 15) {
-          critReason = `📈 ${count} tendências ativas simultaneamente neste país`;
+          critReason = `📈 ${count} ${t("mapCritActive")}`;
         } else if (count > 0) {
-          critReason = `ℹ️ ${count} tendência${count > 1 ? 's' : ''} em monitoramento — atividade dentro da média`;
+          critReason = `ℹ️ ${count} trend${count > 1 ? 's' : ''} ${t("mapCritMonitoring")}`;
         } else {
-          critReason = `ℹ️ Nenhuma tendência ativa no momento`;
+          critReason = `ℹ️ ${t("mapCritNone")}`;
         }
 
         const critSectionBg = isDark
