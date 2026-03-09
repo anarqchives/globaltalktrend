@@ -668,7 +668,7 @@ export default function TrendRadar({ trends, allTrends, criticalMoments, anomali
     localStorage.setItem(RADAR_STORAGE_KEY, String(collapsed));
   }, [collapsed]);
 
-  const totalCriticalItems = criticalMoments.length + anomalies.length;
+  const totalCriticalItems = criticalMoments.length;
 
   // When new critical items arrive and user is NOT on the critical tab, increment unseen
   useEffect(() => {
