@@ -768,6 +768,10 @@ const translations: Record<LangCode, Record<TranslationKey, string>> = {
     signalTooltip: "감지된 신호 유형: Spike, Search, Social, News, Dev, Knowledge.",
     trendTableTitle: "제목", trendTablePlatform: "플랫폼", trendTableVolume: "볼륨",
     trendTableChange: "변화", trendTableCountry: "국가",
+    mapFlowMap: "흐름", mapSentiment: "감정", mapHeatmap: "히트맵",
+    mapFlowLegendTitle: "트렌드 전파", mapFlowOrigin: "출발지", mapFlowDestination: "도착지", mapFlowPropagation: "전파", mapFlowTimeDelta: "전파 시간", mapFlowClickToFilter: "클릭하여 필터링", mapFlowNoData: "이 기간의 전파 데이터가 부족합니다",
+    mapSentLegendTitle: "감정 풍경", mapSentPositive: "긍정적", mapSentNegative: "부정적", mapSentMixed: "양극화", mapSentNeutral: "중립", mapSentBreakdown: "감정 분포", mapSentTopTrends: "주요 트렌드", mapSentNoData: "감정 데이터가 부족합니다",
+    mapSentVolume: "총 볼륨", mapSentGrowth: "평균 성장", mapSentActiveTrends: "활성 트렌드",
   },
   ar: {
     trends: "الاتجاهات", moreTrends: "المزيد", filters: "التصفية",
