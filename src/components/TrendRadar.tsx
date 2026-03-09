@@ -548,10 +548,10 @@ export default function TrendRadar({ trends, allTrends, criticalMoments, anomali
                 <TooltipTrigger asChild>
                   <button
                     onClick={onClose}
-                    className="w-7 h-7 rounded-md flex items-center justify-center text-foreground/60 hover:text-destructive hover:bg-destructive/10 transition-all duration-200 border border-transparent hover:border-destructive/20"
+                    className="w-6 h-6 rounded-full flex items-center justify-center bg-muted/60 hover:bg-destructive/15 text-muted-foreground hover:text-destructive border border-border/40 hover:border-destructive/30 shadow-sm backdrop-blur-sm transition-all duration-200"
                     aria-label={lang === "pt" ? "Fechar Radar" : "Close Radar"}
                   >
-                    <X className="w-3.5 h-3.5" />
+                    <X className="w-3 h-3" strokeWidth={2.5} />
                   </button>
                 </TooltipTrigger>
                 <TooltipContent side="bottom" className="text-[10px]">
