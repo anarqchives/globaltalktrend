@@ -1,6 +1,6 @@
-import { useState, useEffect, useMemo, useRef } from "react";
+import { useState, useEffect, useMemo, useRef, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Sprout, Flame, Trophy, Info, ChevronUp, ChevronDown, Activity, AlertTriangle, ExternalLink, TrendingUp, Zap, Globe2, Radio, BarChart3, Eye, Target, Radar, ArrowRight, Sparkles, Clock, Crown, Medal, Award } from "lucide-react";
+import { Sprout, Flame, Trophy, Info, ChevronUp, ChevronDown, Activity, AlertTriangle, ExternalLink, TrendingUp, Zap, Globe2, Radio, BarChart3, Eye, Target, Radar, ArrowRight, Sparkles, Clock, Crown, Medal, Award, GripHorizontal } from "lucide-react";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -25,28 +25,31 @@ interface TrendRadarProps {
 }
 
 const RADAR_STORAGE_KEY = "globaltalktrend-radar-collapsed";
-const RADAR_HEIGHT = 350;
+const RADAR_HEIGHT_KEY = "globaltalktrend-radar-height";
+const MIN_HEIGHT = 200;
+const MAX_HEIGHT = 700;
+const DEFAULT_HEIGHT = 350;
 
 const legendText: Record<string, Record<string, string>> = {
-  emerging: {
-    pt: "Tendências em aceleração nas últimas 2h — detectadas por crescimento anômalo.",
-    en: "Accelerating trends in the last 2h — detected by anomalous growth.",
+  signals: {
+    pt: "Sinais emergentes, anomalias e tendências em aceleração — detectados em tempo real.",
+    en: "Emerging signals, anomalies and accelerating trends — detected in real time.",
+    es: "Señales emergentes, anomalías y tendencias en aceleración — detectadas en tiempo real.",
   },
   critical: {
-    pt: "⚡ Explosão de sinal — crescimento acima de +150% em menos de 2h.",
-    en: "⚡ Signal burst — growth above +150% in less than 2h.",
+    pt: "⚡ Eventos críticos — picos de volume, convergência de mídias e propagação geográfica.",
+    en: "⚡ Critical events — volume spikes, media convergence and geographic spread.",
+    es: "⚡ Eventos críticos — picos de volumen, convergencia de medios y propagación geográfica.",
   },
   top: {
     pt: "Os 20 assuntos mais discutidos agora — ordenados por volume total.",
     en: "The 20 most discussed topics right now — sorted by total volume.",
+    es: "Los 20 temas más discutidos ahora — ordenados por volumen total.",
   },
   weekly: {
     pt: "Painel semanal de inteligência — volume, categorias e tendências dos últimos 7 dias.",
     en: "Weekly intelligence dashboard — volume, categories and trends from the last 7 days.",
-  },
-  anomalies: {
-    pt: "🔍 Padrões estatisticamente incomuns — comportamentos inesperados detectados em múltiplas plataformas simultaneamente.",
-    en: "🔍 Statistically unusual patterns — unexpected behaviors detected across multiple platforms simultaneously.",
+    es: "Panel semanal de inteligencia — volumen, categorías y tendencias de los últimos 7 días.",
   },
 };
 
@@ -104,7 +107,6 @@ function TopTrendsGrid({ trends, onSelectTrend }: { trends: TrendCardProps[]; on
   }
 
   const handleClick = (trend: TrendCardProps, idx: number, e: React.MouseEvent) => {
-    // If sourceUrl exists, open it; otherwise toggle expand
     if (trend.sourceUrl) {
       e.stopPropagation();
       window.open(trend.sourceUrl, "_blank", "noopener,noreferrer");
@@ -159,7 +161,6 @@ function TopTrendsGrid({ trends, onSelectTrend }: { trends: TrendCardProps[]; on
                   )}
                 </div>
               </button>
-              {/* Expanded details inline */}
               <AnimatePresence>
                 {isExpanded && (
                   <motion.div
@@ -170,6 +171,23 @@ function TopTrendsGrid({ trends, onSelectTrend }: { trends: TrendCardProps[]; on
                     className="overflow-hidden border border-t-0 border-border/30 rounded-b-lg bg-card px-2 pb-2"
                   >
                     {trend.description && <p className="text-[9px] text-muted-foreground mt-1.5 leading-relaxed line-clamp-3">{trend.description}</p>}
+                    {/* Trend score + category */}
+                    <div className="flex items-center gap-1 mt-1 text-[8px]">
+                      <span className="px-1 py-0.5 rounded bg-secondary text-secondary-foreground font-medium">{trend.category || "Geral"}</span>
+                      {trend.sources && trend.sources.length > 1 && (
+                        <span className="text-muted-foreground">{trend.sources.length} sources</span>
+                      )}
+                    </div>
+                    {/* Sparkline */}
+                    {trend.sparkData && trend.sparkData.length > 2 && (
+                      <div className="h-6 w-full mt-1">
+                        <ResponsiveContainer width="100%" height="100%">
+                          <AreaChart data={trend.sparkData.map(v => ({ v }))}>
+                            <Area type="monotone" dataKey="v" stroke="hsl(var(--primary))" strokeWidth={1} fill="hsl(var(--primary))" fillOpacity={0.1} dot={false} />
+                          </AreaChart>
+                        </ResponsiveContainer>
+                      </div>
+                    )}
                     <div className="flex gap-1 mt-1.5" onClick={e => e.stopPropagation()}>
                       {trend.sourceUrl && (
                         <a href={trend.sourceUrl} target="_blank" rel="noopener noreferrer"
@@ -240,6 +258,9 @@ function TopTrendsGrid({ trends, onSelectTrend }: { trends: TrendCardProps[]; on
                   >
                     <div className="mt-2 pt-1.5 border-t border-border/30 space-y-1.5">
                       {trend.description && <p className="text-[9px] text-muted-foreground leading-relaxed line-clamp-3">{trend.description}</p>}
+                      <div className="flex items-center gap-1 text-[8px]">
+                        <span className="px-1 py-0.5 rounded bg-secondary text-secondary-foreground font-medium">{trend.category || "Geral"}</span>
+                      </div>
                       {trend.sparkData && trend.sparkData.length > 2 && (
                         <div className="h-6 w-full">
                           <ResponsiveContainer width="100%" height="100%">
@@ -305,11 +326,11 @@ function AnomaliesPredictive({ anomalies, lang, onAnomalyClick }: {
     let prediction = "";
     if (platformSet.size >= 3 && avgChange > 200) {
       prediction = lang === "pt"
-        ? "Convergência global detectada — múltiplas plataformas em aceleração simultânea. Alta probabilidade de intensificação em 4-8h."
+        ? "Convergência global detectada — múltiplas plataformas em aceleração simultânea."
         : "Global convergence detected — simultaneous acceleration across platforms.";
     } else if (countrySet.size >= 3) {
       prediction = lang === "pt"
-        ? "Propagação geográfica ativa — anomalias expandindo entre regiões. Monitoramento intensificado."
+        ? "Propagação geográfica ativa — anomalias expandindo entre regiões."
         : "Active geographic spread — anomalies expanding across regions.";
     } else if (avgChange > 150) {
       prediction = lang === "pt"
@@ -323,15 +344,6 @@ function AnomaliesPredictive({ anomalies, lang, onAnomalyClick }: {
 
     return { platformCount: platformSet.size, countryCount: countrySet.size, dominantType, avgChange, prediction };
   }, [anomalies, lang]);
-
-  if (anomalies.length === 0) {
-    return (
-      <div className="px-3 py-6 text-center text-muted-foreground">
-        <Radar className="w-8 h-8 mx-auto mb-2 opacity-30" />
-        <p className="text-[11px]">{lang === "pt" ? "Nenhuma anomalia detectada no momento." : "No anomalies detected."}</p>
-      </div>
-    );
-  }
 
   return (
     <div className="p-3 space-y-2.5">
@@ -366,7 +378,6 @@ function AnomaliesPredictive({ anomalies, lang, onAnomalyClick }: {
           const isExpanded = expandedIdx === i;
           const trendId = `${anomaly.trend.platform}-${anomaly.trend.title.slice(0, 20)}`;
 
-          // Smart prediction per card
           const cardPrediction = changeNum > 300
             ? (lang === "pt" ? "Viralização confirmada — ciclo noticioso mainstream em 2-4h." : "Viral pattern confirmed.")
             : changeNum > 150
@@ -410,7 +421,7 @@ function AnomaliesPredictive({ anomalies, lang, onAnomalyClick }: {
                 <span className={`px-1 py-0 rounded text-[7px] font-bold ${
                   anomaly.severity === "high" ? "bg-destructive/10 text-destructive" : "bg-amber-500/10 text-amber-600"
                 }`}>
-                  {anomaly.severity === "high" ? "ALTO" : "MÉDIO"}
+                  {anomaly.severity === "high" ? (lang === "pt" ? "ALTO" : "HIGH") : (lang === "pt" ? "MÉDIO" : "MEDIUM")}
                 </span>
               </div>
 
@@ -441,15 +452,25 @@ function AnomaliesPredictive({ anomalies, lang, onAnomalyClick }: {
                     className="overflow-hidden"
                   >
                     <div className="mt-2 pt-2 border-t border-destructive/10 space-y-2">
-                      {/* Why anomaly */}
-                      <p className="text-[10px] text-muted-foreground leading-relaxed">
-                        <span className="font-semibold text-foreground">{lang === "pt" ? "Análise: " : "Analysis: "}</span>
-                        {anomaly.message}
-                      </p>
+                      {/* Anomaly explanation */}
+                      <div className="space-y-1">
+                        <p className="text-[10px] text-muted-foreground leading-relaxed">
+                          <span className="font-semibold text-foreground">{lang === "pt" ? "Tipo: " : "Type: "}</span>
+                          {info.emoji} {info.label}
+                        </p>
+                        <p className="text-[10px] text-muted-foreground leading-relaxed">
+                          <span className="font-semibold text-foreground">{lang === "pt" ? "Análise: " : "Analysis: "}</span>
+                          {anomaly.message}
+                        </p>
+                        <p className="text-[10px] text-muted-foreground leading-relaxed">
+                          <span className="font-semibold text-foreground">{lang === "pt" ? "Magnitude: " : "Magnitude: "}</span>
+                          +{Math.round(changeNum)}% {lang === "pt" ? "acima do normal" : "above baseline"}
+                        </p>
+                      </div>
 
                       {/* Sparkline large */}
                       {sparkData.length > 2 && (
-                        <div className="h-8 w-full">
+                        <div className="h-10 w-full">
                           <ResponsiveContainer width="100%" height="100%">
                             <AreaChart data={sparkData}>
                               <defs>
@@ -473,7 +494,6 @@ function AnomaliesPredictive({ anomalies, lang, onAnomalyClick }: {
                           <span className="text-[8px] font-bold text-primary/60">{confidenceLevel}% {lang === "pt" ? "confiança" : "confidence"}</span>
                         </div>
                         <p className="text-[10px] text-foreground/80 leading-relaxed">{cardPrediction}</p>
-                        {/* Confidence bar */}
                         <div className="mt-1 h-1 w-full rounded-full bg-muted overflow-hidden">
                           <div className="h-full rounded-full bg-primary/60 transition-all" style={{ width: `${confidenceLevel}%` }} />
                         </div>
@@ -507,12 +527,53 @@ function AnomaliesPredictive({ anomalies, lang, onAnomalyClick }: {
 // ─── MAIN COMPONENT ─────────────────────────────────────────────────────
 export default function TrendRadar({ trends, allTrends, criticalMoments, anomalies = [], onSelectTrend, onFilterCountry, onAnomalyClick }: TrendRadarProps) {
   const { lang } = useLanguage();
-  const [tab, setTab] = useState("emerging");
+  const [tab, setTab] = useState("signals");
   const [collapsed, setCollapsed] = useState(() => {
     if (typeof window !== "undefined") return localStorage.getItem(RADAR_STORAGE_KEY) === "true";
     return false;
   });
-  // Track unseen anomaly/critical count — resets when user views the Critical tab
+  const [radarHeight, setRadarHeight] = useState(() => {
+    if (typeof window !== "undefined") {
+      const saved = localStorage.getItem(RADAR_HEIGHT_KEY);
+      return saved ? Math.max(MIN_HEIGHT, Math.min(MAX_HEIGHT, parseInt(saved))) : DEFAULT_HEIGHT;
+    }
+    return DEFAULT_HEIGHT;
+  });
+
+  // Drag resize state
+  const isDragging = useRef(false);
+  const dragStartY = useRef(0);
+  const dragStartHeight = useRef(DEFAULT_HEIGHT);
+
+  const handleDragStart = useCallback((e: React.MouseEvent | React.TouchEvent) => {
+    e.preventDefault();
+    isDragging.current = true;
+    dragStartHeight.current = radarHeight;
+    const clientY = 'touches' in e ? e.touches[0].clientY : e.clientY;
+    dragStartY.current = clientY;
+
+    const handleMove = (ev: MouseEvent | TouchEvent) => {
+      if (!isDragging.current) return;
+      const cy = 'touches' in ev ? ev.touches[0].clientY : ev.clientY;
+      const delta = cy - dragStartY.current;
+      const newH = Math.max(MIN_HEIGHT, Math.min(MAX_HEIGHT, dragStartHeight.current + delta));
+      setRadarHeight(newH);
+    };
+    const handleEnd = () => {
+      isDragging.current = false;
+      localStorage.setItem(RADAR_HEIGHT_KEY, String(radarHeight));
+      window.removeEventListener("mousemove", handleMove);
+      window.removeEventListener("mouseup", handleEnd);
+      window.removeEventListener("touchmove", handleMove);
+      window.removeEventListener("touchend", handleEnd);
+    };
+    window.addEventListener("mousemove", handleMove);
+    window.addEventListener("mouseup", handleEnd);
+    window.addEventListener("touchmove", handleMove);
+    window.addEventListener("touchend", handleEnd);
+  }, [radarHeight]);
+
+  // Track unseen
   const [unseenCritical, setUnseenCritical] = useState(0);
   const prevCriticalCountRef = useRef(0);
 
@@ -520,60 +581,81 @@ export default function TrendRadar({ trends, allTrends, criticalMoments, anomali
     localStorage.setItem(RADAR_STORAGE_KEY, String(collapsed));
   }, [collapsed]);
 
-  const totalCriticalItems = criticalMoments.length;
-
-  // When new critical items arrive and user is NOT on the critical tab, increment unseen
+  // Save height on change
   useEffect(() => {
-    if (totalCriticalItems > prevCriticalCountRef.current && tab !== "critical") {
-      setUnseenCritical(totalCriticalItems);
-    }
-    prevCriticalCountRef.current = totalCriticalItems;
-  }, [totalCriticalItems, tab]);
+    localStorage.setItem(RADAR_HEIGHT_KEY, String(radarHeight));
+  }, [radarHeight]);
 
-  // When user clicks the Critical tab, reset unseen
+  const totalAlertItems = criticalMoments.length + anomalies.length;
+
+  useEffect(() => {
+    if (totalAlertItems > prevCriticalCountRef.current && tab !== "critical") {
+      setUnseenCritical(totalAlertItems);
+    }
+    prevCriticalCountRef.current = totalAlertItems;
+  }, [totalAlertItems, tab]);
+
   useEffect(() => {
     if (tab === "critical") setUnseenCritical(0);
   }, [tab]);
 
   const hasEmerging = trends.length > 3;
   const hasCritical = criticalMoments.length > 0;
+  const hasAnomalies = anomalies.length > 0;
+  const hasSignals = hasEmerging || hasAnomalies;
 
   const labels = {
     collapse: lang === "pt" ? "Recolher radar" : "Collapse radar",
     expand: lang === "pt" ? "Expandir radar" : "Expand radar",
   };
 
-  const hasAnomalies = anomalies.length > 0;
-  // Track unseen anomalies separately
-  const [unseenAnomalies, setUnseenAnomalies] = useState(0);
-  const prevAnomalyCountRef = useRef(0);
-
-  useEffect(() => {
-    if (anomalies.length > prevAnomalyCountRef.current && tab !== "anomalies") {
-      setUnseenAnomalies(anomalies.length);
-    }
-    prevAnomalyCountRef.current = anomalies.length;
-  }, [anomalies.length, tab]);
-
-  useEffect(() => {
-    if (tab === "anomalies") setUnseenAnomalies(0);
-  }, [tab]);
-
+  // Consolidated tab structure: Signals (emerging + anomalies), Critical Events, Top, Weekly
   const tabConfig = [
-    { value: "emerging", icon: Sprout, label: lang === "pt" ? "Emergentes" : "Emerging", activeClass: "data-[state=active]:bg-emerald-500/15 data-[state=active]:text-emerald-600 dark:data-[state=active]:text-emerald-400 data-[state=active]:border-emerald-500/30", dot: hasEmerging ? "bg-emerald-500" : null, badge: null, pulse: false },
-    { value: "critical", icon: Flame, label: lang === "pt" ? "Crítico" : "Critical", activeClass: "data-[state=active]:bg-rose-500/15 data-[state=active]:text-rose-600 dark:data-[state=active]:text-rose-400 data-[state=active]:border-rose-500/30", dot: null, badge: unseenCritical > 0 ? unseenCritical : (criticalMoments.length > 0 ? criticalMoments.length : null), pulse: unseenCritical > 0 },
-    { value: "anomalies", icon: AlertTriangle, label: lang === "pt" ? "Anomalias" : "Anomalies", activeClass: "data-[state=active]:bg-red-500/15 data-[state=active]:text-red-600 dark:data-[state=active]:text-red-400 data-[state=active]:border-red-500/30", dot: null, badge: unseenAnomalies > 0 ? unseenAnomalies : (hasAnomalies ? anomalies.length : null), pulse: unseenAnomalies > 0 },
-    { value: "top", icon: Trophy, label: "Top", activeClass: "data-[state=active]:bg-amber-500/15 data-[state=active]:text-amber-600 dark:data-[state=active]:text-amber-400 data-[state=active]:border-amber-500/30", dot: null, badge: null, pulse: false },
-    { value: "weekly", icon: Activity, label: lang === "pt" ? "Semana" : "Weekly", activeClass: "data-[state=active]:bg-sky-500/15 data-[state=active]:text-sky-600 dark:data-[state=active]:text-sky-400 data-[state=active]:border-sky-500/30", dot: null, badge: null, pulse: false },
+    {
+      value: "signals",
+      icon: Sprout,
+      label: lang === "pt" ? "Sinais" : "Signals",
+      activeClass: "data-[state=active]:bg-emerald-500/15 data-[state=active]:text-emerald-600 dark:data-[state=active]:text-emerald-400 data-[state=active]:border-emerald-500/30",
+      dot: hasSignals ? "bg-emerald-500" : null,
+      badge: hasAnomalies ? anomalies.length : null,
+      pulse: false,
+    },
+    {
+      value: "critical",
+      icon: Flame,
+      label: lang === "pt" ? "Crítico" : "Critical",
+      activeClass: "data-[state=active]:bg-rose-500/15 data-[state=active]:text-rose-600 dark:data-[state=active]:text-rose-400 data-[state=active]:border-rose-500/30",
+      dot: null,
+      badge: unseenCritical > 0 ? unseenCritical : (hasCritical ? criticalMoments.length : null),
+      pulse: unseenCritical > 0,
+    },
+    {
+      value: "top",
+      icon: Trophy,
+      label: "Top",
+      activeClass: "data-[state=active]:bg-amber-500/15 data-[state=active]:text-amber-600 dark:data-[state=active]:text-amber-400 data-[state=active]:border-amber-500/30",
+      dot: null,
+      badge: null,
+      pulse: false,
+    },
+    {
+      value: "weekly",
+      icon: Activity,
+      label: lang === "pt" ? "Semana" : "Weekly",
+      activeClass: "data-[state=active]:bg-sky-500/15 data-[state=active]:text-sky-600 dark:data-[state=active]:text-sky-400 data-[state=active]:border-sky-500/30",
+      dot: null,
+      badge: null,
+      pulse: false,
+    },
   ];
 
   return (
     <div
       className="bg-card/50 backdrop-blur-sm flex-shrink-0 transition-all duration-300 ease-out overflow-hidden shadow-[0_2px_8px_-2px_hsl(var(--primary)/0.08)]"
       style={{
-        height: collapsed ? 40 : RADAR_HEIGHT,
-        minHeight: collapsed ? 40 : RADAR_HEIGHT,
-        maxHeight: collapsed ? 40 : RADAR_HEIGHT,
+        height: collapsed ? 40 : radarHeight,
+        minHeight: collapsed ? 40 : MIN_HEIGHT,
+        maxHeight: collapsed ? 40 : MAX_HEIGHT,
       }}
     >
       <Tabs value={tab} onValueChange={setTab} className="h-full flex flex-col">
@@ -633,20 +715,46 @@ export default function TrendRadar({ trends, allTrends, criticalMoments, anomali
         {!collapsed && (
           <div className="flex-1 min-h-0 flex flex-col overflow-hidden">
             <div className="flex-1 min-h-0 overflow-hidden relative">
-              <TabsContent value="emerging" className="absolute inset-0 mt-0 flex flex-col data-[state=inactive]:hidden animate-in fade-in-0 duration-300">
-                <Legend tab="emerging" lang={lang} />
+              {/* SIGNALS TAB: Emerging + Anomalies consolidated */}
+              <TabsContent value="signals" className="absolute inset-0 mt-0 flex flex-col data-[state=inactive]:hidden animate-in fade-in-0 duration-300">
+                <Legend tab="signals" lang={lang} />
                 <ScrollArea className="flex-1">
+                  {/* Anomalies section first if present */}
+                  {hasAnomalies && (
+                    <div className="mb-1">
+                      <div className="px-3 pt-2 pb-1">
+                        <span className="text-[9px] font-bold text-destructive uppercase tracking-wider flex items-center gap-1">
+                          <AlertTriangle className="w-3 h-3" />
+                          {lang === "pt" ? "Anomalias Detectadas" : "Detected Anomalies"}
+                          <span className="px-1 py-0 rounded-full bg-destructive/10 text-destructive text-[8px] font-bold ml-1">
+                            {anomalies.length}
+                          </span>
+                        </span>
+                      </div>
+                      <AnomaliesPredictive anomalies={anomalies} lang={lang} onAnomalyClick={onAnomalyClick} />
+                    </div>
+                  )}
+                  {/* Emerging signals */}
                   {hasEmerging ? (
-                    <EmergingTrendsSection trends={trends} onSelectTrend={onSelectTrend} />
-                  ) : (
+                    <div>
+                      <div className="px-3 pt-2 pb-1">
+                        <span className="text-[9px] font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider flex items-center gap-1">
+                          <Sprout className="w-3 h-3" />
+                          {lang === "pt" ? "Sinais Emergentes" : "Emerging Signals"}
+                        </span>
+                      </div>
+                      <EmergingTrendsSection trends={trends} onSelectTrend={onSelectTrend} />
+                    </div>
+                  ) : !hasAnomalies && (
                     <div className="flex flex-col items-center justify-center py-8 text-muted-foreground">
                       <Sprout className="w-8 h-8 mb-2 opacity-30" />
-                      <p className="text-[11px]">{lang === "pt" ? "Nenhum sinal emergente detectado no momento." : "No emerging signals detected."}</p>
+                      <p className="text-[11px]">{lang === "pt" ? "Nenhum sinal detectado no momento. Dados recentes serão exibidos quando disponíveis." : "No signals detected. Recent data will appear when available."}</p>
                     </div>
                   )}
                 </ScrollArea>
               </TabsContent>
 
+              {/* CRITICAL TAB */}
               <TabsContent value="critical" className="absolute inset-0 mt-0 flex flex-col data-[state=inactive]:hidden animate-in fade-in-0 duration-300">
                 <Legend tab="critical" lang={lang} />
                 <ScrollArea className="flex-1">
@@ -655,26 +763,34 @@ export default function TrendRadar({ trends, allTrends, criticalMoments, anomali
                   ) : (
                     <div className="flex flex-col items-center justify-center py-8 text-muted-foreground">
                       <Flame className="w-8 h-8 mb-2 opacity-30" />
-                      <p className="text-[11px]">{lang === "pt" ? "Nenhum alerta crítico no momento." : "No critical alerts."}</p>
+                      <p className="text-[11px] text-center px-4">
+                        {lang === "pt" 
+                          ? "Nenhum evento crítico detectado. O sistema monitora picos, convergência e propagação em tempo real." 
+                          : "No critical events detected. The system monitors spikes, convergence and propagation in real time."}
+                      </p>
+                      {/* Show latest high-volume trends as fallback context */}
+                      {allTrends.length > 0 && (
+                        <div className="mt-3 w-full px-4">
+                          <p className="text-[9px] text-muted-foreground/60 mb-1.5 text-center">
+                            {lang === "pt" ? "Tendências mais ativas agora:" : "Most active trends now:"}
+                          </p>
+                          <div className="space-y-1">
+                            {allTrends.slice(0, 3).map((t, i) => (
+                              <div key={i} className="flex items-center gap-1.5 text-[9px] text-muted-foreground/80 bg-muted/20 rounded px-2 py-1">
+                                <span className="font-semibold text-foreground/70 truncate flex-1">{t.title}</span>
+                                <span className="text-[8px]">{t.platform}</span>
+                                {t.change && <span className="text-emerald-500 font-bold">{t.change}</span>}
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
                     </div>
                   )}
                 </ScrollArea>
               </TabsContent>
 
-              <TabsContent value="anomalies" className="absolute inset-0 mt-0 flex flex-col data-[state=inactive]:hidden animate-in fade-in-0 duration-300">
-                <Legend tab="anomalies" lang={lang} />
-                <ScrollArea className="flex-1">
-                  {hasAnomalies ? (
-                    <AnomaliesPredictive anomalies={anomalies} lang={lang} onAnomalyClick={onAnomalyClick} />
-                  ) : (
-                    <div className="flex flex-col items-center justify-center py-8 text-muted-foreground">
-                      <AlertTriangle className="w-8 h-8 mb-2 opacity-30" />
-                      <p className="text-[11px]">{lang === "pt" ? "Nenhuma anomalia detectada no momento." : "No anomalies detected."}</p>
-                    </div>
-                  )}
-                </ScrollArea>
-              </TabsContent>
-
+              {/* TOP TAB */}
               <TabsContent value="top" className="absolute inset-0 mt-0 flex flex-col data-[state=inactive]:hidden animate-in fade-in-0 duration-300">
                 <Legend tab="top" lang={lang} />
                 <ScrollArea className="flex-1">
@@ -684,18 +800,28 @@ export default function TrendRadar({ trends, allTrends, criticalMoments, anomali
                 </ScrollArea>
               </TabsContent>
 
+              {/* WEEKLY TAB */}
               <TabsContent value="weekly" className="absolute inset-0 mt-0 flex flex-col data-[state=inactive]:hidden animate-in fade-in-0 duration-300">
                 <Legend tab="weekly" lang={lang} />
                 <ScrollArea className="flex-1">
                   <WeeklyPulseDashboard trends={allTrends} />
                 </ScrollArea>
               </TabsContent>
-
-              
             </div>
           </div>
         )}
       </Tabs>
+
+      {/* Drag resize handle */}
+      {!collapsed && (
+        <div
+          onMouseDown={handleDragStart}
+          onTouchStart={handleDragStart}
+          className="h-2 w-full cursor-row-resize flex items-center justify-center group hover:bg-muted/30 transition-colors border-t border-border/30"
+        >
+          <div className="w-8 h-0.5 rounded-full bg-muted-foreground/20 group-hover:bg-primary/40 transition-colors" />
+        </div>
+      )}
     </div>
   );
 }

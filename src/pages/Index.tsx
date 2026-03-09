@@ -332,7 +332,19 @@ const Index = () => {
   const handleSelectTrend = useCallback((trend: TrendCardProps) => {
     const trendId = `${trend.platform}-${trend.title.slice(0, 20)}`;
     setExpandedTrendId(trendId);
-    scrollRef.current?.scrollTo({ top: 0, behavior: "smooth" });
+    setHighlightedTrendId(trendId);
+    // Switch to timeline view on mobile
+    setViewMode("timeline");
+    setTimeout(() => {
+      const el = document.getElementById(`trend-card-${trendId}`);
+      if (el) {
+        el.scrollIntoView({ behavior: "smooth", block: "center" });
+      } else {
+        // Card may not be in visible range, scroll to top
+        scrollRef.current?.scrollTo({ top: 0, behavior: "smooth" });
+      }
+      setTimeout(() => setHighlightedTrendId(null), 2500);
+    }, 150);
   }, []);
 
   const handleAnomalyClick = useCallback((trendId: string) => {
