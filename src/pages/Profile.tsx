@@ -32,10 +32,10 @@ import ReportsTab from "@/components/ReportsTab";
 import BentoDashboard from "@/components/BentoDashboard";
 
 const tabs = [
-  { key: "dashboard", label: "Meu Painel", icon: LayoutGrid },
-  { key: "filters", label: "Meus Filtros", icon: Star },
+  { key: "dashboard", label: "Visão Geral", icon: LayoutGrid },
+  { key: "filters", label: "Filtros", icon: Star },
   { key: "reports", label: "Relatórios", icon: Star },
-  { key: "alerts", label: "Meus Alertas", icon: Bell },
+  { key: "alerts", label: "Alertas", icon: Bell },
   { key: "history", label: "Histórico", icon: Clock },
   { key: "stats", label: "Estatísticas", icon: BarChart3 },
   { key: "privacy", label: "Privacidade", icon: Shield },
