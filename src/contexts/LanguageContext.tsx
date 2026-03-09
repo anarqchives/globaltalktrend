@@ -548,6 +548,10 @@ const translations: Record<LangCode, Record<TranslationKey, string>> = {
     tviGrowthLabel: "Wachstum (30%)", tviVolumeLabel: "Volumen (30%)", tviSourcesLabel: "Quellen (20%)", tviGeographyLabel: "Geographie (20%)",
     tviDescription: "Misst die Verbreitungsgeschwindigkeit basierend auf:",
     sourcesSingular: "Quelle", sourcesPlural: "Quellen",
+    mapMentions: "Erwähnungen", mapSimilarity: "Ähnlichkeit", mapThinLowVol: "Dünn = niedriges Volumen", mapThickHighVol: "Dick = hohes Volumen", mapPropArcs: "Verbreitungsbögen", mapSizeVolume: "Größe = Volumen", mapFastPulse: "Schneller Puls = beschleunigtes Wachstum", mapTrendsActiveLabel: "aktiv", mapClickDetails: "Klicken für Details", mapLoadingMap: "Karte wird geladen...", mapReconnectMsg: "Die Karte wird angezeigt, sobald die Verbindung wiederhergestellt ist.", mapRetry: "Erneut versuchen", mapFilterByCountry: "Timeline nach Land filtern", mapTopTrendsLabel: "Top Trends", mapMoreTrends: "weitere Trends", mapCloseMap: "Karte schließen",
+    mapIntCritical: "🔥 KRITISCH", mapIntHigh: "⚡ HOCH", mapIntModerate: "📊 MODERAT", mapIntAttention: "📈 AUFMERKSAMKEIT", mapIntNormal: "ℹ️ NORMAL",
+    mapStatusExceptional: "Außergewöhnliches Volumen — mehrere aktive Quellen", mapStatusHigh: "Hohe Aktivität — beschleunigtes Wachstum", mapStatusModerate: "Moderate Aktivität — sich entwickelnde Trends", mapStatusLow: "Geringe Aktivität — wenige Signale", mapStatusNormal: "Normale Überwachung — keine Anomalien",
+    mapCritVolume: "Außergewöhnlich hohes Volumen", mapCritGrowth: "Beschleunigtes Wachstum", mapCritMultiplatform: "Plattformübergreifend", mapCritActive: "gleichzeitig aktive Trends", mapCritMonitoring: "Überwachung — normale Aktivität", mapCritNone: "Keine aktiven Trends",
   },
   it: {
     trends: "Tendenze", moreTrends: "Più tendenze", filters: "Filtri",
