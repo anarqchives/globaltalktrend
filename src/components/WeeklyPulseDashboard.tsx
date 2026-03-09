@@ -1054,7 +1054,7 @@ export default function WeeklyPulseDashboard({ trends }: { trends: TrendCardProp
       </div>
 
       {/* ═══════ KPI ROW ═══════ */}
-      <div className="grid grid-cols-5 gap-1.5">
+      <div className="grid grid-cols-3 sm:grid-cols-5 gap-1.5">
         <KPICard icon={<BarChart3 className="w-3.5 h-3.5" />}
           value={fmtNum(analysis.totalVolume)}
           label={t(lang, "Volume total", "Total Volume", "Volumen total")}
