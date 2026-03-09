@@ -808,8 +808,8 @@ const Index = () => {
                         maxSize={70}
                         collapsible
                         collapsedSize={3}
-                        onCollapse={() => setRadarCollapsed(true)}
-                        onExpand={() => setRadarCollapsed(false)}
+                        onCollapse={() => { setRadarCollapsed(true); try { localStorage.setItem("radar-collapsed", "true"); } catch {} }}
+                        onExpand={() => { setRadarCollapsed(false); try { localStorage.setItem("radar-collapsed", "false"); } catch {} }}
                       >
                         <div className="h-full border-b border-border/20 bg-muted/8">
                           <TrendRadar
