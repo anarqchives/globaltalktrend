@@ -225,6 +225,7 @@
 
   .timeline-card-expanded {
     @apply rounded-b-none;
+    aspect-ratio: unset;
   }
 
   .timeline-card-expanded-content {
