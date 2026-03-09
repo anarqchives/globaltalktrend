@@ -195,7 +195,6 @@
     word-wrap: break-word;
     overflow-wrap: break-word;
     min-width: 0;
-    aspect-ratio: 1 / 1.15;
     display: flex;
     flex-direction: column;
   }
