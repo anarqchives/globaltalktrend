@@ -626,6 +626,10 @@ const translations: Record<LangCode, Record<TranslationKey, string>> = {
     signalTooltip: "检测到的信号类型：Spike、Search、Social、News、Dev、Knowledge。",
     trendTableTitle: "标题", trendTablePlatform: "平台", trendTableVolume: "量",
     trendTableChange: "变化", trendTableCountry: "国家",
+    mapFlowMap: "流向", mapSentiment: "情绪", mapHeatmap: "热力图",
+    mapFlowLegendTitle: "趋势传播", mapFlowOrigin: "来源", mapFlowDestination: "目的地", mapFlowPropagation: "传播", mapFlowTimeDelta: "传播时间", mapFlowClickToFilter: "点击筛选时间线", mapFlowNoData: "该时段传播数据不足",
+    mapSentLegendTitle: "情绪全景", mapSentPositive: "积极", mapSentNegative: "消极", mapSentMixed: "两极化", mapSentNeutral: "中性", mapSentBreakdown: "情绪分布", mapSentTopTrends: "热门趋势", mapSentNoData: "情绪数据不足",
+    mapSentVolume: "总量", mapSentGrowth: "平均增长", mapSentActiveTrends: "活跃趋势",
   },
   ja: {
     trends: "トレンド", moreTrends: "もっと見る", filters: "フィルター",
