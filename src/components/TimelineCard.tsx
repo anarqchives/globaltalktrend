@@ -13,6 +13,7 @@ import TrendFeedback from "./TrendFeedback";
 import PropagationTimeline from "./PropagationTimeline";
 import FreshnessIndicator from "./FreshnessIndicator";
 import { CrossPlatformCluster } from "@/hooks/use-cross-platform";
+import { getTooltip } from "@/lib/format-utils";
 
 const platformIcons: Record<string, { emoji: string; color: string }> = {
   YouTube: { emoji: "▶", color: "hsl(0, 72%, 51%)" },
