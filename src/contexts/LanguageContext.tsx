@@ -826,6 +826,12 @@ const translations: Record<LangCode, Record<TranslationKey, string>> = {
     mapFlowLegendTitle: "트렌드 전파", mapFlowOrigin: "출발지", mapFlowDestination: "도착지", mapFlowPropagation: "전파", mapFlowTimeDelta: "전파 시간", mapFlowClickToFilter: "클릭하여 필터링", mapFlowNoData: "이 기간의 전파 데이터가 부족합니다",
     mapSentLegendTitle: "감정 풍경", mapSentPositive: "긍정적", mapSentNegative: "부정적", mapSentMixed: "양극화", mapSentNeutral: "중립", mapSentBreakdown: "감정 분포", mapSentTopTrends: "주요 트렌드", mapSentNoData: "감정 데이터가 부족합니다",
     mapSentVolume: "총 볼륨", mapSentGrowth: "평균 성장", mapSentActiveTrends: "활성 트렌드",
+    growth: "성장", volumeLabel: "볼륨", sourcesLabel: "출처", narrativeOrigin: "내러티브 기원",
+    confidenceLabel: "신뢰도", confidenceHigh: "높음", confidenceMedium: "중간", confidenceLow: "낮음",
+    propagationPath: "전파 경로", sourceLabel: "출처", sentimentAnalysis: "감정 분석",
+    tviGrowthLabel: "성장 (30%)", tviVolumeLabel: "볼륨 (30%)", tviSourcesLabel: "출처 (20%)", tviGeographyLabel: "지리 (20%)",
+    tviDescription: "다음에 기반한 전파 속도 측정:",
+    sourcesSingular: "출처", sourcesPlural: "출처",
   },
   ar: {
     trends: "الاتجاهات", moreTrends: "المزيد", filters: "التصفية",
