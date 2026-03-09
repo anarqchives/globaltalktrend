@@ -776,7 +776,7 @@ export default function TrendRadar({ trends, allTrends, criticalMoments, anomali
                 </ScrollArea>
               </TabsContent>
 
-              <TabsContent value="top" className="absolute inset-0 mt-0 flex flex-col data-[state=inactive]:hidden">
+              <TabsContent value="top" className="absolute inset-0 mt-0 flex flex-col data-[state=inactive]:hidden animate-in fade-in-0 duration-300">
                 <Legend tab="top" lang={lang} />
                 <ScrollArea className="flex-1">
                   <div className="px-3 py-2">
