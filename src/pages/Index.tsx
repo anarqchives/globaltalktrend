@@ -83,6 +83,8 @@ const Index = () => {
   const togglePanel = (panel: "radar" | "timeline" | "map") =>
     setPanelVisibility(prev => ({ ...prev, [panel]: !prev[panel] }));
   const timelinePanelRef = useRef<HTMLDivElement>(null);
+  const radarPanelRef = useRef<ElementRef<typeof ResizablePanel>>(null);
+  const [radarCollapsed, setRadarCollapsed] = useState(false);
   const { timelineRef: gridRef, columns: gridColumns } = useTimelineColumns();
 
   useEffect(() => {
