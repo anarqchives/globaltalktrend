@@ -543,27 +543,28 @@ const GoogleMapView = ({
           ? `<div style="text-align:center;font-size:10px;color:${subtext};padding:6px;background:${badgeBg};border-radius:8px;margin-bottom:10px;">+ ${moreCount} outras tendências</div>`
           : '';
 
+        const closeBtn = `<button id="map-tooltip-close" style="position:absolute;top:12px;right:12px;width:24px;height:24px;border-radius:12px;background:${isDark ? 'rgba(30,41,59,0.8)' : '#f1f5f9'};border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:12px;color:${subtext};transition:all 0.15s ease;z-index:10;">✕</button>`;
+        
+        const filterBtn = `<button id="map-tooltip-filter" style="width:100%;background:#3b82f6;color:white;border:none;border-radius:30px;padding:10px;font-size:13px;font-weight:500;cursor:pointer;transition:all 0.2s ease;margin-top:10px;">Clique para filtrar a timeline</button>`;
+
         infoWindowRef.current.setContent(`
-          <div style="font-family:Inter,system-ui,-apple-system,sans-serif;padding:16px 14px;min-width:280px;max-width:340px;background:${bg};color:${text};border-radius:20px;backdrop-filter:blur(20px);border:1px solid ${border};">
-            <div style="display:flex;align-items:center;justify-content:space-between;padding-bottom:10px;border-bottom:1px solid ${border};">
-              <div style="display:flex;align-items:center;gap:8px;">
-                <span style="font-size:24px;line-height:1;">${flag}</span>
-                <div>
-                  <div style="font-size:16px;font-weight:600;color:${text};letter-spacing:-0.02em;">${cp.name}</div>
-                  <div style="font-size:11px;color:${subtext};margin-top:2px;">${count} trends ativas</div>
-                </div>
+          <div style="font-family:Inter,system-ui,-apple-system,sans-serif;position:relative;padding:20px;min-width:280px;max-width:320px;background:${bg};color:${text};border-radius:24px;backdrop-filter:blur(20px);border:1px solid ${border};box-shadow:0 20px 40px rgba(0,0,0,0.2);">
+            ${closeBtn}
+            <div style="display:flex;align-items:center;gap:8px;padding-bottom:12px;border-bottom:1px solid ${border};">
+              <span style="font-size:28px;line-height:1;">${flag}</span>
+              <div>
+                <div style="font-size:18px;font-weight:600;color:${text};letter-spacing:-0.02em;">${cp.name}</div>
+                <div style="font-size:11px;color:${subtext};margin-top:2px;">${count} trends ativas</div>
               </div>
             </div>
-            <div style="margin:12px 0;background:${critSectionBg};border-radius:12px;padding:12px 14px;border-left:4px solid ${critColor};">
-              <span style="display:inline-block;background:${critColor};color:#fff;padding:3px 10px;border-radius:20px;font-weight:600;font-size:10px;letter-spacing:0.5px;text-transform:uppercase;margin-bottom:6px;">${critTag}</span>
-              <p style="font-size:12px;color:${isDark ? '#94a3b8' : '#475569'};line-height:1.5;margin:0;">${critReason}</p>
+            <div style="margin:12px 0;background:${critSectionBg};border-radius:16px;padding:12px 14px;border-left:4px solid ${critColor};">
+              <span style="display:inline-flex;align-items:center;gap:6px;background:${critColor};color:#fff;padding:4px 12px;border-radius:20px;font-weight:600;font-size:10px;letter-spacing:0.5px;text-transform:uppercase;margin-bottom:8px;">${critTag}</span>
+              <p style="font-size:12px;color:${isDark ? '#94a3b8' : '#1e293b'};line-height:1.5;margin:0;">${critReason}</p>
             </div>
             ${countryTrends.length > 0 ? `<div style="font-size:11px;font-weight:600;color:${text};text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px;">Principais tendências</div>` : ''}
-            <div style="max-height:200px;overflow-y:auto;">${trendsList}</div>
+            <div style="background:${badgeBg};border-radius:16px;padding:12px;max-height:180px;overflow-y:auto;">${trendsList}</div>
             ${moreSection}
-            <div style="text-align:center;padding-top:10px;border-top:1px solid ${border};">
-              <span style="font-size:10px;color:${subtext};font-style:italic;">Clique em uma tendência para ver detalhes</span>
-            </div>
+            ${filterBtn}
           </div>
         `);
         infoWindowRef.current.open({ anchor: marker, map });
