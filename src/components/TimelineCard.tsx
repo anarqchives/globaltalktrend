@@ -574,6 +574,30 @@ const TimelineCard = ({
             </div>
           )}
 
+          {/* Sentiment Analysis Section */}
+          <div className="mb-3 p-2 rounded-lg bg-secondary/30 border border-border/50">
+            <span className="text-[9px] font-semibold text-muted-foreground uppercase tracking-wide mb-2 block">
+              📊 Sentiment Analysis
+            </span>
+            <div className="flex items-start gap-3">
+              <SentimentDonut
+                positive={changePositive ? 55 : 25}
+                neutral={30}
+                negative={changePositive ? 15 : 45}
+                size={64}
+              />
+              <div className="flex-1 min-w-0">
+                <EmotionBars
+                  emotions={[
+                    { icon: "😊", label: "Positivo", percentage: changePositive ? 55 : 25, color: "hsl(142, 60%, 45%)" },
+                    { icon: "😐", label: "Neutro", percentage: 30, color: "hsl(var(--muted-foreground))" },
+                    { icon: "😠", label: "Negativo", percentage: changePositive ? 15 : 45, color: "hsl(var(--destructive))" },
+                  ]}
+                />
+              </div>
+            </div>
+          </div>
+
           {/* Platform-specific metrics */}
           <div className="flex flex-wrap gap-2 mb-3 text-[11px]">
             {platform === "YouTube" && likeRatio !== undefined && likeRatio > 0 && (
