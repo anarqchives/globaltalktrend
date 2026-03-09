@@ -515,7 +515,7 @@ const Index = () => {
                   staggerIndex={i}
                   userId={user?.id}
                   onTrackAction={trackAction}
-                  forceExpanded={expandedTrendId === trendId}
+                  forceExpanded={allExpanded || expandedTrendId === trendId}
                   isMultiplatform={isMulti}
                   crossPlatformCluster={matchingCluster}
                   onSaveCard={saveCard}
