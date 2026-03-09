@@ -87,6 +87,7 @@ const App = () => {
                 </Routes>
               </Suspense>
             </BrowserRouter>
+            </ErrorBoundary>
           </TooltipProvider>
         </UserModeProvider>
       </LanguageProvider>

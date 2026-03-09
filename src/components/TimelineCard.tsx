@@ -290,6 +290,7 @@ const TimelineCard = ({
             <span className="text-[10px] font-semibold flex-shrink-0" style={{ color: pf.color }}>
               {platform}
             </span>
+            <FreshnessIndicator publishedAt={publishedAt} time={time} />
             <span className="text-[10px] text-muted-foreground flex-shrink-0">{localizedTime}</span>
             {flag && <span className="text-[11px] flex-shrink-0">{flag}</span>}
           </div>
