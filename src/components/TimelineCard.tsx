@@ -75,6 +75,15 @@ interface TimelineCardProps extends TrendCardProps {
 
 const normalizeText = (value: string) => value.toLowerCase().normalize("NFD").replace(/\p{Diacritic}/gu, "").trim();
 
+// Decode HTML entities (e.g. &#39; &amp; &quot;)
+const decodeEntities = (text: string): string => {
+  if (!text || (!text.includes("&") && !text.includes("&#"))) return text;
+  const el = typeof document !== "undefined" ? document.createElement("textarea") : null;
+  if (!el) return text;
+  el.innerHTML = text;
+  return el.value;
+};
+
 const localizeCategory = (category: string, t: (key: any) => string) => {
   const normalized = normalizeText(category || "");
   const map: Record<string, string> = {
