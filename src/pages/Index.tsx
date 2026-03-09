@@ -533,10 +533,8 @@ const Index = () => {
                         <span className="text-[10px] font-normal text-muted-foreground ml-1">({ultimas2h.length})</span>
                       </span>
                     </motion.div>
-                    <div className="grid gap-4" style={gridStyle}>
-                      <AnimatePresence mode="popLayout">
+                    <div style={gridStyle}>
                         {ultimas2h.map((trend) => renderCard(trend, globalIndex++))}
-                      </AnimatePresence>
                     </div>
                   </>
                 )}
