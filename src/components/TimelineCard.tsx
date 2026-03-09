@@ -295,13 +295,13 @@ const TimelineCard = ({
           </div>
           {/* Title */}
           <h3 className={`font-semibold text-foreground leading-snug mb-1 ${compact ? 'text-xs line-clamp-1' : 'text-[14px] line-clamp-2'}`}>
-            {title}
+            {decodeEntities(title)}
           </h3>
 
           {/* Contextual Description — the core intelligence layer */}
           {displayDescription && !compact && (
             <p className="text-[12px] text-muted-foreground leading-relaxed line-clamp-2 mb-2">
-              {displayDescription}
+              {decodeEntities(displayDescription)}
             </p>
           )}
 
