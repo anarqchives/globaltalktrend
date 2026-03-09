@@ -255,62 +255,34 @@ const TimelineCard = ({
       whileInView={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -8 }}
       viewport={{ once: true, margin: "-30px" }}
-      transition={{ duration: 0.3, ease: [0.25, 0.46, 0.45, 0.94], delay: Math.min(staggerIndex * 0.04, 0.4) }}
+      transition={{ duration: 0.2, ease: [0.4, 0, 0.2, 1], delay: Math.min(staggerIndex * 0.04, 0.4) }}
     >
       <div className={`timeline-card group ${expanded ? 'timeline-card-expanded' : ''}`}>
-        {/* === HEADER ROW: Platform + Time + TVI === */}
-        <div className="flex items-center gap-2 mb-1.5">
-          <div
-            className="w-6 h-6 rounded-full flex items-center justify-center text-[11px] font-bold flex-shrink-0 cursor-pointer hover:scale-110 transition-transform"
-            style={{ background: `${pf.color}12`, color: pf.color }}
-            onClick={handlePlatformClick}
-            title={`${t("filterByPlatform")} ${platform}`}
-          >
-            {pf.emoji}
-          </div>
-          <span className="text-[10px] font-semibold cursor-pointer hover:underline flex-shrink-0" style={{ color: pf.color }} onClick={handlePlatformClick}>
-            {platform}
-          </span>
-          {flag && <span className="text-[11px] flex-shrink-0">{flag}</span>}
-          <span className="text-[10px] text-muted-foreground flex-shrink-0">{localizedTime}</span>
-
-          {/* Trust badge */}
-          {trustBadge && trustBadgeKeys[trustBadge] && (
-            <span className={`inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full text-[9px] font-medium flex-shrink-0 ${trustBadgeKeys[trustBadge].className}`}>
-              {trustBadgeKeys[trustBadge].icon}
-              {t(trustBadgeKeys[trustBadge].labelKey as any)}
-            </span>
-          )}
-
-          {translated && (
-            <span className="text-[9px] text-blue-500 flex-shrink-0" title={t("autoTranslated")}>🌐</span>
-          )}
-
-          <div className="flex-1" />
-
-          {/* TVI Badge with decomposition tooltip */}
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <div
-                className={`flex-shrink-0 w-7 h-7 rounded-full flex items-center justify-center text-[10px] font-black border-2 cursor-help ${trendScoreLabel.cls}`}
-              >
-                {trendScore}
-              </div>
-            </TooltipTrigger>
-            <TooltipContent side="left" className="p-2 text-[10px] space-y-1 min-w-[140px]">
-              <div className="font-bold text-[11px] mb-1">TVI (Trend Velocity Index)</div>
-              <p className="text-muted-foreground/80 mb-2 leading-tight">Mede a velocidade e impacto de uma narrativa.</p>
-              <div className="flex justify-between"><span>⚡ Velocity (30%)</span><span className="font-bold">{tviBreakdown.velocity}</span></div>
-              <div className="flex justify-between"><span>💬 Volume (30%)</span><span className="font-bold">{tviBreakdown.volume}</span></div>
-              <div className="flex justify-between"><span>📰 Sources (20%)</span><span className="font-bold">{tviBreakdown.sources}</span></div>
-              <div className="flex justify-between"><span>🌍 Geography (20%)</span><span className="font-bold">{tviBreakdown.geography}</span></div>
-              <div className="border-t border-border pt-1 mt-1 text-[9px] text-muted-foreground">{trendScoreLabel.emoji} {trendScoreLabel.text}</div>
-            </TooltipContent>
-          </Tooltip>
-        </div>
-
+        
         {/* === MAIN CONTENT: Click to expand === */}
         <div className="cursor-pointer" onClick={handleToggle}>
+          
+          {/* Image (when available) */}
+          {thumbnail && !imgError && !compact && (
+            <div className="relative w-full h-36 mb-3 rounded-lg overflow-hidden bg-secondary">
+              <img src={thumbnail} alt="" className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105" loading="lazy" onError={() => setImgError(true)} />
+            </div>
+          )}
+
+          {/* === HEADER ROW: Platform + Time === */}
+          <div className="flex items-center gap-2 mb-2">
+            <div
+              className="w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold flex-shrink-0"
+              style={{ background: `${pf.color}12`, color: pf.color }}
+            >
+              {pf.emoji}
+            </div>
+            <span className="text-[10px] font-semibold flex-shrink-0" style={{ color: pf.color }}>
+              {platform}
+            </span>
+            <span className="text-[10px] text-muted-foreground flex-shrink-0">{localizedTime}</span>
+            {flag && <span className="text-[11px] flex-shrink-0">{flag}</span>}
+          </div>
           {/* Title */}
           <h3 className={`font-semibold text-foreground leading-snug mb-1 ${compact ? 'text-xs line-clamp-1' : 'text-[14px] line-clamp-2'}`}>
             {title}
@@ -324,27 +296,28 @@ const TimelineCard = ({
           )}
 
           {/* === METRICS BAR: Horizontal, compact === */}
-          <div className="flex items-center gap-2 flex-wrap text-[10px] mb-1.5">
+          <div className="flex items-center gap-2 flex-wrap text-[10px] mb-2">
+            {/* TVI Badge */}
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <div className={`flex items-center gap-1.5 px-2 py-0.5 rounded-full font-bold border cursor-help ${trendScoreLabel.cls} bg-transparent`}>
+                  <span className="opacity-70 font-medium">TVI ⓘ</span>
+                  <span>{trendScore}</span>
+                </div>
+              </TooltipTrigger>
+              <TooltipContent side="top" className="p-3 text-[11px] space-y-1.5 min-w-[200px] z-50 bg-popover/95 backdrop-blur-md">
+                <div className="font-bold text-[12px] mb-1 text-foreground">Trend Velocity Index (TVI)</div>
+                <p className="text-muted-foreground mb-2 leading-tight">Mede a velocidade de propagação baseada em:</p>
+                <div className="flex justify-between"><span>📈 Crescimento (30%)</span><span className="font-bold text-foreground">{tviBreakdown.velocity}</span></div>
+                <div className="flex justify-between"><span>💬 Volume (30%)</span><span className="font-bold text-foreground">{tviBreakdown.volume}</span></div>
+                <div className="flex justify-between"><span>📰 Fontes (20%)</span><span className="font-bold text-foreground">{tviBreakdown.sources}</span></div>
+                <div className="flex justify-between"><span>🌍 Países (20%)</span><span className="font-bold text-foreground">{tviBreakdown.geography}</span></div>
+                <div className="h-px bg-gradient-to-r from-transparent via-border to-transparent my-2" />
+                <div className="text-[11px] font-medium text-center text-foreground">{trendScore}% - {trendScoreLabel.text}</div>
+              </TooltipContent>
+            </Tooltip>
+
             {/* Growth */}
-            <span className={`inline-flex items-center gap-0.5 font-bold ${changePositive ? "text-green-600 dark:text-green-400" : "text-destructive"}`}>
-              <TrendingUp className="w-3 h-3" />
-              {change}
-            </span>
-
-            {/* Volume */}
-            {volume && volume !== "0" && (
-              <span className="text-muted-foreground">
-                💬 {volume}
-              </span>
-            )}
-
-            {/* Sources */}
-            {sources && sources.length > 0 && (
-              <span className="text-muted-foreground inline-flex items-center gap-0.5">
-                <Radio className="w-2.5 h-2.5" />
-                {sources.length} {sources.length === 1 ? "fonte" : "fontes"}
-              </span>
-            )}
 
             {/* Region */}
             {countryCode && countryCode !== "GL" && (
@@ -358,6 +331,27 @@ const TimelineCard = ({
               <span className="font-bold text-orange-600 dark:text-orange-400 inline-flex items-center gap-0.5">
                 <Globe className="w-2.5 h-2.5" />
                 {crossPlatformCluster.platformCount} plat.
+              </span>
+            )}
+
+            {/* Growth */}
+            <span className={`inline-flex items-center gap-0.5 font-bold ${changePositive ? "text-green-600 dark:text-green-400" : "text-destructive"}`}>
+              <TrendingUp className="w-3 h-3" />
+              {change}
+            </span>
+
+            {/* Volume */}
+            {volume && volume !== "0" && (
+              <span className="text-muted-foreground font-medium">
+                💬 {volume}
+              </span>
+            )}
+
+            {/* Sources */}
+            {sources && sources.length > 0 && (
+              <span className="text-muted-foreground font-medium inline-flex items-center gap-0.5">
+                <Radio className="w-2.5 h-2.5" />
+                {sources.length} {sources.length === 1 ? "fonte" : "fontes"}
               </span>
             )}
 
@@ -380,33 +374,35 @@ const TimelineCard = ({
           </div>
 
           {/* === TAGS ROW === */}
-          <div className="flex items-center gap-1 flex-wrap">
+          <div className="flex items-center gap-1 flex-wrap mb-1">
             <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-medium bg-secondary text-muted-foreground">
               {localizedCategory}
             </span>
             <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-medium bg-secondary text-muted-foreground">
               {signalType}
             </span>
+            {trustBadge && trustBadgeKeys[trustBadge] && (
+              <span className={`inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded text-[9px] font-medium ${trustBadgeKeys[trustBadge].className}`}>
+                {trustBadgeKeys[trustBadge].icon}
+                {t(trustBadgeKeys[trustBadge].labelKey as any)}
+              </span>
+            )}
             {trigger && (
-              <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-medium bg-accent/20 text-accent-foreground">
+              <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-medium bg-accent/10 text-accent-foreground">
                 {trigger.emoji} {t(trigger.labelKey as any)}
               </span>
             )}
-            {isMultiplatform && (
-              <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-bold bg-orange-500/10 text-orange-600 dark:text-orange-400">
-                🔗 Cross-platform
-              </span>
-            )}
-            {trendScore >= 80 && (
-              <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-bold bg-destructive/10 text-destructive">
-                🔥 Explosive
-              </span>
+            {translated && (
+              <span className="text-[9px] text-blue-500" title={t("autoTranslated")}>🌐 Traduzido</span>
             )}
           </div>
         </div>
 
+        {/* Divider gradient */}
+        <div className="h-px w-full bg-gradient-to-r from-transparent via-border to-transparent my-2" />
+
         {/* === ACTION BAR === */}
-        <div className="flex items-center gap-1 mt-2 pt-1.5 border-t border-border/50">
+        <div className="flex items-center gap-1">
           {sourceUrl && (
             <a
               href={sourceUrl}
@@ -448,8 +444,8 @@ const TimelineCard = ({
       {/* === EXPANDED CONTENT === */}
       {expanded && (
         <div className="timeline-card-expanded-content">
-          {/* Image */}
-          {thumbnail && !imgError && (
+          {/* Image (only show in expanded if it was hidden by compact mode) */}
+          {thumbnail && !imgError && compact && (
             <div className="relative w-full mb-3 rounded-lg overflow-hidden bg-secondary aspect-video">
               <img src={thumbnail} alt="" className="w-full h-full object-cover" loading="lazy" onError={() => setImgError(true)} />
             </div>
