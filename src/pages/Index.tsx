@@ -490,7 +490,7 @@ const Index = () => {
                     setFilters((f) => ({ ...f, type: map[p] || "Todas mídias" }));
                   }}
                 />
-                </motion.div>
+                </div>
               );
             };
 
