@@ -22,6 +22,7 @@ import { useSavedCards } from "@/hooks/use-saved-cards";
 import { useSavedFilters } from "@/hooks/use-saved-filters";
 import { supabase } from "@/integrations/supabase/client";
 import { ChevronRight, X, Map, Newspaper, RefreshCw, ChevronsUp, ChevronsDown, Radar, MapPin, FileText } from "lucide-react";
+import ArchiveDrawer from "@/components/ArchiveDrawer";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import TagLegend from "@/components/TagLegend";
 import WatchlistPanel from "@/components/WatchlistPanel";
