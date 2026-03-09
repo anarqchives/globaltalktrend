@@ -71,7 +71,15 @@ type TranslationKey =
   | "confidenceHigh" | "confidenceMedium" | "confidenceLow"
   | "propagationPath" | "sourceLabel" | "sentimentAnalysis"
   | "tviGrowthLabel" | "tviVolumeLabel" | "tviSourcesLabel" | "tviGeographyLabel" | "tviDescription"
-  | "sourcesSingular" | "sourcesPlural";
+  | "sourcesSingular" | "sourcesPlural"
+  // Map tooltip extended keys
+  | "mapMentions" | "mapSimilarity" | "mapThinLowVol" | "mapThickHighVol" | "mapPropArcs"
+  | "mapSizeVolume" | "mapFastPulse" | "mapTrendsActiveLabel" | "mapClickDetails"
+  | "mapLoadingMap" | "mapReconnectMsg" | "mapRetry" | "mapFilterByCountry"
+  | "mapTopTrendsLabel" | "mapMoreTrends" | "mapCloseMap"
+  | "mapIntCritical" | "mapIntHigh" | "mapIntModerate" | "mapIntAttention" | "mapIntNormal"
+  | "mapStatusExceptional" | "mapStatusHigh" | "mapStatusModerate" | "mapStatusLow" | "mapStatusNormal"
+  | "mapCritVolume" | "mapCritGrowth" | "mapCritMultiplatform" | "mapCritActive" | "mapCritMonitoring" | "mapCritNone";
 
 const translations: Record<LangCode, Record<TranslationKey, string>> = {
   pt: {
@@ -183,6 +191,10 @@ const translations: Record<LangCode, Record<TranslationKey, string>> = {
     tviGrowthLabel: "Crescimento (30%)", tviVolumeLabel: "Volume (30%)", tviSourcesLabel: "Fontes (20%)", tviGeographyLabel: "Geografia (20%)",
     tviDescription: "Mede a velocidade de propagação baseada em:",
     sourcesSingular: "fonte", sourcesPlural: "fontes",
+    mapMentions: "menções", mapSimilarity: "similaridade", mapThinLowVol: "Fino = baixo volume", mapThickHighVol: "Grosso = alto volume", mapPropArcs: "arcos de propagação", mapSizeVolume: "Tamanho = volume", mapFastPulse: "Pulso rápido = crescimento acelerado", mapTrendsActiveLabel: "ativas", mapClickDetails: "Clique para ver detalhes", mapLoadingMap: "Carregando mapa...", mapReconnectMsg: "O mapa será exibido assim que a conexão for restabelecida.", mapRetry: "Tentar novamente", mapFilterByCountry: "Filtrar timeline por este país", mapTopTrendsLabel: "Principais tendências", mapMoreTrends: "outras tendências", mapCloseMap: "Fechar Mapa",
+    mapIntCritical: "🔥 CRÍTICO", mapIntHigh: "⚡ ALTO", mapIntModerate: "📊 MODERADO", mapIntAttention: "📈 ATENÇÃO", mapIntNormal: "ℹ️ NORMAL",
+    mapStatusExceptional: "Volume excepcional detectado — múltiplas fontes ativas", mapStatusHigh: "Alta atividade — crescimento acelerado em várias plataformas", mapStatusModerate: "Atividade moderada — tendências em desenvolvimento", mapStatusLow: "Baixa atividade — poucos sinais detectados", mapStatusNormal: "Monitoramento normal — sem anomalias",
+    mapCritVolume: "Volume excepcionalmente alto", mapCritGrowth: "Crescimento acelerado", mapCritMultiplatform: "Multiplataforma", mapCritActive: "tendências ativas simultaneamente", mapCritMonitoring: "em monitoramento — atividade dentro da média", mapCritNone: "Nenhuma tendência ativa no momento",
   },
   en: {
     trends: "Trends", moreTrends: "More trends", filters: "Filters",
@@ -293,6 +305,10 @@ const translations: Record<LangCode, Record<TranslationKey, string>> = {
     tviGrowthLabel: "Growth (30%)", tviVolumeLabel: "Volume (30%)", tviSourcesLabel: "Sources (20%)", tviGeographyLabel: "Geography (20%)",
     tviDescription: "Measures propagation speed based on:",
     sourcesSingular: "source", sourcesPlural: "sources",
+    mapMentions: "mentions", mapSimilarity: "similarity", mapThinLowVol: "Thin = low volume", mapThickHighVol: "Thick = high volume", mapPropArcs: "propagation arcs", mapSizeVolume: "Size = volume", mapFastPulse: "Fast pulse = rapid growth", mapTrendsActiveLabel: "active", mapClickDetails: "Click for details", mapLoadingMap: "Loading map...", mapReconnectMsg: "Map will display once connection is restored.", mapRetry: "Try again", mapFilterByCountry: "Filter timeline by country", mapTopTrendsLabel: "Top trends", mapMoreTrends: "more trends", mapCloseMap: "Close Map",
+    mapIntCritical: "🔥 CRITICAL", mapIntHigh: "⚡ HIGH", mapIntModerate: "📊 MODERATE", mapIntAttention: "📈 ATTENTION", mapIntNormal: "ℹ️ NORMAL",
+    mapStatusExceptional: "Exceptional volume — multiple active sources", mapStatusHigh: "High activity — accelerating across platforms", mapStatusModerate: "Moderate activity — developing trends", mapStatusLow: "Low activity — few signals detected", mapStatusNormal: "Normal monitoring — no anomalies",
+    mapCritVolume: "Exceptionally high volume", mapCritGrowth: "Accelerating growth", mapCritMultiplatform: "Multi-platform", mapCritActive: "active trends simultaneously", mapCritMonitoring: "monitoring — activity within average", mapCritNone: "No active trends at this time",
   },
   es: {
     trends: "Tendencias", moreTrends: "Más trends", filters: "Filtros",
@@ -370,6 +386,10 @@ const translations: Record<LangCode, Record<TranslationKey, string>> = {
     tviGrowthLabel: "Crecimiento (30%)", tviVolumeLabel: "Volumen (30%)", tviSourcesLabel: "Fuentes (20%)", tviGeographyLabel: "Geografía (20%)",
     tviDescription: "Mide la velocidad de propagación basada en:",
     sourcesSingular: "fuente", sourcesPlural: "fuentes",
+    mapMentions: "menciones", mapSimilarity: "similitud", mapThinLowVol: "Fino = bajo volumen", mapThickHighVol: "Grueso = alto volumen", mapPropArcs: "arcos de propagación", mapSizeVolume: "Tamaño = volumen", mapFastPulse: "Pulso rápido = crecimiento acelerado", mapTrendsActiveLabel: "activas", mapClickDetails: "Clic para ver detalles", mapLoadingMap: "Cargando mapa...", mapReconnectMsg: "El mapa se mostrará cuando se restablezca la conexión.", mapRetry: "Reintentar", mapFilterByCountry: "Filtrar timeline por país", mapTopTrendsLabel: "Principales tendencias", mapMoreTrends: "más tendencias", mapCloseMap: "Cerrar Mapa",
+    mapIntCritical: "🔥 CRÍTICO", mapIntHigh: "⚡ ALTO", mapIntModerate: "📊 MODERADO", mapIntAttention: "📈 ATENCIÓN", mapIntNormal: "ℹ️ NORMAL",
+    mapStatusExceptional: "Volumen excepcional — múltiples fuentes activas", mapStatusHigh: "Alta actividad — crecimiento acelerado", mapStatusModerate: "Actividad moderada — tendencias en desarrollo", mapStatusLow: "Baja actividad — pocas señales", mapStatusNormal: "Monitoreo normal — sin anomalías",
+    mapCritVolume: "Volumen excepcionalmente alto", mapCritGrowth: "Crecimiento acelerado", mapCritMultiplatform: "Multiplataforma", mapCritActive: "tendencias activas simultáneamente", mapCritMonitoring: "en monitoreo — actividad normal", mapCritNone: "Sin tendencias activas",
   },
   fr: {
     trends: "Tendances", moreTrends: "Plus de tendances", filters: "Filtres",
@@ -447,6 +467,10 @@ const translations: Record<LangCode, Record<TranslationKey, string>> = {
     tviGrowthLabel: "Croissance (30%)", tviVolumeLabel: "Volume (30%)", tviSourcesLabel: "Sources (20%)", tviGeographyLabel: "Géographie (20%)",
     tviDescription: "Mesure la vitesse de propagation basée sur :",
     sourcesSingular: "source", sourcesPlural: "sources",
+    mapMentions: "mentions", mapSimilarity: "similarité", mapThinLowVol: "Fin = faible volume", mapThickHighVol: "Épais = fort volume", mapPropArcs: "arcs de propagation", mapSizeVolume: "Taille = volume", mapFastPulse: "Pulsation rapide = croissance accélérée", mapTrendsActiveLabel: "actives", mapClickDetails: "Cliquer pour les détails", mapLoadingMap: "Chargement de la carte...", mapReconnectMsg: "La carte s'affichera dès que la connexion sera rétablie.", mapRetry: "Réessayer", mapFilterByCountry: "Filtrer par pays", mapTopTrendsLabel: "Principales tendances", mapMoreTrends: "autres tendances", mapCloseMap: "Fermer la carte",
+    mapIntCritical: "🔥 CRITIQUE", mapIntHigh: "⚡ ÉLEVÉ", mapIntModerate: "📊 MODÉRÉ", mapIntAttention: "📈 ATTENTION", mapIntNormal: "ℹ️ NORMAL",
+    mapStatusExceptional: "Volume exceptionnel — sources multiples actives", mapStatusHigh: "Activité élevée — croissance accélérée", mapStatusModerate: "Activité modérée — tendances en développement", mapStatusLow: "Faible activité — peu de signaux", mapStatusNormal: "Surveillance normale — aucune anomalie",
+    mapCritVolume: "Volume exceptionnellement élevé", mapCritGrowth: "Croissance accélérée", mapCritMultiplatform: "Multiplateforme", mapCritActive: "tendances actives simultanément", mapCritMonitoring: "en surveillance — activité normale", mapCritNone: "Aucune tendance active",
   },
   de: {
     trends: "Trends", moreTrends: "Mehr Trends", filters: "Filter",
@@ -524,6 +548,10 @@ const translations: Record<LangCode, Record<TranslationKey, string>> = {
     tviGrowthLabel: "Wachstum (30%)", tviVolumeLabel: "Volumen (30%)", tviSourcesLabel: "Quellen (20%)", tviGeographyLabel: "Geographie (20%)",
     tviDescription: "Misst die Verbreitungsgeschwindigkeit basierend auf:",
     sourcesSingular: "Quelle", sourcesPlural: "Quellen",
+    mapMentions: "Erwähnungen", mapSimilarity: "Ähnlichkeit", mapThinLowVol: "Dünn = niedriges Volumen", mapThickHighVol: "Dick = hohes Volumen", mapPropArcs: "Verbreitungsbögen", mapSizeVolume: "Größe = Volumen", mapFastPulse: "Schneller Puls = beschleunigtes Wachstum", mapTrendsActiveLabel: "aktiv", mapClickDetails: "Klicken für Details", mapLoadingMap: "Karte wird geladen...", mapReconnectMsg: "Die Karte wird angezeigt, sobald die Verbindung wiederhergestellt ist.", mapRetry: "Erneut versuchen", mapFilterByCountry: "Timeline nach Land filtern", mapTopTrendsLabel: "Top Trends", mapMoreTrends: "weitere Trends", mapCloseMap: "Karte schließen",
+    mapIntCritical: "🔥 KRITISCH", mapIntHigh: "⚡ HOCH", mapIntModerate: "📊 MODERAT", mapIntAttention: "📈 AUFMERKSAMKEIT", mapIntNormal: "ℹ️ NORMAL",
+    mapStatusExceptional: "Außergewöhnliches Volumen — mehrere aktive Quellen", mapStatusHigh: "Hohe Aktivität — beschleunigtes Wachstum", mapStatusModerate: "Moderate Aktivität — sich entwickelnde Trends", mapStatusLow: "Geringe Aktivität — wenige Signale", mapStatusNormal: "Normale Überwachung — keine Anomalien",
+    mapCritVolume: "Außergewöhnlich hohes Volumen", mapCritGrowth: "Beschleunigtes Wachstum", mapCritMultiplatform: "Plattformübergreifend", mapCritActive: "gleichzeitig aktive Trends", mapCritMonitoring: "Überwachung — normale Aktivität", mapCritNone: "Keine aktiven Trends",
   },
   it: {
     trends: "Tendenze", moreTrends: "Più tendenze", filters: "Filtri",
@@ -601,6 +629,10 @@ const translations: Record<LangCode, Record<TranslationKey, string>> = {
     tviGrowthLabel: "Crescita (30%)", tviVolumeLabel: "Volume (30%)", tviSourcesLabel: "Fonti (20%)", tviGeographyLabel: "Geografia (20%)",
     tviDescription: "Misura la velocità di propagazione basata su:",
     sourcesSingular: "fonte", sourcesPlural: "fonti",
+    mapMentions: "menzioni", mapSimilarity: "somiglianza", mapThinLowVol: "Sottile = basso volume", mapThickHighVol: "Spesso = alto volume", mapPropArcs: "archi di propagazione", mapSizeVolume: "Dimensione = volume", mapFastPulse: "Pulsazione rapida = crescita accelerata", mapTrendsActiveLabel: "attive", mapClickDetails: "Clicca per dettagli", mapLoadingMap: "Caricamento mappa...", mapReconnectMsg: "La mappa verrà visualizzata al ripristino della connessione.", mapRetry: "Riprova", mapFilterByCountry: "Filtra timeline per paese", mapTopTrendsLabel: "Principali tendenze", mapMoreTrends: "altre tendenze", mapCloseMap: "Chiudi Mappa",
+    mapIntCritical: "🔥 CRITICO", mapIntHigh: "⚡ ALTO", mapIntModerate: "📊 MODERATO", mapIntAttention: "📈 ATTENZIONE", mapIntNormal: "ℹ️ NORMALE",
+    mapStatusExceptional: "Volume eccezionale — fonti multiple attive", mapStatusHigh: "Alta attività — crescita accelerata", mapStatusModerate: "Attività moderata — tendenze in sviluppo", mapStatusLow: "Bassa attività — pochi segnali", mapStatusNormal: "Monitoraggio normale — nessuna anomalia",
+    mapCritVolume: "Volume eccezionalmente alto", mapCritGrowth: "Crescita accelerata", mapCritMultiplatform: "Multipiattaforma", mapCritActive: "tendenze attive simultaneamente", mapCritMonitoring: "in monitoraggio — attività normale", mapCritNone: "Nessuna tendenza attiva",
   },
   zh: {
     trends: "趋势", moreTrends: "更多趋势", filters: "筛选",
@@ -678,6 +710,10 @@ const translations: Record<LangCode, Record<TranslationKey, string>> = {
     tviGrowthLabel: "增长 (30%)", tviVolumeLabel: "量 (30%)", tviSourcesLabel: "来源 (20%)", tviGeographyLabel: "地理 (20%)",
     tviDescription: "基于以下指标衡量传播速度：",
     sourcesSingular: "来源", sourcesPlural: "来源",
+    mapMentions: "提及", mapSimilarity: "相似度", mapThinLowVol: "细线 = 低量", mapThickHighVol: "粗线 = 高量", mapPropArcs: "传播弧线", mapSizeVolume: "大小 = 量", mapFastPulse: "快速脉冲 = 加速增长", mapTrendsActiveLabel: "活跃", mapClickDetails: "点击查看详情", mapLoadingMap: "加载地图中...", mapReconnectMsg: "连接恢复后地图将显示。", mapRetry: "重试", mapFilterByCountry: "按国家筛选时间线", mapTopTrendsLabel: "热门趋势", mapMoreTrends: "更多趋势", mapCloseMap: "关闭地图",
+    mapIntCritical: "🔥 紧急", mapIntHigh: "⚡ 高", mapIntModerate: "📊 中等", mapIntAttention: "📈 关注", mapIntNormal: "ℹ️ 正常",
+    mapStatusExceptional: "异常量级 — 多个来源活跃", mapStatusHigh: "高活跃度 — 多平台加速增长", mapStatusModerate: "中等活跃度 — 发展中趋势", mapStatusLow: "低活跃度 — 信号较少", mapStatusNormal: "正常监控 — 无异常",
+    mapCritVolume: "异常高量级", mapCritGrowth: "加速增长", mapCritMultiplatform: "多平台", mapCritActive: "同时活跃趋势", mapCritMonitoring: "监控中 — 正常活跃度", mapCritNone: "暂无活跃趋势",
   },
   ja: {
     trends: "トレンド", moreTrends: "もっと見る", filters: "フィルター",
@@ -755,6 +791,10 @@ const translations: Record<LangCode, Record<TranslationKey, string>> = {
     tviGrowthLabel: "成長 (30%)", tviVolumeLabel: "ボリューム (30%)", tviSourcesLabel: "ソース (20%)", tviGeographyLabel: "地理 (20%)",
     tviDescription: "以下に基づく伝播速度を測定：",
     sourcesSingular: "ソース", sourcesPlural: "ソース",
+    mapMentions: "言及", mapSimilarity: "類似度", mapThinLowVol: "細い = 低ボリューム", mapThickHighVol: "太い = 高ボリューム", mapPropArcs: "伝播アーク", mapSizeVolume: "サイズ = ボリューム", mapFastPulse: "速い脈動 = 急成長", mapTrendsActiveLabel: "アクティブ", mapClickDetails: "詳細はクリック", mapLoadingMap: "マップ読み込み中...", mapReconnectMsg: "接続が復旧次第マップが表示されます。", mapRetry: "再試行", mapFilterByCountry: "国でタイムラインをフィルター", mapTopTrendsLabel: "トップトレンド", mapMoreTrends: "その他のトレンド", mapCloseMap: "マップを閉じる",
+    mapIntCritical: "🔥 緊急", mapIntHigh: "⚡ 高い", mapIntModerate: "📊 中程度", mapIntAttention: "📈 注意", mapIntNormal: "ℹ️ 通常",
+    mapStatusExceptional: "異常なボリューム — 複数のソースがアクティブ", mapStatusHigh: "高いアクティビティ — 加速的成長", mapStatusModerate: "中程度のアクティビティ — 発展中のトレンド", mapStatusLow: "低いアクティビティ — 少ない信号", mapStatusNormal: "通常の監視 — 異常なし",
+    mapCritVolume: "異常に高いボリューム", mapCritGrowth: "加速的成長", mapCritMultiplatform: "マルチプラットフォーム", mapCritActive: "同時アクティブトレンド", mapCritMonitoring: "監視中 — 通常のアクティビティ", mapCritNone: "アクティブなトレンドなし",
   },
   ko: {
     trends: "트렌드", moreTrends: "더 많은 트렌드", filters: "필터",
@@ -832,6 +872,10 @@ const translations: Record<LangCode, Record<TranslationKey, string>> = {
     tviGrowthLabel: "성장 (30%)", tviVolumeLabel: "볼륨 (30%)", tviSourcesLabel: "출처 (20%)", tviGeographyLabel: "지리 (20%)",
     tviDescription: "다음에 기반한 전파 속도 측정:",
     sourcesSingular: "출처", sourcesPlural: "출처",
+    mapMentions: "언급", mapSimilarity: "유사도", mapThinLowVol: "얇음 = 낮은 볼륨", mapThickHighVol: "두꺼움 = 높은 볼륨", mapPropArcs: "전파 아크", mapSizeVolume: "크기 = 볼륨", mapFastPulse: "빠른 맥동 = 빠른 성장", mapTrendsActiveLabel: "활성", mapClickDetails: "상세 보기 클릭", mapLoadingMap: "지도 로딩 중...", mapReconnectMsg: "연결이 복구되면 지도가 표시됩니다.", mapRetry: "재시도", mapFilterByCountry: "국가별 타임라인 필터", mapTopTrendsLabel: "주요 트렌드", mapMoreTrends: "추가 트렌드", mapCloseMap: "지도 닫기",
+    mapIntCritical: "🔥 긴급", mapIntHigh: "⚡ 높음", mapIntModerate: "📊 보통", mapIntAttention: "📈 주의", mapIntNormal: "ℹ️ 정상",
+    mapStatusExceptional: "이례적 볼륨 — 다수 소스 활성", mapStatusHigh: "높은 활동 — 가속 성장", mapStatusModerate: "보통 활동 — 발전 중인 트렌드", mapStatusLow: "낮은 활동 — 적은 신호", mapStatusNormal: "정상 모니터링 — 이상 없음",
+    mapCritVolume: "이례적으로 높은 볼륨", mapCritGrowth: "가속 성장", mapCritMultiplatform: "멀티플랫폼", mapCritActive: "동시 활성 트렌드", mapCritMonitoring: "모니터링 — 정상 활동", mapCritNone: "활성 트렌드 없음",
   },
   ar: {
     trends: "الاتجاهات", moreTrends: "المزيد", filters: "التصفية",
@@ -909,6 +953,10 @@ const translations: Record<LangCode, Record<TranslationKey, string>> = {
     tviGrowthLabel: "النمو (30%)", tviVolumeLabel: "الحجم (30%)", tviSourcesLabel: "المصادر (20%)", tviGeographyLabel: "الجغرافيا (20%)",
     tviDescription: "يقيس سرعة الانتشار بناءً على:",
     sourcesSingular: "مصدر", sourcesPlural: "مصادر",
+    mapMentions: "إشارات", mapSimilarity: "تشابه", mapThinLowVol: "رفيع = حجم منخفض", mapThickHighVol: "سميك = حجم مرتفع", mapPropArcs: "أقواس الانتشار", mapSizeVolume: "الحجم = الحجم", mapFastPulse: "نبض سريع = نمو متسارع", mapTrendsActiveLabel: "نشطة", mapClickDetails: "انقر للتفاصيل", mapLoadingMap: "جاري تحميل الخريطة...", mapReconnectMsg: "ستظهر الخريطة عند استعادة الاتصال.", mapRetry: "إعادة المحاولة", mapFilterByCountry: "تصفية الجدول الزمني حسب البلد", mapTopTrendsLabel: "أهم الاتجاهات", mapMoreTrends: "اتجاهات أخرى", mapCloseMap: "إغلاق الخريطة",
+    mapIntCritical: "🔥 حرج", mapIntHigh: "⚡ مرتفع", mapIntModerate: "📊 معتدل", mapIntAttention: "📈 انتباه", mapIntNormal: "ℹ️ عادي",
+    mapStatusExceptional: "حجم استثنائي — مصادر متعددة نشطة", mapStatusHigh: "نشاط مرتفع — نمو متسارع", mapStatusModerate: "نشاط معتدل — اتجاهات قيد التطور", mapStatusLow: "نشاط منخفض — إشارات قليلة", mapStatusNormal: "مراقبة عادية — بدون شذوذ",
+    mapCritVolume: "حجم مرتفع بشكل استثنائي", mapCritGrowth: "نمو متسارع", mapCritMultiplatform: "متعدد المنصات", mapCritActive: "اتجاهات نشطة في وقت واحد", mapCritMonitoring: "قيد المراقبة — نشاط عادي", mapCritNone: "لا توجد اتجاهات نشطة",
   },
   hi: {
     trends: "रुझान", moreTrends: "और रुझान", filters: "फ़िल्टर",
@@ -986,6 +1034,10 @@ const translations: Record<LangCode, Record<TranslationKey, string>> = {
     tviGrowthLabel: "वृद्धि (30%)", tviVolumeLabel: "मात्रा (30%)", tviSourcesLabel: "स्रोत (20%)", tviGeographyLabel: "भूगोल (20%)",
     tviDescription: "इन पर आधारित प्रसार गति मापता है:",
     sourcesSingular: "स्रोत", sourcesPlural: "स्रोत",
+    mapMentions: "उल्लेख", mapSimilarity: "समानता", mapThinLowVol: "पतला = कम मात्रा", mapThickHighVol: "मोटा = अधिक मात्रा", mapPropArcs: "प्रसार आर्क", mapSizeVolume: "आकार = मात्रा", mapFastPulse: "तेज़ धड़कन = तेज़ वृद्धि", mapTrendsActiveLabel: "सक्रिय", mapClickDetails: "विवरण के लिए क्लिक करें", mapLoadingMap: "मानचित्र लोड हो रहा है...", mapReconnectMsg: "कनेक्शन बहाल होने पर मानचित्र दिखाई देगा।", mapRetry: "पुनः प्रयास", mapFilterByCountry: "देश से टाइमलाइन फ़िल्टर करें", mapTopTrendsLabel: "शीर्ष रुझान", mapMoreTrends: "और रुझान", mapCloseMap: "मानचित्र बंद करें",
+    mapIntCritical: "🔥 गंभीर", mapIntHigh: "⚡ उच्च", mapIntModerate: "📊 मध्यम", mapIntAttention: "📈 ध्यान", mapIntNormal: "ℹ️ सामान्य",
+    mapStatusExceptional: "असाधारण मात्रा — कई स्रोत सक्रिय", mapStatusHigh: "उच्च गतिविधि — त्वरित वृद्धि", mapStatusModerate: "मध्यम गतिविधि — विकासशील रुझान", mapStatusLow: "कम गतिविधि — कम संकेत", mapStatusNormal: "सामान्य निगरानी — कोई विसंगति नहीं",
+    mapCritVolume: "असाधारण रूप से उच्च मात्रा", mapCritGrowth: "त्वरित वृद्धि", mapCritMultiplatform: "मल्टी-प्लेटफ़ॉर्म", mapCritActive: "एक साथ सक्रिय रुझान", mapCritMonitoring: "निगरानी में — सामान्य गतिविधि", mapCritNone: "कोई सक्रिय रुझान नहीं",
   },
   ru: {
     trends: "Тренды", moreTrends: "Больше трендов", filters: "Фильтры",
@@ -1063,6 +1115,10 @@ const translations: Record<LangCode, Record<TranslationKey, string>> = {
     tviGrowthLabel: "Рост (30%)", tviVolumeLabel: "Объём (30%)", tviSourcesLabel: "Источники (20%)", tviGeographyLabel: "География (20%)",
     tviDescription: "Измеряет скорость распространения на основе:",
     sourcesSingular: "источник", sourcesPlural: "источников",
+    mapMentions: "упоминаний", mapSimilarity: "сходство", mapThinLowVol: "Тонкая = низкий объём", mapThickHighVol: "Толстая = высокий объём", mapPropArcs: "дуг распространения", mapSizeVolume: "Размер = объём", mapFastPulse: "Быстрый пульс = ускоренный рост", mapTrendsActiveLabel: "активных", mapClickDetails: "Нажмите для деталей", mapLoadingMap: "Загрузка карты...", mapReconnectMsg: "Карта отобразится после восстановления соединения.", mapRetry: "Повторить", mapFilterByCountry: "Фильтр таймлайна по стране", mapTopTrendsLabel: "Топ тренды", mapMoreTrends: "ещё трендов", mapCloseMap: "Закрыть карту",
+    mapIntCritical: "🔥 КРИТИЧЕСКИЙ", mapIntHigh: "⚡ ВЫСОКИЙ", mapIntModerate: "📊 УМЕРЕННЫЙ", mapIntAttention: "📈 ВНИМАНИЕ", mapIntNormal: "ℹ️ НОРМАЛЬНЫЙ",
+    mapStatusExceptional: "Исключительный объём — множество активных источников", mapStatusHigh: "Высокая активность — ускоренный рост", mapStatusModerate: "Умеренная активность — развивающиеся тренды", mapStatusLow: "Низкая активность — мало сигналов", mapStatusNormal: "Нормальный мониторинг — без аномалий",
+    mapCritVolume: "Исключительно высокий объём", mapCritGrowth: "Ускоренный рост", mapCritMultiplatform: "Мультиплатформенность", mapCritActive: "одновременно активных трендов", mapCritMonitoring: "мониторинг — нормальная активность", mapCritNone: "Нет активных трендов",
   },
 };
 

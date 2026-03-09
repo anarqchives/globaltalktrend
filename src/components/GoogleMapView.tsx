@@ -128,12 +128,12 @@ function getMarkerColor(intensity: number): { fill: string; glow: string; ring: 
   return { fill: "#00a6ff", glow: "rgba(0,166,255,0.3)", ring: "#38bdf8" };
 }
 
-function getIntensityLabel(intensity: number): { label: string; tag: string; color: string } {
-  if (intensity > 0.8) return { label: "Crítica", tag: "🔥 CRÍTICO", color: "#ef4444" };
-  if (intensity > 0.6) return { label: "Alta", tag: "⚡ ALTO", color: "#f97316" };
-  if (intensity > 0.4) return { label: "Média", tag: "📊 MODERADO", color: "#eab308" };
-  if (intensity > 0.2) return { label: "Baixa", tag: "📈 ATENÇÃO", color: "#3b82f6" };
-  return { label: "Mínima", tag: "ℹ️ NORMAL", color: "#94a3b8" };
+function getIntensityLabel(intensity: number, t?: (key: any) => string): { label: string; tag: string; color: string } {
+  if (intensity > 0.8) return { label: t?.("mapIntCritical") || "🔥 CRÍTICO", tag: t?.("mapIntCritical") || "🔥 CRÍTICO", color: "#ef4444" };
+  if (intensity > 0.6) return { label: t?.("mapIntHigh") || "⚡ ALTO", tag: t?.("mapIntHigh") || "⚡ ALTO", color: "#f97316" };
+  if (intensity > 0.4) return { label: t?.("mapIntModerate") || "📊 MODERADO", tag: t?.("mapIntModerate") || "📊 MODERADO", color: "#eab308" };
+  if (intensity > 0.2) return { label: t?.("mapIntAttention") || "📈 ATENÇÃO", tag: t?.("mapIntAttention") || "📈 ATENÇÃO", color: "#3b82f6" };
+  return { label: t?.("mapIntNormal") || "ℹ️ NORMAL", tag: t?.("mapIntNormal") || "ℹ️ NORMAL", color: "#94a3b8" };
 }
 
 interface GoogleMapViewProps {
@@ -588,9 +588,9 @@ const GoogleMapView = ({
                   <span style="font-size:10px;color:${sub};">~${arc.timeDelta}h ${t("mapFlowTimeDelta")}</span>
                 </div>
                 <div style="display:flex;align-items:center;gap:6px;padding:8px 10px;background:${isDark ? 'rgba(30,41,59,0.4)' : 'rgba(241,245,249,0.6)'};border-radius:8px;margin-bottom:8px;">
-                  <span style="font-size:10px;color:${sub};">📊 ${arc.volume.toLocaleString()} ${lang === "pt" ? "menções" : "mentions"}</span>
+                  <span style="font-size:10px;color:${sub};">📊 ${arc.volume.toLocaleString()} ${t("mapMentions")}</span>
                   <span style="font-size:10px;color:${sub};">·</span>
-                  <span style="font-size:10px;color:${sub};">${Math.round(arc.similarity * 100)}% ${lang === "pt" ? "similaridade" : "similarity"}</span>
+                  <span style="font-size:10px;color:${sub};">${Math.round(arc.similarity * 100)}% ${t("mapSimilarity")}</span>
                 </div>
                 <div style="font-size:10px;color:${isDark ? '#60a5fa' : '#3b82f6'};text-align:center;font-weight:600;padding-top:8px;border-top:1px solid ${border};">👆 ${t("mapFlowClickToFilter")}</div>
               </div>
@@ -1123,14 +1123,14 @@ const GoogleMapView = ({
           const hBg = isDark ? "rgba(19,22,32,0.97)" : "rgba(255,255,255,0.97)";
           const hText = isDark ? "#e2e8f0" : "#111827";
           const hSub = isDark ? "#94a3b8" : "#6b7280";
-          const { tag: hTag, color: hColor } = getIntensityLabel(intensity);
+          const { tag: hTag, color: hColor } = getIntensityLabel(intensity, t);
           
           let statusExplain = "";
-          if (intensity > 0.8) statusExplain = lang === "pt" ? "Volume excepcional detectado — múltiplas fontes ativas" : "Exceptional volume — multiple active sources";
-          else if (intensity > 0.6) statusExplain = lang === "pt" ? "Alta atividade — crescimento acelerado em várias plataformas" : "High activity — accelerating across platforms";
-          else if (intensity > 0.4) statusExplain = lang === "pt" ? "Atividade moderada — tendências em desenvolvimento" : "Moderate activity — developing trends";
-          else if (intensity > 0.2) statusExplain = lang === "pt" ? "Baixa atividade — poucos sinais detectados" : "Low activity — few signals detected";
-          else statusExplain = lang === "pt" ? "Monitoramento normal — sem anomalias" : "Normal monitoring — no anomalies";
+          if (intensity > 0.8) statusExplain = t("mapStatusExceptional");
+          else if (intensity > 0.6) statusExplain = t("mapStatusHigh");
+          else if (intensity > 0.4) statusExplain = t("mapStatusModerate");
+          else if (intensity > 0.2) statusExplain = t("mapStatusLow");
+          else statusExplain = t("mapStatusNormal");
           
           hoverInfoRef.current.setContent(`
             <div style="font-family:Inter,system-ui,sans-serif;padding:10px 14px;min-width:190px;max-width:240px;background:${hBg};color:${hText};border-radius:14px;backdrop-filter:blur(16px);border:1px solid ${isDark ? 'rgba(45,51,72,0.5)' : 'rgba(0,0,0,0.08)'}; box-shadow:0 8px 24px rgba(0,0,0,0.12);">
@@ -1138,14 +1138,14 @@ const GoogleMapView = ({
                 <span style="font-size:20px;">${flag}</span>
                 <div>
                   <div style="font-size:13px;font-weight:700;letter-spacing:-0.01em;">${cp.name}</div>
-                  <div style="font-size:10px;color:${hSub};margin-top:1px;">${count} trend${count !== 1 ? 's' : ''} ${lang === "pt" ? "ativas" : "active"}</div>
+                  <div style="font-size:10px;color:${hSub};margin-top:1px;">${count} trend${count !== 1 ? 's' : ''} ${t("mapTrendsActiveLabel")}</div>
                 </div>
               </div>
               <div style="display:flex;align-items:center;gap:6px;margin-bottom:6px;">
                 <span style="background:${hColor};color:#fff;padding:2px 10px;border-radius:12px;font-size:9px;font-weight:700;letter-spacing:0.5px;">${hTag}</span>
               </div>
               <div style="font-size:10px;color:${hSub};line-height:1.4;margin-bottom:8px;">${statusExplain}</div>
-              <div style="font-size:9px;color:${isDark ? '#60a5fa' : '#3b82f6'};text-align:center;font-weight:600;padding-top:6px;border-top:1px solid ${isDark ? 'rgba(45,51,72,0.4)' : 'rgba(0,0,0,0.06)'};">👆 ${lang === "pt" ? "Clique para ver detalhes" : "Click for details"}</div>
+              <div style="font-size:9px;color:${isDark ? '#60a5fa' : '#3b82f6'};text-align:center;font-weight:600;padding-top:6px;border-top:1px solid ${isDark ? 'rgba(45,51,72,0.4)' : 'rgba(0,0,0,0.06)'};">👆 ${t("mapClickDetails")}</div>
             </div>
           `);
           hoverInfoRef.current.open({ anchor: marker, map });
@@ -1183,7 +1183,7 @@ const GoogleMapView = ({
         const border = isDark ? "rgba(45,51,72,0.5)" : "rgba(0,0,0,0.06)";
         const badgeBg = isDark ? "rgba(30,41,59,0.8)" : "rgba(241,245,249,0.8)";
         const hoverBg = isDark ? "rgba(30,41,59,0.5)" : "rgba(248,250,252,1)";
-        const { tag: critTag, color: critColor } = getIntensityLabel(intensity);
+        const { tag: critTag, color: critColor } = getIntensityLabel(intensity, t);
 
         // Calculate criticality from real trend data
         const totalVolume = countryTrends.reduce((acc, tr) => {
@@ -1197,17 +1197,17 @@ const GoogleMapView = ({
 
         let critReason = "";
         if (totalVolume > 10000) {
-          critReason = `🔥 Volume excepcionalmente alto: ${totalVolume.toLocaleString()} menções detectadas`;
+          critReason = `🔥 ${t("mapCritVolume")}: ${totalVolume.toLocaleString()} ${t("mapMentions")}`;
         } else if (avgChange > 100) {
-          critReason = `⚡ Crescimento acelerado: +${Math.round(avgChange)}% de variação média`;
+          critReason = `⚡ ${t("mapCritGrowth")}: +${Math.round(avgChange)}%`;
         } else if (platforms.length > 3) {
-          critReason = `📊 Multiplataforma: presente em ${platforms.join(', ')}`;
+          critReason = `📊 ${t("mapCritMultiplatform")}: ${platforms.join(', ')}`;
         } else if (count > 15) {
-          critReason = `📈 ${count} tendências ativas simultaneamente neste país`;
+          critReason = `📈 ${count} ${t("mapCritActive")}`;
         } else if (count > 0) {
-          critReason = `ℹ️ ${count} tendência${count > 1 ? 's' : ''} em monitoramento — atividade dentro da média`;
+          critReason = `ℹ️ ${count} trend${count > 1 ? 's' : ''} ${t("mapCritMonitoring")}`;
         } else {
-          critReason = `ℹ️ Nenhuma tendência ativa no momento`;
+          critReason = `ℹ️ ${t("mapCritNone")}`;
         }
 
         const critSectionBg = isDark
@@ -1237,13 +1237,13 @@ const GoogleMapView = ({
 
         const moreCount = trends.filter(tr => tr.countryCode === cp.id).length - 5;
         const moreSection = moreCount > 0
-          ? `<div style="text-align:center;font-size:${isMobile ? '12px' : '10px'};color:${subtext};padding:${isMobile ? '8px' : '6px'};background:${badgeBg};border-radius:8px;margin-bottom:10px;">+ ${moreCount} ${lang === "pt" ? "outras tendências" : "more trends"}</div>`
+          ? `<div style="text-align:center;font-size:${isMobile ? '12px' : '10px'};color:${subtext};padding:${isMobile ? '8px' : '6px'};background:${badgeBg};border-radius:8px;margin-bottom:10px;">+ ${moreCount} ${t("mapMoreTrends")}</div>`
           : '';
 
         const closeBtnSize = isMobile ? '32' : '22';
         const closeBtn = `<button id="map-tooltip-close" style="position:absolute;top:${isMobile ? '8px' : '10px'};right:${isMobile ? '8px' : '10px'};width:${closeBtnSize}px;height:${closeBtnSize}px;border-radius:${parseInt(closeBtnSize)/2}px;background:${isDark ? 'rgba(30,41,59,0.8)' : '#f1f5f9'};border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:${isMobile ? '14px' : '11px'};color:${subtext};transition:all 0.15s ease;z-index:10;touch-action:manipulation;">✕</button>`;
         
-        const filterBtn = `<button id="map-tooltip-filter" style="width:100%;background:${isDark ? 'rgba(59,130,246,0.9)' : '#3b82f6'};color:white;border:none;border-radius:${isMobile ? '12px' : '8px'};padding:${isMobile ? '12px' : '8px'};font-size:${isMobile ? '13px' : '11px'};font-weight:600;cursor:pointer;transition:all 0.2s ease;margin-top:8px;touch-action:manipulation;min-height:${isMobile ? '48px' : 'auto'};">${lang === "pt" ? "Filtrar timeline por este país" : "Filter timeline by country"}</button>`;
+        const filterBtn = `<button id="map-tooltip-filter" style="width:100%;background:${isDark ? 'rgba(59,130,246,0.9)' : '#3b82f6'};color:white;border:none;border-radius:${isMobile ? '12px' : '8px'};padding:${isMobile ? '12px' : '8px'};font-size:${isMobile ? '13px' : '11px'};font-weight:600;cursor:pointer;transition:all 0.2s ease;margin-top:8px;touch-action:manipulation;min-height:${isMobile ? '48px' : 'auto'};">${t("mapFilterByCountry")}</button>`;
 
         const tooltipWidth = isMobile ? 'min-width:280px;max-width:92vw' : 'min-width:260px;max-width:290px';
         const tooltipPadding = isMobile ? '18px' : '16px';
@@ -1255,14 +1255,14 @@ const GoogleMapView = ({
               <span style="font-size:${isMobile ? '28px' : '24px'};line-height:1;">${flag}</span>
               <div>
                 <div style="font-size:${isMobile ? '17px' : '15px'};font-weight:700;color:${text};letter-spacing:-0.02em;">${cp.name}</div>
-                <div style="font-size:${isMobile ? '12px' : '10px'};color:${subtext};margin-top:1px;">${count} trends ${lang === "pt" ? "ativas" : "active"}</div>
+                <div style="font-size:${isMobile ? '12px' : '10px'};color:${subtext};margin-top:1px;">${count} trends ${t("mapTrendsActiveLabel")}</div>
               </div>
             </div>
             <div style="margin:${isMobile ? '12px 0' : '10px 0'};background:${critSectionBg};border-radius:12px;padding:${isMobile ? '12px 14px' : '10px 12px'};border-left:3px solid ${critColor};">
               <span style="display:inline-flex;align-items:center;gap:4px;background:${critColor};color:#fff;padding:${isMobile ? '3px 10px' : '2px 8px'};border-radius:10px;font-weight:700;font-size:${isMobile ? '10px' : '9px'};letter-spacing:0.5px;text-transform:uppercase;margin-bottom:6px;">${critTag}</span>
               <p style="font-size:${isMobile ? '12px' : '11px'};color:${isDark ? '#94a3b8' : '#475569'};line-height:1.4;margin:0;">${critReason}</p>
             </div>
-            ${countryTrends.length > 0 ? `<div style="font-size:${isMobile ? '11px' : '10px'};font-weight:700;color:${text};text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;">${lang === "pt" ? "Principais tendências" : "Top trends"}</div>` : ''}
+            ${countryTrends.length > 0 ? `<div style="font-size:${isMobile ? '11px' : '10px'};font-weight:700;color:${text};text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;">${t("mapTopTrendsLabel")}</div>` : ''}
             <div style="border-radius:10px;max-height:${isMobile ? '200px' : '140px'};overflow-y:auto;-webkit-overflow-scrolling:touch;">${trendsList}</div>
             ${moreSection}
             ${filterBtn}
@@ -1435,7 +1435,7 @@ const GoogleMapView = ({
           <button
             onClick={onClose}
             className="w-6 h-6 rounded-full flex items-center justify-center bg-background/80 hover:bg-destructive/15 text-muted-foreground hover:text-destructive border border-border/40 hover:border-destructive/30 shadow-sm backdrop-blur-sm transition-all duration-200 pointer-events-auto mr-8"
-            title={lang === "pt" ? "Fechar Mapa" : "Close Map"}
+            title={t("mapCloseMap")}
           >
             <X className="w-3 h-3" strokeWidth={2.5} />
           </button>
@@ -1455,7 +1455,7 @@ const GoogleMapView = ({
         <div className="absolute inset-0 flex items-center justify-center bg-background/50 backdrop-blur-sm">
           <div className="flex items-center gap-3 text-muted-foreground text-sm">
             <div className="w-5 h-5 border-2 border-primary/30 border-t-primary rounded-full animate-spin" />
-            <span className="font-medium">Carregando mapa...</span>
+            <span className="font-medium">{t("mapLoadingMap")}</span>
           </div>
         </div>
       )}
@@ -1466,9 +1466,9 @@ const GoogleMapView = ({
           <div className="text-center p-6 bg-card/80 backdrop-blur-xl rounded-2xl border border-border/30 shadow-lg max-w-xs">
             <div className="text-3xl mb-3">🗺️</div>
             <p className="text-sm font-medium text-foreground mb-1">{mapError}</p>
-            <p className="text-xs text-muted-foreground/60 mb-4">O mapa será exibido assim que a conexão for restabelecida.</p>
+            <p className="text-xs text-muted-foreground/60 mb-4">{t("mapReconnectMsg")}</p>
             <button onClick={retryMap} className="px-4 py-2 rounded-full bg-primary hover:bg-primary/90 text-primary-foreground text-xs font-semibold transition-colors shadow-sm">
-              🔄 Tentar novamente
+              🔄 {t("mapRetry")}
             </button>
           </div>
         </div>
@@ -1561,14 +1561,14 @@ const GoogleMapView = ({
                 </div>
                 <div className="flex items-center gap-2 text-[9px] text-muted-foreground">
                   <div className="w-5 h-[2px] rounded-full bg-foreground/20" />
-                  <span>{lang === "pt" ? "Fino = baixo volume" : "Thin = low volume"}</span>
+                  <span>{t("mapThinLowVol")}</span>
                 </div>
                 <div className="flex items-center gap-2 text-[9px] text-muted-foreground mt-0.5">
                   <div className="w-5 h-[5px] rounded-full bg-foreground/40" />
-                  <span>{lang === "pt" ? "Grosso = alto volume" : "Thick = high volume"}</span>
+                  <span>{t("mapThickHighVol")}</span>
                 </div>
                 <div className="mt-2 pt-2 border-t border-border/30 text-[10px] text-muted-foreground">
-                  {flowArcs.length} {lang === "pt" ? "arcos de propagação" : "propagation arcs"}
+                  {flowArcs.length} {t("mapPropArcs")}
                 </div>
               </>
             )}
@@ -1605,10 +1605,10 @@ const GoogleMapView = ({
                   <div className="w-2 h-2 rounded-full bg-foreground/20" />
                   <span>→</span>
                   <div className="w-4 h-4 rounded-full bg-foreground/20" />
-                  <span>{lang === "pt" ? "Tamanho = volume" : "Size = volume"}</span>
+                  <span>{t("mapSizeVolume")}</span>
                 </div>
                 <div className="text-[9px] text-muted-foreground italic">
-                  {lang === "pt" ? "Pulso rápido = crescimento acelerado" : "Fast pulse = rapid growth"}
+                  {t("mapFastPulse")}
                 </div>
                 <div className="mt-2 pt-2 border-t border-border/30 text-[10px] text-muted-foreground">
                   {sentimentBubbles.length} {t("countries")}
