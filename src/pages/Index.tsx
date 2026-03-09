@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback, useEffect, useMemo, lazy, Suspense } from "react";
+import { useState, useRef, useCallback, useEffect, useMemo, lazy, Suspense, type ElementRef } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { useTimelineColumns } from "@/hooks/use-timeline-columns";
 import TrendHeader from "@/components/TrendHeader";
