@@ -552,9 +552,9 @@ const GoogleMapView = ({
           ? `<div style="text-align:center;font-size:10px;color:${subtext};padding:6px;background:${badgeBg};border-radius:8px;margin-bottom:10px;">+ ${moreCount} outras tendências</div>`
           : '';
 
-        const closeBtn = `<button id="map-tooltip-close" style="position:absolute;top:12px;right:12px;width:24px;height:24px;border-radius:12px;background:${isDark ? 'rgba(30,41,59,0.8)' : '#f1f5f9'};border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:12px;color:${subtext};transition:all 0.15s ease;z-index:10;">✕</button>`;
+        const closeBtn = `<button id="map-tooltip-close" style="position:absolute;top:10px;right:10px;width:22px;height:22px;border-radius:11px;background:${isDark ? 'rgba(30,41,59,0.8)' : '#f1f5f9'};border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:11px;color:${subtext};transition:all 0.15s ease;z-index:10;">✕</button>`;
         
-        const filterBtn = `<button id="map-tooltip-filter" style="width:100%;background:#3b82f6;color:white;border:none;border-radius:30px;padding:10px;font-size:13px;font-weight:500;cursor:pointer;transition:all 0.2s ease;margin-top:10px;">Clique para filtrar a timeline</button>`;
+        const filterBtn = `<button id="map-tooltip-filter" style="width:100%;background:${isDark ? 'rgba(59,130,246,0.9)' : '#3b82f6'};color:white;border:none;border-radius:8px;padding:8px;font-size:11px;font-weight:600;cursor:pointer;transition:all 0.2s ease;margin-top:8px;">${lang === "pt" ? "Filtrar timeline por este país" : "Filter timeline by country"}</button>`;
 
         infoWindowRef.current.setContent(`
           <div style="font-family:Inter,system-ui,-apple-system,sans-serif;position:relative;padding:16px;min-width:260px;max-width:290px;background:${bg};color:${text};border-radius:16px;backdrop-filter:blur(20px);border:1px solid ${border};box-shadow:0 12px 32px rgba(0,0,0,0.15);">
