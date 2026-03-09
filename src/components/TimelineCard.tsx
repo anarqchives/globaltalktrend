@@ -437,45 +437,38 @@ const TimelineCard = ({
           </div>
         </div>
 
-        {/* Divider gradient */}
-        <div className="h-px w-full bg-gradient-to-r from-transparent via-border to-transparent my-2" />
+        {/* Divider */}
+        <div className="h-px w-full bg-gradient-to-r from-transparent via-border to-transparent my-1.5" />
 
-        {/* === ACTION BAR === */}
-        <div className="flex items-center gap-1">
+        {/* === ACTION BAR — unified container === */}
+        <div className="flex items-center gap-0.5 bg-muted/30 rounded-lg p-0.5">
           {sourceUrl && (
             <a
               href={sourceUrl}
               target="_blank"
               rel="noopener noreferrer"
               onClick={(e) => e.stopPropagation()}
-              className="inline-flex items-center gap-1 px-2 py-1 min-h-[36px] min-w-[36px] rounded-md text-[10px] font-medium text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors"
+              className="inline-flex items-center gap-1 px-2 py-1 min-h-[32px] rounded-md text-[10px] font-medium text-muted-foreground hover:text-foreground hover:bg-card transition-colors"
             >
               <ExternalLink className="w-3 h-3" />
               {t("viewSource")}
             </a>
           )}
-          <button
-            onClick={(e) => { e.stopPropagation(); handleToggle(); }}
-            className="inline-flex items-center gap-1 px-2 py-1 min-h-[36px] min-w-[36px] rounded-md text-[10px] font-medium text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors"
-          >
-            <Eye className="w-3 h-3" />
-            {expanded ? "Fechar" : "Análise"}
-          </button>
-          <button onClick={handleShare} className="inline-flex items-center gap-1 px-2 py-1 min-h-[36px] min-w-[36px] rounded-md text-[10px] font-medium text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors">
+          <button onClick={handleShare} className="inline-flex items-center gap-1 px-2 py-1 min-h-[32px] rounded-md text-[10px] font-medium text-muted-foreground hover:text-foreground hover:bg-card transition-colors">
             <Share2 className="w-3 h-3" />
             {t("share")}
+          </button>
+          <button onClick={(e) => { e.stopPropagation(); onSaveCard?.({ title, platform, category, country_code: countryCode, source_url: sourceUrl, thumbnail, description: displayDescription, volume, change, changePositive, historicalData, platformColor: pf.color, sources }); }} className="inline-flex items-center gap-1 px-2 py-1 min-h-[32px] rounded-md text-[10px] font-medium text-muted-foreground hover:text-foreground hover:bg-card transition-colors">
+            <Bookmark className="w-3 h-3" />
           </button>
 
           <div className="flex-1" />
 
-          <button onClick={handleAlertClick} className="p-1.5 min-h-[36px] min-w-[36px] flex items-center justify-center rounded-md text-muted-foreground/50 hover:text-primary transition-colors">
-            <Bell className="w-3.5 h-3.5" />
+          <button onClick={handleAlertClick} className="p-1.5 min-h-[32px] min-w-[32px] flex items-center justify-center rounded-md text-muted-foreground/50 hover:text-primary hover:bg-card transition-colors">
+            <Bell className="w-3 h-3" />
           </button>
-          <button onClick={(e) => { e.stopPropagation(); onSaveCard?.({ title, platform, category, country_code: countryCode, source_url: sourceUrl, thumbnail, description: displayDescription, volume, change, changePositive, historicalData, platformColor: pf.color, sources }); }} className="p-1.5 min-h-[36px] min-w-[36px] flex items-center justify-center rounded-md text-muted-foreground/50 hover:text-primary transition-colors">
-            <Bookmark className="w-3.5 h-3.5" />
-          </button>
-          <button onClick={(e) => { e.stopPropagation(); toast({ title: "⚠️ Denúncia enviada", description: `Obrigado por reportar: ${title.slice(0, 40)}` }); }} className="p-1.5 min-h-[36px] min-w-[36px] flex items-center justify-center rounded-md text-muted-foreground/50 hover:text-destructive transition-colors">
-            <Flag className="w-3.5 h-3.5" />
+          <button onClick={(e) => { e.stopPropagation(); toast({ title: "⚠️ Denúncia enviada", description: `Obrigado por reportar: ${title.slice(0, 40)}` }); }} className="p-1.5 min-h-[32px] min-w-[32px] flex items-center justify-center rounded-md text-muted-foreground/50 hover:text-destructive hover:bg-card transition-colors">
+            <Flag className="w-3 h-3" />
           </button>
         </div>
       </div>
