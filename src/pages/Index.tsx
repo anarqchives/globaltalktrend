@@ -21,7 +21,7 @@ import { useGamification } from "@/hooks/use-gamification";
 import { useSavedCards } from "@/hooks/use-saved-cards";
 import { useSavedFilters } from "@/hooks/use-saved-filters";
 import { supabase } from "@/integrations/supabase/client";
-import { ChevronRight, X, Map, Newspaper, LayoutList, LayoutGrid, RefreshCw, Camera, ChevronsUp, ChevronsDown } from "lucide-react";
+import { ChevronRight, X, Map, Newspaper, LayoutList, LayoutGrid, RefreshCw, Camera, ChevronsUp, ChevronsDown, Radar, PanelLeftClose, PanelLeftOpen, MapPin, FileText } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import TagLegend from "@/components/TagLegend";
 import WatchlistPanel from "@/components/WatchlistPanel";
@@ -76,6 +76,14 @@ const Index = () => {
   const [compactMode, setCompactMode] = useState(false);
   const [allExpanded, setAllExpanded] = useState(false);
   const [allCollapsed, setAllCollapsed] = useState(false);
+  // Panel visibility for file-tab collapsible sections
+  const [panelVisibility, setPanelVisibility] = useState({
+    radar: true,
+    timeline: true,
+    map: true,
+  });
+  const togglePanel = (panel: "radar" | "timeline" | "map") =>
+    setPanelVisibility(prev => ({ ...prev, [panel]: !prev[panel] }));
   const timelinePanelRef = useRef<HTMLDivElement>(null);
   const { timelineRef: gridRef, columns: gridColumns } = useTimelineColumns();
 
@@ -760,37 +768,134 @@ const Index = () => {
             </div>
           </>
         ) : (
-          <ResizablePanelGroup direction="vertical" className="flex-1 min-h-0">
-            {/* Trend Radar Panel — resizable vertically */}
-            <ResizablePanel defaultSize={30} minSize={5} maxSize={60} collapsible>
-              <div className="h-full overflow-hidden">
-                <TrendRadar
-                  trends={filteredTrends}
-                  allTrends={allTrends}
-                  criticalMoments={criticalMoments}
-                  anomalies={anomalies}
-                  onSelectTrend={handleSelectTrend}
-                  onFilterCountry={(code) => setFilters(f => ({ ...f, country: code }))}
-                  onAnomalyClick={handleAnomalyClick}
-                />
+          <div className="flex-1 min-h-0 flex">
+            {/* File-tab sidebar for closed panels */}
+            {(!panelVisibility.radar || !panelVisibility.timeline || !panelVisibility.map) && (
+              <div className="flex flex-col border-r border-border/40 bg-muted/20 py-2 gap-1 flex-shrink-0">
+                {!panelVisibility.radar && (
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <button
+                        onClick={() => togglePanel("radar")}
+                        className="flex items-center gap-1.5 px-2 py-2.5 text-[10px] font-semibold text-primary hover:bg-primary/10 transition-colors writing-mode-vertical"
+                        style={{ writingMode: "vertical-lr", textOrientation: "mixed" }}
+                      >
+                        <Radar className="w-3.5 h-3.5 rotate-90" />
+                        <span>Trend Radar</span>
+                      </button>
+                    </TooltipTrigger>
+                    <TooltipContent side="right" className="text-[10px]">{lang === "pt" ? "Abrir Trend Radar" : "Open Trend Radar"}</TooltipContent>
+                  </Tooltip>
+                )}
+                {!panelVisibility.timeline && (
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <button
+                        onClick={() => togglePanel("timeline")}
+                        className="flex items-center gap-1.5 px-2 py-2.5 text-[10px] font-semibold text-primary hover:bg-primary/10 transition-colors"
+                        style={{ writingMode: "vertical-lr", textOrientation: "mixed" }}
+                      >
+                        <FileText className="w-3.5 h-3.5 rotate-90" />
+                        <span>Timeline</span>
+                      </button>
+                    </TooltipTrigger>
+                    <TooltipContent side="right" className="text-[10px]">{lang === "pt" ? "Abrir Timeline" : "Open Timeline"}</TooltipContent>
+                  </Tooltip>
+                )}
+                {!panelVisibility.map && (
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <button
+                        onClick={() => togglePanel("map")}
+                        className="flex items-center gap-1.5 px-2 py-2.5 text-[10px] font-semibold text-primary hover:bg-primary/10 transition-colors"
+                        style={{ writingMode: "vertical-lr", textOrientation: "mixed" }}
+                      >
+                        <MapPin className="w-3.5 h-3.5 rotate-90" />
+                        <span>{lang === "pt" ? "Mapa" : "Map"}</span>
+                      </button>
+                    </TooltipTrigger>
+                    <TooltipContent side="right" className="text-[10px]">{lang === "pt" ? "Abrir Mapa" : "Open Map"}</TooltipContent>
+                  </Tooltip>
+                )}
               </div>
-            </ResizablePanel>
-            <ResizableHandle withHandle />
-            {/* Timeline + Map Panel */}
-            <ResizablePanel defaultSize={70} minSize={30}>
-              <ResizablePanelGroup direction="horizontal" className="h-full">
-                <ResizablePanel defaultSize={65} minSize={25} maxSize={85}>
-                  <div className="h-full min-h-0 overflow-hidden" ref={timelinePanelRef}>
-                    {renderTimeline()}
-                  </div>
-                </ResizablePanel>
-                <ResizableHandle withHandle />
-                <ResizablePanel defaultSize={35} minSize={15} maxSize={60}>
-                  <div className="h-full">{renderMap()}</div>
-                </ResizablePanel>
+            )}
+
+            {/* Main content area */}
+            <div className="flex-1 min-h-0 flex flex-col">
+              {!panelVisibility.radar && !panelVisibility.timeline && !panelVisibility.map ? (
+                <div className="flex-1 flex items-center justify-center text-muted-foreground">
+                  <p className="text-sm">{lang === "pt" ? "Clique nas abas laterais para reabrir os painéis." : "Click the side tabs to reopen panels."}</p>
+                </div>
+              ) : (
+              <ResizablePanelGroup direction="vertical" className="flex-1 min-h-0" key={`v-${panelVisibility.radar}-${panelVisibility.timeline}-${panelVisibility.map}`}>
+                {/* Trend Radar Panel */}
+                {panelVisibility.radar && (
+                  <>
+                    <ResizablePanel defaultSize={30} minSize={5} maxSize={60} collapsible>
+                      <div className="h-full overflow-hidden relative group/radar">
+                        <button
+                          onClick={() => togglePanel("radar")}
+                          className="absolute top-2 right-10 z-10 opacity-0 group-hover/radar:opacity-100 w-6 h-6 rounded-md flex items-center justify-center bg-muted/80 hover:bg-destructive/10 hover:text-destructive text-muted-foreground transition-all duration-200 border border-border/30"
+                          title={lang === "pt" ? "Fechar Trend Radar" : "Close Trend Radar"}
+                        >
+                          <X className="w-3 h-3" />
+                        </button>
+                        <TrendRadar
+                          trends={filteredTrends}
+                          allTrends={allTrends}
+                          criticalMoments={criticalMoments}
+                          anomalies={anomalies}
+                          onSelectTrend={handleSelectTrend}
+                          onFilterCountry={(code) => setFilters(f => ({ ...f, country: code }))}
+                          onAnomalyClick={handleAnomalyClick}
+                        />
+                      </div>
+                    </ResizablePanel>
+                    {(panelVisibility.timeline || panelVisibility.map) && <ResizableHandle withHandle />}
+                  </>
+                )}
+                {/* Timeline + Map Panel */}
+                {(panelVisibility.timeline || panelVisibility.map) && (
+                  <ResizablePanel defaultSize={panelVisibility.radar ? 70 : 100} minSize={30}>
+                    <ResizablePanelGroup direction="horizontal" className="h-full" key={`h-${panelVisibility.timeline}-${panelVisibility.map}`}>
+                      {panelVisibility.timeline && (
+                        <>
+                          <ResizablePanel defaultSize={panelVisibility.map ? 65 : 100} minSize={25} maxSize={panelVisibility.map ? 85 : 100}>
+                            <div className="h-full min-h-0 overflow-hidden relative group/timeline" ref={timelinePanelRef}>
+                              <button
+                                onClick={() => togglePanel("timeline")}
+                                className="absolute top-2 right-2 z-10 opacity-0 group-hover/timeline:opacity-100 w-6 h-6 rounded-md flex items-center justify-center bg-muted/80 hover:bg-destructive/10 hover:text-destructive text-muted-foreground transition-all duration-200 border border-border/30"
+                                title={lang === "pt" ? "Fechar Timeline" : "Close Timeline"}
+                              >
+                                <X className="w-3 h-3" />
+                              </button>
+                              {renderTimeline()}
+                            </div>
+                          </ResizablePanel>
+                          {panelVisibility.map && <ResizableHandle withHandle />}
+                        </>
+                      )}
+                      {panelVisibility.map && (
+                        <ResizablePanel defaultSize={panelVisibility.timeline ? 35 : 100} minSize={15} maxSize={panelVisibility.timeline ? 60 : 100}>
+                          <div className="h-full relative group/map">
+                            <button
+                              onClick={() => togglePanel("map")}
+                              className="absolute top-2 right-2 z-10 opacity-0 group-hover/map:opacity-100 w-6 h-6 rounded-md flex items-center justify-center bg-muted/80 hover:bg-destructive/10 hover:text-destructive text-muted-foreground transition-all duration-200 border border-border/30"
+                              title={lang === "pt" ? "Fechar Mapa" : "Close Map"}
+                            >
+                              <X className="w-3 h-3" />
+                            </button>
+                            {renderMap()}
+                          </div>
+                        </ResizablePanel>
+                      )}
+                    </ResizablePanelGroup>
+                  </ResizablePanel>
+                )}
               </ResizablePanelGroup>
-            </ResizablePanel>
-          </ResizablePanelGroup>
+              )}
+            </div>
+          </div>
         )}
       </div>
 
