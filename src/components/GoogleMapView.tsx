@@ -533,14 +533,13 @@ const GoogleMapView = ({
               const growthBadge = changeVal > 50
                 ? `<span style="position:absolute;top:8px;right:8px;background:#ef4444;color:#fff;font-size:9px;font-weight:600;padding:2px 6px;border-radius:10px;">+${Math.round(changeVal)}%</span>`
                 : '';
-              return `<div class="map-tooltip-trend" data-trend-idx="${idx}" style="position:relative;display:flex;align-items:center;gap:8px;padding:10px 12px;border-radius:10px;cursor:pointer;margin-bottom:6px;background:transparent;border:1px solid ${border};transition:all 0.15s ease;">
-                <div style="width:3px;height:24px;border-radius:2px;background:${pColor};flex-shrink:0;"></div>
+              return `<div class="map-tooltip-trend" data-trend-idx="${idx}" style="position:relative;display:flex;align-items:center;gap:6px;padding:8px 10px;border-radius:8px;cursor:pointer;margin-bottom:4px;background:transparent;border:1px solid ${border};transition:all 0.15s ease;">
+                <div style="width:3px;height:20px;border-radius:2px;background:${pColor};flex-shrink:0;"></div>
                 <div style="flex:1;min-width:0;">
-                  <div style="font-size:12px;color:${text};overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:200px;font-weight:500;">${tr.title.slice(0, 45)}${tr.title.length > 45 ? '…' : ''}</div>
-                  <div style="display:flex;align-items:center;gap:6px;margin-top:3px;">
-                    <span style="font-size:9px;background:${badgeBg};color:${subtext};padding:2px 6px;border-radius:6px;font-weight:600;">${tr.volume}</span>
-                    <span style="font-size:9px;color:${subtext};">${tr.platform}</span>
-                    <span style="font-size:9px;color:${subtext};">${tr.time || ''}</span>
+                  <div style="font-size:11px;color:${text};overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:180px;font-weight:500;">${tr.title.slice(0, 40)}${tr.title.length > 40 ? '…' : ''}</div>
+                  <div style="display:flex;align-items:center;gap:4px;margin-top:2px;">
+                    <span style="font-size:8px;background:${badgeBg};color:${subtext};padding:1px 5px;border-radius:4px;font-weight:600;">${tr.volume}</span>
+                    <span style="font-size:8px;color:${subtext};">${tr.platform}</span>
                   </div>
                 </div>
                 ${growthBadge}
