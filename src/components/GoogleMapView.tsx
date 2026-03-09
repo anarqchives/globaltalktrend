@@ -1561,7 +1561,7 @@ const GoogleMapView = ({
                 </div>
                 <div className="flex items-center gap-2 text-[9px] text-muted-foreground">
                   <div className="w-5 h-[2px] rounded-full bg-foreground/20" />
-                  <span>{lang === "pt" ? "Fino = baixo volume" : "Thin = low volume"}</span>
+                  <span>{t("mapThinLowVol")}</span>
                 </div>
                 <div className="flex items-center gap-2 text-[9px] text-muted-foreground mt-0.5">
                   <div className="w-5 h-[5px] rounded-full bg-foreground/40" />
