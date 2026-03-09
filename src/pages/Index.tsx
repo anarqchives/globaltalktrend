@@ -289,10 +289,11 @@ const Index = () => {
   }, []);
 
   useEffect(() => {
-    if (timeSinceLastFetch >= 60) {
+    if (timeSinceLastFetch >= 90) {
       const hasExpandedCard = expandedTrendId !== null;
-      if (!isActive && !hasExpandedCard) {
-        console.log("🔄 Usuário inativo por 30s e sem cards abertos. Atualizando timeline...");
+      const hasUserScrolled = scrollRef.current && scrollRef.current.scrollTop > 150;
+      if (!isActive && !hasExpandedCard && !hasUserScrolled) {
+        console.log("🔄 Usuário inativo, sem cards abertos e sem scroll. Atualizando timeline...");
         fetchTrends().then(() => {
           setTimeSinceLastFetch(0);
           setUpdatePending(false);
@@ -653,18 +654,16 @@ const Index = () => {
       />
 
       <div className="flex-1 overflow-hidden flex flex-col">
-        {/* Trend Radar: Emerging / Critical / Top Trends - Fixed height container */}
-        {!loading && filteredTrends.length > 1 && (
-          <TrendRadar
-            trends={filteredTrends}
-            allTrends={allTrends}
-            criticalMoments={criticalMoments}
-            anomalies={anomalies}
-            onSelectTrend={handleSelectTrend}
-            onFilterCountry={(code) => setFilters(f => ({ ...f, country: code }))}
-            onAnomalyClick={handleAnomalyClick}
-          />
-        )}
+        {/* Trend Radar: Always rendered once data exists - independent of timeline refresh */}
+        <TrendRadar
+          trends={filteredTrends}
+          allTrends={allTrends}
+          criticalMoments={criticalMoments}
+          anomalies={anomalies}
+          onSelectTrend={handleSelectTrend}
+          onFilterCountry={(code) => setFilters(f => ({ ...f, country: code }))}
+          onAnomalyClick={handleAnomalyClick}
+        />
 
         {/* Main content area - expands to fill remaining space */}
 

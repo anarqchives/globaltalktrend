@@ -171,7 +171,7 @@ const GoogleMapView = ({
   onSelectTrend,
   highlightCountry,
 }: GoogleMapViewProps) => {
-  const { t } = useLanguage();
+  const { t, lang } = useLanguage();
   const mapRef = useRef<HTMLDivElement>(null);
   const googleMapRef = useRef<any>(null);
   const markersRef = useRef<any[]>([]);
@@ -425,29 +425,39 @@ const GoogleMapView = ({
       const hoverScale = scale * 1.4;
       const flag = cp.id.length === 2 ? String.fromCodePoint(...[...cp.id.toUpperCase()].map(c => 0x1F1E6 + c.charCodeAt(0) - 65)) : "";
 
-      // Hover: show lightweight preview tooltip
+      // Hover: show lightweight preview tooltip with status explanation
       marker.addListener("mouseover", () => {
         animateMarkerScale(scale, hoverScale);
         // Don't show hover tooltip if click tooltip is already open for this country
         if (openInfoCountryRef.current === cp.id) return;
         if (!hoverInfoRef.current) return;
-        const hBg = isDark ? "rgba(19,22,32,0.95)" : "rgba(255,255,255,0.95)";
+        const hBg = isDark ? "rgba(19,22,32,0.97)" : "rgba(255,255,255,0.97)";
         const hText = isDark ? "#e2e8f0" : "#111827";
-        const hSub = isDark ? "#6b7280" : "#9ca3af";
+        const hSub = isDark ? "#94a3b8" : "#6b7280";
         const { tag: hTag, color: hColor } = getIntensityLabel(intensity);
+        
+        // Status explanation based on intensity
+        let statusExplain = "";
+        if (intensity > 0.8) statusExplain = lang === "pt" ? "Volume excepcional detectado — múltiplas fontes ativas" : "Exceptional volume — multiple active sources";
+        else if (intensity > 0.6) statusExplain = lang === "pt" ? "Alta atividade — crescimento acelerado em várias plataformas" : "High activity — accelerating across platforms";
+        else if (intensity > 0.4) statusExplain = lang === "pt" ? "Atividade moderada — tendências em desenvolvimento" : "Moderate activity — developing trends";
+        else if (intensity > 0.2) statusExplain = lang === "pt" ? "Baixa atividade — poucos sinais detectados" : "Low activity — few signals detected";
+        else statusExplain = lang === "pt" ? "Monitoramento normal — sem anomalias" : "Normal monitoring — no anomalies";
+        
         hoverInfoRef.current.setContent(`
-          <div style="font-family:Inter,system-ui,sans-serif;padding:10px 12px;min-width:180px;max-width:220px;background:${hBg};color:${hText};border-radius:12px;backdrop-filter:blur(12px);border:1px solid ${isDark ? 'rgba(45,51,72,0.4)' : 'rgba(0,0,0,0.06)'};">
-            <div style="display:flex;align-items:center;gap:6px;margin-bottom:6px;">
-              <span style="font-size:18px;">${flag}</span>
+          <div style="font-family:Inter,system-ui,sans-serif;padding:10px 14px;min-width:190px;max-width:240px;background:${hBg};color:${hText};border-radius:14px;backdrop-filter:blur(16px);border:1px solid ${isDark ? 'rgba(45,51,72,0.5)' : 'rgba(0,0,0,0.08)'}; box-shadow:0 8px 24px rgba(0,0,0,0.12);">
+            <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
+              <span style="font-size:20px;">${flag}</span>
               <div>
-                <div style="font-size:13px;font-weight:600;">${cp.name}</div>
-                <div style="font-size:10px;color:${hSub};">${count} trends</div>
+                <div style="font-size:13px;font-weight:700;letter-spacing:-0.01em;">${cp.name}</div>
+                <div style="font-size:10px;color:${hSub};margin-top:1px;">${count} trend${count !== 1 ? 's' : ''} ${lang === "pt" ? "ativas" : "active"}</div>
               </div>
             </div>
-            <div style="display:flex;align-items:center;gap:6px;">
-              <span style="background:${hColor};color:#fff;padding:2px 8px;border-radius:12px;font-size:9px;font-weight:600;letter-spacing:0.3px;">${hTag}</span>
+            <div style="display:flex;align-items:center;gap:6px;margin-bottom:6px;">
+              <span style="background:${hColor};color:#fff;padding:2px 10px;border-radius:12px;font-size:9px;font-weight:700;letter-spacing:0.5px;">${hTag}</span>
             </div>
-            <div style="margin-top:8px;font-size:10px;color:${hSub};text-align:center;font-style:italic;">Clique para ver detalhes</div>
+            <div style="font-size:10px;color:${hSub};line-height:1.4;margin-bottom:8px;">${statusExplain}</div>
+            <div style="font-size:9px;color:${isDark ? '#60a5fa' : '#3b82f6'};text-align:center;font-weight:600;padding-top:6px;border-top:1px solid ${isDark ? 'rgba(45,51,72,0.4)' : 'rgba(0,0,0,0.06)'};">👆 ${lang === "pt" ? "Clique para ver detalhes" : "Click for details"}</div>
           </div>
         `);
         hoverInfoRef.current.open({ anchor: marker, map });
@@ -455,7 +465,7 @@ const GoogleMapView = ({
 
       marker.addListener("mouseout", () => {
         animateMarkerScale(hoverScale, scale);
-        // Close hover tooltip (but not click tooltip)
+        // Only close hover tooltip, never close the click InfoWindow
         if (openInfoCountryRef.current !== cp.id && hoverInfoRef.current) {
           hoverInfoRef.current.close();
         }
@@ -523,14 +533,13 @@ const GoogleMapView = ({
               const growthBadge = changeVal > 50
                 ? `<span style="position:absolute;top:8px;right:8px;background:#ef4444;color:#fff;font-size:9px;font-weight:600;padding:2px 6px;border-radius:10px;">+${Math.round(changeVal)}%</span>`
                 : '';
-              return `<div class="map-tooltip-trend" data-trend-idx="${idx}" style="position:relative;display:flex;align-items:center;gap:8px;padding:10px 12px;border-radius:10px;cursor:pointer;margin-bottom:6px;background:transparent;border:1px solid ${border};transition:all 0.15s ease;">
-                <div style="width:3px;height:24px;border-radius:2px;background:${pColor};flex-shrink:0;"></div>
+              return `<div class="map-tooltip-trend" data-trend-idx="${idx}" style="position:relative;display:flex;align-items:center;gap:6px;padding:8px 10px;border-radius:8px;cursor:pointer;margin-bottom:4px;background:transparent;border:1px solid ${border};transition:all 0.15s ease;">
+                <div style="width:3px;height:20px;border-radius:2px;background:${pColor};flex-shrink:0;"></div>
                 <div style="flex:1;min-width:0;">
-                  <div style="font-size:12px;color:${text};overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:200px;font-weight:500;">${tr.title.slice(0, 45)}${tr.title.length > 45 ? '…' : ''}</div>
-                  <div style="display:flex;align-items:center;gap:6px;margin-top:3px;">
-                    <span style="font-size:9px;background:${badgeBg};color:${subtext};padding:2px 6px;border-radius:6px;font-weight:600;">${tr.volume}</span>
-                    <span style="font-size:9px;color:${subtext};">${tr.platform}</span>
-                    <span style="font-size:9px;color:${subtext};">${tr.time || ''}</span>
+                  <div style="font-size:11px;color:${text};overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:180px;font-weight:500;">${tr.title.slice(0, 40)}${tr.title.length > 40 ? '…' : ''}</div>
+                  <div style="display:flex;align-items:center;gap:4px;margin-top:2px;">
+                    <span style="font-size:8px;background:${badgeBg};color:${subtext};padding:1px 5px;border-radius:4px;font-weight:600;">${tr.volume}</span>
+                    <span style="font-size:8px;color:${subtext};">${tr.platform}</span>
                   </div>
                 </div>
                 ${growthBadge}
@@ -543,26 +552,26 @@ const GoogleMapView = ({
           ? `<div style="text-align:center;font-size:10px;color:${subtext};padding:6px;background:${badgeBg};border-radius:8px;margin-bottom:10px;">+ ${moreCount} outras tendências</div>`
           : '';
 
-        const closeBtn = `<button id="map-tooltip-close" style="position:absolute;top:12px;right:12px;width:24px;height:24px;border-radius:12px;background:${isDark ? 'rgba(30,41,59,0.8)' : '#f1f5f9'};border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:12px;color:${subtext};transition:all 0.15s ease;z-index:10;">✕</button>`;
+        const closeBtn = `<button id="map-tooltip-close" style="position:absolute;top:10px;right:10px;width:22px;height:22px;border-radius:11px;background:${isDark ? 'rgba(30,41,59,0.8)' : '#f1f5f9'};border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:11px;color:${subtext};transition:all 0.15s ease;z-index:10;">✕</button>`;
         
-        const filterBtn = `<button id="map-tooltip-filter" style="width:100%;background:#3b82f6;color:white;border:none;border-radius:30px;padding:10px;font-size:13px;font-weight:500;cursor:pointer;transition:all 0.2s ease;margin-top:10px;">Clique para filtrar a timeline</button>`;
+        const filterBtn = `<button id="map-tooltip-filter" style="width:100%;background:${isDark ? 'rgba(59,130,246,0.9)' : '#3b82f6'};color:white;border:none;border-radius:8px;padding:8px;font-size:11px;font-weight:600;cursor:pointer;transition:all 0.2s ease;margin-top:8px;">${lang === "pt" ? "Filtrar timeline por este país" : "Filter timeline by country"}</button>`;
 
         infoWindowRef.current.setContent(`
-          <div style="font-family:Inter,system-ui,-apple-system,sans-serif;position:relative;padding:20px;min-width:280px;max-width:320px;background:${bg};color:${text};border-radius:24px;backdrop-filter:blur(20px);border:1px solid ${border};box-shadow:0 20px 40px rgba(0,0,0,0.2);">
+          <div style="font-family:Inter,system-ui,-apple-system,sans-serif;position:relative;padding:16px;min-width:260px;max-width:290px;background:${bg};color:${text};border-radius:16px;backdrop-filter:blur(20px);border:1px solid ${border};box-shadow:0 12px 32px rgba(0,0,0,0.15);">
             ${closeBtn}
-            <div style="display:flex;align-items:center;gap:8px;padding-bottom:12px;border-bottom:1px solid ${border};">
-              <span style="font-size:28px;line-height:1;">${flag}</span>
+            <div style="display:flex;align-items:center;gap:8px;padding-bottom:10px;border-bottom:1px solid ${border};">
+              <span style="font-size:24px;line-height:1;">${flag}</span>
               <div>
-                <div style="font-size:18px;font-weight:600;color:${text};letter-spacing:-0.02em;">${cp.name}</div>
-                <div style="font-size:11px;color:${subtext};margin-top:2px;">${count} trends ativas</div>
+                <div style="font-size:15px;font-weight:700;color:${text};letter-spacing:-0.02em;">${cp.name}</div>
+                <div style="font-size:10px;color:${subtext};margin-top:1px;">${count} trends ativas</div>
               </div>
             </div>
-            <div style="margin:12px 0;background:${critSectionBg};border-radius:16px;padding:12px 14px;border-left:4px solid ${critColor};">
-              <span style="display:inline-flex;align-items:center;gap:6px;background:${critColor};color:#fff;padding:4px 12px;border-radius:20px;font-weight:600;font-size:10px;letter-spacing:0.5px;text-transform:uppercase;margin-bottom:8px;">${critTag}</span>
-              <p style="font-size:12px;color:${isDark ? '#94a3b8' : '#1e293b'};line-height:1.5;margin:0;">${critReason}</p>
+            <div style="margin:10px 0;background:${critSectionBg};border-radius:12px;padding:10px 12px;border-left:3px solid ${critColor};">
+              <span style="display:inline-flex;align-items:center;gap:4px;background:${critColor};color:#fff;padding:2px 8px;border-radius:10px;font-weight:700;font-size:9px;letter-spacing:0.5px;text-transform:uppercase;margin-bottom:6px;">${critTag}</span>
+              <p style="font-size:11px;color:${isDark ? '#94a3b8' : '#475569'};line-height:1.4;margin:0;">${critReason}</p>
             </div>
-            ${countryTrends.length > 0 ? `<div style="font-size:11px;font-weight:600;color:${text};text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px;">Principais tendências</div>` : ''}
-            <div style="background:${badgeBg};border-radius:16px;padding:12px;max-height:180px;overflow-y:auto;">${trendsList}</div>
+            ${countryTrends.length > 0 ? `<div style="font-size:10px;font-weight:700;color:${text};text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;">Principais tendências</div>` : ''}
+            <div style="border-radius:10px;max-height:140px;overflow-y:auto;">${trendsList}</div>
             ${moreSection}
             ${filterBtn}
           </div>
