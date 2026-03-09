@@ -953,6 +953,10 @@ const translations: Record<LangCode, Record<TranslationKey, string>> = {
     tviGrowthLabel: "النمو (30%)", tviVolumeLabel: "الحجم (30%)", tviSourcesLabel: "المصادر (20%)", tviGeographyLabel: "الجغرافيا (20%)",
     tviDescription: "يقيس سرعة الانتشار بناءً على:",
     sourcesSingular: "مصدر", sourcesPlural: "مصادر",
+    mapMentions: "إشارات", mapSimilarity: "تشابه", mapThinLowVol: "رفيع = حجم منخفض", mapThickHighVol: "سميك = حجم مرتفع", mapPropArcs: "أقواس الانتشار", mapSizeVolume: "الحجم = الحجم", mapFastPulse: "نبض سريع = نمو متسارع", mapTrendsActiveLabel: "نشطة", mapClickDetails: "انقر للتفاصيل", mapLoadingMap: "جاري تحميل الخريطة...", mapReconnectMsg: "ستظهر الخريطة عند استعادة الاتصال.", mapRetry: "إعادة المحاولة", mapFilterByCountry: "تصفية الجدول الزمني حسب البلد", mapTopTrendsLabel: "أهم الاتجاهات", mapMoreTrends: "اتجاهات أخرى", mapCloseMap: "إغلاق الخريطة",
+    mapIntCritical: "🔥 حرج", mapIntHigh: "⚡ مرتفع", mapIntModerate: "📊 معتدل", mapIntAttention: "📈 انتباه", mapIntNormal: "ℹ️ عادي",
+    mapStatusExceptional: "حجم استثنائي — مصادر متعددة نشطة", mapStatusHigh: "نشاط مرتفع — نمو متسارع", mapStatusModerate: "نشاط معتدل — اتجاهات قيد التطور", mapStatusLow: "نشاط منخفض — إشارات قليلة", mapStatusNormal: "مراقبة عادية — بدون شذوذ",
+    mapCritVolume: "حجم مرتفع بشكل استثنائي", mapCritGrowth: "نمو متسارع", mapCritMultiplatform: "متعدد المنصات", mapCritActive: "اتجاهات نشطة في وقت واحد", mapCritMonitoring: "قيد المراقبة — نشاط عادي", mapCritNone: "لا توجد اتجاهات نشطة",
   },
   hi: {
     trends: "रुझान", moreTrends: "और रुझान", filters: "फ़िल्टर",
