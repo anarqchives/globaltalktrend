@@ -66,6 +66,8 @@ const App = () => {
       <LanguageProvider>
         <UserModeProvider>
           <TooltipProvider>
+            <ErrorBoundary fallbackTitle="Erro inesperado na aplicação">
+            <OfflineBanner />
             <Toaster />
             <Sonner />
             <PrivacyPopup />
