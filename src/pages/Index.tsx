@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback, useEffect, useMemo, lazy, Suspense } from "react";
+import { useState, useRef, useCallback, useEffect, useMemo, lazy, Suspense, type ElementRef } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { useTimelineColumns } from "@/hooks/use-timeline-columns";
 import TrendHeader from "@/components/TrendHeader";
@@ -83,6 +83,8 @@ const Index = () => {
   const togglePanel = (panel: "radar" | "timeline" | "map") =>
     setPanelVisibility(prev => ({ ...prev, [panel]: !prev[panel] }));
   const timelinePanelRef = useRef<HTMLDivElement>(null);
+  const radarPanelRef = useRef<ElementRef<typeof ResizablePanel>>(null);
+  const [radarCollapsed, setRadarCollapsed] = useState(false);
   const { timelineRef: gridRef, columns: gridColumns } = useTimelineColumns();
 
   useEffect(() => {
@@ -791,18 +793,21 @@ const Index = () => {
               ) : (
                 <ResizablePanelGroup
                   direction="vertical"
-                  className="flex-1 min-h-0"
+                  className="flex-1 min-h-0 [&>div]:transition-[flex-grow] [&>div]:duration-300 [&>div]:ease-[cubic-bezier(0.4,0,0.2,1)]"
                   key={`v-${panelVisibility.radar}-${panelVisibility.timeline}-${panelVisibility.map}`}
                 >
                   {/* Radar Panel — resizable vertically */}
                   {panelVisibility.radar && (
                     <>
                       <ResizablePanel
+                        ref={radarPanelRef}
                         defaultSize={30}
                         minSize={8}
                         maxSize={70}
                         collapsible
-                        collapsedSize={5}
+                        collapsedSize={3}
+                        onCollapse={() => setRadarCollapsed(true)}
+                        onExpand={() => setRadarCollapsed(false)}
                       >
                         <div className="h-full border-b border-border/20 bg-muted/8">
                           <TrendRadar
@@ -814,6 +819,13 @@ const Index = () => {
                             onFilterCountry={(code) => setFilters(f => ({ ...f, country: code }))}
                             onAnomalyClick={handleAnomalyClick}
                             onClose={() => togglePanel("radar")}
+                            isCollapsed={radarCollapsed}
+                            onToggleCollapse={() => {
+                              const panel = radarPanelRef.current;
+                              if (!panel) return;
+                              if (radarCollapsed) panel.expand();
+                              else panel.collapse();
+                            }}
                           />
                         </div>
                       </ResizablePanel>
