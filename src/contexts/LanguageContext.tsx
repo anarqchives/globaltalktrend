@@ -472,6 +472,7 @@ const translations: Record<LangCode, Record<TranslationKey, string>> = {
     mapStatusExceptional: "Volume exceptionnel — sources multiples actives", mapStatusHigh: "Activité élevée — croissance accélérée", mapStatusModerate: "Activité modérée — tendances en développement", mapStatusLow: "Faible activité — peu de signaux", mapStatusNormal: "Surveillance normale — aucune anomalie",
     mapCritVolume: "Volume exceptionnellement élevé", mapCritGrowth: "Croissance accélérée", mapCritMultiplatform: "Multiplateforme", mapCritActive: "tendances actives simultanément", mapCritMonitoring: "en surveillance — activité normale", mapCritNone: "Aucune tendance active",
   },
+  de: {
     trends: "Trends", moreTrends: "Mehr Trends", filters: "Filter",
     country: "Land", period: "Zeitraum", category: "Kategorie", type: "Typ",
     global: "Global", lastHour: "Letzte Stunde", today: "Heute", thisWeek: "Diese Woche", thisMonth: "Diesen Monat",
