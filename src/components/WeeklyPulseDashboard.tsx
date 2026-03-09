@@ -445,9 +445,9 @@ export default function WeeklyPulseDashboard({ trends }: { trends: TrendCardProp
         <div className="rounded-lg border border-border/40 bg-card p-2">
           <span className="text-[9px] font-bold text-muted-foreground uppercase tracking-wider flex items-center gap-1 mb-1">
             <Clock className="w-3 h-3" />
-            {lang === "pt" ? "Mapa de calor" : "Activity heatmap"}
+            {lang === "pt" ? "Trend Pulse Matrix" : "Trend Pulse Matrix"}
           </span>
-          <WeeklyHeatmap data={analysis.heatmap} />
+          <TrendPulseMatrix data={analysis.catByDay} topCats={analysis.topCats} />
         </div>
       </div>
 
