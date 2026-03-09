@@ -7,7 +7,7 @@ const defaultFilters: FilterState = {
   country: "global",
   period: "Hoje",
   category: "Todas",
-  type: "Todas mídias",
+  type: "Todas mídias"
 };
 
 export interface FilterState {
@@ -26,82 +26,82 @@ interface FilterBarProps {
 }
 
 export const countries = [
-  { group: "Global", items: [{ value: "global", label: "🌎 Global" }] },
-  { group: "América do Sul", items: [
-    { value: "BR", label: "🇧🇷 Brasil" },
-    { value: "AR", label: "🇦🇷 Argentina" },
-    { value: "CO", label: "🇨🇴 Colômbia" },
-    { value: "CL", label: "🇨🇱 Chile" },
-    { value: "PE", label: "🇵🇪 Peru" },
-    { value: "VE", label: "🇻🇪 Venezuela" },
-  ]},
-  { group: "América do Norte", items: [
-    { value: "US", label: "🇺🇸 EUA" },
-    { value: "CA", label: "🇨🇦 Canadá" },
-    { value: "MX", label: "🇲🇽 México" },
-  ]},
-  { group: "Europa", items: [
-    { value: "GB", label: "🇬🇧 Reino Unido" },
-    { value: "FR", label: "🇫🇷 França" },
-    { value: "DE", label: "🇩🇪 Alemanha" },
-    { value: "ES", label: "🇪🇸 Espanha" },
-    { value: "IT", label: "🇮🇹 Itália" },
-    { value: "PT", label: "🇵🇹 Portugal" },
-    { value: "NL", label: "🇳🇱 Países Baixos" },
-    { value: "SE", label: "🇸🇪 Suécia" },
-    { value: "NO", label: "🇳🇴 Noruega" },
-    { value: "DK", label: "🇩🇰 Dinamarca" },
-    { value: "FI", label: "🇫🇮 Finlândia" },
-    { value: "CH", label: "🇨🇭 Suíça" },
-    { value: "AT", label: "🇦🇹 Áustria" },
-    { value: "BE", label: "🇧🇪 Bélgica" },
-    { value: "IE", label: "🇮🇪 Irlanda" },
-    { value: "PL", label: "🇵🇱 Polônia" },
-    { value: "UA", label: "🇺🇦 Ucrânia" },
-    { value: "GR", label: "🇬🇷 Grécia" },
-    { value: "RU", label: "🇷🇺 Rússia" },
-    { value: "TR", label: "🇹🇷 Turquia" },
-  ]},
-  { group: "Ásia", items: [
-    { value: "JP", label: "🇯🇵 Japão" },
-    { value: "KR", label: "🇰🇷 Coreia do Sul" },
-    { value: "IN", label: "🇮🇳 Índia" },
-    { value: "CN", label: "🇨🇳 China" },
-    { value: "ID", label: "🇮🇩 Indonésia" },
-    { value: "MY", label: "🇲🇾 Malásia" },
-    { value: "SG", label: "🇸🇬 Singapura" },
-    { value: "TH", label: "🇹🇭 Tailândia" },
-    { value: "VN", label: "🇻🇳 Vietnã" },
-    { value: "PH", label: "🇵🇭 Filipinas" },
-    { value: "PK", label: "🇵🇰 Paquistão" },
-    { value: "BD", label: "🇧🇩 Bangladesh" },
-    { value: "SA", label: "🇸🇦 Arábia Saudita" },
-    { value: "AE", label: "🇦🇪 Emirados Árabes" },
-    { value: "IL", label: "🇮🇱 Israel" },
-    { value: "PS", label: "🇵🇸 Palestina" },
-    { value: "IR", label: "🇮🇷 Irã" },
-    { value: "IQ", label: "🇮🇶 Iraque" },
-    { value: "SY", label: "🇸🇾 Síria" },
-    { value: "LB", label: "🇱🇧 Líbano" },
-    { value: "JO", label: "🇯🇴 Jordânia" },
-  ]},
-  { group: "África", items: [
-    { value: "ZA", label: "🇿🇦 África do Sul" },
-    { value: "NG", label: "🇳🇬 Nigéria" },
-    { value: "EG", label: "🇪🇬 Egito" },
-    { value: "KE", label: "🇰🇪 Quênia" },
-    { value: "MA", label: "🇲🇦 Marrocos" },
-    { value: "DZ", label: "🇩🇿 Argélia" },
-    { value: "AO", label: "🇦🇴 Angola" },
-    { value: "MZ", label: "🇲🇿 Moçambique" },
-    { value: "CV", label: "🇨🇻 Cabo Verde" },
-    { value: "ET", label: "🇪🇹 Etiópia" },
-  ]},
-  { group: "Oceania", items: [
-    { value: "AU", label: "🇦🇺 Austrália" },
-    { value: "NZ", label: "🇳🇿 Nova Zelândia" },
-  ]},
-];
+{ group: "Global", items: [{ value: "global", label: "🌎 Global" }] },
+{ group: "América do Sul", items: [
+  { value: "BR", label: "🇧🇷 Brasil" },
+  { value: "AR", label: "🇦🇷 Argentina" },
+  { value: "CO", label: "🇨🇴 Colômbia" },
+  { value: "CL", label: "🇨🇱 Chile" },
+  { value: "PE", label: "🇵🇪 Peru" },
+  { value: "VE", label: "🇻🇪 Venezuela" }]
+},
+{ group: "América do Norte", items: [
+  { value: "US", label: "🇺🇸 EUA" },
+  { value: "CA", label: "🇨🇦 Canadá" },
+  { value: "MX", label: "🇲🇽 México" }]
+},
+{ group: "Europa", items: [
+  { value: "GB", label: "🇬🇧 Reino Unido" },
+  { value: "FR", label: "🇫🇷 França" },
+  { value: "DE", label: "🇩🇪 Alemanha" },
+  { value: "ES", label: "🇪🇸 Espanha" },
+  { value: "IT", label: "🇮🇹 Itália" },
+  { value: "PT", label: "🇵🇹 Portugal" },
+  { value: "NL", label: "🇳🇱 Países Baixos" },
+  { value: "SE", label: "🇸🇪 Suécia" },
+  { value: "NO", label: "🇳🇴 Noruega" },
+  { value: "DK", label: "🇩🇰 Dinamarca" },
+  { value: "FI", label: "🇫🇮 Finlândia" },
+  { value: "CH", label: "🇨🇭 Suíça" },
+  { value: "AT", label: "🇦🇹 Áustria" },
+  { value: "BE", label: "🇧🇪 Bélgica" },
+  { value: "IE", label: "🇮🇪 Irlanda" },
+  { value: "PL", label: "🇵🇱 Polônia" },
+  { value: "UA", label: "🇺🇦 Ucrânia" },
+  { value: "GR", label: "🇬🇷 Grécia" },
+  { value: "RU", label: "🇷🇺 Rússia" },
+  { value: "TR", label: "🇹🇷 Turquia" }]
+},
+{ group: "Ásia", items: [
+  { value: "JP", label: "🇯🇵 Japão" },
+  { value: "KR", label: "🇰🇷 Coreia do Sul" },
+  { value: "IN", label: "🇮🇳 Índia" },
+  { value: "CN", label: "🇨🇳 China" },
+  { value: "ID", label: "🇮🇩 Indonésia" },
+  { value: "MY", label: "🇲🇾 Malásia" },
+  { value: "SG", label: "🇸🇬 Singapura" },
+  { value: "TH", label: "🇹🇭 Tailândia" },
+  { value: "VN", label: "🇻🇳 Vietnã" },
+  { value: "PH", label: "🇵🇭 Filipinas" },
+  { value: "PK", label: "🇵🇰 Paquistão" },
+  { value: "BD", label: "🇧🇩 Bangladesh" },
+  { value: "SA", label: "🇸🇦 Arábia Saudita" },
+  { value: "AE", label: "🇦🇪 Emirados Árabes" },
+  { value: "IL", label: "🇮🇱 Israel" },
+  { value: "PS", label: "🇵🇸 Palestina" },
+  { value: "IR", label: "🇮🇷 Irã" },
+  { value: "IQ", label: "🇮🇶 Iraque" },
+  { value: "SY", label: "🇸🇾 Síria" },
+  { value: "LB", label: "🇱🇧 Líbano" },
+  { value: "JO", label: "🇯🇴 Jordânia" }]
+},
+{ group: "África", items: [
+  { value: "ZA", label: "🇿🇦 África do Sul" },
+  { value: "NG", label: "🇳🇬 Nigéria" },
+  { value: "EG", label: "🇪🇬 Egito" },
+  { value: "KE", label: "🇰🇪 Quênia" },
+  { value: "MA", label: "🇲🇦 Marrocos" },
+  { value: "DZ", label: "🇩🇿 Argélia" },
+  { value: "AO", label: "🇦🇴 Angola" },
+  { value: "MZ", label: "🇲🇿 Moçambique" },
+  { value: "CV", label: "🇨🇻 Cabo Verde" },
+  { value: "ET", label: "🇪🇹 Etiópia" }]
+},
+{ group: "Oceania", items: [
+  { value: "AU", label: "🇦🇺 Austrália" },
+  { value: "NZ", label: "🇳🇿 Nova Zelândia" }]
+}];
+
 
 const selectClass = "appearance-none bg-secondary/50 text-foreground text-[12px] font-medium pl-3 pr-7 h-8 min-h-[32px] max-h-[32px] rounded-full cursor-pointer min-w-0 hover:bg-secondary/80 dark:bg-secondary/50 dark:hover:bg-secondary/70 transition-colors focus:outline-none focus:ring-2 focus:ring-primary/20 box-border touch-manipulation border-none";
 
@@ -113,40 +113,40 @@ const FilterBar = ({ filters, onChange, onForceReset, onSaveFilter, isLoggedIn }
   };
 
   const isFiltered = filters.country !== defaultFilters.country ||
-    filters.period !== defaultFilters.period ||
-    filters.category !== defaultFilters.category ||
-    filters.type !== defaultFilters.type;
+  filters.period !== defaultFilters.period ||
+  filters.category !== defaultFilters.category ||
+  filters.type !== defaultFilters.type;
 
   const periodOptions = [
-    { value: "Última hora", label: t("lastHour") },
-    { value: "Hoje", label: t("today") },
-    { value: "Esta semana", label: t("thisWeek") },
-    { value: "Este mês", label: t("thisMonth") },
-  ];
+  { value: "Última hora", label: t("lastHour") },
+  { value: "Hoje", label: t("today") },
+  { value: "Esta semana", label: t("thisWeek") },
+  { value: "Este mês", label: t("thisMonth") }];
+
 
   const healthLabel: Record<string, string> = { pt: "Saúde", en: "Health", es: "Salud", fr: "Santé", de: "Gesundheit", it: "Salute", zh: "健康", ja: "健康", ko: "건강", ar: "صحة", hi: "स्वास्थ्य", ru: "Здоровье" };
   const { lang: currentLang } = useLanguage();
 
   const categoryOptions = [
-    { value: "Todas", label: t("all") },
-    { value: "Política", label: t("politics") },
-    { value: "Economia", label: t("business") },
-    { value: "Tecnologia", label: t("technology") },
-    { value: "Ciência", label: t("science") },
-    { value: "Saúde", label: healthLabel[currentLang] || "Saúde" },
-    { value: "Esportes", label: t("sports") },
-    { value: "Entretenimento", label: t("entertainment") },
-    { value: "Cultura", label: t("culture") },
-  ];
+  { value: "Todas", label: t("all") },
+  { value: "Política", label: t("politics") },
+  { value: "Economia", label: t("business") },
+  { value: "Tecnologia", label: t("technology") },
+  { value: "Ciência", label: t("science") },
+  { value: "Saúde", label: healthLabel[currentLang] || "Saúde" },
+  { value: "Esportes", label: t("sports") },
+  { value: "Entretenimento", label: t("entertainment") },
+  { value: "Cultura", label: t("culture") }];
+
 
   const typeOptions = [
-    { value: "Todas mídias", label: t("allMedia") },
-    { value: "Multiplataforma", label: "Multiplataforma" },
-    { value: "Redes sociais", label: t("socialMedia") },
-    { value: "Imprensa", label: t("press") },
-    { value: "Buscas (Google)", label: t("searches") },
-    { value: "Dados oficiais", label: "Dados Oficiais" },
-  ];
+  { value: "Todas mídias", label: t("allMedia") },
+  { value: "Multiplataforma", label: "Multiplataforma" },
+  { value: "Redes sociais", label: t("socialMedia") },
+  { value: "Imprensa", label: t("press") },
+  { value: "Buscas (Google)", label: t("searches") },
+  { value: "Dados oficiais", label: "Dados Oficiais" }];
+
 
   return (
     <div className="px-3 md:px-6 py-1.5 sticky top-12 z-40 bg-secondary/20 backdrop-blur-sm border-b border-border/50">
@@ -156,15 +156,15 @@ const FilterBar = ({ filters, onChange, onForceReset, onSaveFilter, isLoggedIn }
             className={selectClass}
             value={filters.country}
             onChange={(e) => update("country", e.target.value)}
-            aria-label={t("country")}
-          >
-            {countries.map((group) => (
-              <optgroup key={group.group} label={group.group}>
-                {group.items.map((c) => (
-                  <option key={c.value} value={c.value}>{c.label}</option>
-                ))}
+            aria-label={t("country")}>
+            
+            {countries.map((group) =>
+            <optgroup key={group.group} label={group.group}>
+                {group.items.map((c) =>
+              <option key={c.value} value={c.value}>{c.label}</option>
+              )}
               </optgroup>
-            ))}
+            )}
           </select>
           <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 w-3 h-3 text-muted-foreground pointer-events-none" />
         </div>
@@ -174,11 +174,11 @@ const FilterBar = ({ filters, onChange, onForceReset, onSaveFilter, isLoggedIn }
             className={selectClass}
             value={filters.period}
             onChange={(e) => update("period", e.target.value)}
-            aria-label={t("period")}
-          >
-            {periodOptions.map((p) => (
-              <option key={p.value} value={p.value}>{p.label}</option>
-            ))}
+            aria-label={t("period")}>
+            
+            {periodOptions.map((p) =>
+            <option key={p.value} value={p.value}>{p.label}</option>
+            )}
           </select>
           <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 w-3 h-3 text-muted-foreground pointer-events-none" />
         </div>
@@ -188,11 +188,11 @@ const FilterBar = ({ filters, onChange, onForceReset, onSaveFilter, isLoggedIn }
             className={selectClass}
             value={filters.category}
             onChange={(e) => update("category", e.target.value)}
-            aria-label={t("category")}
-          >
-            {categoryOptions.map((c) => (
-              <option key={c.value} value={c.value}>{c.label}</option>
-            ))}
+            aria-label={t("category")}>
+            
+            {categoryOptions.map((c) =>
+            <option key={c.value} value={c.value}>{c.label}</option>
+            )}
           </select>
           <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 w-3 h-3 text-muted-foreground pointer-events-none" />
         </div>
@@ -202,23 +202,23 @@ const FilterBar = ({ filters, onChange, onForceReset, onSaveFilter, isLoggedIn }
             className={selectClass}
             value={filters.type}
             onChange={(e) => update("type", e.target.value)}
-            aria-label={t("type")}
-          >
-            {typeOptions.map((opt) => (
-              <option key={opt.value} value={opt.value}>{opt.label}</option>
-            ))}
+            aria-label={t("type")}>
+            
+            {typeOptions.map((opt) =>
+            <option key={opt.value} value={opt.value}>{opt.label}</option>
+            )}
           </select>
           <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 w-3 h-3 text-muted-foreground pointer-events-none" />
         </div>
 
-        {isFiltered && (
-          <Tooltip>
+        {isFiltered &&
+        <Tooltip>
             <TooltipTrigger asChild>
               <button
-                onClick={() => onChange(defaultFilters)}
-                className="flex items-center gap-1 px-3 h-8 min-h-[32px] max-h-[32px] rounded-full text-[12px] font-medium text-primary hover:bg-primary/8 transition-colors flex-shrink-0 focus:outline-none"
-                aria-label={t("all")}
-              >
+              onClick={() => onChange(defaultFilters)}
+              className="flex items-center gap-1 px-3 h-8 min-h-[32px] max-h-[32px] rounded-full text-[12px] font-medium text-primary hover:bg-primary/8 transition-colors flex-shrink-0 focus:outline-none"
+              aria-label={t("all")}>
+              
                 <RotateCcw className="w-3 h-3" />
                 Reset
               </button>
@@ -227,15 +227,15 @@ const FilterBar = ({ filters, onChange, onForceReset, onSaveFilter, isLoggedIn }
               Limpar todos os filtros e voltar ao padrão (Global · Hoje · Todas categorias)
             </TooltipContent>
           </Tooltip>
-        )}
+        }
 
         <Tooltip>
           <TooltipTrigger asChild>
             <button
               onClick={() => onForceReset?.()}
               className="flex items-center gap-1 px-3 h-8 min-h-[32px] max-h-[32px] rounded-full text-[12px] font-medium text-muted-foreground hover:bg-secondary/50 transition-colors flex-shrink-0 focus:outline-none"
-              aria-label="Reset forçado"
-            >
+              aria-label="Reset forçado">
+              
               <RotateCcw className="w-3 h-3" />
             </button>
           </TooltipTrigger>
@@ -244,14 +244,14 @@ const FilterBar = ({ filters, onChange, onForceReset, onSaveFilter, isLoggedIn }
           </TooltipContent>
         </Tooltip>
 
-        {isLoggedIn && onSaveFilter && (
-          <Tooltip>
+        {isLoggedIn && onSaveFilter &&
+        <Tooltip>
             <TooltipTrigger asChild>
               <button
-                onClick={onSaveFilter}
-                className="flex items-center gap-1.5 px-3.5 h-8 min-h-[32px] max-h-[32px] rounded-full text-[12px] font-medium text-primary bg-primary/6 hover:bg-primary hover:text-primary-foreground transition-all flex-shrink-0 focus:outline-none"
-                aria-label={t("createAlert")}
-              >
+              onClick={onSaveFilter}
+              className="flex items-center gap-1.5 px-3.5 h-8 min-h-[32px] max-h-[32px] rounded-full text-[12px] font-medium text-primary bg-primary/6 hover:bg-primary hover:text-primary-foreground transition-all flex-shrink-0 focus:outline-none"
+              aria-label={t("createAlert")}>
+              
                 <Bell className="w-3 h-3" />
                 {t("createAlert")}
               </button>
@@ -260,7 +260,7 @@ const FilterBar = ({ filters, onChange, onForceReset, onSaveFilter, isLoggedIn }
               Salvar filtros atuais e criar um alerta para receber notificações quando estes critérios forem atingidos.
             </TooltipContent>
           </Tooltip>
-        )}
+        }
 
         <div className="flex items-center gap-2 ml-auto flex-shrink-0 whitespace-nowrap pl-2 border-l border-border/30">
           <Tooltip>
@@ -289,15 +289,15 @@ const FilterBar = ({ filters, onChange, onForceReset, onSaveFilter, isLoggedIn }
           </Tooltip>
         </div>
       </div>
-    </div>
-  );
+    </div>);
+
 };
 
 const OnlineUsersCount = () => {
   const [count, setCount] = useState(() => Math.floor(80 + Math.random() * 60));
   useEffect(() => {
     const interval = setInterval(() => {
-      setCount(prev => {
+      setCount((prev) => {
         const delta = Math.floor(Math.random() * 7) - 3;
         return Math.max(20, prev + delta);
       });
@@ -306,9 +306,9 @@ const OnlineUsersCount = () => {
   }, []);
   return (
     <span className="inline-flex items-center gap-1 text-[11px] font-medium text-muted-foreground tabular-nums">
-      <span>👥</span> <span>{count}</span>
-    </span>
-  );
+      <span className="py-[2px] my-[2px] text-left text-sm">👥</span> <span>{count}</span>
+    </span>);
+
 };
 
 const REFRESH_INTERVAL_SECONDS = 10 * 60;
@@ -317,7 +317,7 @@ const CountdownTimer = () => {
   const [seconds, setSeconds] = useState(() => {
     const now = Date.now();
     const interval = REFRESH_INTERVAL_SECONDS * 1000;
-    const remaining = interval - (now % interval);
+    const remaining = interval - now % interval;
     return Math.floor(remaining / 1000);
   });
   const [fading, setFading] = useState(false);
@@ -348,11 +348,11 @@ const CountdownTimer = () => {
 
   return (
     <span
-      className={`text-[11px] font-mono text-muted-foreground tabular-nums transition-opacity duration-300 ${fading ? 'opacity-0' : 'opacity-100'}`}
-    >
+      className={`text-[11px] font-mono text-muted-foreground tabular-nums transition-opacity duration-300 ${fading ? 'opacity-0' : 'opacity-100'}`}>
+      
       ⏱️ {String(mins).padStart(2, '0')}:{String(secs).padStart(2, '0')}
-    </span>
-  );
+    </span>);
+
 };
 
 export default FilterBar;
