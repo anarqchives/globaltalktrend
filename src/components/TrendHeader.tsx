@@ -216,9 +216,9 @@ const TrendHeader = ({ totalTrends = 0, countriesCount = 0, onRefresh, refreshin
             {/* Compact language selector with dropdown */}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <button className="flex items-center gap-1 px-2.5 h-8 min-h-[32px] max-h-[32px] rounded-full bg-secondary text-[11px] font-medium text-foreground justify-center hover:bg-muted transition-colors">
+                <button className="flex items-center gap-1 px-2.5 h-8 min-h-[32px] max-h-[32px] rounded-full bg-secondary dark:bg-white/10 dark:border dark:border-white/20 text-[11px] font-medium text-foreground justify-center hover:bg-muted dark:hover:bg-white/15 transition-colors">
                   🌐 {lang.toUpperCase()}
-                  <ChevronDown className="w-3 h-3 text-muted-foreground" />
+                  <ChevronDown className="w-3 h-3 text-muted-foreground dark:text-white/60" />
                 </button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="min-w-[180px] max-h-[300px] overflow-y-auto">
