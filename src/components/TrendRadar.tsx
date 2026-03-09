@@ -341,7 +341,7 @@ function AnomaliesPredictive({ anomalies, lang, onAnomalyClick }: {
       </div>
 
       {/* Anomaly cards — intelligence hierarchy */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+      <div className="grid grid-cols-2 sm:grid-cols-3 gap-1.5">
         {anomalies.map((anomaly, i) => {
           const info = anomalyTypeInfo[anomaly.type] || anomalyTypeInfo.spike;
           const pf = platformIcons[anomaly.trend.platform] || { emoji: "●", color: "hsl(var(--muted-foreground))" };
