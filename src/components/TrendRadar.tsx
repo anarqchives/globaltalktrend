@@ -527,14 +527,14 @@ export default function TrendRadar({ trends, allTrends, criticalMoments, anomali
           </div>
 
           {/* Tabs */}
-          <TabsList className="h-7 bg-background/60 p-0.5 gap-0.5 rounded-lg border border-border/20 flex-shrink-0">
+          <TabsList className="h-7 bg-transparent p-0 gap-0 rounded-none border-none flex-shrink-0">
             {tabConfig.map(tc => {
               const Icon = tc.icon;
               return (
                 <TabsTrigger
                   key={tc.value}
                   value={tc.value}
-                  className={`h-6 px-2.5 text-[9px] font-semibold gap-1 rounded-md transition-all duration-200 ${activeColorMap[tc.activeColor]} data-[state=active]:shadow-sm`}
+                  className={`h-6 px-2.5 text-[9px] font-semibold gap-1 rounded-md border-none transition-all duration-200 data-[state=inactive]:bg-transparent data-[state=inactive]:text-muted-foreground ${activeColorMap[tc.activeColor]} data-[state=active]:shadow-sm`}
                 >
                   <Icon className="w-3 h-3" />
                   <span className="hidden sm:inline">{tc.label}</span>
