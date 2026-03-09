@@ -145,6 +145,7 @@ interface GoogleMapViewProps {
   trends?: TrendCardProps[];
   onSelectTrend?: (trend: TrendCardProps) => void;
   highlightCountry?: string | null;
+  onClose?: () => void;
 }
 
 // Update notification component
