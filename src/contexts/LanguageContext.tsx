@@ -60,7 +60,12 @@ type TranslationKey =
   | "reportInfoText" | "reportSentTrigger" | "reportWindow"
   | "tviTooltip" | "forceResetTooltip" | "liveTooltip" | "countdownTooltip"
   | "signalTooltip" | "trendTableTitle" | "trendTablePlatform" | "trendTableVolume"
-  | "trendTableChange" | "trendTableCountry";
+  | "trendTableChange" | "trendTableCountry"
+  // Map visualization modes
+  | "mapFlowMap" | "mapSentiment" | "mapHeatmap"
+  | "mapFlowLegendTitle" | "mapFlowOrigin" | "mapFlowDestination" | "mapFlowPropagation" | "mapFlowTimeDelta" | "mapFlowClickToFilter" | "mapFlowNoData"
+  | "mapSentLegendTitle" | "mapSentPositive" | "mapSentNegative" | "mapSentMixed" | "mapSentNeutral" | "mapSentBreakdown" | "mapSentTopTrends" | "mapSentNoData"
+  | "mapSentVolume" | "mapSentGrowth" | "mapSentActiveTrends";
 
 const translations: Record<LangCode, Record<TranslationKey, string>> = {
   pt: {
@@ -162,6 +167,10 @@ const translations: Record<LangCode, Record<TranslationKey, string>> = {
     trendTableVolume: "Volume",
     trendTableChange: "Variação",
     trendTableCountry: "País",
+    mapFlowMap: "Fluxo", mapSentiment: "Sentimento", mapHeatmap: "Heatmap",
+    mapFlowLegendTitle: "Propagação de Trends", mapFlowOrigin: "Origem", mapFlowDestination: "Destino", mapFlowPropagation: "Propagação", mapFlowTimeDelta: "Tempo de propagação", mapFlowClickToFilter: "Clique para filtrar timeline", mapFlowNoData: "Dados de propagação insuficientes para este período",
+    mapSentLegendTitle: "Paisagem Emocional", mapSentPositive: "Positivo", mapSentNegative: "Negativo", mapSentMixed: "Polarizado", mapSentNeutral: "Neutro", mapSentBreakdown: "Distribuição de sentimento", mapSentTopTrends: "Top tendências", mapSentNoData: "Dados de sentimento insuficientes",
+    mapSentVolume: "Volume total", mapSentGrowth: "Crescimento médio", mapSentActiveTrends: "Trends ativas",
   },
   en: {
     trends: "Trends", moreTrends: "More trends", filters: "Filters",
@@ -262,6 +271,10 @@ const translations: Record<LangCode, Record<TranslationKey, string>> = {
     trendTableVolume: "Volume",
     trendTableChange: "Change",
     trendTableCountry: "Country",
+    mapFlowMap: "Flow", mapSentiment: "Sentiment", mapHeatmap: "Heatmap",
+    mapFlowLegendTitle: "Trend Propagation", mapFlowOrigin: "Origin", mapFlowDestination: "Destination", mapFlowPropagation: "Propagation", mapFlowTimeDelta: "Propagation time", mapFlowClickToFilter: "Click to filter timeline", mapFlowNoData: "Not enough propagation data for this period",
+    mapSentLegendTitle: "Emotional Landscape", mapSentPositive: "Positive", mapSentNegative: "Negative", mapSentMixed: "Polarized", mapSentNeutral: "Neutral", mapSentBreakdown: "Sentiment breakdown", mapSentTopTrends: "Top trends", mapSentNoData: "Not enough sentiment data",
+    mapSentVolume: "Total volume", mapSentGrowth: "Avg growth", mapSentActiveTrends: "Active trends",
   },
   es: {
     trends: "Tendencias", moreTrends: "Más trends", filters: "Filtros",
@@ -329,6 +342,10 @@ const translations: Record<LangCode, Record<TranslationKey, string>> = {
     signalTooltip: "Tipo de señal detectada: Spike, Search, Social, News, Dev, Knowledge.",
     trendTableTitle: "Título", trendTablePlatform: "Plataforma", trendTableVolume: "Volumen",
     trendTableChange: "Variación", trendTableCountry: "País",
+    mapFlowMap: "Flujo", mapSentiment: "Sentimiento", mapHeatmap: "Heatmap",
+    mapFlowLegendTitle: "Propagación de Trends", mapFlowOrigin: "Origen", mapFlowDestination: "Destino", mapFlowPropagation: "Propagación", mapFlowTimeDelta: "Tiempo de propagación", mapFlowClickToFilter: "Clic para filtrar timeline", mapFlowNoData: "Datos de propagación insuficientes",
+    mapSentLegendTitle: "Paisaje Emocional", mapSentPositive: "Positivo", mapSentNegative: "Negativo", mapSentMixed: "Polarizado", mapSentNeutral: "Neutro", mapSentBreakdown: "Distribución de sentimiento", mapSentTopTrends: "Top tendencias", mapSentNoData: "Datos de sentimiento insuficientes",
+    mapSentVolume: "Volumen total", mapSentGrowth: "Crecimiento medio", mapSentActiveTrends: "Trends activas",
   },
   fr: {
     trends: "Tendances", moreTrends: "Plus de tendances", filters: "Filtres",
@@ -396,6 +413,10 @@ const translations: Record<LangCode, Record<TranslationKey, string>> = {
     signalTooltip: "Type de signal détecté : Spike, Search, Social, News, Dev, Knowledge.",
     trendTableTitle: "Titre", trendTablePlatform: "Plateforme", trendTableVolume: "Volume",
     trendTableChange: "Variation", trendTableCountry: "Pays",
+    mapFlowMap: "Flux", mapSentiment: "Sentiment", mapHeatmap: "Heatmap",
+    mapFlowLegendTitle: "Propagation des Trends", mapFlowOrigin: "Origine", mapFlowDestination: "Destination", mapFlowPropagation: "Propagation", mapFlowTimeDelta: "Temps de propagation", mapFlowClickToFilter: "Cliquer pour filtrer", mapFlowNoData: "Données de propagation insuffisantes",
+    mapSentLegendTitle: "Paysage Émotionnel", mapSentPositive: "Positif", mapSentNegative: "Négatif", mapSentMixed: "Polarisé", mapSentNeutral: "Neutre", mapSentBreakdown: "Répartition du sentiment", mapSentTopTrends: "Top tendances", mapSentNoData: "Données de sentiment insuffisantes",
+    mapSentVolume: "Volume total", mapSentGrowth: "Croissance moyenne", mapSentActiveTrends: "Trends actives",
   },
   de: {
     trends: "Trends", moreTrends: "Mehr Trends", filters: "Filter",
@@ -463,6 +484,10 @@ const translations: Record<LangCode, Record<TranslationKey, string>> = {
     signalTooltip: "Erkannter Signaltyp: Spike, Search, Social, News, Dev, Knowledge.",
     trendTableTitle: "Titel", trendTablePlatform: "Plattform", trendTableVolume: "Volumen",
     trendTableChange: "Änderung", trendTableCountry: "Land",
+    mapFlowMap: "Fluss", mapSentiment: "Stimmung", mapHeatmap: "Heatmap",
+    mapFlowLegendTitle: "Trend-Verbreitung", mapFlowOrigin: "Ursprung", mapFlowDestination: "Ziel", mapFlowPropagation: "Verbreitung", mapFlowTimeDelta: "Verbreitungszeit", mapFlowClickToFilter: "Klicken zum Filtern", mapFlowNoData: "Nicht genügend Verbreitungsdaten",
+    mapSentLegendTitle: "Emotionale Landschaft", mapSentPositive: "Positiv", mapSentNegative: "Negativ", mapSentMixed: "Polarisiert", mapSentNeutral: "Neutral", mapSentBreakdown: "Stimmungsverteilung", mapSentTopTrends: "Top Trends", mapSentNoData: "Nicht genügend Stimmungsdaten",
+    mapSentVolume: "Gesamtvolumen", mapSentGrowth: "Durchschn. Wachstum", mapSentActiveTrends: "Aktive Trends",
   },
   it: {
     trends: "Tendenze", moreTrends: "Più tendenze", filters: "Filtri",
@@ -530,6 +555,10 @@ const translations: Record<LangCode, Record<TranslationKey, string>> = {
     signalTooltip: "Tipo di segnale rilevato: Spike, Search, Social, News, Dev, Knowledge.",
     trendTableTitle: "Titolo", trendTablePlatform: "Piattaforma", trendTableVolume: "Volume",
     trendTableChange: "Variazione", trendTableCountry: "Paese",
+    mapFlowMap: "Flusso", mapSentiment: "Sentimento", mapHeatmap: "Heatmap",
+    mapFlowLegendTitle: "Propagazione dei Trend", mapFlowOrigin: "Origine", mapFlowDestination: "Destinazione", mapFlowPropagation: "Propagazione", mapFlowTimeDelta: "Tempo di propagazione", mapFlowClickToFilter: "Clicca per filtrare", mapFlowNoData: "Dati di propagazione insufficienti",
+    mapSentLegendTitle: "Paesaggio Emotivo", mapSentPositive: "Positivo", mapSentNegative: "Negativo", mapSentMixed: "Polarizzato", mapSentNeutral: "Neutro", mapSentBreakdown: "Distribuzione del sentimento", mapSentTopTrends: "Top tendenze", mapSentNoData: "Dati di sentimento insufficienti",
+    mapSentVolume: "Volume totale", mapSentGrowth: "Crescita media", mapSentActiveTrends: "Trend attive",
   },
   zh: {
     trends: "趋势", moreTrends: "更多趋势", filters: "筛选",
@@ -597,6 +626,10 @@ const translations: Record<LangCode, Record<TranslationKey, string>> = {
     signalTooltip: "检测到的信号类型：Spike、Search、Social、News、Dev、Knowledge。",
     trendTableTitle: "标题", trendTablePlatform: "平台", trendTableVolume: "量",
     trendTableChange: "变化", trendTableCountry: "国家",
+    mapFlowMap: "流向", mapSentiment: "情绪", mapHeatmap: "热力图",
+    mapFlowLegendTitle: "趋势传播", mapFlowOrigin: "来源", mapFlowDestination: "目的地", mapFlowPropagation: "传播", mapFlowTimeDelta: "传播时间", mapFlowClickToFilter: "点击筛选时间线", mapFlowNoData: "该时段传播数据不足",
+    mapSentLegendTitle: "情绪全景", mapSentPositive: "积极", mapSentNegative: "消极", mapSentMixed: "两极化", mapSentNeutral: "中性", mapSentBreakdown: "情绪分布", mapSentTopTrends: "热门趋势", mapSentNoData: "情绪数据不足",
+    mapSentVolume: "总量", mapSentGrowth: "平均增长", mapSentActiveTrends: "活跃趋势",
   },
   ja: {
     trends: "トレンド", moreTrends: "もっと見る", filters: "フィルター",
@@ -664,6 +697,10 @@ const translations: Record<LangCode, Record<TranslationKey, string>> = {
     signalTooltip: "検出されたシグナルタイプ：Spike、Search、Social、News、Dev、Knowledge。",
     trendTableTitle: "タイトル", trendTablePlatform: "プラットフォーム", trendTableVolume: "ボリューム",
     trendTableChange: "変化", trendTableCountry: "国",
+    mapFlowMap: "フロー", mapSentiment: "感情", mapHeatmap: "ヒートマップ",
+    mapFlowLegendTitle: "トレンド伝播", mapFlowOrigin: "発信元", mapFlowDestination: "宛先", mapFlowPropagation: "伝播", mapFlowTimeDelta: "伝播時間", mapFlowClickToFilter: "クリックでフィルター", mapFlowNoData: "この期間の伝播データが不足しています",
+    mapSentLegendTitle: "感情の風景", mapSentPositive: "ポジティブ", mapSentNegative: "ネガティブ", mapSentMixed: "分極化", mapSentNeutral: "ニュートラル", mapSentBreakdown: "感情分布", mapSentTopTrends: "トップトレンド", mapSentNoData: "感情データが不足しています",
+    mapSentVolume: "合計ボリューム", mapSentGrowth: "平均成長", mapSentActiveTrends: "アクティブトレンド",
   },
   ko: {
     trends: "트렌드", moreTrends: "더 많은 트렌드", filters: "필터",
@@ -731,6 +768,10 @@ const translations: Record<LangCode, Record<TranslationKey, string>> = {
     signalTooltip: "감지된 신호 유형: Spike, Search, Social, News, Dev, Knowledge.",
     trendTableTitle: "제목", trendTablePlatform: "플랫폼", trendTableVolume: "볼륨",
     trendTableChange: "변화", trendTableCountry: "국가",
+    mapFlowMap: "흐름", mapSentiment: "감정", mapHeatmap: "히트맵",
+    mapFlowLegendTitle: "트렌드 전파", mapFlowOrigin: "출발지", mapFlowDestination: "도착지", mapFlowPropagation: "전파", mapFlowTimeDelta: "전파 시간", mapFlowClickToFilter: "클릭하여 필터링", mapFlowNoData: "이 기간의 전파 데이터가 부족합니다",
+    mapSentLegendTitle: "감정 풍경", mapSentPositive: "긍정적", mapSentNegative: "부정적", mapSentMixed: "양극화", mapSentNeutral: "중립", mapSentBreakdown: "감정 분포", mapSentTopTrends: "주요 트렌드", mapSentNoData: "감정 데이터가 부족합니다",
+    mapSentVolume: "총 볼륨", mapSentGrowth: "평균 성장", mapSentActiveTrends: "활성 트렌드",
   },
   ar: {
     trends: "الاتجاهات", moreTrends: "المزيد", filters: "التصفية",
@@ -798,6 +839,10 @@ const translations: Record<LangCode, Record<TranslationKey, string>> = {
     signalTooltip: "نوع الإشارة المكتشفة: Spike وSearch وSocial وNews وDev وKnowledge.",
     trendTableTitle: "العنوان", trendTablePlatform: "المنصة", trendTableVolume: "الحجم",
     trendTableChange: "التغيير", trendTableCountry: "البلد",
+    mapFlowMap: "تدفق", mapSentiment: "مشاعر", mapHeatmap: "خريطة حرارية",
+    mapFlowLegendTitle: "انتشار الاتجاهات", mapFlowOrigin: "المصدر", mapFlowDestination: "الوجهة", mapFlowPropagation: "الانتشار", mapFlowTimeDelta: "وقت الانتشار", mapFlowClickToFilter: "انقر للتصفية", mapFlowNoData: "بيانات انتشار غير كافية",
+    mapSentLegendTitle: "المشهد العاطفي", mapSentPositive: "إيجابي", mapSentNegative: "سلبي", mapSentMixed: "مستقطب", mapSentNeutral: "محايد", mapSentBreakdown: "توزيع المشاعر", mapSentTopTrends: "أهم الاتجاهات", mapSentNoData: "بيانات مشاعر غير كافية",
+    mapSentVolume: "الحجم الإجمالي", mapSentGrowth: "متوسط النمو", mapSentActiveTrends: "اتجاهات نشطة",
   },
   hi: {
     trends: "रुझान", moreTrends: "और रुझान", filters: "फ़िल्टर",
@@ -865,6 +910,10 @@ const translations: Record<LangCode, Record<TranslationKey, string>> = {
     signalTooltip: "पहचाना सिग्नल प्रकार: Spike, Search, Social, News, Dev, Knowledge।",
     trendTableTitle: "शीर्षक", trendTablePlatform: "प्लेटफ़ॉर्म", trendTableVolume: "मात्रा",
     trendTableChange: "बदलाव", trendTableCountry: "देश",
+    mapFlowMap: "प्रवाह", mapSentiment: "भावना", mapHeatmap: "हीटमैप",
+    mapFlowLegendTitle: "ट्रेंड प्रसार", mapFlowOrigin: "मूल", mapFlowDestination: "गंतव्य", mapFlowPropagation: "प्रसार", mapFlowTimeDelta: "प्रसार समय", mapFlowClickToFilter: "फ़िल्टर करने के लिए क्लिक करें", mapFlowNoData: "इस अवधि के लिए पर्याप्त प्रसार डेटा नहीं",
+    mapSentLegendTitle: "भावनात्मक परिदृश्य", mapSentPositive: "सकारात्मक", mapSentNegative: "नकारात्मक", mapSentMixed: "ध्रुवीकृत", mapSentNeutral: "तटस्थ", mapSentBreakdown: "भावना वितरण", mapSentTopTrends: "शीर्ष रुझान", mapSentNoData: "भावना डेटा अपर्याप्त",
+    mapSentVolume: "कुल मात्रा", mapSentGrowth: "औसत वृद्धि", mapSentActiveTrends: "सक्रिय रुझान",
   },
   ru: {
     trends: "Тренды", moreTrends: "Больше трендов", filters: "Фильтры",
@@ -932,6 +981,10 @@ const translations: Record<LangCode, Record<TranslationKey, string>> = {
     signalTooltip: "Тип обнаруженного сигнала: Spike, Search, Social, News, Dev, Knowledge.",
     trendTableTitle: "Заголовок", trendTablePlatform: "Платформа", trendTableVolume: "Объём",
     trendTableChange: "Изменение", trendTableCountry: "Страна",
+    mapFlowMap: "Поток", mapSentiment: "Настроение", mapHeatmap: "Тепловая карта",
+    mapFlowLegendTitle: "Распространение трендов", mapFlowOrigin: "Источник", mapFlowDestination: "Назначение", mapFlowPropagation: "Распространение", mapFlowTimeDelta: "Время распространения", mapFlowClickToFilter: "Нажмите для фильтрации", mapFlowNoData: "Недостаточно данных о распространении",
+    mapSentLegendTitle: "Эмоциональный ландшафт", mapSentPositive: "Позитивный", mapSentNegative: "Негативный", mapSentMixed: "Поляризованный", mapSentNeutral: "Нейтральный", mapSentBreakdown: "Распределение настроений", mapSentTopTrends: "Топ трендов", mapSentNoData: "Недостаточно данных о настроениях",
+    mapSentVolume: "Общий объём", mapSentGrowth: "Средний рост", mapSentActiveTrends: "Активные тренды",
   },
 };
 
