@@ -528,50 +528,6 @@ export default function TrendRadar({ trends, allTrends, criticalMoments, anomali
     if (typeof window !== "undefined") return localStorage.getItem(RADAR_STORAGE_KEY) === "true";
     return false;
   });
-  const [radarHeight, setRadarHeight] = useState(() => {
-    if (typeof window !== "undefined") {
-      const saved = localStorage.getItem(RADAR_HEIGHT_KEY);
-      return saved ? Math.max(MIN_HEIGHT, Math.min(MAX_HEIGHT, parseInt(saved))) : DEFAULT_HEIGHT;
-    }
-    return DEFAULT_HEIGHT;
-  });
-
-  // Drag resize state
-  const isDragging = useRef(false);
-  const dragStartY = useRef(0);
-  const dragStartHeight = useRef(DEFAULT_HEIGHT);
-
-  const handleDragStart = useCallback((e: React.MouseEvent | React.TouchEvent) => {
-    e.preventDefault();
-    isDragging.current = true;
-    dragStartHeight.current = radarHeight;
-    const clientY = 'touches' in e ? e.touches[0].clientY : e.clientY;
-    dragStartY.current = clientY;
-
-    const handleMove = (ev: MouseEvent | TouchEvent) => {
-      if (!isDragging.current) return;
-      const cy = 'touches' in ev ? ev.touches[0].clientY : ev.clientY;
-      const delta = cy - dragStartY.current;
-      const newH = Math.max(MIN_HEIGHT, Math.min(MAX_HEIGHT, dragStartHeight.current + delta));
-      setRadarHeight(newH);
-    };
-    const handleEnd = () => {
-      isDragging.current = false;
-      // Use ref to get latest height
-      setRadarHeight(prev => {
-        localStorage.setItem(RADAR_HEIGHT_KEY, String(prev));
-        return prev;
-      });
-      window.removeEventListener("mousemove", handleMove);
-      window.removeEventListener("mouseup", handleEnd);
-      window.removeEventListener("touchmove", handleMove);
-      window.removeEventListener("touchend", handleEnd);
-    };
-    window.addEventListener("mousemove", handleMove);
-    window.addEventListener("mouseup", handleEnd);
-    window.addEventListener("touchmove", handleMove);
-    window.addEventListener("touchend", handleEnd);
-  }, [radarHeight]);
 
   // Track unseen
   const [unseenCritical, setUnseenCritical] = useState(0);
@@ -580,11 +536,6 @@ export default function TrendRadar({ trends, allTrends, criticalMoments, anomali
   useEffect(() => {
     localStorage.setItem(RADAR_STORAGE_KEY, String(collapsed));
   }, [collapsed]);
-
-  // Save height on change
-  useEffect(() => {
-    localStorage.setItem(RADAR_HEIGHT_KEY, String(radarHeight));
-  }, [radarHeight]);
 
   const totalAlertItems = criticalMoments.length + anomalies.length;
 
@@ -609,7 +560,7 @@ export default function TrendRadar({ trends, allTrends, criticalMoments, anomali
     expand: lang === "pt" ? "Expandir radar" : "Expand radar",
   };
 
-  // Consolidated tab structure: Signals (emerging + anomalies), Critical Events, Top, Weekly
+  // Consolidated tab structure
   const tabConfig = [
     {
       value: "signals",
@@ -650,14 +601,7 @@ export default function TrendRadar({ trends, allTrends, criticalMoments, anomali
   ];
 
   return (
-    <div
-      className="bg-card/50 backdrop-blur-sm flex-shrink-0 transition-all duration-300 ease-out overflow-hidden shadow-[0_2px_8px_-2px_hsl(var(--primary)/0.08)]"
-      style={{
-        height: collapsed ? 40 : radarHeight,
-        minHeight: collapsed ? 40 : MIN_HEIGHT,
-        maxHeight: collapsed ? 40 : MAX_HEIGHT,
-      }}
-    >
+    <div className="h-full flex flex-col bg-card/50 backdrop-blur-sm overflow-hidden">
       <Tabs value={tab} onValueChange={setTab} className="h-full flex flex-col">
         {/* Header */}
         <div className="px-3 pt-2 pb-1.5 flex items-center gap-2 flex-shrink-0 bg-background z-10">
@@ -715,11 +659,10 @@ export default function TrendRadar({ trends, allTrends, criticalMoments, anomali
         {!collapsed && (
           <div className="flex-1 min-h-0 flex flex-col overflow-hidden">
             <div className="flex-1 min-h-0 overflow-hidden relative">
-              {/* SIGNALS TAB: Emerging + Anomalies consolidated */}
+              {/* SIGNALS TAB */}
               <TabsContent value="signals" className="absolute inset-0 mt-0 flex flex-col data-[state=inactive]:hidden animate-in fade-in-0 duration-300">
                 <Legend tab="signals" lang={lang} />
                 <ScrollArea className="flex-1">
-                  {/* Anomalies section first if present */}
                   {hasAnomalies && (
                     <div className="mb-1">
                       <div className="px-3 pt-2 pb-1">
@@ -734,7 +677,6 @@ export default function TrendRadar({ trends, allTrends, criticalMoments, anomali
                       <AnomaliesPredictive anomalies={anomalies} lang={lang} onAnomalyClick={onAnomalyClick} />
                     </div>
                   )}
-                  {/* Emerging signals */}
                   {hasEmerging ? (
                     <div>
                       <div className="px-3 pt-2 pb-1">
@@ -748,7 +690,7 @@ export default function TrendRadar({ trends, allTrends, criticalMoments, anomali
                   ) : !hasAnomalies && (
                     <div className="flex flex-col items-center justify-center py-8 text-muted-foreground">
                       <Sprout className="w-8 h-8 mb-2 opacity-30" />
-                      <p className="text-[11px]">{lang === "pt" ? "Nenhum sinal detectado no momento. Dados recentes serão exibidos quando disponíveis." : "No signals detected. Recent data will appear when available."}</p>
+                      <p className="text-[11px]">{lang === "pt" ? "Nenhum sinal detectado no momento." : "No signals detected."}</p>
                     </div>
                   )}
                 </ScrollArea>
@@ -765,10 +707,9 @@ export default function TrendRadar({ trends, allTrends, criticalMoments, anomali
                       <Flame className="w-8 h-8 mb-2 opacity-30" />
                       <p className="text-[11px] text-center px-4">
                         {lang === "pt" 
-                          ? "Nenhum evento crítico detectado. O sistema monitora picos, convergência e propagação em tempo real." 
-                          : "No critical events detected. The system monitors spikes, convergence and propagation in real time."}
+                          ? "Nenhum evento crítico detectado." 
+                          : "No critical events detected."}
                       </p>
-                      {/* Show latest high-volume trends as fallback context */}
                       {allTrends.length > 0 && (
                         <div className="mt-3 w-full px-4">
                           <p className="text-[9px] text-muted-foreground/60 mb-1.5 text-center">
@@ -811,17 +752,6 @@ export default function TrendRadar({ trends, allTrends, criticalMoments, anomali
           </div>
         )}
       </Tabs>
-
-      {/* Drag resize handle */}
-      {!collapsed && (
-        <div
-          onMouseDown={handleDragStart}
-          onTouchStart={handleDragStart}
-          className="h-2 w-full cursor-row-resize flex items-center justify-center group hover:bg-muted/30 transition-colors border-t border-border/30"
-        >
-          <div className="w-8 h-0.5 rounded-full bg-muted-foreground/20 group-hover:bg-primary/40 transition-colors" />
-        </div>
-      )}
     </div>
   );
 }
