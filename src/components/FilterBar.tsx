@@ -305,8 +305,8 @@ const OnlineUsersCount = () => {
     return () => clearInterval(interval);
   }, []);
   return (
-    <span className="text-[11px] font-medium text-muted-foreground tabular-nums">
-      👥 {count}
+    <span className="inline-flex items-center gap-1 text-[11px] font-medium text-muted-foreground tabular-nums">
+      <span>👥</span> <span>{count}</span>
     </span>
   );
 };
