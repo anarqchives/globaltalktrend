@@ -54,7 +54,7 @@ export default function ArchiveDrawer({ closedPanels, onRestore }: ArchiveDrawer
             animate={{ width: 44, opacity: 1 }}
             exit={{ width: 0, opacity: 0 }}
             transition={{ duration: 0.25, ease: [0.4, 0, 0.2, 1] }}
-            className="h-full flex flex-col items-center py-3 bg-muted/15 border-r border-border/20 overflow-hidden"
+            className="h-full flex flex-col items-center py-3 bg-muted/10 border-r border-border/15 overflow-hidden rounded-r-lg"
           >
             {/* Stack indicator button */}
             <Tooltip>
