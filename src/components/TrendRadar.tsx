@@ -114,6 +114,13 @@ export default function TrendRadar({ trends, allTrends, criticalMoments, anomali
               <span className="hidden sm:inline">Top Trends</span>
             </TabsTrigger>
           </TabsList>
+          
+          <TabsList className="h-7 bg-secondary/50 p-0.5 gap-0.5 ml-1">
+            <TabsTrigger value="weekly" className="h-6 px-2.5 text-[10px] font-semibold data-[state=active]:bg-blue-500/15 data-[state=active]:text-blue-600 dark:data-[state=active]:text-blue-400 gap-1">
+              <Activity className="w-3 h-3" />
+              <span className="hidden sm:inline">Weekly</span>
+            </TabsTrigger>
+          </TabsList>
 
           <div className="ml-auto flex items-center gap-1">
             <Tooltip>
