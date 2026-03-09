@@ -404,19 +404,17 @@ const Index = () => {
           <div className="flex items-center bg-secondary rounded-full p-0.5 gap-0.5">
             <button
               onClick={() => setCompactMode(false)}
-              className={`flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium transition-all ${!compactMode ? 'bg-card text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}
+              className={`flex items-center justify-center w-6 h-6 rounded-full transition-all ${!compactMode ? 'bg-card text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}
               title="Modo expandido"
             >
               <LayoutGrid className="w-3 h-3" />
-              <span className="hidden sm:inline">Expandido</span>
             </button>
             <button
               onClick={() => setCompactMode(true)}
-              className={`flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium transition-all ${compactMode ? 'bg-card text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}
+              className={`flex items-center justify-center w-6 h-6 rounded-full transition-all ${compactMode ? 'bg-card text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}
               title="Modo compacto"
             >
               <LayoutList className="w-3 h-3" />
-              <span className="hidden sm:inline">Compacto</span>
             </button>
           </div>
         </div>
