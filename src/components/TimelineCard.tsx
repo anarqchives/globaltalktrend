@@ -393,7 +393,7 @@ const TimelineCard = ({
                   {localizedCategory}
                 </span>
               </TooltipTrigger>
-              <TooltipContent side="top" className="text-[10px]">Categoria da trend</TooltipContent>
+              <TooltipContent side="top" className="text-[10px]">{getTooltip("category", lang)}</TooltipContent>
             </Tooltip>
             <Tooltip>
               <TooltipTrigger asChild>
@@ -401,7 +401,7 @@ const TimelineCard = ({
                   {signalType}
                 </span>
               </TooltipTrigger>
-              <TooltipContent side="top" className="text-[10px]">Tipo de sinal detectado</TooltipContent>
+              <TooltipContent side="top" className="text-[10px]">{getTooltip("signalType", lang)}</TooltipContent>
             </Tooltip>
             {trustBadge && trustBadgeKeys[trustBadge] && (
               <Tooltip>
