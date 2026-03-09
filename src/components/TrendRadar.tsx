@@ -369,8 +369,8 @@ function AnomaliesPredictive({ anomalies, lang, onAnomalyClick }: {
             >
               {/* WHAT — Title */}
               <div>
-                <p className="text-[11px] font-bold text-foreground leading-tight line-clamp-2">{anomaly.trend.title}</p>
-                <p className="text-[9px] text-muted-foreground/70 italic mt-0.5">
+                <p className="text-[10px] font-bold text-foreground leading-tight line-clamp-2">{anomaly.trend.title}</p>
+                <p className="text-[8px] text-muted-foreground/70 mt-0.5">
                   {anomaly.trend.category || "Geral"} · {anomaly.trend.platform}
                 </p>
               </div>
