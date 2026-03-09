@@ -372,16 +372,16 @@ const Index = () => {
     setFilters(f => ({ ...f, [key]: defaultFilters[key] }));
   };
 
-  // Smart grid: use CSS auto-fill for perfect fit, reduce columns when a card is expanded
-  const hasExpanded = expandedTrendId !== null;
+  // Smart masonry: use CSS columns for gap-free layout
   const gridStyle = useMemo(() => ({
-    display: 'grid' as const,
-    gridTemplateColumns: hasExpanded && gridColumns > 2
-      ? `repeat(${gridColumns - 1}, 1fr)`
-      : `repeat(${gridColumns}, 1fr)`,
-    gap: compactMode ? '8px' : '12px',
-    alignItems: 'start' as const,
-  }), [gridColumns, compactMode, hasExpanded]);
+    columnCount: gridColumns,
+    columnGap: compactMode ? '8px' : '12px',
+  }), [gridColumns, compactMode]);
+
+  const cardWrapperStyle = useMemo(() => ({
+    breakInside: 'avoid' as const,
+    marginBottom: compactMode ? '8px' : '12px',
+  }), [compactMode]);
 
   const renderTimeline = () => (
     <div ref={(el) => { (scrollRef as any).current = el; (gridRef as any).current = el; }} className={`flex flex-col gap-1 p-2 h-full overflow-y-auto overflow-x-hidden scrollbar-thin relative transition-opacity duration-200 w-full max-w-full ${filterTransitioning ? 'opacity-60' : 'opacity-100'}`}>
@@ -450,7 +450,7 @@ const Index = () => {
               const isMulti = multiplatformTitles.has(normalizedKey);
               const matchingCluster = isMulti ? clusters.find(c => c.trends.some(ct => ct.title.toLowerCase().normalize("NFD").replace(/\p{Diacritic}/gu, "").replace(/[^a-z0-9\s]/g, "").trim().slice(0, 50) === normalizedKey)) || null : null;
               return (
-                <motion.div layout key={`${trendId}-${i}`} id={`trend-card-${trendId}`} className={highlightedTrendId === trendId ? 'animate-highlight-pulse rounded-xl' : ''}>
+                <div key={`${trendId}-${i}`} id={`trend-card-${trendId}`} style={cardWrapperStyle} className={highlightedTrendId === trendId ? 'animate-highlight-pulse rounded-xl' : ''}>
                 <TimelineCard
                   {...trend}
                   compact={compactMode}
@@ -490,7 +490,7 @@ const Index = () => {
                     setFilters((f) => ({ ...f, type: map[p] || "Todas mídias" }));
                   }}
                 />
-                </motion.div>
+                </div>
               );
             };
 
@@ -514,10 +514,8 @@ const Index = () => {
                         <span className="text-[10px] font-normal text-muted-foreground ml-1">({agora.length})</span>
                       </span>
                     </motion.div>
-                    <div className="grid gap-4" style={gridStyle}>
-                      <AnimatePresence mode="popLayout">
+                    <div style={gridStyle}>
                         {agora.map((trend) => renderCard(trend, globalIndex++))}
-                      </AnimatePresence>
                     </div>
                   </>
                 )}
@@ -535,10 +533,8 @@ const Index = () => {
                         <span className="text-[10px] font-normal text-muted-foreground ml-1">({ultimas2h.length})</span>
                       </span>
                     </motion.div>
-                    <div className="grid gap-4" style={gridStyle}>
-                      <AnimatePresence mode="popLayout">
+                    <div style={gridStyle}>
                         {ultimas2h.map((trend) => renderCard(trend, globalIndex++))}
-                      </AnimatePresence>
                     </div>
                   </>
                 )}
@@ -556,10 +552,8 @@ const Index = () => {
                         <span className="text-[10px] font-normal text-muted-foreground ml-1">({ultimas24h.length})</span>
                       </span>
                     </motion.div>
-                    <div className="grid gap-4" style={gridStyle}>
-                      <AnimatePresence mode="popLayout">
+                    <div style={gridStyle}>
                         {ultimas24h.map((trend) => renderCard(trend, globalIndex++))}
-                      </AnimatePresence>
                     </div>
                   </>
                 )}

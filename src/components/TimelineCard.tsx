@@ -260,12 +260,11 @@ const TimelineCard = ({
   return (
     <motion.div
       className={`timeline-card-wrapper ${expanded ? 'timeline-card-expanded-wrapper' : ''}`}
-      layout
       initial={{ opacity: 0, y: 12 }}
       whileInView={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -8 }}
       viewport={{ once: true, margin: "-30px" }}
-      transition={{ duration: 0.2, ease: [0.4, 0, 0.2, 1], delay: Math.min(staggerIndex * 0.04, 0.4) }}
+      transition={{ duration: 0.3, ease: [0.25, 0.1, 0.25, 1], delay: Math.min(staggerIndex * 0.04, 0.4) }}
     >
       <div className={`timeline-card group ${expanded ? 'timeline-card-expanded' : ''}`}>
         
