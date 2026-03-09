@@ -440,6 +440,20 @@ const Index = () => {
               <TooltipContent side="bottom" className="text-[10px]">{lang === "pt" ? "Compactar todos" : "Collapse all"}</TooltipContent>
             </Tooltip>
           </div>
+          {/* Close timeline button — inline in header */}
+          {!isMobile && (
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <button
+                  onClick={() => togglePanel("timeline")}
+                  className="w-6 h-6 rounded-full flex items-center justify-center text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-all duration-200"
+                >
+                  <X className="w-3 h-3" strokeWidth={2.5} />
+                </button>
+              </TooltipTrigger>
+              <TooltipContent side="bottom" className="text-[10px]">{lang === "pt" ? "Fechar Timeline" : "Close Timeline"}</TooltipContent>
+            </Tooltip>
+          )}
         </div>
       </div>
 
