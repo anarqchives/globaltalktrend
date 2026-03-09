@@ -7,6 +7,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { AreaChart, Area, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RTooltip, Cell } from "recharts";
 import EmergingTrendsSection from "./EmergingTrendsSection";
 import CriticalMomentsSection from "./CriticalMomentsSection";
+import WeeklyPulseDashboard from "./WeeklyPulseDashboard";
 import { TrendCardProps } from "./TrendCard";
 import { CriticalMoment } from "@/hooks/use-critical-moments";
 import { AnomalyAlert } from "@/hooks/use-anomaly-alerts";
@@ -788,7 +789,7 @@ export default function TrendRadar({ trends, allTrends, criticalMoments, anomali
               <TabsContent value="weekly" className="absolute inset-0 mt-0 flex flex-col data-[state=inactive]:hidden animate-in fade-in-0 duration-300">
                 <Legend tab="weekly" lang={lang} />
                 <ScrollArea className="flex-1">
-                  <WeeklyDashboard trends={allTrends} />
+                  <WeeklyPulseDashboard trends={allTrends} />
                 </ScrollArea>
               </TabsContent>
 

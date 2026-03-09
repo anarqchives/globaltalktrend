@@ -10,12 +10,10 @@ const langNames: Record<string, string> = {
   ko: "Korean", ar: "Arabic", hi: "Hindi", ru: "Russian",
 };
 
-const BATCH_SIZE = 8;
+const BATCH_SIZE = 12;
 
 function extractJsonFromText(text: string): any {
-  // Try direct parse first
   try { return JSON.parse(text); } catch {}
-  // Try stripping markdown code fences
   const cleaned = text.replace(/```json\s*/gi, "").replace(/```\s*/g, "").trim();
   const start = cleaned.search(/[\{\[]/);
   const end = Math.max(cleaned.lastIndexOf("}"), cleaned.lastIndexOf("]"));
@@ -32,13 +30,13 @@ async function translateBatch(
 ): Promise<{ title: string; details?: string }[]> {
   const numbered = batch
     .map((item, i) => {
-      const d = item.details ? ` ||| ${item.details.slice(0, 100)}` : "";
-      return `${i + 1}. ${item.title.slice(0, 180)}${d}`;
+      const d = item.details ? ` ||| ${item.details.slice(0, 120)}` : "";
+      return `${i + 1}. ${item.title.slice(0, 200)}${d}`;
     })
     .join("\n");
 
   const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), 12000);
+  const timeout = setTimeout(() => controller.abort(), 15000);
 
   try {
     const aiRes = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
@@ -52,11 +50,12 @@ async function translateBatch(
         messages: [
           {
             role: "system",
-            content: `Translate each numbered line to ${langLabel}. Keep numbering. If " ||| " exists, translate both parts keeping separator. Return ONLY numbered translations.`,
+            content: `You are a fast translator. Translate each numbered line to ${langLabel}. Keep numbering. If " ||| " exists, translate both parts keeping separator. Return ONLY numbered translations, nothing else.`,
           },
           { role: "user", content: numbered },
         ],
         temperature: 0.1,
+        max_tokens: 2000,
       }),
       signal: controller.signal,
     });
@@ -125,6 +124,11 @@ Deno.serve(async (req) => {
       return Response.json({ translations: [] }, { headers: corsHeaders });
     }
 
+    // Skip translation if target is Portuguese (default language)
+    if (targetLang === "pt") {
+      return Response.json({ translations: items }, { headers: corsHeaders });
+    }
+
     const langLabel = langNames[targetLang] || targetLang;
 
     // Split into batches
@@ -133,8 +137,8 @@ Deno.serve(async (req) => {
       batches.push(items.slice(i, i + BATCH_SIZE));
     }
 
-    // Process up to 3 batches concurrently using indexed approach (no race condition)
-    const CONCURRENCY = 3;
+    // Process up to 4 batches concurrently
+    const CONCURRENCY = 4;
     const results: { title: string; details?: string }[][] = new Array(batches.length);
     let nextIdx = 0;
 
@@ -155,10 +159,8 @@ Deno.serve(async (req) => {
       if (batch) allTranslations.push(...batch);
     }
 
-    // Pad with originals if needed
     while (allTranslations.length < items.length) {
-      const idx = allTranslations.length;
-      allTranslations.push(items[idx]);
+      allTranslations.push(items[allTranslations.length]);
     }
 
     return Response.json({ translations: allTranslations }, { headers: corsHeaders });
