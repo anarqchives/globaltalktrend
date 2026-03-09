@@ -128,12 +128,12 @@ function getMarkerColor(intensity: number): { fill: string; glow: string; ring: 
   return { fill: "#00a6ff", glow: "rgba(0,166,255,0.3)", ring: "#38bdf8" };
 }
 
-function getIntensityLabel(intensity: number): { label: string; tag: string; color: string } {
-  if (intensity > 0.8) return { label: "Crítica", tag: "🔥 CRÍTICO", color: "#ef4444" };
-  if (intensity > 0.6) return { label: "Alta", tag: "⚡ ALTO", color: "#f97316" };
-  if (intensity > 0.4) return { label: "Média", tag: "📊 MODERADO", color: "#eab308" };
-  if (intensity > 0.2) return { label: "Baixa", tag: "📈 ATENÇÃO", color: "#3b82f6" };
-  return { label: "Mínima", tag: "ℹ️ NORMAL", color: "#94a3b8" };
+function getIntensityLabel(intensity: number, t?: (key: any) => string): { label: string; tag: string; color: string } {
+  if (intensity > 0.8) return { label: t?.("mapIntCritical") || "🔥 CRÍTICO", tag: t?.("mapIntCritical") || "🔥 CRÍTICO", color: "#ef4444" };
+  if (intensity > 0.6) return { label: t?.("mapIntHigh") || "⚡ ALTO", tag: t?.("mapIntHigh") || "⚡ ALTO", color: "#f97316" };
+  if (intensity > 0.4) return { label: t?.("mapIntModerate") || "📊 MODERADO", tag: t?.("mapIntModerate") || "📊 MODERADO", color: "#eab308" };
+  if (intensity > 0.2) return { label: t?.("mapIntAttention") || "📈 ATENÇÃO", tag: t?.("mapIntAttention") || "📈 ATENÇÃO", color: "#3b82f6" };
+  return { label: t?.("mapIntNormal") || "ℹ️ NORMAL", tag: t?.("mapIntNormal") || "ℹ️ NORMAL", color: "#94a3b8" };
 }
 
 interface GoogleMapViewProps {
