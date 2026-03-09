@@ -104,49 +104,72 @@ function WordCloud({ words }: { words: { text: string; count: number; sentiment:
   );
 }
 
-// ── Weekly Heatmap Mini ──
-function WeeklyHeatmap({ data }: { data: Record<string, Record<number, number>> }) {
+// ── Category × Day Heatmap Matrix ──
+function TrendPulseMatrix({ data, topCats, onFilter }: { data: Record<string, Record<string, number>>; topCats: string[]; onFilter?: (cat: string, day: string) => void }) {
   const days = ["Seg", "Ter", "Qua", "Qui", "Sex", "Sáb", "Dom"];
-  const hours = [0, 3, 6, 9, 12, 15, 18, 21];
   let maxVal = 0;
-  for (const d of days) {
-    for (const h of hours) {
-      const v = data[d]?.[h] || 0;
+  for (const cat of topCats) {
+    for (const day of days) {
+      const v = data[cat]?.[day] || 0;
       if (v > maxVal) maxVal = v;
     }
   }
 
+  const getColor = (v: number) => {
+    if (maxVal === 0) return "hsl(var(--muted) / 0.3)";
+    const intensity = v / maxVal;
+    if (intensity > 0.8) return "hsl(0, 84%, 55%)";
+    if (intensity > 0.6) return "hsl(25, 100%, 55%)";
+    if (intensity > 0.4) return "hsl(45, 90%, 50%)";
+    if (intensity > 0.2) return "hsl(210, 100%, 55%)";
+    if (intensity > 0.05) return "hsl(210, 60%, 70%, 0.4)";
+    return "hsl(var(--muted) / 0.15)";
+  };
+
   return (
     <div className="overflow-x-auto">
-      <div className="grid gap-px" style={{ gridTemplateColumns: `40px repeat(${hours.length}, 1fr)` }}>
+      <div className="grid gap-px" style={{ gridTemplateColumns: `80px repeat(${days.length}, 1fr)` }}>
         <div />
-        {hours.map(h => (
-          <div key={h} className="text-[7px] text-muted-foreground text-center">{h}h</div>
+        {days.map(d => (
+          <div key={d} className="text-[8px] text-muted-foreground text-center font-semibold py-0.5">{d}</div>
         ))}
-        {days.map(day => (
-          <React.Fragment key={day}>
-            <div className="text-[8px] text-muted-foreground font-medium flex items-center">{day}</div>
-            {hours.map(h => {
-              const v = data[day]?.[h] || 0;
-              const intensity = maxVal > 0 ? v / maxVal : 0;
+        {topCats.map(cat => (
+          <React.Fragment key={cat}>
+            <div className="text-[8px] text-muted-foreground font-medium flex items-center truncate pr-1" title={cat}>
+              <span className="w-2 h-2 rounded-full flex-shrink-0 mr-1" style={{ backgroundColor: getCatColor(cat) }} />
+              {cat}
+            </div>
+            {days.map(day => {
+              const v = data[cat]?.[day] || 0;
               return (
-                <Tooltip key={`${day}-${h}`}>
+                <Tooltip key={`${cat}-${day}`}>
                   <TooltipTrigger asChild>
-                    <div
-                      className="h-3 rounded-sm cursor-help transition-colors"
-                      style={{
-                        backgroundColor: `hsl(210, 100%, 50%, ${0.05 + intensity * 0.85})`,
-                      }}
-                    />
+                    <motion.div
+                      className="h-5 rounded-sm cursor-pointer transition-all hover:ring-1 hover:ring-primary/30 flex items-center justify-center"
+                      style={{ backgroundColor: getColor(v) }}
+                      whileHover={{ scale: 1.1 }}
+                      onClick={() => onFilter?.(cat, day)}
+                    >
+                      {v > 0 && <span className="text-[7px] font-bold text-foreground/70">{v >= 1000000 ? `${(v / 1000000).toFixed(0)}M` : v >= 1000 ? `${(v / 1000).toFixed(0)}K` : v}</span>}
+                    </motion.div>
                   </TooltipTrigger>
                   <TooltipContent side="top" className="text-[9px]">
-                    {day} {h}h: {v} trends
+                    <div className="font-bold">{cat} · {day}</div>
+                    <div>Volume: {v >= 1000000 ? `${(v / 1000000).toFixed(1)}M` : v >= 1000 ? `${(v / 1000).toFixed(1)}K` : v}</div>
                   </TooltipContent>
                 </Tooltip>
               );
             })}
           </React.Fragment>
         ))}
+      </div>
+      {/* Color legend */}
+      <div className="flex items-center gap-1 mt-1.5 justify-end">
+        <span className="text-[7px] text-muted-foreground">Low</span>
+        {[0.05, 0.2, 0.4, 0.6, 0.8].map((i) => (
+          <div key={i} className="w-3 h-2 rounded-sm" style={{ backgroundColor: getColor(i * maxVal) }} />
+        ))}
+        <span className="text-[7px] text-muted-foreground">High</span>
       </div>
     </div>
   );
@@ -308,11 +331,21 @@ export default function WeeklyPulseDashboard({ trends }: { trends: TrendCardProp
     // Historical average (rough estimate: use current week's average as baseline * 0.85)
     const historicalAvg = Math.round(totalVolume * 0.85);
 
+    // Category × Day matrix
+    const catByDay: Record<string, Record<string, number>> = {};
+    for (const cat of topCats) {
+      catByDay[cat] = {};
+      for (const day of orderedDays) {
+        catByDay[cat][day] = catDaily[day]?.[cat] || 0;
+      }
+    }
+
     return {
       stackedData,
       topCats,
       wordCloud,
       heatmap,
+      catByDay,
       insights,
       totalVolume,
       historicalAvg,
@@ -412,9 +445,9 @@ export default function WeeklyPulseDashboard({ trends }: { trends: TrendCardProp
         <div className="rounded-lg border border-border/40 bg-card p-2">
           <span className="text-[9px] font-bold text-muted-foreground uppercase tracking-wider flex items-center gap-1 mb-1">
             <Clock className="w-3 h-3" />
-            {lang === "pt" ? "Mapa de calor" : "Activity heatmap"}
+            {lang === "pt" ? "Trend Pulse Matrix" : "Trend Pulse Matrix"}
           </span>
-          <WeeklyHeatmap data={analysis.heatmap} />
+          <TrendPulseMatrix data={analysis.catByDay} topCats={analysis.topCats} />
         </div>
       </div>
 

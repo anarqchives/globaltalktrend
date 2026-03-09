@@ -21,7 +21,7 @@ import { useGamification } from "@/hooks/use-gamification";
 import { useSavedCards } from "@/hooks/use-saved-cards";
 import { useSavedFilters } from "@/hooks/use-saved-filters";
 import { supabase } from "@/integrations/supabase/client";
-import { ChevronRight, X, Map, Newspaper, LayoutList, LayoutGrid, RefreshCw } from "lucide-react";
+import { ChevronRight, X, Map, Newspaper, LayoutList, LayoutGrid, RefreshCw, Camera } from "lucide-react";
 import TagLegend from "@/components/TagLegend";
 import { useUserActivity } from "@/hooks/use-user-activity";
 import {
@@ -401,13 +401,24 @@ const Index = () => {
             </button>
           )}
           <TagLegend />
-          <button
-            onClick={() => setCompactMode(c => !c)}
-            className="h-6 w-6 flex items-center justify-center rounded-md hover:bg-secondary transition-colors text-muted-foreground hover:text-foreground"
-            title={compactMode ? "Modo expandido" : "Modo compacto"}
-          >
-            {compactMode ? <LayoutGrid className="w-3.5 h-3.5" /> : <LayoutList className="w-3.5 h-3.5" />}
-          </button>
+          <div className="flex items-center bg-secondary rounded-full p-0.5 gap-0.5">
+            <button
+              onClick={() => setCompactMode(false)}
+              className={`flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium transition-all ${!compactMode ? 'bg-card text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}
+              title="Modo expandido"
+            >
+              <LayoutGrid className="w-3 h-3" />
+              <span className="hidden sm:inline">Expandido</span>
+            </button>
+            <button
+              onClick={() => setCompactMode(true)}
+              className={`flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium transition-all ${compactMode ? 'bg-card text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}
+              title="Modo compacto"
+            >
+              <LayoutList className="w-3 h-3" />
+              <span className="hidden sm:inline">Compacto</span>
+            </button>
+          </div>
         </div>
       </div>
 
@@ -703,8 +714,8 @@ const Index = () => {
           </div>
         ) : (
           <ResizablePanelGroup direction="horizontal" className="flex-1 min-h-0">
-            <ResizablePanel defaultSize={65} minSize={40} maxSize={85}>
-              <div className="h-full min-h-0 overflow-hidden" ref={timelinePanelRef}>
+            <ResizablePanel defaultSize={65} minSize={25} maxSize={85}>
+               <div className="h-full min-h-0 overflow-hidden" ref={timelinePanelRef}>
                 {renderTimeline()}
               </div>
             </ResizablePanel>

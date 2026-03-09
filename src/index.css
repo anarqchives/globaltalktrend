@@ -117,6 +117,30 @@
     box-shadow: 0 1px 0 0 hsl(var(--border)), 0 4px 12px -4px hsl(var(--primary) / 0.06);
   }
 
+  /* Dark mode: header stays white with liquid glass */
+  .dark .glass-header {
+    background: hsl(0 0% 100% / 0.85);
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
+    box-shadow: 0 1px 0 0 hsl(0 0% 0% / 0.08), 0 4px 16px -4px hsl(0 0% 0% / 0.1);
+  }
+  .dark .glass-header,
+  .dark .glass-header h1,
+  .dark .glass-header span,
+  .dark .glass-header button,
+  .dark .glass-header a {
+    color: hsl(220, 20%, 12%);
+  }
+  .dark .glass-header .text-muted-foreground {
+    color: hsl(220, 10%, 40%) !important;
+  }
+  .dark .glass-header button:hover {
+    background: hsl(0 0% 0% / 0.06);
+  }
+  .dark .glass-header [style*="background: rgba(255, 215, 0"] {
+    color: hsl(30, 80%, 30%) !important;
+  }
+
   .section-gradient-divider {
     height: 1px;
     background: linear-gradient(90deg, transparent 0%, hsl(var(--primary) / 0.15) 30%, hsl(var(--primary) / 0.25) 50%, hsl(var(--primary) / 0.15) 70%, transparent 100%);
@@ -194,10 +218,14 @@
     word-wrap: break-word;
     overflow-wrap: break-word;
     min-width: 0;
+    aspect-ratio: 1 / 1.15;
+    display: flex;
+    flex-direction: column;
   }
 
   .timeline-card-expanded {
     @apply rounded-b-none;
+    aspect-ratio: unset;
   }
 
   .timeline-card-expanded-content {
