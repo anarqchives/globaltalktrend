@@ -371,8 +371,8 @@ export default function WeeklyPulseDashboard({ trends }: { trends: TrendCardProp
         <ProgressRing value={analysis.totalVolume} max={analysis.historicalAvg} size={64} />
         <div className="flex-1 grid grid-cols-3 gap-2">
           {[
-            { label: lang === "pt" ? "Trends ativas" : "Active trends", value: analysis.totalTrends, icon: "📊" },
-            { label: lang === "pt" ? "Snapshots 7d" : "7d Snapshots", value: analysis.totalSnapshots > 999 ? `${(analysis.totalSnapshots / 1000).toFixed(1)}k` : analysis.totalSnapshots, icon: "📸" },
+            { label: lang === "pt" ? "Trends ativas" : "Active trends", value: analysis.totalTrends, icon: "📊", tooltip: lang === "pt" ? "Total de tendências monitoradas agora" : "Total trends currently monitored" },
+            { label: lang === "pt" ? "Snapshots 7d" : "7d Snapshots", value: analysis.totalSnapshots > 999 ? `${(analysis.totalSnapshots / 1000).toFixed(1)}k` : analysis.totalSnapshots, icon: "📸", tooltip: lang === "pt" ? "Número de capturas de dados nos últimos 7 dias" : "Number of data captures in the last 7 days" },
             { label: "Momentum", value: analysis.totalSnapshots < 50 ? "—" : `${analysis.momentum > 0 ? "+" : ""}${analysis.momentum}%`, icon: analysis.momentum > 0 ? "🔥" : analysis.totalSnapshots < 50 ? "⏳" : "📉", tooltip: lang === "pt" ? "Variação do volume entre a 1ª e 2ª metade da semana" : "Volume variation between first and second half of the week" },
           ].map((kpi, i) => (
             <motion.div
