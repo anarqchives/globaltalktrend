@@ -1,9 +1,11 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   ArrowLeft, Star, Bell, Clock, BarChart3, Settings, Trash2, Edit2,
-  Play, BellOff, BellRing, Plus, Sun, Moon, Monitor, Mail, AlertTriangle, Globe, FileText, LayoutGrid
+  Play, BellOff, BellRing, Plus, Sun, Moon, Monitor, AlertTriangle, 
+  LayoutGrid, Share2, UserPlus, Users, Check, X, Eye, EyeOff, Globe,
+  Lock, Shield, Copy, QrCode, Mail, AtSign, Pencil
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useSavedFilters, type SavedFilter } from "@/hooks/use-saved-filters";
@@ -11,9 +13,18 @@ import { useAlerts, type Alert, type CreateAlertInput } from "@/hooks/use-alerts
 import { useHistory } from "@/hooks/use-history";
 import { useGamification } from "@/hooks/use-gamification";
 import { useSavedCards } from "@/hooks/use-saved-cards";
+import { useProfile, type Profile as ProfileType, type PrivacySettings } from "@/hooks/use-profile";
+import { useFollows, type FollowWithProfile } from "@/hooks/use-follows";
 import { useLanguage, languages, type LangCode } from "@/contexts/LanguageContext";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Switch } from "@/components/ui/switch";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { toast } from "@/hooks/use-toast";
 import { format } from "date-fns";
 import { countries } from "@/components/FilterBar";
@@ -23,10 +34,11 @@ import BentoDashboard from "@/components/BentoDashboard";
 const tabs = [
   { key: "dashboard", label: "Meu Painel", icon: LayoutGrid },
   { key: "filters", label: "Meus Filtros", icon: Star },
-  { key: "reports", label: "Relatórios", icon: FileText },
+  { key: "reports", label: "Relatórios", icon: Star },
   { key: "alerts", label: "Meus Alertas", icon: Bell },
   { key: "history", label: "Histórico", icon: Clock },
   { key: "stats", label: "Estatísticas", icon: BarChart3 },
+  { key: "privacy", label: "Privacidade", icon: Shield },
   { key: "settings", label: "Configurações", icon: Settings },
 ] as const;
 
@@ -34,16 +46,19 @@ type TabKey = typeof tabs[number]["key"];
 
 const Profile = () => {
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const { lang, setLang, t } = useLanguage();
   const [user, setUser] = useState<any>(null);
   const [authLoading, setAuthLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<TabKey>(() => {
-    const params = new URLSearchParams(window.location.search);
-    const tab = params.get("tab");
+    const tab = searchParams.get("tab");
     if (tab && tabs.some(t => t.key === tab)) return tab as TabKey;
     return "dashboard";
   });
   const [dark, setDark] = useState(() => localStorage.getItem("theme") === "dark");
+  const [showEditProfile, setShowEditProfile] = useState(false);
+  const [showShareProfile, setShowShareProfile] = useState(false);
+  const [showFollowers, setShowFollowers] = useState<"followers" | "following" | null>(null);
 
   useEffect(() => {
     const {
@@ -66,26 +81,45 @@ const Profile = () => {
   }, [navigate]);
 
   const userId = user?.id ?? null;
+  const { profile, loading: profileLoading, updating: profileUpdating, updateProfile, checkUsernameAvailable, refetch: refetchProfile } = useProfile(userId);
+  const { followers, following, loading: followsLoading, follow, unfollow, isFollowing } = useFollows(userId);
   const { savedFilters, deleteFilter, loading: filtersLoading } = useSavedFilters(userId);
   const { alerts, toggleAlert, deleteAlert, createAlert, loading: alertsLoading } = useAlerts(userId);
   const { history, clearHistory, deleteItem, loading: historyLoading } = useHistory(userId);
   const { totalPoints, achievements, unlocked, loading: gamLoading } = useGamification(userId);
   const { cards: savedCards, loading: cardsLoading, removeCard } = useSavedCards(userId);
 
-  if (authLoading) {
+  const handleTabChange = (tab: TabKey) => {
+    setActiveTab(tab);
+    setSearchParams({ tab });
+  };
+
+  if (authLoading || profileLoading) {
     return (
       <div className="min-h-screen bg-background text-foreground flex items-center justify-center px-4">
-        <p className="text-sm text-muted-foreground">Carregando perfil…</p>
+        <div className="flex flex-col items-center gap-3">
+          <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+          <p className="text-sm text-muted-foreground">Carregando perfil…</p>
+        </div>
       </div>
     );
   }
 
   if (!user) return null;
 
-  const avatar = user.user_metadata?.avatar_url;
-  const name = user.user_metadata?.full_name || user.email?.split("@")[0] || "";
-  const initial = name.charAt(0).toUpperCase();
+  const displayName = profile?.display_name || user.user_metadata?.full_name || user.email?.split("@")[0] || "";
+  const avatar = profile?.avatar_url || user.user_metadata?.avatar_url;
+  const initial = displayName.charAt(0).toUpperCase();
   const createdAt = user.created_at ? format(new Date(user.created_at), "dd/MM/yyyy") : "";
+  const username = profile?.username;
+
+  const countryLabel = (code: string) => {
+    for (const g of countries) {
+      const c = g.items.find(i => i.value === code);
+      if (c) return c.label;
+    }
+    return code;
+  };
 
   const handleApplyFilter = (sf: SavedFilter) => {
     const params = new URLSearchParams();
@@ -96,12 +130,12 @@ const Profile = () => {
     navigate(`/?${params.toString()}`);
   };
 
-  const countryLabel = (code: string) => {
-    for (const g of countries) {
-      const c = g.items.find(i => i.value === code);
-      if (c) return c.label;
-    }
-    return code;
+  const copyProfileLink = () => {
+    const link = username 
+      ? `${window.location.origin}/@${username}`
+      : `${window.location.origin}/perfil`;
+    navigator.clipboard.writeText(link);
+    toast({ title: "Link copiado!", description: "O link do seu perfil foi copiado." });
   };
 
   return (
@@ -116,28 +150,109 @@ const Profile = () => {
       </header>
 
       <div className="max-w-3xl mx-auto px-4 py-6 space-y-6">
-        {/* Profile Card */}
+        {/* Enhanced Profile Card */}
         <motion.div
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
-          className="bg-card rounded-2xl border border-border/50 p-5 flex items-center gap-4"
+          className="bg-card rounded-2xl border border-border/50 overflow-hidden"
         >
-          <Avatar className="w-16 h-16">
-            {avatar && <AvatarImage src={avatar} alt={name} />}
-            <AvatarFallback className="text-xl bg-primary/10 text-primary font-bold">{initial}</AvatarFallback>
-          </Avatar>
-          <div className="min-w-0 flex-1">
-            <h2 className="text-lg font-semibold text-foreground truncate">{name}</h2>
-            <p className="text-sm text-muted-foreground truncate">{user.email}</p>
-            <div className="flex items-center gap-2 mt-1">
-              <span className="text-[10px] text-muted-foreground">Desde {createdAt}</span>
-              <span className="px-2 py-0.5 rounded-full bg-primary/10 text-primary text-[10px] font-semibold">
-                {totalPoints >= 100 ? "Curador" : "Usuário"}
-              </span>
-              <span className="px-2 py-0.5 rounded-full bg-secondary text-muted-foreground text-[10px] font-medium">
-                {totalPoints} pts
-              </span>
+          {/* Cover gradient */}
+          <div className="h-20 bg-gradient-to-r from-primary/20 via-primary/10 to-accent/20" />
+          
+          <div className="px-5 pb-5 -mt-10">
+            <div className="flex flex-col sm:flex-row sm:items-end gap-4">
+              {/* Avatar with online indicator */}
+              <div className="relative">
+                <Avatar className="w-20 h-20 ring-4 ring-card">
+                  {avatar && <AvatarImage src={avatar} alt={displayName} />}
+                  <AvatarFallback className="text-2xl bg-primary/10 text-primary font-bold">{initial}</AvatarFallback>
+                </Avatar>
+                <span className="absolute bottom-1 right-1 w-4 h-4 bg-green-500 border-2 border-card rounded-full" title="Online" />
+              </div>
+
+              <div className="flex-1 min-w-0">
+                <div className="flex flex-wrap items-center gap-2">
+                  <h2 className="text-xl font-bold text-foreground truncate">{displayName}</h2>
+                  {profile?.is_public === false && (
+                    <Tooltip>
+                      <TooltipTrigger>
+                        <Lock className="w-4 h-4 text-muted-foreground" />
+                      </TooltipTrigger>
+                      <TooltipContent>Perfil privado</TooltipContent>
+                    </Tooltip>
+                  )}
+                </div>
+                
+                {username ? (
+                  <p className="text-sm text-primary font-medium">@{username}</p>
+                ) : (
+                  <button 
+                    onClick={() => setShowEditProfile(true)}
+                    className="text-sm text-muted-foreground hover:text-primary flex items-center gap-1 transition-colors"
+                  >
+                    <AtSign className="w-3.5 h-3.5" /> Definir username
+                  </button>
+                )}
+
+                {profile?.bio && (
+                  <p className="text-sm text-muted-foreground mt-1 line-clamp-2">{profile.bio}</p>
+                )}
+              </div>
+
+              {/* Action buttons */}
+              <div className="flex gap-2 shrink-0">
+                <Button variant="outline" size="sm" onClick={() => setShowEditProfile(true)}>
+                  <Pencil className="w-3.5 h-3.5 mr-1.5" /> Editar
+                </Button>
+                <Button variant="outline" size="sm" onClick={() => setShowShareProfile(true)}>
+                  <Share2 className="w-3.5 h-3.5 mr-1.5" /> Compartilhar
+                </Button>
+              </div>
             </div>
+
+            {/* Stats row */}
+            <div className="flex items-center gap-6 mt-4 pt-4 border-t border-border/50">
+              <button 
+                onClick={() => setShowFollowers("followers")}
+                className="text-center hover:bg-secondary/50 px-3 py-1.5 rounded-lg transition-colors"
+              >
+                <div className="text-lg font-bold text-foreground">{profile?.followers_count || 0}</div>
+                <div className="text-xs text-muted-foreground">seguidores</div>
+              </button>
+              <button 
+                onClick={() => setShowFollowers("following")}
+                className="text-center hover:bg-secondary/50 px-3 py-1.5 rounded-lg transition-colors"
+              >
+                <div className="text-lg font-bold text-foreground">{profile?.following_count || 0}</div>
+                <div className="text-xs text-muted-foreground">seguindo</div>
+              </button>
+              <div className="text-center px-3 py-1.5">
+                <div className="text-lg font-bold text-foreground">{profile?.boards_count || 0}</div>
+                <div className="text-xs text-muted-foreground">boards</div>
+              </div>
+              <div className="ml-auto flex items-center gap-2">
+                <span className="px-2.5 py-1 rounded-full bg-primary/10 text-primary text-xs font-semibold">
+                  {totalPoints >= 100 ? "Curador" : "Usuário"}
+                </span>
+                <span className="px-2.5 py-1 rounded-full bg-secondary text-muted-foreground text-xs font-medium">
+                  {totalPoints} pts
+                </span>
+              </div>
+            </div>
+
+            {/* Badges */}
+            {profile?.badges && profile.badges.length > 0 && (
+              <div className="flex flex-wrap gap-1.5 mt-3">
+                {profile.badges.map((badge, idx) => (
+                  <span 
+                    key={idx} 
+                    className="px-2 py-1 rounded-full bg-accent/10 text-accent-foreground text-xs font-medium flex items-center gap-1"
+                  >
+                    {badge.icon} {badge.name}
+                  </span>
+                ))}
+              </div>
+            )}
           </div>
         </motion.div>
 
@@ -146,7 +261,7 @@ const Profile = () => {
           {tabs.map((tab) => (
             <button
               key={tab.key}
-              onClick={() => setActiveTab(tab.key)}
+              onClick={() => handleTabChange(tab.key)}
               className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-medium whitespace-nowrap transition-all ${
                 activeTab === tab.key
                   ? "bg-primary text-primary-foreground shadow-sm"
@@ -174,13 +289,405 @@ const Profile = () => {
             {activeTab === "alerts" && <AlertsTab alerts={alerts} loading={alertsLoading} onToggle={toggleAlert} onDelete={deleteAlert} onCreate={createAlert} countryLabel={countryLabel} />}
             {activeTab === "history" && <HistoryTab history={history} loading={historyLoading} onClear={clearHistory} onDelete={deleteItem} onNavigate={(id) => navigate("/")} />}
             {activeTab === "stats" && <StatsTab history={history} totalPoints={totalPoints} achievements={achievements} unlocked={unlocked} loading={gamLoading} countryLabel={countryLabel} />}
+            {activeTab === "privacy" && <PrivacyTab profile={profile} onUpdate={updateProfile} updating={profileUpdating} />}
             {activeTab === "settings" && <SettingsTab lang={lang} setLang={setLang} dark={dark} setDark={setDark} user={user} />}
           </motion.div>
         </AnimatePresence>
       </div>
+
+      {/* Edit Profile Modal */}
+      <EditProfileModal 
+        open={showEditProfile} 
+        onClose={() => setShowEditProfile(false)} 
+        profile={profile}
+        onUpdate={updateProfile}
+        updating={profileUpdating}
+        checkUsername={checkUsernameAvailable}
+      />
+
+      {/* Share Profile Modal */}
+      <ShareProfileModal 
+        open={showShareProfile} 
+        onClose={() => setShowShareProfile(false)}
+        profile={profile}
+        displayName={displayName}
+        copyLink={copyProfileLink}
+      />
+
+      {/* Followers/Following Modal */}
+      <FollowersModal
+        open={!!showFollowers}
+        onClose={() => setShowFollowers(null)}
+        type={showFollowers}
+        followers={followers}
+        following={following}
+        loading={followsLoading}
+        onFollow={follow}
+        onUnfollow={unfollow}
+        isFollowing={isFollowing}
+      />
     </div>
   );
 };
+
+/* ─── Edit Profile Modal ─── */
+function EditProfileModal({ 
+  open, onClose, profile, onUpdate, updating, checkUsername 
+}: {
+  open: boolean;
+  onClose: () => void;
+  profile: ProfileType | null;
+  onUpdate: (input: any) => Promise<boolean>;
+  updating: boolean;
+  checkUsername: (username: string) => Promise<boolean>;
+}) {
+  const [username, setUsername] = useState(profile?.username || "");
+  const [displayName, setDisplayName] = useState(profile?.display_name || "");
+  const [bio, setBio] = useState(profile?.bio || "");
+  const [usernameAvailable, setUsernameAvailable] = useState<boolean | null>(null);
+  const [checking, setChecking] = useState(false);
+
+  useEffect(() => {
+    if (profile) {
+      setUsername(profile.username || "");
+      setDisplayName(profile.display_name || "");
+      setBio(profile.bio || "");
+    }
+  }, [profile]);
+
+  useEffect(() => {
+    if (!username || username.length < 3 || username === profile?.username) {
+      setUsernameAvailable(null);
+      return;
+    }
+
+    const timer = setTimeout(async () => {
+      setChecking(true);
+      const available = await checkUsername(username);
+      setUsernameAvailable(available);
+      setChecking(false);
+    }, 500);
+
+    return () => clearTimeout(timer);
+  }, [username, checkUsername, profile?.username]);
+
+  const handleSave = async () => {
+    const success = await onUpdate({
+      username: username || undefined,
+      display_name: displayName || undefined,
+      bio: bio || undefined,
+    });
+    if (success) onClose();
+  };
+
+  const usernameValid = /^[a-z0-9_]{3,30}$/.test(username.toLowerCase());
+
+  return (
+    <Dialog open={open} onOpenChange={onClose}>
+      <DialogContent className="max-w-md">
+        <DialogHeader>
+          <DialogTitle>Editar Perfil</DialogTitle>
+          <DialogDescription>Personalize seu perfil público</DialogDescription>
+        </DialogHeader>
+
+        <div className="space-y-4 py-4">
+          <div className="space-y-2">
+            <Label htmlFor="username" className="flex items-center gap-2">
+              Username
+              {checking && <span className="text-xs text-muted-foreground">(verificando...)</span>}
+              {usernameAvailable === true && <Check className="w-4 h-4 text-green-500" />}
+              {usernameAvailable === false && <X className="w-4 h-4 text-destructive" />}
+            </Label>
+            <div className="relative">
+              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">@</span>
+              <Input
+                id="username"
+                value={username}
+                onChange={(e) => setUsername(e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, ""))}
+                placeholder="seu_username"
+                className="pl-8"
+                maxLength={30}
+              />
+            </div>
+            <p className="text-xs text-muted-foreground">
+              3-30 caracteres. Apenas letras, números e underscore.
+            </p>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="displayName">Nome de exibição</Label>
+            <Input
+              id="displayName"
+              value={displayName}
+              onChange={(e) => setDisplayName(e.target.value)}
+              placeholder="Seu nome"
+              maxLength={100}
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="bio">Bio</Label>
+            <textarea
+              id="bio"
+              value={bio}
+              onChange={(e) => setBio(e.target.value)}
+              placeholder="Conte um pouco sobre você..."
+              className="w-full px-3 py-2 rounded-lg bg-secondary text-sm border border-border focus:outline-none focus:ring-1 focus:ring-primary/30 resize-none"
+              rows={3}
+              maxLength={300}
+            />
+            <p className="text-xs text-muted-foreground text-right">{bio.length}/300</p>
+          </div>
+        </div>
+
+        <div className="flex gap-2 justify-end">
+          <Button variant="outline" onClick={onClose}>Cancelar</Button>
+          <Button 
+            onClick={handleSave} 
+            disabled={updating || (username && !usernameValid) || usernameAvailable === false}
+          >
+            {updating ? "Salvando..." : "Salvar"}
+          </Button>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+/* ─── Share Profile Modal ─── */
+function ShareProfileModal({ 
+  open, onClose, profile, displayName, copyLink 
+}: {
+  open: boolean;
+  onClose: () => void;
+  profile: ProfileType | null;
+  displayName: string;
+  copyLink: () => void;
+}) {
+  const profileLink = profile?.username 
+    ? `${window.location.origin}/@${profile.username}`
+    : `${window.location.origin}/perfil`;
+
+  return (
+    <Dialog open={open} onOpenChange={onClose}>
+      <DialogContent className="max-w-md">
+        <DialogHeader>
+          <DialogTitle>Compartilhar Perfil</DialogTitle>
+          <DialogDescription>Compartilhe seu perfil com outras pessoas</DialogDescription>
+        </DialogHeader>
+
+        <div className="space-y-4 py-4">
+          {/* Preview */}
+          <div className="bg-secondary/50 rounded-xl p-4 flex items-center gap-3">
+            <Avatar className="w-12 h-12">
+              {profile?.avatar_url && <AvatarImage src={profile.avatar_url} />}
+              <AvatarFallback className="bg-primary/10 text-primary font-bold">
+                {displayName.charAt(0).toUpperCase()}
+              </AvatarFallback>
+            </Avatar>
+            <div className="min-w-0">
+              <p className="font-semibold text-foreground truncate">{displayName}</p>
+              {profile?.username && (
+                <p className="text-sm text-primary">@{profile.username}</p>
+              )}
+              {profile?.bio && (
+                <p className="text-xs text-muted-foreground line-clamp-1 mt-0.5">{profile.bio}</p>
+              )}
+            </div>
+          </div>
+
+          {/* Link */}
+          <div className="space-y-2">
+            <Label>Link do perfil</Label>
+            <div className="flex gap-2">
+              <Input value={profileLink} readOnly className="bg-secondary" />
+              <Button variant="outline" onClick={copyLink}>
+                <Copy className="w-4 h-4" />
+              </Button>
+            </div>
+          </div>
+
+          {!profile?.username && (
+            <p className="text-xs text-amber-500 bg-amber-500/10 rounded-lg px-3 py-2">
+              💡 Defina um username para ter um link personalizado!
+            </p>
+          )}
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+/* ─── Followers Modal ─── */
+function FollowersModal({
+  open, onClose, type, followers, following, loading, onFollow, onUnfollow, isFollowing
+}: {
+  open: boolean;
+  onClose: () => void;
+  type: "followers" | "following" | null;
+  followers: FollowWithProfile[];
+  following: FollowWithProfile[];
+  loading: boolean;
+  onFollow: (userId: string) => Promise<boolean>;
+  onUnfollow: (userId: string) => Promise<boolean>;
+  isFollowing: (userId: string) => boolean;
+}) {
+  const list = type === "followers" ? followers : following;
+  const title = type === "followers" ? "Seguidores" : "Seguindo";
+
+  return (
+    <Dialog open={open} onOpenChange={onClose}>
+      <DialogContent className="max-w-md max-h-[70vh]">
+        <DialogHeader>
+          <DialogTitle>{title}</DialogTitle>
+          <DialogDescription>{list.length} {type === "followers" ? "seguidores" : "pessoas que você segue"}</DialogDescription>
+        </DialogHeader>
+
+        <div className="overflow-y-auto max-h-80 space-y-2 py-2">
+          {loading ? (
+            <div className="flex justify-center py-8">
+              <div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+            </div>
+          ) : list.length === 0 ? (
+            <div className="text-center py-8 text-muted-foreground text-sm">
+              {type === "followers" ? "Nenhum seguidor ainda" : "Você ainda não segue ninguém"}
+            </div>
+          ) : (
+            list.map((user) => (
+              <div key={user.id} className="flex items-center gap-3 p-2 rounded-xl hover:bg-secondary/50 transition-colors">
+                <Avatar className="w-10 h-10">
+                  {user.avatar_url && <AvatarImage src={user.avatar_url} />}
+                  <AvatarFallback className="bg-primary/10 text-primary text-sm font-bold">
+                    {(user.display_name || "U").charAt(0).toUpperCase()}
+                  </AvatarFallback>
+                </Avatar>
+                <div className="flex-1 min-w-0">
+                  <p className="font-medium text-sm text-foreground truncate">{user.display_name}</p>
+                  {user.username && <p className="text-xs text-muted-foreground">@{user.username}</p>}
+                </div>
+                {type === "followers" && !isFollowing(user.user_id) && (
+                  <Button size="sm" variant="outline" onClick={() => onFollow(user.user_id)}>
+                    <UserPlus className="w-3.5 h-3.5 mr-1" /> Seguir
+                  </Button>
+                )}
+                {isFollowing(user.user_id) && (
+                  <Button size="sm" variant="secondary" onClick={() => onUnfollow(user.user_id)}>
+                    Seguindo
+                  </Button>
+                )}
+              </div>
+            ))
+          )}
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+/* ─── Privacy Tab ─── */
+function PrivacyTab({ profile, onUpdate, updating }: {
+  profile: ProfileType | null;
+  onUpdate: (input: any) => Promise<boolean>;
+  updating: boolean;
+}) {
+  const [isPublic, setIsPublic] = useState(profile?.is_public ?? true);
+  const [isSearchable, setIsSearchable] = useState(profile?.is_searchable ?? true);
+  const [privacySettings, setPrivacySettings] = useState<PrivacySettings>(
+    profile?.privacy_settings || {
+      timeline: "public",
+      boards: "public",
+      comments: "public",
+      reports: "followers",
+    }
+  );
+
+  const handleSave = async () => {
+    await onUpdate({
+      is_public: isPublic,
+      is_searchable: isSearchable,
+      privacy_settings: privacySettings,
+    });
+  };
+
+  const updateSectionPrivacy = (section: keyof PrivacySettings, value: string) => {
+    setPrivacySettings(prev => ({
+      ...prev,
+      [section]: value as "public" | "followers" | "private",
+    }));
+  };
+
+  const visibilityOptions = [
+    { value: "public", label: "Todos", icon: Globe },
+    { value: "followers", label: "Apenas seguidores", icon: Users },
+    { value: "private", label: "Apenas eu", icon: Lock },
+  ];
+
+  return (
+    <div className="space-y-4">
+      {/* Global Privacy */}
+      <SectionCard title="Visibilidade do perfil">
+        <div className="space-y-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium text-foreground">Perfil público</p>
+              <p className="text-xs text-muted-foreground">Permite que qualquer pessoa veja seu perfil</p>
+            </div>
+            <Switch checked={isPublic} onCheckedChange={setIsPublic} />
+          </div>
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium text-foreground">Aparecer em buscas</p>
+              <p className="text-xs text-muted-foreground">Permite ser encontrado por outros usuários</p>
+            </div>
+            <Switch checked={isSearchable} onCheckedChange={setIsSearchable} />
+          </div>
+        </div>
+      </SectionCard>
+
+      {/* Granular Privacy */}
+      <SectionCard title="Visibilidade por seção">
+        <div className="space-y-4">
+          {([
+            { key: "timeline" as const, label: "Timeline pessoal", desc: "Quem pode ver sua timeline de atividades" },
+            { key: "boards" as const, label: "Boards", desc: "Quem pode ver seus boards públicos" },
+            { key: "comments" as const, label: "Comentários", desc: "Quem pode ver seus comentários" },
+            { key: "reports" as const, label: "Relatórios", desc: "Quem pode ver seus relatórios gerados" },
+          ]).map(({ key, label, desc }) => (
+            <div key={key} className="flex items-center justify-between gap-4">
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium text-foreground">{label}</p>
+                <p className="text-xs text-muted-foreground">{desc}</p>
+              </div>
+              <Select 
+                value={privacySettings[key]} 
+                onValueChange={(v) => updateSectionPrivacy(key, v)}
+              >
+                <SelectTrigger className="w-40">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {visibilityOptions.map((opt) => (
+                    <SelectItem key={opt.value} value={opt.value}>
+                      <div className="flex items-center gap-2">
+                        <opt.icon className="w-3.5 h-3.5" />
+                        {opt.label}
+                      </div>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          ))}
+        </div>
+      </SectionCard>
+
+      {/* Save button */}
+      <Button onClick={handleSave} disabled={updating} className="w-full">
+        {updating ? "Salvando..." : "Salvar configurações de privacidade"}
+      </Button>
+    </div>
+  );
+}
 
 /* ─── Filters Tab ─── */
 function FiltersTab({ filters, loading, onDelete, onApply, countryLabel }: {
@@ -409,7 +916,6 @@ function StatsTab({ history, totalPoints, achievements, unlocked, loading, count
 function SettingsTab({ lang, setLang, dark, setDark, user }: {
   lang: LangCode; setLang: (l: LangCode) => void; dark: boolean; setDark: (d: boolean) => void; user: any;
 }) {
-  // User mode removed
   const [themeMode, setThemeMode] = useState<"light" | "dark" | "system">(() => {
     const saved = localStorage.getItem("theme");
     if (!saved) return "system";
@@ -475,7 +981,6 @@ function SettingsTab({ lang, setLang, dark, setDark, user }: {
         </div>
       </SectionCard>
 
-      {/* User Mode selector removed */}
       {/* Notifications placeholder */}
       <SectionCard title="Notificações por email">
         <div className="flex items-center justify-between">
