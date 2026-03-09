@@ -22,6 +22,7 @@ import { useSavedCards } from "@/hooks/use-saved-cards";
 import { useSavedFilters } from "@/hooks/use-saved-filters";
 import { supabase } from "@/integrations/supabase/client";
 import { ChevronRight, X, Map, Newspaper, RefreshCw, ChevronsUp, ChevronsDown, Radar, MapPin, FileText } from "lucide-react";
+import ArchiveDrawer from "@/components/ArchiveDrawer";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import TagLegend from "@/components/TagLegend";
 import WatchlistPanel from "@/components/WatchlistPanel";
@@ -689,7 +690,8 @@ const Index = () => {
   );
 
   // Count closed panels
-  const closedPanels = [!panelVisibility.radar, !panelVisibility.timeline, !panelVisibility.map].filter(Boolean).length;
+  const closedPanelsList = (["radar", "timeline", "map"] as const).filter(p => !panelVisibility[p]);
+  const closedPanels = closedPanelsList.length;
 
   return (
     <div className="h-screen flex flex-col bg-background overflow-hidden w-full max-w-[100vw]">
@@ -759,67 +761,17 @@ const Index = () => {
           </>
         ) : (
           <div className="flex-1 min-h-0 flex">
-            {/* Closed panel tabs — sleek vertical sidebar */}
-            <AnimatePresence>
-              {closedPanels > 0 && (
-                <motion.div
-                  initial={{ width: 0, opacity: 0 }}
-                  animate={{ width: 32, opacity: 1 }}
-                  exit={{ width: 0, opacity: 0 }}
-                  transition={{ duration: 0.2, ease: "easeInOut" }}
-                  className="flex flex-col bg-muted/10 border-r border-border/20 py-2 gap-1 flex-shrink-0 overflow-hidden"
-                >
-                  {!panelVisibility.radar && (
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <button
-                          onClick={() => togglePanel("radar")}
-                          className="flex flex-col items-center justify-center py-3 text-primary/60 hover:text-primary hover:bg-primary/5 transition-all rounded-r-md mx-0.5"
-                        >
-                          <Radar className="w-3.5 h-3.5" />
-                          <span className="text-[7px] font-bold uppercase tracking-wider mt-1" style={{ writingMode: "vertical-lr" }}>Radar</span>
-                        </button>
-                      </TooltipTrigger>
-                      <TooltipContent side="right" className="text-[10px]">{lang === "pt" ? "Abrir Radar" : "Open Radar"}</TooltipContent>
-                    </Tooltip>
-                  )}
-                  {!panelVisibility.timeline && (
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <button
-                          onClick={() => togglePanel("timeline")}
-                          className="flex flex-col items-center justify-center py-3 text-primary/60 hover:text-primary hover:bg-primary/5 transition-all rounded-r-md mx-0.5"
-                        >
-                          <FileText className="w-3.5 h-3.5" />
-                          <span className="text-[7px] font-bold uppercase tracking-wider mt-1" style={{ writingMode: "vertical-lr" }}>Timeline</span>
-                        </button>
-                      </TooltipTrigger>
-                      <TooltipContent side="right" className="text-[10px]">{lang === "pt" ? "Abrir Timeline" : "Open Timeline"}</TooltipContent>
-                    </Tooltip>
-                  )}
-                  {!panelVisibility.map && (
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <button
-                          onClick={() => togglePanel("map")}
-                          className="flex flex-col items-center justify-center py-3 text-primary/60 hover:text-primary hover:bg-primary/5 transition-all rounded-r-md mx-0.5"
-                        >
-                          <MapPin className="w-3.5 h-3.5" />
-                          <span className="text-[7px] font-bold uppercase tracking-wider mt-1" style={{ writingMode: "vertical-lr" }}>{lang === "pt" ? "Mapa" : "Map"}</span>
-                        </button>
-                      </TooltipTrigger>
-                      <TooltipContent side="right" className="text-[10px]">{lang === "pt" ? "Abrir Mapa" : "Open Map"}</TooltipContent>
-                    </Tooltip>
-                  )}
-                </motion.div>
-              )}
-            </AnimatePresence>
+            {/* Archive drawer for closed panels */}
+            <ArchiveDrawer
+              closedPanels={closedPanelsList}
+              onRestore={(panel) => togglePanel(panel)}
+            />
 
             {/* Main content */}
             <div className="flex-1 min-h-0 flex flex-col">
               {!panelVisibility.radar && !panelVisibility.timeline && !panelVisibility.map ? (
                 <div className="flex-1 flex items-center justify-center text-muted-foreground">
-                  <p className="text-sm">{lang === "pt" ? "Clique nas abas laterais para reabrir os painéis." : "Click the side tabs to reopen panels."}</p>
+                  <p className="text-sm">{lang === "pt" ? "Todos os painéis foram arquivados. Use o menu lateral para restaurá-los." : "All panels archived. Use the side drawer to restore them."}</p>
                 </div>
               ) : (
                 <ResizablePanelGroup
