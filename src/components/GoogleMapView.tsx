@@ -338,16 +338,24 @@ const GoogleMapView = ({
     if (heatmapRef.current) heatmapRef.current.setMap(mapMode === "heatmap" ? googleMapRef.current : null);
   }, [mapMode]);
 
-  // ─── FLOW MAP rendering ───
+  // ─── FLOW MAP rendering with enhanced animations ───
   const flowArcs = useMemo(() => computeFlowArcs(trends, countryPoints), [trends]);
+  const [hoveredArcId, setHoveredArcId] = useState<string | null>(null);
+  const [lockedArcId, setLockedArcId] = useState<string | null>(null);
+  const flowOriginPulsesRef = useRef<any[]>([]);
+  const flowParticlesRef = useRef<any[]>([]);
 
   useEffect(() => {
     const map = googleMapRef.current;
     if (!map || !mapLoaded) return;
 
-    // Cleanup previous flow polylines
+    // Cleanup previous flow elements
     flowPolylinesRef.current.forEach(p => p.setMap(null));
     flowPolylinesRef.current = [];
+    flowOriginPulsesRef.current.forEach(p => p.setMap(null));
+    flowOriginPulsesRef.current = [];
+    flowParticlesRef.current.forEach(p => p.setMap(null));
+    flowParticlesRef.current = [];
 
     if (mapMode !== "flow") return;
     if (flowArcs.length === 0) return;
@@ -356,107 +364,304 @@ const GoogleMapView = ({
       flowHoverInfoRef.current = new googleRef.current.maps.InfoWindow({ disableAutoPan: true });
     }
 
+    const g = googleRef.current;
+    if (!g) return;
+
     const maxVol = Math.max(...flowArcs.map(a => a.volume), 1);
 
-    flowArcs.forEach(arc => {
+    flowArcs.forEach((arc, arcIndex) => {
       const cpOrigin = countryPoints.find(c => c.id === arc.originId);
       const cpDest = countryPoints.find(c => c.id === arc.destId);
       if (!cpOrigin || !cpDest) return;
 
-      const curvePoints = computeCurvePoints(cpOrigin.lat, cpOrigin.lng, cpDest.lat, cpDest.lng, 40);
+      const arcId = `${arc.originId}-${arc.destId}-${arcIndex}`;
+      const curvePoints = computeCurvePoints(cpOrigin.lat, cpOrigin.lng, cpDest.lat, cpDest.lng, 60);
       const path = curvePoints.map(p => ({ lat: p.lat, lng: p.lng }));
       const color = sentimentColors[arc.sentiment];
-      const weight = 2 + (arc.volume / maxVol) * 5;
-      const opacity = 0.4 + (arc.volume / maxVol) * 0.5;
+      const baseWeight = 2 + (arc.volume / maxVol) * 4;
+      const baseOpacity = 0.35 + (arc.volume / maxVol) * 0.4;
 
+      // Arc base line with subtle throbbing
       const polyline = new google.maps.Polyline({
         path,
         geodesic: false,
         strokeColor: color,
-        strokeOpacity: opacity,
-        strokeWeight: weight,
+        strokeOpacity: baseOpacity,
+        strokeWeight: baseWeight,
         map,
         zIndex: 5,
       });
 
-      // Animated dash overlay
-      const dashLine = new google.maps.Polyline({
+      // Store original properties for hover effects
+      (polyline as any)._arcId = arcId;
+      (polyline as any)._baseOpacity = baseOpacity;
+      (polyline as any)._baseWeight = baseWeight;
+
+      // Soft glow underlayer for depth
+      const glowLine = new google.maps.Polyline({
         path,
         geodesic: false,
-        strokeColor: "#ffffff",
-        strokeOpacity: 0,
-        strokeWeight: weight * 0.4,
+        strokeColor: color,
+        strokeOpacity: 0.15,
+        strokeWeight: baseWeight * 2.5,
         map,
-        zIndex: 6,
-        icons: [{
-          icon: {
-            path: "M 0,-1 0,1",
-            strokeOpacity: 0.6,
-            strokeWeight: 2,
-            scale: 3,
-          },
-          offset: "0",
-          repeat: "20px",
-        }],
+        zIndex: 4,
       });
+      (glowLine as any)._arcId = arcId;
 
-      // Animate the dash offset
-      let offset = 0;
-      const speed = 0.5 + (1 - arc.timeDelta / 8) * 1.5; // faster = shorter timeDelta
-      const animateDash = () => {
-        if (!dashLine.getMap()) return;
-        offset = (offset + speed) % 200;
-        dashLine.set("icons", [{
-          icon: { path: "M 0,-1 0,1", strokeOpacity: 0.5, strokeWeight: 2, scale: 3 },
-          offset: offset + "px",
-          repeat: "20px",
-        }]);
-        requestAnimationFrame(animateDash);
-      };
-      requestAnimationFrame(animateDash);
-
-      // Hover tooltip
-      if (!isMobile) {
-        polyline.addListener("mouseover", (e: any) => {
-          if (!flowHoverInfoRef.current) return;
-          const bg = isDark ? "rgba(19,22,32,0.97)" : "rgba(255,255,255,0.97)";
-          const txt = isDark ? "#e2e8f0" : "#111827";
-          const sub = isDark ? "#94a3b8" : "#6b7280";
-          const border = isDark ? "rgba(45,51,72,0.5)" : "rgba(0,0,0,0.08)";
-          flowHoverInfoRef.current.setContent(`
-            <div style="font-family:Inter,system-ui,sans-serif;padding:12px 16px;min-width:200px;max-width:280px;background:${bg};color:${txt};border-radius:14px;backdrop-filter:blur(16px);border:1px solid ${border};box-shadow:0 8px 24px rgba(0,0,0,0.12);">
-              <div style="font-size:12px;font-weight:700;margin-bottom:8px;line-height:1.3;">${arc.trendTitle.slice(0, 60)}${arc.trendTitle.length > 60 ? '…' : ''}</div>
-              <div style="display:flex;align-items:center;gap:6px;margin-bottom:6px;">
-                <span style="font-size:16px;">${arc.originId.length === 2 ? String.fromCodePoint(...[...arc.originId.toUpperCase()].map(c => 0x1F1E6 + c.charCodeAt(0) - 65)) : ''}</span>
-                <span style="font-size:10px;color:${sub};">${arc.originName}</span>
-                <span style="font-size:12px;color:${color};">→</span>
-                <span style="font-size:16px;">${arc.destId.length === 2 ? String.fromCodePoint(...[...arc.destId.toUpperCase()].map(c => 0x1F1E6 + c.charCodeAt(0) - 65)) : ''}</span>
-                <span style="font-size:10px;color:${sub};">${arc.destName}</span>
-              </div>
-              <div style="display:flex;gap:8px;margin-bottom:4px;">
-                <span style="background:${color};color:#fff;padding:2px 8px;border-radius:10px;font-size:9px;font-weight:700;">${t("mapSent" + arc.sentiment.charAt(0).toUpperCase() + arc.sentiment.slice(1) as any)}</span>
-                <span style="font-size:9px;color:${sub};">~${arc.timeDelta}h ${t("mapFlowTimeDelta")}</span>
-              </div>
-              <div style="font-size:9px;color:${isDark ? '#60a5fa' : '#3b82f6'};text-align:center;padding-top:6px;border-top:1px solid ${border};font-weight:600;">👆 ${t("mapFlowClickToFilter")}</div>
-            </div>
-          `);
-          flowHoverInfoRef.current.setPosition(e.latLng);
-          flowHoverInfoRef.current.open(map);
+      // Subtle arc throbbing animation (scale 1.0 → 1.02)
+      let throbStart = performance.now();
+      const throbDuration = 2500 + Math.random() * 1000;
+      const animateThrobbing = (now: number) => {
+        if (!polyline.getMap()) return;
+        const progress = ((now - throbStart) % throbDuration) / throbDuration;
+        const throbScale = 1 + 0.02 * Math.sin(progress * Math.PI * 2);
+        const throbOpacity = baseOpacity * (0.95 + 0.05 * Math.sin(progress * Math.PI * 2));
+        polyline.setOptions({
+          strokeWeight: baseWeight * throbScale,
+          strokeOpacity: throbOpacity,
         });
-        polyline.addListener("mouseout", () => {
+        requestAnimationFrame(animateThrobbing);
+      };
+      requestAnimationFrame(animateThrobbing);
+
+      // Particle flow animation (soft glowing dot traveling along arc)
+      const particleSpeed = 0.3 + (1 - arc.timeDelta / 8) * 0.7; // 0.3-1.0 based on propagation speed
+      const particleDuration = 6000 / particleSpeed;
+      let particleStart = performance.now() - Math.random() * particleDuration;
+
+      const particleMarker = new g.maps.Marker({
+        map,
+        position: path[0],
+        icon: {
+          path: g.maps.SymbolPath.CIRCLE,
+          fillColor: "#ffffff",
+          fillOpacity: 0.9,
+          strokeColor: color,
+          strokeWeight: 2,
+          strokeOpacity: 0.8,
+          scale: 4 + (arc.volume / maxVol) * 3,
+        },
+        zIndex: 8,
+        optimized: false,
+        clickable: false,
+      });
+      (particleMarker as any)._arcId = arcId;
+
+      // Particle glow trail
+      const particleGlow = new g.maps.Marker({
+        map,
+        position: path[0],
+        icon: {
+          path: g.maps.SymbolPath.CIRCLE,
+          fillColor: color,
+          fillOpacity: 0.3,
+          strokeOpacity: 0,
+          scale: 12 + (arc.volume / maxVol) * 6,
+        },
+        zIndex: 7,
+        optimized: false,
+        clickable: false,
+      });
+      (particleGlow as any)._arcId = arcId;
+
+      const animateParticle = (now: number) => {
+        if (!particleMarker.getMap()) return;
+        const elapsed = (now - particleStart) % particleDuration;
+        const progress = elapsed / particleDuration;
+        const pathIndex = Math.floor(progress * (path.length - 1));
+        const nextIndex = Math.min(pathIndex + 1, path.length - 1);
+        const localProgress = (progress * (path.length - 1)) % 1;
+        
+        // Interpolate position
+        const lat = path[pathIndex].lat + (path[nextIndex].lat - path[pathIndex].lat) * localProgress;
+        const lng = path[pathIndex].lng + (path[nextIndex].lng - path[pathIndex].lng) * localProgress;
+        
+        particleMarker.setPosition({ lat, lng });
+        particleGlow.setPosition({ lat, lng });
+
+        // Pulse the particle slightly
+        const pulseScale = 1 + 0.15 * Math.sin(progress * Math.PI * 8);
+        particleMarker.setIcon({
+          path: g.maps.SymbolPath.CIRCLE,
+          fillColor: "#ffffff",
+          fillOpacity: 0.85 + 0.1 * Math.sin(progress * Math.PI * 8),
+          strokeColor: color,
+          strokeWeight: 2,
+          strokeOpacity: 0.8,
+          scale: (4 + (arc.volume / maxVol) * 3) * pulseScale,
+        });
+
+        requestAnimationFrame(animateParticle);
+      };
+      requestAnimationFrame(animateParticle);
+
+      // Origin country pulsing ripple
+      const originPulse = new g.maps.Marker({
+        map,
+        position: { lat: cpOrigin.lat, lng: cpOrigin.lng },
+        icon: {
+          path: g.maps.SymbolPath.CIRCLE,
+          fillColor: color,
+          fillOpacity: 0,
+          strokeColor: color,
+          strokeWeight: 2,
+          strokeOpacity: 0.4,
+          scale: 15,
+        },
+        zIndex: 3,
+        optimized: false,
+        clickable: false,
+      });
+      (originPulse as any)._arcId = arcId;
+
+      let originPulseStart = performance.now();
+      const originPulseDuration = 2000;
+      const animateOriginPulse = (now: number) => {
+        if (!originPulse.getMap()) return;
+        const progress = ((now - originPulseStart) % originPulseDuration) / originPulseDuration;
+        const scale = 15 + progress * 25;
+        const opacity = 0.5 * (1 - progress);
+        originPulse.setIcon({
+          path: g.maps.SymbolPath.CIRCLE,
+          fillColor: color,
+          fillOpacity: 0,
+          strokeColor: color,
+          strokeWeight: 2 * (1 - progress * 0.5),
+          strokeOpacity: opacity,
+          scale,
+        });
+        requestAnimationFrame(animateOriginPulse);
+      };
+      requestAnimationFrame(animateOriginPulse);
+
+      // Hover interactions
+      const handleHover = (e: any, isEnter: boolean) => {
+        if (isEnter) {
+          setHoveredArcId(arcId);
+          
+          // Brighten this arc
+          polyline.setOptions({
+            strokeOpacity: Math.min(baseOpacity * 1.5, 1),
+            strokeWeight: baseWeight * 1.3,
+          });
+          glowLine.setOptions({
+            strokeOpacity: 0.35,
+            strokeWeight: baseWeight * 3.5,
+          });
+
+          // Show tooltip with smooth animation styling
+          if (flowHoverInfoRef.current && !isMobile) {
+            const bg = isDark ? "rgba(19,22,32,0.97)" : "rgba(255,255,255,0.97)";
+            const txt = isDark ? "#e2e8f0" : "#111827";
+            const sub = isDark ? "#94a3b8" : "#6b7280";
+            const border = isDark ? "rgba(45,51,72,0.5)" : "rgba(0,0,0,0.08)";
+            const originFlag = arc.originId.length === 2 ? String.fromCodePoint(...[...arc.originId.toUpperCase()].map(c => 0x1F1E6 + c.charCodeAt(0) - 65)) : '';
+            const destFlag = arc.destId.length === 2 ? String.fromCodePoint(...[...arc.destId.toUpperCase()].map(c => 0x1F1E6 + c.charCodeAt(0) - 65)) : '';
+
+            flowHoverInfoRef.current.setContent(`
+              <div class="flow-tooltip-enter" style="font-family:Inter,system-ui,sans-serif;padding:14px 18px;min-width:220px;max-width:300px;background:${bg};color:${txt};border-radius:16px;backdrop-filter:blur(20px);border:1px solid ${border};box-shadow:0 12px 40px rgba(0,0,0,0.18);animation:tooltipEnter 0.25s cubic-bezier(0.25,0.1,0.25,1) forwards;">
+                <style>
+                  @keyframes tooltipEnter { from { opacity: 0; transform: translateY(6px) scale(0.96); } to { opacity: 1; transform: translateY(0) scale(1); } }
+                  @keyframes barGrow { from { width: 0; } }
+                </style>
+                <div style="font-size:13px;font-weight:700;margin-bottom:10px;line-height:1.35;letter-spacing:-0.01em;">${arc.trendTitle.slice(0, 55)}${arc.trendTitle.length > 55 ? '…' : ''}</div>
+                <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;padding:8px 10px;background:${isDark ? 'rgba(30,41,59,0.5)' : 'rgba(241,245,249,0.8)'};border-radius:10px;">
+                  <div style="text-align:center;">
+                    <span style="font-size:20px;display:block;">${originFlag}</span>
+                    <span style="font-size:9px;color:${sub};display:block;margin-top:2px;">${arc.originName}</span>
+                  </div>
+                  <div style="flex:1;display:flex;align-items:center;justify-content:center;">
+                    <div style="height:2px;flex:1;background:linear-gradient(90deg,${color},${color}50);border-radius:1px;"></div>
+                    <span style="font-size:14px;margin:0 6px;color:${color};">→</span>
+                    <div style="height:2px;flex:1;background:linear-gradient(90deg,${color}50,${color});border-radius:1px;"></div>
+                  </div>
+                  <div style="text-align:center;">
+                    <span style="font-size:20px;display:block;">${destFlag}</span>
+                    <span style="font-size:9px;color:${sub};display:block;margin-top:2px;">${arc.destName}</span>
+                  </div>
+                </div>
+                <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
+                  <span style="background:${color};color:#fff;padding:3px 10px;border-radius:12px;font-size:9px;font-weight:700;letter-spacing:0.3px;">${t("mapSent" + arc.sentiment.charAt(0).toUpperCase() + arc.sentiment.slice(1) as any)}</span>
+                  <span style="font-size:10px;color:${sub};">~${arc.timeDelta}h ${t("mapFlowTimeDelta")}</span>
+                </div>
+                <div style="display:flex;align-items:center;gap:6px;padding:8px 10px;background:${isDark ? 'rgba(30,41,59,0.4)' : 'rgba(241,245,249,0.6)'};border-radius:8px;margin-bottom:8px;">
+                  <span style="font-size:10px;color:${sub};">📊 ${arc.volume.toLocaleString()} ${lang === "pt" ? "menções" : "mentions"}</span>
+                  <span style="font-size:10px;color:${sub};">·</span>
+                  <span style="font-size:10px;color:${sub};">${Math.round(arc.similarity * 100)}% ${lang === "pt" ? "similaridade" : "similarity"}</span>
+                </div>
+                <div style="font-size:10px;color:${isDark ? '#60a5fa' : '#3b82f6'};text-align:center;font-weight:600;padding-top:8px;border-top:1px solid ${border};">👆 ${t("mapFlowClickToFilter")}</div>
+              </div>
+            `);
+            flowHoverInfoRef.current.setPosition(e.latLng);
+            flowHoverInfoRef.current.open(map);
+          }
+        } else {
+          if (lockedArcId !== arcId) {
+            setHoveredArcId(null);
+            polyline.setOptions({
+              strokeOpacity: baseOpacity,
+              strokeWeight: baseWeight,
+            });
+            glowLine.setOptions({
+              strokeOpacity: 0.15,
+              strokeWeight: baseWeight * 2.5,
+            });
+          }
           flowHoverInfoRef.current?.close();
+        }
+      };
+
+      polyline.addListener("mouseover", (e: any) => handleHover(e, true));
+      polyline.addListener("mouseout", (e: any) => handleHover(e, false));
+      glowLine.addListener("mouseover", (e: any) => handleHover(e, true));
+      glowLine.addListener("mouseout", (e: any) => handleHover(e, false));
+
+      // Click to filter with success animation
+      const handleClick = () => {
+        setLockedArcId(arcId);
+        
+        // Brief glow flash animation
+        polyline.setOptions({
+          strokeOpacity: 1,
+          strokeWeight: baseWeight * 1.6,
+        });
+        glowLine.setOptions({
+          strokeOpacity: 0.6,
+          strokeWeight: baseWeight * 4,
+        });
+
+        setTimeout(() => {
+          onSelectCountry(arc.originId);
+          flowHoverInfoRef.current?.close();
+          setLockedArcId(null);
+          setHoveredArcId(null);
+        }, 150);
+      };
+
+      polyline.addListener("click", handleClick);
+      glowLine.addListener("click", handleClick);
+
+      flowPolylinesRef.current.push(polyline, glowLine);
+      flowOriginPulsesRef.current.push(originPulse);
+      flowParticlesRef.current.push(particleMarker, particleGlow);
+    });
+
+    // Dim non-hovered arcs effect
+    const updateArcVisibility = () => {
+      if (!hoveredArcId && !lockedArcId) {
+        // Reset all arcs to normal
+        flowPolylinesRef.current.forEach(p => {
+          const base = (p as any)._baseOpacity || 0.5;
+          if (p.getOptions?.().strokeWeight > 5) {
+            // It's a glow line
+            p.setOptions({ strokeOpacity: 0.15 });
+          }
         });
       }
-
-      // Click to filter
-      polyline.addListener("click", () => {
-        onSelectCountry(arc.originId);
-        flowHoverInfoRef.current?.close();
-      });
-
-      flowPolylinesRef.current.push(polyline, dashLine);
-    });
-  }, [mapMode, flowArcs, mapLoaded, isDark, isMobile, t, onSelectCountry]);
+    };
+    
+  }, [mapMode, flowArcs, mapLoaded, isDark, isMobile, t, onSelectCountry, lang]);
 
   // ─── SENTIMENT BUBBLE MAP rendering ───
   const sentimentBubbles = useMemo(() => computeSentimentBubbles(trends, countryPoints), [trends]);
