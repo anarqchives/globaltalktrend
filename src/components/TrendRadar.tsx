@@ -403,13 +403,17 @@ function AnomaliesPredictive({ anomalies, lang, onAnomalyClick }: {
 }
 
 // ─── MAIN COMPONENT ─────────────────────────────────────────────────────
-export default function TrendRadar({ trends, allTrends, criticalMoments, anomalies = [], onSelectTrend, onFilterCountry, onAnomalyClick, onClose }: TrendRadarProps) {
+export default function TrendRadar({ trends, allTrends, criticalMoments, anomalies = [], onSelectTrend, onFilterCountry, onAnomalyClick, onClose, isCollapsed: externalCollapsed, onToggleCollapse }: TrendRadarProps) {
   const { lang } = useLanguage();
   const [tab, setTab] = useState("signals");
-  const [collapsed, setCollapsed] = useState(() => {
+  const [internalCollapsed, setInternalCollapsed] = useState(() => {
     if (typeof window !== "undefined") return localStorage.getItem(RADAR_STORAGE_KEY) === "true";
-    return true; // default collapsed
+    return true;
   });
+  
+  // Use external collapse state if provided (from ResizablePanel), otherwise internal
+  const collapsed = externalCollapsed !== undefined ? externalCollapsed : internalCollapsed;
+  const setCollapsed = onToggleCollapse || (() => setInternalCollapsed(c => !c));
 
   // Track unseen
   const [unseenCritical, setUnseenCritical] = useState(0);
