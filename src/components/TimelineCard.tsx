@@ -296,27 +296,28 @@ const TimelineCard = ({
           )}
 
           {/* === METRICS BAR: Horizontal, compact === */}
-          <div className="flex items-center gap-2 flex-wrap text-[10px] mb-1.5">
+          <div className="flex items-center gap-2 flex-wrap text-[10px] mb-2">
+            {/* TVI Badge */}
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <div className={`flex items-center gap-1.5 px-2 py-0.5 rounded-full font-bold border cursor-help ${trendScoreLabel.cls} bg-transparent`}>
+                  <span className="opacity-70 font-medium">TVI ⓘ</span>
+                  <span>{trendScore}</span>
+                </div>
+              </TooltipTrigger>
+              <TooltipContent side="top" className="p-3 text-[11px] space-y-1.5 min-w-[200px] z-50 bg-popover/95 backdrop-blur-md">
+                <div className="font-bold text-[12px] mb-1 text-foreground">Trend Velocity Index (TVI)</div>
+                <p className="text-muted-foreground mb-2 leading-tight">Mede a velocidade de propagação baseada em:</p>
+                <div className="flex justify-between"><span>📈 Crescimento (30%)</span><span className="font-bold text-foreground">{tviBreakdown.velocity}</span></div>
+                <div className="flex justify-between"><span>💬 Volume (30%)</span><span className="font-bold text-foreground">{tviBreakdown.volume}</span></div>
+                <div className="flex justify-between"><span>📰 Fontes (20%)</span><span className="font-bold text-foreground">{tviBreakdown.sources}</span></div>
+                <div className="flex justify-between"><span>🌍 Países (20%)</span><span className="font-bold text-foreground">{tviBreakdown.geography}</span></div>
+                <div className="h-px bg-gradient-to-r from-transparent via-border to-transparent my-2" />
+                <div className="text-[11px] font-medium text-center text-foreground">{trendScore}% - {trendScoreLabel.text}</div>
+              </TooltipContent>
+            </Tooltip>
+
             {/* Growth */}
-            <span className={`inline-flex items-center gap-0.5 font-bold ${changePositive ? "text-green-600 dark:text-green-400" : "text-destructive"}`}>
-              <TrendingUp className="w-3 h-3" />
-              {change}
-            </span>
-
-            {/* Volume */}
-            {volume && volume !== "0" && (
-              <span className="text-muted-foreground">
-                💬 {volume}
-              </span>
-            )}
-
-            {/* Sources */}
-            {sources && sources.length > 0 && (
-              <span className="text-muted-foreground inline-flex items-center gap-0.5">
-                <Radio className="w-2.5 h-2.5" />
-                {sources.length} {sources.length === 1 ? "fonte" : "fontes"}
-              </span>
-            )}
 
             {/* Region */}
             {countryCode && countryCode !== "GL" && (
