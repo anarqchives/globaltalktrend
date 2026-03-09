@@ -420,7 +420,7 @@ function WeeklyPulse({ trends }: { trends: TrendCardProps[] }) {
   );
 }
 
-function TrendRadarInner({ trends, allTrends, criticalMoments, anomalies = [], onSelectTrend, onFilterCountry, onAnomalyClick }: TrendRadarProps) {
+export default function TrendRadar({ trends, allTrends, criticalMoments, anomalies = [], onSelectTrend, onFilterCountry, onAnomalyClick }: TrendRadarProps) {
   const { lang, t } = useLanguage();
   const [tab, setTab] = useState("emerging");
   const [collapsed, setCollapsed] = useState(() => {
