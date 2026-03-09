@@ -90,12 +90,14 @@ export default {
   		},
   		fontFamily: {
   			sans: [
-  				'ui-sans-serif',
-  				'system-ui',
+  				'"Helvetica Neue"',
+  				'Helvetica',
+  				'Arial',
+  				'-apple-system',
+  				'BlinkMacSystemFont',
   				'sans-serif',
   				'Apple Color Emoji',
   				'Segoe UI Emoji',
-  				'Segoe UI Symbol',
   				'Noto Color Emoji'
   			],
   			serif: [

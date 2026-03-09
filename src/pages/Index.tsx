@@ -472,10 +472,6 @@ const Index = () => {
         </div>
       </div>
 
-      {/* Watchlist Panel */}
-      {user && (
-        <WatchlistPanel trends={filteredTrends} onSelectTrend={handleSelectTrend} />
-      )}
 
       {breadcrumbs.length > 0 && (
         <div className="px-1.5 py-0.5 flex items-center gap-1 flex-wrap text-[9px]">
