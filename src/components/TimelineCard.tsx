@@ -565,27 +565,28 @@ const TimelineCard = ({
             </div>
           )}
 
-          {/* Sentiment Analysis Section */}
-          <div className="mb-3 p-2 rounded-lg bg-secondary/30 border border-border/50">
+          {/* Sentiment Analysis Section — with labeled legend */}
+          <div className="mb-3 p-2.5 rounded-lg bg-secondary/30 border border-border/50">
             <span className="text-[9px] font-semibold text-muted-foreground uppercase tracking-wide mb-2 block">
               📊 Sentiment Analysis
             </span>
-            <div className="flex items-start gap-3">
+            <div className="flex items-center gap-4">
               <SentimentDonut
                 positive={changePositive ? 55 : 25}
                 neutral={30}
                 negative={changePositive ? 15 : 45}
-                size={64}
+                size={56}
+                showLegend
               />
-              <div className="flex-1 min-w-0">
-                <EmotionBars
-                  emotions={[
-                    { icon: "😊", label: "Positivo", percentage: changePositive ? 55 : 25, color: "hsl(142, 60%, 45%)" },
-                    { icon: "😐", label: "Neutro", percentage: 30, color: "hsl(var(--muted-foreground))" },
-                    { icon: "😠", label: "Negativo", percentage: changePositive ? 15 : 45, color: "hsl(var(--destructive))" },
-                  ]}
-                />
-              </div>
+            </div>
+            <div className="mt-2 pt-2 border-t border-border/30">
+              <EmotionBars
+                emotions={[
+                  { icon: "😊", label: "Positivo", percentage: changePositive ? 55 : 25, color: "hsl(142, 60%, 45%)" },
+                  { icon: "😐", label: "Neutro", percentage: 30, color: "hsl(var(--muted-foreground))" },
+                  { icon: "😠", label: "Negativo", percentage: changePositive ? 15 : 45, color: "hsl(var(--destructive))" },
+                ]}
+              />
             </div>
           </div>
 
