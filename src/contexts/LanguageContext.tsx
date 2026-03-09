@@ -467,8 +467,11 @@ const translations: Record<LangCode, Record<TranslationKey, string>> = {
     tviGrowthLabel: "Croissance (30%)", tviVolumeLabel: "Volume (30%)", tviSourcesLabel: "Sources (20%)", tviGeographyLabel: "Géographie (20%)",
     tviDescription: "Mesure la vitesse de propagation basée sur :",
     sourcesSingular: "source", sourcesPlural: "sources",
+    mapMentions: "mentions", mapSimilarity: "similarité", mapThinLowVol: "Fin = faible volume", mapThickHighVol: "Épais = fort volume", mapPropArcs: "arcs de propagation", mapSizeVolume: "Taille = volume", mapFastPulse: "Pulsation rapide = croissance accélérée", mapTrendsActiveLabel: "actives", mapClickDetails: "Cliquer pour les détails", mapLoadingMap: "Chargement de la carte...", mapReconnectMsg: "La carte s'affichera dès que la connexion sera rétablie.", mapRetry: "Réessayer", mapFilterByCountry: "Filtrer par pays", mapTopTrendsLabel: "Principales tendances", mapMoreTrends: "autres tendances", mapCloseMap: "Fermer la carte",
+    mapIntCritical: "🔥 CRITIQUE", mapIntHigh: "⚡ ÉLEVÉ", mapIntModerate: "📊 MODÉRÉ", mapIntAttention: "📈 ATTENTION", mapIntNormal: "ℹ️ NORMAL",
+    mapStatusExceptional: "Volume exceptionnel — sources multiples actives", mapStatusHigh: "Activité élevée — croissance accélérée", mapStatusModerate: "Activité modérée — tendances en développement", mapStatusLow: "Faible activité — peu de signaux", mapStatusNormal: "Surveillance normale — aucune anomalie",
+    mapCritVolume: "Volume exceptionnellement élevé", mapCritGrowth: "Croissance accélérée", mapCritMultiplatform: "Multiplateforme", mapCritActive: "tendances actives simultanément", mapCritMonitoring: "en surveillance — activité normale", mapCritNone: "Aucune tendance active",
   },
-  de: {
     trends: "Trends", moreTrends: "Mehr Trends", filters: "Filter",
     country: "Land", period: "Zeitraum", category: "Kategorie", type: "Typ",
     global: "Global", lastHour: "Letzte Stunde", today: "Heute", thisWeek: "Diese Woche", thisMonth: "Diesen Monat",
