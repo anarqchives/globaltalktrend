@@ -331,11 +331,21 @@ export default function WeeklyPulseDashboard({ trends }: { trends: TrendCardProp
     // Historical average (rough estimate: use current week's average as baseline * 0.85)
     const historicalAvg = Math.round(totalVolume * 0.85);
 
+    // Category × Day matrix
+    const catByDay: Record<string, Record<string, number>> = {};
+    for (const cat of topCats) {
+      catByDay[cat] = {};
+      for (const day of orderedDays) {
+        catByDay[cat][day] = catDaily[day]?.[cat] || 0;
+      }
+    }
+
     return {
       stackedData,
       topCats,
       wordCloud,
       heatmap,
+      catByDay,
       insights,
       totalVolume,
       historicalAvg,
