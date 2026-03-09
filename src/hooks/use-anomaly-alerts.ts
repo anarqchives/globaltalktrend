@@ -113,19 +113,8 @@ export function useAnomalyAlerts(trends: TrendCardProps[]) {
     [anomalies, dismissed]
   );
 
-  // Show toast + push for new high-severity anomalies
-  useEffect(() => {
-    for (const a of activeAnomalies) {
-      const key = a.trend.title.toLowerCase().slice(0, 40);
-      if (!notified.has(key) && a.severity === "high") {
-        toast({ title: "🚨 Anomalia detectada", description: a.message.slice(0, 100) });
-        if (pushEnabled) {
-          sendPushNotification("🚨 Anomalia detectada", a.message);
-        }
-        setNotified(prev => new Set(prev).add(key));
-      }
-    }
-  }, [activeAnomalies, pushEnabled]);
+  // Anomaly notifications are now exclusively shown inside the Trend Radar Critical Alerts tab.
+  // No toasts or push notifications are fired from here.
 
   const dismiss = useCallback((title: string) => {
     const key = title.toLowerCase().slice(0, 40);

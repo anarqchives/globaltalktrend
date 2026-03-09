@@ -96,8 +96,13 @@ const PublicProfile = () => {
   }, [username]);
 
   const handleShare = () => {
-    navigator.clipboard.writeText(window.location.href);
-    toast({ title: "Link copiado!", description: "Link do perfil copiado para a área de transferência." });
+    const shareUrl = `${window.location.origin}/@${profile?.username}`;
+    if (navigator.share) {
+      navigator.share({ title: `@${profile?.username} — Global Talk Trend`, url: shareUrl }).catch(() => {});
+    } else {
+      navigator.clipboard.writeText(shareUrl);
+    }
+    toast({ title: "Link copiado!", description: shareUrl });
   };
 
   const handleFollow = async () => {
@@ -141,11 +146,13 @@ const PublicProfile = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Minimal header */}
+      {/* Navigation header with back to main site */}
       <header className="glass-header sticky top-0 z-50 px-4 md:px-6 py-2 h-12 flex items-center justify-between">
-        <button onClick={() => navigate(-1)} className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors">
-          <ArrowLeft className="w-4 h-4" /> Voltar
-        </button>
+        <a href="/" className="flex items-center gap-1.5 text-sm font-semibold text-primary hover:text-primary/80 transition-colors">
+          <ArrowLeft className="w-4 h-4" />
+          <span className="hidden sm:inline">Global Talk Trend</span>
+          <span className="sm:hidden">GTT</span>
+        </a>
         <span className="text-sm font-semibold text-foreground">@{profile.username}</span>
         <div className="w-16" />
       </header>

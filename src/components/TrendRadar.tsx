@@ -660,27 +660,43 @@ export default function TrendRadar({ trends, allTrends, criticalMoments, anomali
     if (typeof window !== "undefined") return localStorage.getItem(RADAR_STORAGE_KEY) === "true";
     return false;
   });
+  // Track unseen anomaly/critical count — resets when user views the Critical tab
+  const [unseenCritical, setUnseenCritical] = useState(0);
+  const prevCriticalCountRef = useRef(0);
 
   useEffect(() => {
     localStorage.setItem(RADAR_STORAGE_KEY, String(collapsed));
   }, [collapsed]);
 
+  const totalCriticalItems = criticalMoments.length + anomalies.length;
+
+  // When new critical items arrive and user is NOT on the critical tab, increment unseen
+  useEffect(() => {
+    if (totalCriticalItems > prevCriticalCountRef.current && tab !== "critical") {
+      setUnseenCritical(totalCriticalItems);
+    }
+    prevCriticalCountRef.current = totalCriticalItems;
+  }, [totalCriticalItems, tab]);
+
+  // When user clicks the Critical tab, reset unseen
+  useEffect(() => {
+    if (tab === "critical") setUnseenCritical(0);
+  }, [tab]);
+
   const hasEmerging = trends.length > 3;
-  const hasCritical = criticalMoments.length > 0;
-  const hasAnomalies = anomalies.length > 0;
+  const hasCritical = criticalMoments.length > 0 || anomalies.length > 0;
 
   const labels = {
     collapse: lang === "pt" ? "Recolher radar" : "Collapse radar",
     expand: lang === "pt" ? "Expandir radar" : "Expand radar",
   };
 
-  // Tab config with colors
+  // Tab config — anomalies are merged into the Critical tab; no separate Anomalies tab
   const tabConfig = [
-    { value: "emerging", icon: Sprout, label: "Emerging", activeClass: "data-[state=active]:bg-emerald-500/15 data-[state=active]:text-emerald-600 dark:data-[state=active]:text-emerald-400 data-[state=active]:border-emerald-500/30", dot: hasEmerging ? "bg-emerald-500" : null, badge: null },
-    { value: "critical", icon: Flame, label: "Critical", activeClass: "data-[state=active]:bg-rose-500/15 data-[state=active]:text-rose-600 dark:data-[state=active]:text-rose-400 data-[state=active]:border-rose-500/30", dot: null, badge: hasCritical ? criticalMoments.length : null },
-    { value: "top", icon: Trophy, label: "Top", activeClass: "data-[state=active]:bg-amber-500/15 data-[state=active]:text-amber-600 dark:data-[state=active]:text-amber-400 data-[state=active]:border-amber-500/30", dot: null, badge: null },
-    { value: "weekly", icon: Activity, label: "Weekly", activeClass: "data-[state=active]:bg-sky-500/15 data-[state=active]:text-sky-600 dark:data-[state=active]:text-sky-400 data-[state=active]:border-sky-500/30", dot: null, badge: null },
-    ...(hasAnomalies ? [{ value: "anomalies", icon: AlertTriangle, label: "Anomalias", activeClass: "data-[state=active]:bg-red-500/15 data-[state=active]:text-red-600 dark:data-[state=active]:text-red-400 data-[state=active]:border-red-500/30", dot: null, badge: anomalies.length }] : []),
+    { value: "emerging", icon: Sprout, label: "Emerging", activeClass: "data-[state=active]:bg-emerald-500/15 data-[state=active]:text-emerald-600 dark:data-[state=active]:text-emerald-400 data-[state=active]:border-emerald-500/30", dot: hasEmerging ? "bg-emerald-500" : null, badge: null, pulse: false },
+    { value: "critical", icon: Flame, label: "Critical", activeClass: "data-[state=active]:bg-rose-500/15 data-[state=active]:text-rose-600 dark:data-[state=active]:text-rose-400 data-[state=active]:border-rose-500/30", dot: null, badge: unseenCritical > 0 ? unseenCritical : (hasCritical ? totalCriticalItems : null), pulse: unseenCritical > 0 },
+    { value: "top", icon: Trophy, label: "Top", activeClass: "data-[state=active]:bg-amber-500/15 data-[state=active]:text-amber-600 dark:data-[state=active]:text-amber-400 data-[state=active]:border-amber-500/30", dot: null, badge: null, pulse: false },
+    { value: "weekly", icon: Activity, label: "Weekly", activeClass: "data-[state=active]:bg-sky-500/15 data-[state=active]:text-sky-600 dark:data-[state=active]:text-sky-400 data-[state=active]:border-sky-500/30", dot: null, badge: null, pulse: false },
   ];
 
   return (
@@ -713,7 +729,7 @@ export default function TrendRadar({ trends, allTrends, criticalMoments, anomali
                       <span className="hidden sm:inline">{tc.label}</span>
                       {tc.dot && <span className={`w-1.5 h-1.5 rounded-full ${tc.dot} animate-pulse`} />}
                       {tc.badge && (
-                        <span className="px-1 py-0 rounded-full bg-destructive text-destructive-foreground text-[8px] font-bold leading-tight animate-pulse">
+                        <span className={`px-1 py-0 rounded-full bg-destructive text-destructive-foreground text-[8px] font-bold leading-tight ${tc.pulse ? "animate-pulse" : ""}`}>
                           {tc.badge}
                         </span>
                       )}
@@ -767,7 +783,22 @@ export default function TrendRadar({ trends, allTrends, criticalMoments, anomali
                 <Legend tab="critical" lang={lang} />
                 <ScrollArea className="flex-1">
                   {hasCritical ? (
-                    <CriticalMomentsSection moments={criticalMoments} onSelectTrend={onSelectTrend} />
+                    <div className="space-y-0">
+                      {criticalMoments.length > 0 && (
+                        <CriticalMomentsSection moments={criticalMoments} onSelectTrend={onSelectTrend} />
+                      )}
+                      {anomalies.length > 0 && (
+                        <div className="px-3 py-2">
+                          <div className="flex items-center gap-1.5 mb-2">
+                            <AlertTriangle className="w-3 h-3 text-destructive" />
+                            <span className="text-[10px] font-bold text-destructive uppercase tracking-wider">
+                              {lang === "pt" ? "Anomalias Detectadas" : "Detected Anomalies"}
+                            </span>
+                          </div>
+                          <AnomaliesPredictive anomalies={anomalies} lang={lang} onAnomalyClick={onAnomalyClick} />
+                        </div>
+                      )}
+                    </div>
                   ) : (
                     <div className="flex flex-col items-center justify-center py-8 text-muted-foreground">
                       <Flame className="w-8 h-8 mb-2 opacity-30" />
@@ -793,14 +824,7 @@ export default function TrendRadar({ trends, allTrends, criticalMoments, anomali
                 </ScrollArea>
               </TabsContent>
 
-              {hasAnomalies && (
-                <TabsContent value="anomalies" className="absolute inset-0 mt-0 flex flex-col data-[state=inactive]:hidden animate-in fade-in-0 duration-300">
-                  <Legend tab="anomalies" lang={lang} />
-                  <ScrollArea className="flex-1">
-                    <AnomaliesPredictive anomalies={anomalies} lang={lang} onAnomalyClick={onAnomalyClick} />
-                  </ScrollArea>
-                </TabsContent>
-              )}
+              {/* Anomalies tab removed — anomalies are now shown inside Critical Alerts tab */}
             </div>
           </div>
         )}
