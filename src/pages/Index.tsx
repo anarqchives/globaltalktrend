@@ -868,17 +868,6 @@ const Index = () => {
                         {panelVisibility.map && (
                           <ResizablePanel defaultSize={panelVisibility.timeline ? 35 : 100} minSize={15} maxSize={panelVisibility.timeline ? 60 : 100}>
                             <div className="h-full relative">
-                              <Tooltip>
-                                <TooltipTrigger asChild>
-                                  <button
-                                    onClick={() => togglePanel("map")}
-                                    className="absolute top-3 right-3 z-20 w-6 h-6 rounded-full flex items-center justify-center bg-background/80 hover:bg-destructive/15 text-muted-foreground hover:text-destructive border border-border/40 hover:border-destructive/30 shadow-sm backdrop-blur-sm transition-all duration-200"
-                                  >
-                                    <X className="w-3 h-3" strokeWidth={2.5} />
-                                  </button>
-                                </TooltipTrigger>
-                                <TooltipContent side="left" className="text-[10px]">{lang === "pt" ? "Fechar Mapa" : "Close Map"}</TooltipContent>
-                              </Tooltip>
                               {renderMap()}
                             </div>
                           </ResizablePanel>
