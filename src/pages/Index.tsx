@@ -725,7 +725,7 @@ const Index = () => {
         }}
       />
 
-      <div className="flex-1 overflow-hidden flex flex-col">
+      <div className="flex-1 overflow-hidden flex flex-col min-h-0">
         {isMobile ? (
           <>
             <div className="section-gradient-divider" />
