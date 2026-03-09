@@ -562,15 +562,9 @@ export default function TrendRadar({ trends, allTrends, criticalMoments, anomali
           </div>
         </div>
 
-        {/* Content — smooth expand/collapse with CSS transition */}
-        <motion.div
-          initial={false}
-          animate={{ 
-            height: collapsed ? 0 : "100%",
-            opacity: collapsed ? 0 : 1
-          }}
-          transition={{ duration: 0.25, ease: [0.4, 0, 0.2, 1] }}
-          className="overflow-hidden flex-1 min-h-0"
+        {/* Content — fills available space, hidden when collapsed */}
+        <div
+          className={`overflow-hidden flex-1 min-h-0 transition-opacity duration-200 ease-out ${collapsed ? "opacity-0 pointer-events-none" : "opacity-100"}`}
           style={{ flexGrow: collapsed ? 0 : 1 }}
         >
           <div className="h-full relative">
