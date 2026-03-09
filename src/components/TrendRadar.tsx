@@ -199,40 +199,76 @@ function TopTrendsGrid({ trends, onSelectTrend }: {
   );
 }
 
-// Weekly Pulse - Interactive chart
+// Weekly Pulse - Interactive chart with REAL historical data
 function WeeklyPulse({ trends }: { trends: TrendCardProps[] }) {
   const { lang } = useLanguage();
-  
-  // Generate weekly data from trends
-  const weeklyData = useMemo(() => {
-    const categories = ["Política", "Tecnologia", "Economia", "Entretenimento"];
-    const days = ["Seg", "Ter", "Qua", "Qui", "Sex", "Sáb", "Dom"];
-    
-    // Group trends by category
-    const categoryVolumes: Record<string, number> = {};
-    trends.forEach(t => {
-      const cat = t.category || "Geral";
-      const vol = parseInt(String(t.volume).replace(/[^0-9]/g, "")) || 1;
-      categoryVolumes[cat] = (categoryVolumes[cat] || 0) + vol;
-    });
+  const [weeklyData, setWeeklyData] = useState<Array<{
+    day: string;
+    politica: number;
+    tecnologia: number;
+    entretenimento: number;
+    esportes: number;
+  }>>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-    // Generate simulated weekly evolution based on current data
-    return days.map((day, idx) => {
-      const dayFactor = 0.7 + Math.random() * 0.6;
-      const weekendBoost = idx >= 5 ? 1.2 : 1;
-      
-      return {
-        day,
-        politica: Math.round((categoryVolumes["Política"] || 50) * dayFactor * weekendBoost / 7),
-        tecnologia: Math.round((categoryVolumes["Tecnologia"] || 80) * dayFactor / 7),
-        economia: Math.round((categoryVolumes["Economia"] || 40) * dayFactor / 7),
-        criticos: Math.round(trends.filter(t => {
-          const ch = parseFloat(t.change?.replace(/[^0-9.-]/g, "") || "0");
-          return ch > 100;
-        }).length * dayFactor * 3),
-      };
-    });
-  }, [trends]);
+  // Fetch real data from trend_snapshots
+  useEffect(() => {
+    const fetchHistoricalData = async () => {
+      try {
+        setLoading(true);
+        const { data, error: fetchError } = await supabase
+          .from("trend_snapshots")
+          .select("category, snapshot_at, volume_raw")
+          .gte("snapshot_at", new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString())
+          .order("snapshot_at", { ascending: true });
+
+        if (fetchError) throw fetchError;
+
+        // Group by day and category
+        const dayMap = new Map<string, Record<string, number>>();
+        const dayNames = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
+        
+        (data || []).forEach((row) => {
+          const date = new Date(row.snapshot_at);
+          const dayKey = dayNames[date.getDay()];
+          const cat = (row.category || "Geral").toLowerCase();
+          
+          if (!dayMap.has(dayKey)) {
+            dayMap.set(dayKey, { politica: 0, tecnologia: 0, entretenimento: 0, esportes: 0 });
+          }
+          
+          const dayData = dayMap.get(dayKey)!;
+          const vol = row.volume_raw || 0;
+          
+          if (cat.includes("polít")) dayData.politica += vol;
+          else if (cat.includes("tecno")) dayData.tecnologia += vol;
+          else if (cat.includes("entret") || cat.includes("cultur")) dayData.entretenimento += vol;
+          else if (cat.includes("espor")) dayData.esportes += vol;
+        });
+
+        // Convert to array in week order
+        const orderedDays = ["Seg", "Ter", "Qua", "Qui", "Sex", "Sáb", "Dom"];
+        const chartData = orderedDays.map(day => ({
+          day,
+          politica: Math.round((dayMap.get(day)?.politica || 0) / 1000000), // Convert to millions
+          tecnologia: Math.round((dayMap.get(day)?.tecnologia || 0) / 1000000),
+          entretenimento: Math.round((dayMap.get(day)?.entretenimento || 0) / 1000000),
+          esportes: Math.round((dayMap.get(day)?.esportes || 0) / 1000000),
+        }));
+
+        setWeeklyData(chartData);
+        setError(null);
+      } catch (err) {
+        console.error("Error fetching weekly data:", err);
+        setError("Erro ao carregar dados históricos");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchHistoricalData();
+  }, []);
 
   // Calculate weekly insights
   const insights = useMemo(() => {
