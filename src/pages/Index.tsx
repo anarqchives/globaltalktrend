@@ -788,7 +788,7 @@ const Index = () => {
                         onCollapse={() => { setRadarCollapsed(true); try { localStorage.setItem("radar-collapsed", "true"); } catch {} }}
                         onExpand={() => { setRadarCollapsed(false); try { localStorage.setItem("radar-collapsed", "false"); } catch {} }}
                       >
-                        <div className="h-full border-b border-border/20 bg-muted/8">
+                         <div className="h-full">
                           <TrendRadar
                             trends={filteredTrends}
                             allTrends={allTrends}
