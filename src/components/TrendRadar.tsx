@@ -22,6 +22,8 @@ interface TrendRadarProps {
   onFilterCountry?: (code: string) => void;
   onAnomalyClick?: (id: string) => void;
   onClose?: () => void;
+  isCollapsed?: boolean;
+  onToggleCollapse?: () => void;
 }
 
 const RADAR_STORAGE_KEY = "globaltalktrend-radar-collapsed";
