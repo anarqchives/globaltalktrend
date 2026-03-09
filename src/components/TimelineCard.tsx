@@ -249,7 +249,7 @@ const TimelineCard = ({
 
   return (
     <motion.div
-      className="timeline-card-wrapper"
+      className={`timeline-card-wrapper ${expanded ? 'timeline-card-expanded-wrapper' : ''}`}
       layout
       initial={{ opacity: 0, y: 12 }}
       whileInView={{ opacity: 1, y: 0 }}
