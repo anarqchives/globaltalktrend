@@ -365,7 +365,7 @@ function AnomaliesPredictive({ anomalies, lang, onAnomalyClick }: {
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: i * 0.03 }}
               onClick={() => setExpandedIdx(isExpanded ? null : i)}
-              className={`rounded-xl border border-border/30 bg-card/80 p-3 cursor-pointer transition-all hover:border-primary/20 flex flex-col gap-1.5 ${isExpanded ? "ring-1 ring-primary/15" : ""}`}
+              className={`rounded-lg border border-border/30 bg-card/80 p-2 cursor-pointer transition-all hover:border-primary/20 flex flex-col gap-1 ${isExpanded ? "ring-1 ring-primary/15" : ""}`}
             >
               {/* WHAT — Title */}
               <div>
