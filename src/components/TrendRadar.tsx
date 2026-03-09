@@ -729,7 +729,7 @@ export default function TrendRadar({ trends, allTrends, criticalMoments, anomali
                       <span className="hidden sm:inline">{tc.label}</span>
                       {tc.dot && <span className={`w-1.5 h-1.5 rounded-full ${tc.dot} animate-pulse`} />}
                       {tc.badge && (
-                        <span className="px-1 py-0 rounded-full bg-destructive text-destructive-foreground text-[8px] font-bold leading-tight animate-pulse">
+                        <span className={`px-1 py-0 rounded-full bg-destructive text-destructive-foreground text-[8px] font-bold leading-tight ${tc.pulse ? "animate-pulse" : ""}`}>
                           {tc.badge}
                         </span>
                       )}
