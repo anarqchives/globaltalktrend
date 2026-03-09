@@ -1243,7 +1243,7 @@ const GoogleMapView = ({
         const closeBtnSize = isMobile ? '32' : '22';
         const closeBtn = `<button id="map-tooltip-close" style="position:absolute;top:${isMobile ? '8px' : '10px'};right:${isMobile ? '8px' : '10px'};width:${closeBtnSize}px;height:${closeBtnSize}px;border-radius:${parseInt(closeBtnSize)/2}px;background:${isDark ? 'rgba(30,41,59,0.8)' : '#f1f5f9'};border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:${isMobile ? '14px' : '11px'};color:${subtext};transition:all 0.15s ease;z-index:10;touch-action:manipulation;">✕</button>`;
         
-        const filterBtn = `<button id="map-tooltip-filter" style="width:100%;background:${isDark ? 'rgba(59,130,246,0.9)' : '#3b82f6'};color:white;border:none;border-radius:${isMobile ? '12px' : '8px'};padding:${isMobile ? '12px' : '8px'};font-size:${isMobile ? '13px' : '11px'};font-weight:600;cursor:pointer;transition:all 0.2s ease;margin-top:8px;touch-action:manipulation;min-height:${isMobile ? '48px' : 'auto'};">${lang === "pt" ? "Filtrar timeline por este país" : "Filter timeline by country"}</button>`;
+        const filterBtn = `<button id="map-tooltip-filter" style="width:100%;background:${isDark ? 'rgba(59,130,246,0.9)' : '#3b82f6'};color:white;border:none;border-radius:${isMobile ? '12px' : '8px'};padding:${isMobile ? '12px' : '8px'};font-size:${isMobile ? '13px' : '11px'};font-weight:600;cursor:pointer;transition:all 0.2s ease;margin-top:8px;touch-action:manipulation;min-height:${isMobile ? '48px' : 'auto'};">${t("mapFilterByCountry")}</button>`;
 
         const tooltipWidth = isMobile ? 'min-width:280px;max-width:92vw' : 'min-width:260px;max-width:290px';
         const tooltipPadding = isMobile ? '18px' : '16px';
