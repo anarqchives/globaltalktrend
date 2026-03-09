@@ -21,7 +21,7 @@ import { useGamification } from "@/hooks/use-gamification";
 import { useSavedCards } from "@/hooks/use-saved-cards";
 import { useSavedFilters } from "@/hooks/use-saved-filters";
 import { supabase } from "@/integrations/supabase/client";
-import { ChevronRight, X, Map, Newspaper, LayoutList, LayoutGrid, RefreshCw, Camera } from "lucide-react";
+import { ChevronRight, X, Map, Newspaper, LayoutList, LayoutGrid, RefreshCw, Camera, ChevronsUp, ChevronsDown } from "lucide-react";
 import TagLegend from "@/components/TagLegend";
 import WatchlistPanel from "@/components/WatchlistPanel";
 import OnboardingFlow, { hasCompletedOnboarding } from "@/components/OnboardingFlow";
