@@ -487,17 +487,15 @@ export default function TrendRadar({ trends, allTrends, criticalMoments, anomali
   };
 
   return (
-    <div className="h-full flex flex-col overflow-hidden bg-muted/15 border-b border-border/30">
-      <Tabs value={tab} onValueChange={setTab} className="h-full flex flex-col">
-        {/* Header bar — unified with content */}
+    <div className="flex flex-col overflow-hidden bg-muted/15 border-b border-border/30">
+      <Tabs value={tab} onValueChange={setTab} className="flex flex-col">
+        {/* Header bar */}
         <div className="px-3 py-1.5 flex items-center gap-2 flex-shrink-0 bg-muted/30">
-          {/* Section label */}
           <div className="flex items-center gap-1.5 mr-1 flex-shrink-0">
             <Radar className="w-3.5 h-3.5 text-primary" />
             <span className="text-[10px] font-bold text-primary uppercase tracking-widest hidden sm:inline">Radar</span>
           </div>
 
-          {/* Tabs */}
           <TabsList className="h-7 bg-background/60 p-0.5 gap-0.5 rounded-lg border border-border/20 flex-shrink-0">
             {tabConfig.map(tc => {
               const Icon = tc.icon;
@@ -520,7 +518,6 @@ export default function TrendRadar({ trends, allTrends, criticalMoments, anomali
             })}
           </TabsList>
 
-          {/* Collapse toggle */}
           <Tooltip>
             <TooltipTrigger asChild>
               <button
@@ -537,105 +534,93 @@ export default function TrendRadar({ trends, allTrends, criticalMoments, anomali
           </Tooltip>
         </div>
 
-        {/* Content area — visually part of the same block */}
-        <AnimatePresence initial={false}>
-          {!collapsed && (
-            <motion.div
-              initial={{ height: 0, opacity: 0 }}
-              animate={{ height: "auto", opacity: 1 }}
-              exit={{ height: 0, opacity: 0 }}
-              transition={{ duration: 0.25, ease: "easeInOut" }}
-              className="flex-1 min-h-0 overflow-hidden"
-              style={{ minHeight: collapsed ? 0 : undefined }}
-            >
-              <div className="h-full relative">
-                {/* SIGNALS TAB */}
-                <TabsContent value="signals" className="absolute inset-0 mt-0 overflow-y-auto scrollbar-thin data-[state=inactive]:hidden animate-in fade-in-0 duration-200">
-                  <Legend tab="signals" lang={lang} />
-                  {!hasSignals && !hasEmerging ? (
-                    <TabLoadingState lang={lang} />
-                  ) : (
-                    <>
-                      {hasAnomalies && (
-                        <div className="mb-1">
-                          <div className="px-3 pt-1.5 pb-1">
-                            <span className="text-[9px] font-bold text-destructive uppercase tracking-wider flex items-center gap-1">
-                              <AlertTriangle className="w-3 h-3" />
-                              {lang === "pt" ? "Anomalias" : "Anomalies"}
-                              <span className="px-1 py-px rounded-full bg-destructive/10 text-destructive text-[7px] font-bold ml-0.5">{anomalies.length}</span>
-                            </span>
-                          </div>
-                          <AnomaliesPredictive anomalies={anomalies} lang={lang} onAnomalyClick={onAnomalyClick} />
-                        </div>
-                      )}
-                      {hasEmerging ? (
-                        <div>
-                          <div className="px-3 pt-1.5 pb-1">
-                            <span className="text-[9px] font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider flex items-center gap-1">
-                              <Sprout className="w-3 h-3" />
-                              {lang === "pt" ? "Sinais Emergentes" : "Emerging Signals"}
-                            </span>
-                          </div>
-                          <EmergingTrendsSection trends={trends} onSelectTrend={onSelectTrend} />
-                        </div>
-                      ) : !hasAnomalies && (
-                        <div className="flex flex-col items-center justify-center py-6 text-muted-foreground">
-                          <Sprout className="w-6 h-6 mb-1.5 opacity-20" />
-                          <p className="text-[10px]">{lang === "pt" ? "Nenhum sinal detectado." : "No signals detected."}</p>
-                        </div>
-                      )}
-                    </>
-                  )}
-                </TabsContent>
-
-                {/* CRITICAL TAB */}
-                <TabsContent value="critical" className="absolute inset-0 mt-0 overflow-y-auto scrollbar-thin data-[state=inactive]:hidden animate-in fade-in-0 duration-200">
-                  <Legend tab="critical" lang={lang} />
-                  {hasCritical ? (
-                    <CriticalMomentsSection moments={criticalMoments} onSelectTrend={onSelectTrend} />
-                  ) : (
-                    <div className="flex flex-col items-center justify-center py-6 text-muted-foreground">
-                      <Flame className="w-6 h-6 mb-1.5 opacity-20" />
-                      <p className="text-[10px] text-center px-4">
-                        {lang === "pt" ? "Nenhum evento crítico detectado." : "No critical events detected."}
-                      </p>
-                      {allTrends.length > 0 && (
-                        <div className="mt-2 w-full px-4">
-                          <p className="text-[8px] text-muted-foreground/50 mb-1 text-center">
-                            {lang === "pt" ? "Tendências ativas:" : "Active trends:"}
-                          </p>
-                          <div className="space-y-0.5">
-                            {allTrends.slice(0, 3).map((t, i) => (
-                              <div key={i} className="flex items-center gap-1 text-[9px] text-muted-foreground/70 bg-muted/20 rounded px-2 py-1">
-                                <span className="font-medium text-foreground/60 truncate flex-1">{t.title}</span>
-                                <span className="text-[8px] text-muted-foreground/50">{t.platform}</span>
-                                {t.change && <span className="text-emerald-500 font-bold text-[8px]">{t.change}</span>}
-                              </div>
-                            ))}
-                          </div>
-                        </div>
-                      )}
+        {/* Content — fixed height, collapsible */}
+        <div
+          className="overflow-hidden transition-all duration-300 ease-in-out"
+          style={{ height: collapsed ? 0 : 280 }}
+        >
+          <div className="h-[280px] relative">
+            <TabsContent value="signals" className="absolute inset-0 mt-0 overflow-y-auto scrollbar-thin data-[state=inactive]:hidden animate-in fade-in-0 duration-200">
+              <Legend tab="signals" lang={lang} />
+              {!hasSignals && !hasEmerging ? (
+                <TabLoadingState lang={lang} />
+              ) : (
+                <>
+                  {hasAnomalies && (
+                    <div className="mb-1">
+                      <div className="px-3 pt-1.5 pb-1">
+                        <span className="text-[9px] font-bold text-destructive uppercase tracking-wider flex items-center gap-1">
+                          <AlertTriangle className="w-3 h-3" />
+                          {lang === "pt" ? "Anomalias" : "Anomalies"}
+                          <span className="px-1 py-px rounded-full bg-destructive/10 text-destructive text-[7px] font-bold ml-0.5">{anomalies.length}</span>
+                        </span>
+                      </div>
+                      <AnomaliesPredictive anomalies={anomalies} lang={lang} onAnomalyClick={onAnomalyClick} />
                     </div>
                   )}
-                </TabsContent>
+                  {hasEmerging ? (
+                    <div>
+                      <div className="px-3 pt-1.5 pb-1">
+                        <span className="text-[9px] font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider flex items-center gap-1">
+                          <Sprout className="w-3 h-3" />
+                          {lang === "pt" ? "Sinais Emergentes" : "Emerging Signals"}
+                        </span>
+                      </div>
+                      <EmergingTrendsSection trends={trends} onSelectTrend={onSelectTrend} />
+                    </div>
+                  ) : !hasAnomalies && (
+                    <div className="flex flex-col items-center justify-center py-6 text-muted-foreground">
+                      <Sprout className="w-6 h-6 mb-1.5 opacity-20" />
+                      <p className="text-[10px]">{lang === "pt" ? "Nenhum sinal detectado." : "No signals detected."}</p>
+                    </div>
+                  )}
+                </>
+              )}
+            </TabsContent>
 
-                {/* TOP TAB */}
-                <TabsContent value="top" className="absolute inset-0 mt-0 overflow-y-auto scrollbar-thin data-[state=inactive]:hidden animate-in fade-in-0 duration-200">
-                  <Legend tab="top" lang={lang} />
-                  <div className="px-2 py-1.5">
-                    <TopTrendsGrid trends={allTrends} onSelectTrend={onSelectTrend} />
-                  </div>
-                </TabsContent>
+            <TabsContent value="critical" className="absolute inset-0 mt-0 overflow-y-auto scrollbar-thin data-[state=inactive]:hidden animate-in fade-in-0 duration-200">
+              <Legend tab="critical" lang={lang} />
+              {hasCritical ? (
+                <CriticalMomentsSection moments={criticalMoments} onSelectTrend={onSelectTrend} />
+              ) : (
+                <div className="flex flex-col items-center justify-center py-6 text-muted-foreground">
+                  <Flame className="w-6 h-6 mb-1.5 opacity-20" />
+                  <p className="text-[10px] text-center px-4">
+                    {lang === "pt" ? "Nenhum evento crítico detectado." : "No critical events detected."}
+                  </p>
+                  {allTrends.length > 0 && (
+                    <div className="mt-2 w-full px-4">
+                      <p className="text-[8px] text-muted-foreground/50 mb-1 text-center">
+                        {lang === "pt" ? "Tendências ativas:" : "Active trends:"}
+                      </p>
+                      <div className="space-y-0.5">
+                        {allTrends.slice(0, 3).map((t, i) => (
+                          <div key={i} className="flex items-center gap-1 text-[9px] text-muted-foreground/70 bg-muted/20 rounded px-2 py-1">
+                            <span className="font-medium text-foreground/60 truncate flex-1">{t.title}</span>
+                            <span className="text-[8px] text-muted-foreground/50">{t.platform}</span>
+                            {t.change && <span className="text-emerald-500 font-bold text-[8px]">{t.change}</span>}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+            </TabsContent>
 
-                {/* WEEKLY TAB */}
-                <TabsContent value="weekly" className="absolute inset-0 mt-0 overflow-y-auto scrollbar-thin data-[state=inactive]:hidden animate-in fade-in-0 duration-200">
-                  <Legend tab="weekly" lang={lang} />
-                  <WeeklyPulseDashboard trends={allTrends} />
-                </TabsContent>
+            <TabsContent value="top" className="absolute inset-0 mt-0 overflow-y-auto scrollbar-thin data-[state=inactive]:hidden animate-in fade-in-0 duration-200">
+              <Legend tab="top" lang={lang} />
+              <div className="px-2 py-1.5">
+                <TopTrendsGrid trends={allTrends} onSelectTrend={onSelectTrend} />
               </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
+            </TabsContent>
+
+            <TabsContent value="weekly" className="absolute inset-0 mt-0 overflow-y-auto scrollbar-thin data-[state=inactive]:hidden animate-in fade-in-0 duration-200">
+              <Legend tab="weekly" lang={lang} />
+              <WeeklyPulseDashboard trends={allTrends} />
+            </TabsContent>
+          </div>
+        </div>
       </Tabs>
     </div>
   );
