@@ -76,6 +76,14 @@ const Index = () => {
   const [compactMode, setCompactMode] = useState(false);
   const [allExpanded, setAllExpanded] = useState(false);
   const [allCollapsed, setAllCollapsed] = useState(false);
+  // Panel visibility for file-tab collapsible sections
+  const [panelVisibility, setPanelVisibility] = useState({
+    radar: true,
+    timeline: true,
+    map: true,
+  });
+  const togglePanel = (panel: "radar" | "timeline" | "map") =>
+    setPanelVisibility(prev => ({ ...prev, [panel]: !prev[panel] }));
   const timelinePanelRef = useRef<HTMLDivElement>(null);
   const { timelineRef: gridRef, columns: gridColumns } = useTimelineColumns();
 
