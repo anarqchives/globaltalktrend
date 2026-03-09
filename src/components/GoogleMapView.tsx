@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { setOptions, importLibrary } from "@googlemaps/js-api-loader";
 import { supabase } from "@/integrations/supabase/client";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { TrendCardProps } from "./TrendCard";
 import { Map, Flame, Globe, RefreshCw } from "lucide-react";
 
@@ -172,6 +173,7 @@ const GoogleMapView = ({
   highlightCountry,
 }: GoogleMapViewProps) => {
   const { t, lang } = useLanguage();
+  const isMobile = useIsMobile();
   const mapRef = useRef<HTMLDivElement>(null);
   const googleMapRef = useRef<any>(null);
   const markersRef = useRef<any[]>([]);
@@ -425,51 +427,50 @@ const GoogleMapView = ({
       const hoverScale = scale * 1.4;
       const flag = cp.id.length === 2 ? String.fromCodePoint(...[...cp.id.toUpperCase()].map(c => 0x1F1E6 + c.charCodeAt(0) - 65)) : "";
 
-      // Hover: show lightweight preview tooltip with status explanation
-      marker.addListener("mouseover", () => {
-        animateMarkerScale(scale, hoverScale);
-        // Don't show hover tooltip if click tooltip is already open for this country
-        if (openInfoCountryRef.current === cp.id) return;
-        if (!hoverInfoRef.current) return;
-        const hBg = isDark ? "rgba(19,22,32,0.97)" : "rgba(255,255,255,0.97)";
-        const hText = isDark ? "#e2e8f0" : "#111827";
-        const hSub = isDark ? "#94a3b8" : "#6b7280";
-        const { tag: hTag, color: hColor } = getIntensityLabel(intensity);
-        
-        // Status explanation based on intensity
-        let statusExplain = "";
-        if (intensity > 0.8) statusExplain = lang === "pt" ? "Volume excepcional detectado — múltiplas fontes ativas" : "Exceptional volume — multiple active sources";
-        else if (intensity > 0.6) statusExplain = lang === "pt" ? "Alta atividade — crescimento acelerado em várias plataformas" : "High activity — accelerating across platforms";
-        else if (intensity > 0.4) statusExplain = lang === "pt" ? "Atividade moderada — tendências em desenvolvimento" : "Moderate activity — developing trends";
-        else if (intensity > 0.2) statusExplain = lang === "pt" ? "Baixa atividade — poucos sinais detectados" : "Low activity — few signals detected";
-        else statusExplain = lang === "pt" ? "Monitoramento normal — sem anomalias" : "Normal monitoring — no anomalies";
-        
-        hoverInfoRef.current.setContent(`
-          <div style="font-family:Inter,system-ui,sans-serif;padding:10px 14px;min-width:190px;max-width:240px;background:${hBg};color:${hText};border-radius:14px;backdrop-filter:blur(16px);border:1px solid ${isDark ? 'rgba(45,51,72,0.5)' : 'rgba(0,0,0,0.08)'}; box-shadow:0 8px 24px rgba(0,0,0,0.12);">
-            <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
-              <span style="font-size:20px;">${flag}</span>
-              <div>
-                <div style="font-size:13px;font-weight:700;letter-spacing:-0.01em;">${cp.name}</div>
-                <div style="font-size:10px;color:${hSub};margin-top:1px;">${count} trend${count !== 1 ? 's' : ''} ${lang === "pt" ? "ativas" : "active"}</div>
+      // Hover: show lightweight preview tooltip (desktop only — on mobile use tap)
+      if (!isMobile) {
+        marker.addListener("mouseover", () => {
+          animateMarkerScale(scale, hoverScale);
+          if (openInfoCountryRef.current === cp.id) return;
+          if (!hoverInfoRef.current) return;
+          const hBg = isDark ? "rgba(19,22,32,0.97)" : "rgba(255,255,255,0.97)";
+          const hText = isDark ? "#e2e8f0" : "#111827";
+          const hSub = isDark ? "#94a3b8" : "#6b7280";
+          const { tag: hTag, color: hColor } = getIntensityLabel(intensity);
+          
+          let statusExplain = "";
+          if (intensity > 0.8) statusExplain = lang === "pt" ? "Volume excepcional detectado — múltiplas fontes ativas" : "Exceptional volume — multiple active sources";
+          else if (intensity > 0.6) statusExplain = lang === "pt" ? "Alta atividade — crescimento acelerado em várias plataformas" : "High activity — accelerating across platforms";
+          else if (intensity > 0.4) statusExplain = lang === "pt" ? "Atividade moderada — tendências em desenvolvimento" : "Moderate activity — developing trends";
+          else if (intensity > 0.2) statusExplain = lang === "pt" ? "Baixa atividade — poucos sinais detectados" : "Low activity — few signals detected";
+          else statusExplain = lang === "pt" ? "Monitoramento normal — sem anomalias" : "Normal monitoring — no anomalies";
+          
+          hoverInfoRef.current.setContent(`
+            <div style="font-family:Inter,system-ui,sans-serif;padding:10px 14px;min-width:190px;max-width:240px;background:${hBg};color:${hText};border-radius:14px;backdrop-filter:blur(16px);border:1px solid ${isDark ? 'rgba(45,51,72,0.5)' : 'rgba(0,0,0,0.08)'}; box-shadow:0 8px 24px rgba(0,0,0,0.12);">
+              <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
+                <span style="font-size:20px;">${flag}</span>
+                <div>
+                  <div style="font-size:13px;font-weight:700;letter-spacing:-0.01em;">${cp.name}</div>
+                  <div style="font-size:10px;color:${hSub};margin-top:1px;">${count} trend${count !== 1 ? 's' : ''} ${lang === "pt" ? "ativas" : "active"}</div>
+                </div>
               </div>
+              <div style="display:flex;align-items:center;gap:6px;margin-bottom:6px;">
+                <span style="background:${hColor};color:#fff;padding:2px 10px;border-radius:12px;font-size:9px;font-weight:700;letter-spacing:0.5px;">${hTag}</span>
+              </div>
+              <div style="font-size:10px;color:${hSub};line-height:1.4;margin-bottom:8px;">${statusExplain}</div>
+              <div style="font-size:9px;color:${isDark ? '#60a5fa' : '#3b82f6'};text-align:center;font-weight:600;padding-top:6px;border-top:1px solid ${isDark ? 'rgba(45,51,72,0.4)' : 'rgba(0,0,0,0.06)'};">👆 ${lang === "pt" ? "Clique para ver detalhes" : "Click for details"}</div>
             </div>
-            <div style="display:flex;align-items:center;gap:6px;margin-bottom:6px;">
-              <span style="background:${hColor};color:#fff;padding:2px 10px;border-radius:12px;font-size:9px;font-weight:700;letter-spacing:0.5px;">${hTag}</span>
-            </div>
-            <div style="font-size:10px;color:${hSub};line-height:1.4;margin-bottom:8px;">${statusExplain}</div>
-            <div style="font-size:9px;color:${isDark ? '#60a5fa' : '#3b82f6'};text-align:center;font-weight:600;padding-top:6px;border-top:1px solid ${isDark ? 'rgba(45,51,72,0.4)' : 'rgba(0,0,0,0.06)'};">👆 ${lang === "pt" ? "Clique para ver detalhes" : "Click for details"}</div>
-          </div>
-        `);
-        hoverInfoRef.current.open({ anchor: marker, map });
-      });
+          `);
+          hoverInfoRef.current.open({ anchor: marker, map });
+        });
 
-      marker.addListener("mouseout", () => {
-        animateMarkerScale(hoverScale, scale);
-        // Only close hover tooltip, never close the click InfoWindow
-        if (openInfoCountryRef.current !== cp.id && hoverInfoRef.current) {
-          hoverInfoRef.current.close();
-        }
-      });
+        marker.addListener("mouseout", () => {
+          animateMarkerScale(hoverScale, scale);
+          if (openInfoCountryRef.current !== cp.id && hoverInfoRef.current) {
+            hoverInfoRef.current.close();
+          }
+        });
+      }
 
       // Click: close hover tooltip, open persistent detail tooltip or filter
       marker.addListener("click", () => {
@@ -531,47 +532,51 @@ const GoogleMapView = ({
               const pColor = platformColors[tr.platform] || "#888";
               const changeVal = parseFloat(String(tr.change).replace(/[^0-9.-]/g, '')) || 0;
               const growthBadge = changeVal > 50
-                ? `<span style="position:absolute;top:8px;right:8px;background:#ef4444;color:#fff;font-size:9px;font-weight:600;padding:2px 6px;border-radius:10px;">+${Math.round(changeVal)}%</span>`
+                ? `<span style="position:absolute;top:${isMobile ? '10px' : '8px'};right:${isMobile ? '10px' : '8px'};background:#ef4444;color:#fff;font-size:${isMobile ? '10px' : '9px'};font-weight:600;padding:${isMobile ? '3px 8px' : '2px 6px'};border-radius:10px;">+${Math.round(changeVal)}%</span>`
                 : '';
-              return `<div class="map-tooltip-trend" data-trend-idx="${idx}" style="position:relative;display:flex;align-items:center;gap:6px;padding:8px 10px;border-radius:8px;cursor:pointer;margin-bottom:4px;background:transparent;border:1px solid ${border};transition:all 0.15s ease;">
-                <div style="width:3px;height:20px;border-radius:2px;background:${pColor};flex-shrink:0;"></div>
+              return `<div class="map-tooltip-trend" data-trend-idx="${idx}" style="position:relative;display:flex;align-items:center;gap:${isMobile ? '10px' : '6px'};padding:${isMobile ? '12px 14px' : '8px 10px'};border-radius:${isMobile ? '12px' : '8px'};cursor:pointer;margin-bottom:${isMobile ? '6px' : '4px'};background:transparent;border:1px solid ${border};transition:all 0.15s ease;min-height:${isMobile ? '48px' : 'auto'};touch-action:manipulation;">
+                <div style="width:${isMobile ? '4px' : '3px'};height:${isMobile ? '24px' : '20px'};border-radius:2px;background:${pColor};flex-shrink:0;"></div>
                 <div style="flex:1;min-width:0;">
-                  <div style="font-size:11px;color:${text};overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:180px;font-weight:500;">${tr.title.slice(0, 40)}${tr.title.length > 40 ? '…' : ''}</div>
-                  <div style="display:flex;align-items:center;gap:4px;margin-top:2px;">
-                    <span style="font-size:8px;background:${badgeBg};color:${subtext};padding:1px 5px;border-radius:4px;font-weight:600;">${tr.volume}</span>
-                    <span style="font-size:8px;color:${subtext};">${tr.platform}</span>
+                  <div style="font-size:${isMobile ? '13px' : '11px'};color:${text};overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:${isMobile ? '220px' : '180px'};font-weight:500;">${tr.title.slice(0, isMobile ? 50 : 40)}${tr.title.length > (isMobile ? 50 : 40) ? '…' : ''}</div>
+                  <div style="display:flex;align-items:center;gap:${isMobile ? '6px' : '4px'};margin-top:${isMobile ? '4px' : '2px'};">
+                    <span style="font-size:${isMobile ? '10px' : '8px'};background:${badgeBg};color:${subtext};padding:${isMobile ? '2px 7px' : '1px 5px'};border-radius:4px;font-weight:600;">${tr.volume}</span>
+                    <span style="font-size:${isMobile ? '10px' : '8px'};color:${subtext};">${tr.platform}</span>
                   </div>
                 </div>
                 ${growthBadge}
               </div>`;
             }).join('')
-          : `<div style="font-size:11px;color:${subtext};padding:12px 0;text-align:center;">${t("noTrends")}</div>`;
+          : `<div style="font-size:${isMobile ? '13px' : '11px'};color:${subtext};padding:12px 0;text-align:center;">${t("noTrends")}</div>`;
 
         const moreCount = trends.filter(tr => tr.countryCode === cp.id).length - 5;
         const moreSection = moreCount > 0
-          ? `<div style="text-align:center;font-size:10px;color:${subtext};padding:6px;background:${badgeBg};border-radius:8px;margin-bottom:10px;">+ ${moreCount} outras tendências</div>`
+          ? `<div style="text-align:center;font-size:${isMobile ? '12px' : '10px'};color:${subtext};padding:${isMobile ? '8px' : '6px'};background:${badgeBg};border-radius:8px;margin-bottom:10px;">+ ${moreCount} ${lang === "pt" ? "outras tendências" : "more trends"}</div>`
           : '';
 
-        const closeBtn = `<button id="map-tooltip-close" style="position:absolute;top:10px;right:10px;width:22px;height:22px;border-radius:11px;background:${isDark ? 'rgba(30,41,59,0.8)' : '#f1f5f9'};border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:11px;color:${subtext};transition:all 0.15s ease;z-index:10;">✕</button>`;
+        const closeBtnSize = isMobile ? '32' : '22';
+        const closeBtn = `<button id="map-tooltip-close" style="position:absolute;top:${isMobile ? '8px' : '10px'};right:${isMobile ? '8px' : '10px'};width:${closeBtnSize}px;height:${closeBtnSize}px;border-radius:${parseInt(closeBtnSize)/2}px;background:${isDark ? 'rgba(30,41,59,0.8)' : '#f1f5f9'};border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:${isMobile ? '14px' : '11px'};color:${subtext};transition:all 0.15s ease;z-index:10;touch-action:manipulation;">✕</button>`;
         
-        const filterBtn = `<button id="map-tooltip-filter" style="width:100%;background:${isDark ? 'rgba(59,130,246,0.9)' : '#3b82f6'};color:white;border:none;border-radius:8px;padding:8px;font-size:11px;font-weight:600;cursor:pointer;transition:all 0.2s ease;margin-top:8px;">${lang === "pt" ? "Filtrar timeline por este país" : "Filter timeline by country"}</button>`;
+        const filterBtn = `<button id="map-tooltip-filter" style="width:100%;background:${isDark ? 'rgba(59,130,246,0.9)' : '#3b82f6'};color:white;border:none;border-radius:${isMobile ? '12px' : '8px'};padding:${isMobile ? '12px' : '8px'};font-size:${isMobile ? '13px' : '11px'};font-weight:600;cursor:pointer;transition:all 0.2s ease;margin-top:8px;touch-action:manipulation;min-height:${isMobile ? '48px' : 'auto'};">${lang === "pt" ? "Filtrar timeline por este país" : "Filter timeline by country"}</button>`;
+
+        const tooltipWidth = isMobile ? 'min-width:280px;max-width:92vw' : 'min-width:260px;max-width:290px';
+        const tooltipPadding = isMobile ? '18px' : '16px';
 
         infoWindowRef.current.setContent(`
-          <div style="font-family:Inter,system-ui,-apple-system,sans-serif;position:relative;padding:16px;min-width:260px;max-width:290px;background:${bg};color:${text};border-radius:16px;backdrop-filter:blur(20px);border:1px solid ${border};box-shadow:0 12px 32px rgba(0,0,0,0.15);">
+          <div style="font-family:Inter,system-ui,-apple-system,sans-serif;position:relative;padding:${tooltipPadding};${tooltipWidth};background:${bg};color:${text};border-radius:16px;backdrop-filter:blur(20px);border:1px solid ${border};box-shadow:0 12px 32px rgba(0,0,0,0.15);">
             ${closeBtn}
-            <div style="display:flex;align-items:center;gap:8px;padding-bottom:10px;border-bottom:1px solid ${border};">
-              <span style="font-size:24px;line-height:1;">${flag}</span>
+            <div style="display:flex;align-items:center;gap:${isMobile ? '12px' : '8px'};padding-bottom:${isMobile ? '12px' : '10px'};border-bottom:1px solid ${border};">
+              <span style="font-size:${isMobile ? '28px' : '24px'};line-height:1;">${flag}</span>
               <div>
-                <div style="font-size:15px;font-weight:700;color:${text};letter-spacing:-0.02em;">${cp.name}</div>
-                <div style="font-size:10px;color:${subtext};margin-top:1px;">${count} trends ativas</div>
+                <div style="font-size:${isMobile ? '17px' : '15px'};font-weight:700;color:${text};letter-spacing:-0.02em;">${cp.name}</div>
+                <div style="font-size:${isMobile ? '12px' : '10px'};color:${subtext};margin-top:1px;">${count} trends ${lang === "pt" ? "ativas" : "active"}</div>
               </div>
             </div>
-            <div style="margin:10px 0;background:${critSectionBg};border-radius:12px;padding:10px 12px;border-left:3px solid ${critColor};">
-              <span style="display:inline-flex;align-items:center;gap:4px;background:${critColor};color:#fff;padding:2px 8px;border-radius:10px;font-weight:700;font-size:9px;letter-spacing:0.5px;text-transform:uppercase;margin-bottom:6px;">${critTag}</span>
-              <p style="font-size:11px;color:${isDark ? '#94a3b8' : '#475569'};line-height:1.4;margin:0;">${critReason}</p>
+            <div style="margin:${isMobile ? '12px 0' : '10px 0'};background:${critSectionBg};border-radius:12px;padding:${isMobile ? '12px 14px' : '10px 12px'};border-left:3px solid ${critColor};">
+              <span style="display:inline-flex;align-items:center;gap:4px;background:${critColor};color:#fff;padding:${isMobile ? '3px 10px' : '2px 8px'};border-radius:10px;font-weight:700;font-size:${isMobile ? '10px' : '9px'};letter-spacing:0.5px;text-transform:uppercase;margin-bottom:6px;">${critTag}</span>
+              <p style="font-size:${isMobile ? '12px' : '11px'};color:${isDark ? '#94a3b8' : '#475569'};line-height:1.4;margin:0;">${critReason}</p>
             </div>
-            ${countryTrends.length > 0 ? `<div style="font-size:10px;font-weight:700;color:${text};text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;">Principais tendências</div>` : ''}
-            <div style="border-radius:10px;max-height:140px;overflow-y:auto;">${trendsList}</div>
+            ${countryTrends.length > 0 ? `<div style="font-size:${isMobile ? '11px' : '10px'};font-weight:700;color:${text};text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;">${lang === "pt" ? "Principais tendências" : "Top trends"}</div>` : ''}
+            <div style="border-radius:10px;max-height:${isMobile ? '200px' : '140px'};overflow-y:auto;-webkit-overflow-scrolling:touch;">${trendsList}</div>
             ${moreSection}
             ${filterBtn}
           </div>
@@ -650,7 +655,7 @@ const GoogleMapView = ({
 
       markersRef.current.push(marker);
     });
-  }, [trendCounts, maxCount, avgCount, selectedCountry, mapLoaded, onSelectCountry, t, trends, isDark]);
+  }, [trendCounts, maxCount, avgCount, selectedCountry, mapLoaded, onSelectCountry, t, trends, isDark, isMobile]);
 
   // Pan to selected/highlighted country
   useEffect(() => {
@@ -767,7 +772,7 @@ const GoogleMapView = ({
         </div>
       )}
 
-      {/* Dynamic interactive legend */}
+      {/* Dynamic interactive legend — compact on mobile */}
       <AnimatePresence>
         {heatmapEnabled && (
           <motion.div
@@ -775,60 +780,93 @@ const GoogleMapView = ({
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 10 }}
             transition={{ duration: 0.25, ease: "easeOut" }}
-            className="absolute bottom-[30px] right-5 z-20 bg-white/95 dark:bg-card/95 backdrop-blur-[12px] border border-white/50 dark:border-white/10 rounded-2xl shadow-[0_4px_20px_rgba(0,0,0,0.08)] dark:shadow-[0_4px_20px_rgba(0,0,0,0.25)] px-3 py-2.5 min-w-[200px]"
+            className={`absolute z-20 bg-white/95 dark:bg-card/95 backdrop-blur-[12px] border border-white/50 dark:border-white/10 shadow-[0_4px_20px_rgba(0,0,0,0.08)] dark:shadow-[0_4px_20px_rgba(0,0,0,0.25)] ${
+              isMobile
+                ? 'bottom-2 left-2 right-2 rounded-xl px-3 py-2'
+                : 'bottom-[30px] right-5 rounded-2xl px-3 py-2.5 min-w-[200px]'
+            }`}
           >
-            <p className="text-[11px] font-medium text-foreground mb-1.5 tracking-wide flex items-center gap-1.5">
-              🌡️ Densidade de Trends
-            </p>
-            {/* Animated gradient bar with shine */}
-            <div className="relative h-5 rounded-[10px] overflow-hidden mb-1.5" style={{ boxShadow: "inset 0 1px 3px rgba(0,0,0,0.1)" }}>
-              <div
-                className="w-full h-full"
-                style={{
-                  background: "linear-gradient(90deg, #00a6ff, #00ff9d, #ffff00, #ffaa00, #ff3300)",
-                  backgroundSize: "200% 100%",
-                  animation: "gradientFlow 8s ease infinite",
-                }}
-              />
-              {/* Shine overlay */}
-              <div
-                className="absolute inset-0 pointer-events-none"
-                style={{
-                  background: "linear-gradient(90deg, rgba(255,255,255,0) 0%, rgba(255,255,255,0.3) 50%, rgba(255,255,255,0) 100%)",
-                  animation: "legendShine 3s infinite",
-                }}
-              />
-              {/* Current intensity marker */}
-              <motion.div
-                className="absolute top-[-3px] w-1 h-[26px] bg-white border-2 border-foreground/70 rounded-sm"
-                style={{ left: `${currentMaxIntensity * 100}%` }}
-                animate={{ left: `${currentMaxIntensity * 100}%` }}
-                transition={{ type: "spring", stiffness: 200, damping: 20 }}
-              >
-                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-3 h-3 rounded-full bg-white/50 animate-pulse" />
-              </motion.div>
-            </div>
-            <div className="flex justify-between text-[9px] text-muted-foreground uppercase tracking-wider mb-2">
-              <span>Baixa</span>
-              <span>Média</span>
-              <span>Alta</span>
-              <span>Crítica</span>
-            </div>
-            {/* Live stats */}
-            <div className="flex justify-between pt-2 border-t border-border/30">
-              <div className="flex flex-col items-center">
-                <span className="text-[9px] text-muted-foreground uppercase tracking-wider">Máxima</span>
-                <span className="text-sm font-medium text-foreground">{maxCount}</span>
+            {isMobile ? (
+              /* Compact mobile legend */
+              <div className="flex items-center gap-3">
+                <div className="flex-1">
+                  <div className="relative h-3 rounded-full overflow-hidden" style={{ boxShadow: "inset 0 1px 2px rgba(0,0,0,0.1)" }}>
+                    <div
+                      className="w-full h-full"
+                      style={{
+                        background: "linear-gradient(90deg, #00a6ff, #00ff9d, #ffff00, #ffaa00, #ff3300)",
+                      }}
+                    />
+                  </div>
+                  <div className="flex justify-between text-[8px] text-muted-foreground uppercase tracking-wider mt-0.5">
+                    <span>{lang === "pt" ? "Baixa" : "Low"}</span>
+                    <span>{lang === "pt" ? "Crítica" : "Critical"}</span>
+                  </div>
+                </div>
+                <div className="flex gap-3 text-center flex-shrink-0">
+                  <div>
+                    <span className="text-xs font-semibold text-foreground tabular-nums">{activeCountries}</span>
+                    <span className="text-[8px] text-muted-foreground block">{lang === "pt" ? "Países" : "Countries"}</span>
+                  </div>
+                  <div>
+                    <span className="text-xs font-semibold text-foreground tabular-nums">{totalTrends}</span>
+                    <span className="text-[8px] text-muted-foreground block">Trends</span>
+                  </div>
+                </div>
               </div>
-              <div className="flex flex-col items-center">
-                <span className="text-[9px] text-muted-foreground uppercase tracking-wider">Países</span>
-                <span className="text-sm font-medium text-foreground">{activeCountries}</span>
-              </div>
-              <div className="flex flex-col items-center">
-                <span className="text-[9px] text-muted-foreground uppercase tracking-wider">Total</span>
-                <span className="text-sm font-medium text-foreground">{totalTrends}</span>
-              </div>
-            </div>
+            ) : (
+              /* Full desktop legend */
+              <>
+                <p className="text-[11px] font-medium text-foreground mb-1.5 tracking-wide flex items-center gap-1.5">
+                  🌡️ {lang === "pt" ? "Densidade de Trends" : "Trend Density"}
+                </p>
+                <div className="relative h-5 rounded-[10px] overflow-hidden mb-1.5" style={{ boxShadow: "inset 0 1px 3px rgba(0,0,0,0.1)" }}>
+                  <div
+                    className="w-full h-full"
+                    style={{
+                      background: "linear-gradient(90deg, #00a6ff, #00ff9d, #ffff00, #ffaa00, #ff3300)",
+                      backgroundSize: "200% 100%",
+                      animation: "gradientFlow 8s ease infinite",
+                    }}
+                  />
+                  <div
+                    className="absolute inset-0 pointer-events-none"
+                    style={{
+                      background: "linear-gradient(90deg, rgba(255,255,255,0) 0%, rgba(255,255,255,0.3) 50%, rgba(255,255,255,0) 100%)",
+                      animation: "legendShine 3s infinite",
+                    }}
+                  />
+                  <motion.div
+                    className="absolute top-[-3px] w-1 h-[26px] bg-white border-2 border-foreground/70 rounded-sm"
+                    style={{ left: `${currentMaxIntensity * 100}%` }}
+                    animate={{ left: `${currentMaxIntensity * 100}%` }}
+                    transition={{ type: "spring", stiffness: 200, damping: 20 }}
+                  >
+                    <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-3 h-3 rounded-full bg-white/50 animate-pulse" />
+                  </motion.div>
+                </div>
+                <div className="flex justify-between text-[9px] text-muted-foreground uppercase tracking-wider mb-2">
+                  <span>{lang === "pt" ? "Baixa" : "Low"}</span>
+                  <span>{lang === "pt" ? "Média" : "Medium"}</span>
+                  <span>{lang === "pt" ? "Alta" : "High"}</span>
+                  <span>{lang === "pt" ? "Crítica" : "Critical"}</span>
+                </div>
+                <div className="flex justify-between pt-2 border-t border-border/30">
+                  <div className="flex flex-col items-center">
+                    <span className="text-[9px] text-muted-foreground uppercase tracking-wider">{lang === "pt" ? "Máxima" : "Max"}</span>
+                    <span className="text-sm font-medium text-foreground">{maxCount}</span>
+                  </div>
+                  <div className="flex flex-col items-center">
+                    <span className="text-[9px] text-muted-foreground uppercase tracking-wider">{lang === "pt" ? "Países" : "Countries"}</span>
+                    <span className="text-sm font-medium text-foreground">{activeCountries}</span>
+                  </div>
+                  <div className="flex flex-col items-center">
+                    <span className="text-[9px] text-muted-foreground uppercase tracking-wider">Total</span>
+                    <span className="text-sm font-medium text-foreground">{totalTrends}</span>
+                  </div>
+                </div>
+              </>
+            )}
           </motion.div>
         )}
       </AnimatePresence>

@@ -103,7 +103,7 @@ export const countries = [
   ]},
 ];
 
-const selectClass = "appearance-none bg-transparent text-foreground text-[12px] font-medium pl-3 pr-7 h-8 min-h-[32px] max-h-[32px] rounded-full cursor-pointer min-w-0 hover:bg-muted/50 dark:hover:bg-white/5 transition-colors focus:outline-none focus:ring-0 box-border";
+const selectClass = "appearance-none bg-transparent text-foreground text-[12px] font-medium pl-3 pr-7 h-8 min-h-[32px] max-h-[32px] rounded-full cursor-pointer min-w-0 hover:bg-muted/50 dark:hover:bg-white/5 transition-colors focus:outline-none focus:ring-0 box-border touch-manipulation";
 
 const FilterBar = ({ filters, onChange, onForceReset, onSaveFilter, isLoggedIn }: FilterBarProps) => {
   const { t } = useLanguage();
@@ -149,8 +149,8 @@ const FilterBar = ({ filters, onChange, onForceReset, onSaveFilter, isLoggedIn }
   ];
 
   return (
-    <div className="px-3 md:px-6 py-1.5 sticky top-12 z-40 bg-background/90 backdrop-blur-sm">
-      <div className="flex items-center gap-0.5 md:gap-1 overflow-x-auto scrollbar-thin flex-nowrap -webkit-overflow-scrolling-touch pb-1 md:pb-0">
+    <div className="px-2 md:px-6 py-1.5 sticky top-12 z-40 bg-background/90 backdrop-blur-sm">
+      <div className="flex items-center gap-0.5 md:gap-1 overflow-x-auto scrollbar-thin flex-nowrap pb-1 md:pb-0" style={{ WebkitOverflowScrolling: 'touch' }}>
         <div className="relative flex-shrink-0">
           <select
             className={selectClass}
@@ -184,9 +184,9 @@ const FilterBar = ({ filters, onChange, onForceReset, onSaveFilter, isLoggedIn }
         </div>
 
         <div className="relative flex-shrink-0">
-          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[11px] text-muted-foreground pointer-events-none">{t("filterCategory")}:</span>
+          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[11px] text-muted-foreground pointer-events-none hidden md:inline">{t("filterCategory")}:</span>
           <select
-            className={`${selectClass} pl-[80px]`}
+            className={`${selectClass} md:pl-[80px]`}
             value={filters.category}
             onChange={(e) => update("category", e.target.value)}
             aria-label={t("category")}
@@ -199,9 +199,9 @@ const FilterBar = ({ filters, onChange, onForceReset, onSaveFilter, isLoggedIn }
         </div>
 
         <div className="relative flex-shrink-0">
-          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[11px] text-muted-foreground pointer-events-none">{t("filterSource")}:</span>
+          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[11px] text-muted-foreground pointer-events-none hidden md:inline">{t("filterSource")}:</span>
           <select
-            className={`${selectClass} pl-[52px]`}
+            className={`${selectClass} md:pl-[52px]`}
             value={filters.type}
             onChange={(e) => update("type", e.target.value)}
             aria-label={t("type")}

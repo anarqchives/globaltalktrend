@@ -677,16 +677,18 @@ const Index = () => {
                 <div className="h-full">{renderMap()}</div>
               )}
             </div>
-            <button
+            <motion.button
               onClick={() => setViewMode(v => v === "timeline" ? "map" : "timeline")}
-              className="absolute bottom-4 right-4 z-30 flex items-center gap-1.5 px-3 py-2 rounded-full bg-primary text-primary-foreground text-xs font-semibold shadow-lg hover:bg-primary/90 transition-all"
+              className="absolute bottom-4 right-4 z-30 flex items-center gap-2 px-4 py-3 rounded-full bg-primary text-primary-foreground text-xs font-semibold shadow-[0_4px_20px_rgba(0,0,0,0.15)] active:scale-95 transition-transform touch-manipulation"
+              whileTap={{ scale: 0.93 }}
+              style={{ minHeight: 48, minWidth: 48 }}
             >
               {viewMode === "timeline" ? (
-                <><Map className="w-3.5 h-3.5" /> {t("map")}</>
+                <><Map className="w-4 h-4" /> {t("map")}</>
               ) : (
-                <><Newspaper className="w-3.5 h-3.5" /> {t("timeline")}</>
+                <><Newspaper className="w-4 h-4" /> {t("timeline")}</>
               )}
-            </button>
+            </motion.button>
           </div>
         ) : (
           <ResizablePanelGroup direction="horizontal" className="flex-1 min-h-0">
