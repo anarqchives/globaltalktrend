@@ -65,7 +65,13 @@ type TranslationKey =
   | "mapFlowMap" | "mapSentiment" | "mapHeatmap"
   | "mapFlowLegendTitle" | "mapFlowOrigin" | "mapFlowDestination" | "mapFlowPropagation" | "mapFlowTimeDelta" | "mapFlowClickToFilter" | "mapFlowNoData"
   | "mapSentLegendTitle" | "mapSentPositive" | "mapSentNegative" | "mapSentMixed" | "mapSentNeutral" | "mapSentBreakdown" | "mapSentTopTrends" | "mapSentNoData"
-  | "mapSentVolume" | "mapSentGrowth" | "mapSentActiveTrends";
+  | "mapSentVolume" | "mapSentGrowth" | "mapSentActiveTrends"
+  // Card expanded metrics
+  | "growth" | "volumeLabel" | "sourcesLabel" | "narrativeOrigin" | "confidenceLabel"
+  | "confidenceHigh" | "confidenceMedium" | "confidenceLow"
+  | "propagationPath" | "sourceLabel" | "sentimentAnalysis"
+  | "tviGrowthLabel" | "tviVolumeLabel" | "tviSourcesLabel" | "tviGeographyLabel" | "tviDescription"
+  | "sourcesSingular" | "sourcesPlural";
 
 const translations: Record<LangCode, Record<TranslationKey, string>> = {
   pt: {
