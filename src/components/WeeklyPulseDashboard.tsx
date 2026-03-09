@@ -1054,7 +1054,7 @@ export default function WeeklyPulseDashboard({ trends }: { trends: TrendCardProp
       </div>
 
       {/* ═══════ KPI ROW ═══════ */}
-      <div className="grid grid-cols-5 gap-1.5">
+      <div className="grid grid-cols-3 sm:grid-cols-5 gap-1.5">
         <KPICard icon={<BarChart3 className="w-3.5 h-3.5" />}
           value={fmtNum(analysis.totalVolume)}
           label={t(lang, "Volume total", "Total Volume", "Volumen total")}
@@ -1147,7 +1147,7 @@ export default function WeeklyPulseDashboard({ trends }: { trends: TrendCardProp
       </AnimatePresence>
 
       {/* ═══════ MOMENTUM + LIVE FEED ═══════ */}
-      <div className="grid grid-cols-2 gap-1.5">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5">
         <div className="rounded-xl border border-border/50 bg-card p-2.5">
           <MomentumGauge categories={analysis.categoryMomentum} lang={lang} />
         </div>
@@ -1162,7 +1162,7 @@ export default function WeeklyPulseDashboard({ trends }: { trends: TrendCardProp
       </div>
 
       {/* ═══════ NARRATIVE CLUSTERS + GEO ═══════ */}
-      <div className="grid grid-cols-2 gap-1.5">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5">
         <div className="rounded-xl border border-border/50 bg-card p-2.5">
           <NarrativeClusters clusters={analysis.narrativeClusters} lang={lang} />
         </div>
@@ -1172,7 +1172,7 @@ export default function WeeklyPulseDashboard({ trends }: { trends: TrendCardProp
       </div>
 
       {/* ═══════ HEATMAP + TERM CLOUD ═══════ */}
-      <div className="grid grid-cols-2 gap-1.5">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5">
         <div className="rounded-xl border border-border/50 bg-card p-2.5">
           <span className="text-[9px] font-bold text-muted-foreground uppercase tracking-wider flex items-center gap-1 mb-1">
             <Target className="w-3 h-3" />Trend Pulse Matrix
