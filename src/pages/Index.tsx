@@ -23,6 +23,8 @@ import { useSavedFilters } from "@/hooks/use-saved-filters";
 import { supabase } from "@/integrations/supabase/client";
 import { ChevronRight, X, Map, Newspaper, LayoutList, LayoutGrid, RefreshCw, Camera } from "lucide-react";
 import TagLegend from "@/components/TagLegend";
+import WatchlistPanel from "@/components/WatchlistPanel";
+import OnboardingFlow, { hasCompletedOnboarding } from "@/components/OnboardingFlow";
 import { useUserActivity } from "@/hooks/use-user-activity";
 import {
   ResizablePanelGroup,
@@ -100,6 +102,14 @@ const Index = () => {
   const [criticalDismissed, setCriticalDismissed] = useState(false);
   const [emergingDismissed, setEmergingDismissed] = useState(false);
   const [heatmapDismissed, setHeatmapDismissed] = useState(false);
+  const [showOnboarding, setShowOnboarding] = useState(false);
+
+  // Show onboarding for new logged-in users
+  useEffect(() => {
+    if (user?.id && !hasCompletedOnboarding(user.id)) {
+      setShowOnboarding(true);
+    }
+  }, [user?.id]);
 
   // Reset dismissed state when new critical moments appear
   useEffect(() => {
@@ -420,6 +430,11 @@ const Index = () => {
         </div>
       </div>
 
+      {/* Watchlist Panel */}
+      {user && (
+        <WatchlistPanel trends={filteredTrends} onSelectTrend={handleSelectTrend} />
+      )}
+
       {breadcrumbs.length > 0 && (
         <div className="px-2 py-1 flex items-center gap-1 flex-wrap text-[10px]">
           <span className="text-muted-foreground/60">{t("showing")}:</span>
@@ -727,6 +742,11 @@ const Index = () => {
         lastUpdated={lastUpdated}
         totalTrends={filteredTrends.length}
       />
+
+      {/* Onboarding Flow */}
+      {showOnboarding && user?.id && (
+        <OnboardingFlow userId={user.id} onComplete={() => setShowOnboarding(false)} />
+      )}
     </div>
   );
 };

@@ -11,6 +11,7 @@ import { supabase } from "@/integrations/supabase/client";
 import AlertModal from "./AlertModal";
 import TrendFeedback from "./TrendFeedback";
 import PropagationTimeline from "./PropagationTimeline";
+import FreshnessIndicator from "./FreshnessIndicator";
 import { CrossPlatformCluster } from "@/hooks/use-cross-platform";
 
 const platformIcons: Record<string, { emoji: string; color: string }> = {
@@ -289,6 +290,7 @@ const TimelineCard = ({
             <span className="text-[10px] font-semibold flex-shrink-0" style={{ color: pf.color }}>
               {platform}
             </span>
+            <FreshnessIndicator publishedAt={publishedAt} time={time} />
             <span className="text-[10px] text-muted-foreground flex-shrink-0">{localizedTime}</span>
             {flag && <span className="text-[11px] flex-shrink-0">{flag}</span>}
           </div>
