@@ -468,19 +468,6 @@ const TimelineCard = ({
             <Share2 className="w-3 h-3" />
             {t("share")}
           </button>
-          <button
-            onClick={async (e) => {
-              e.stopPropagation();
-              const { downloadShareImage } = await import("@/lib/share-image");
-              downloadShareImage({ title, platform, volume: volume || "0", change: change || "0%", changePositive: !!changePositive, category });
-              toast({ title: "📸 Screenshot gerado!", description: title.slice(0, 50) });
-              onTrackAction?.("screenshot", 3, { title, platform });
-            }}
-            className="inline-flex items-center gap-1 px-2 py-1 min-h-[36px] min-w-[36px] rounded-md text-[10px] font-medium text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors"
-          >
-            <Camera className="w-3 h-3" />
-            📸
-          </button>
 
           <div className="flex-1" />
 
