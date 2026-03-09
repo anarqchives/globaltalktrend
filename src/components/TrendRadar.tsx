@@ -11,6 +11,7 @@ import { TrendCardProps } from "./TrendCard";
 import { CriticalMoment } from "@/hooks/use-critical-moments";
 import { AnomalyAlert } from "@/hooks/use-anomaly-alerts";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { supabase } from "@/integrations/supabase/client";
 
 interface TrendRadarProps {
   trends: TrendCardProps[];
@@ -199,63 +200,125 @@ function TopTrendsGrid({ trends, onSelectTrend }: {
   );
 }
 
-// Weekly Pulse - Interactive chart
+// Weekly Pulse - Interactive chart with REAL historical data
 function WeeklyPulse({ trends }: { trends: TrendCardProps[] }) {
   const { lang } = useLanguage();
-  
-  // Generate weekly data from trends
-  const weeklyData = useMemo(() => {
-    const categories = ["Política", "Tecnologia", "Economia", "Entretenimento"];
-    const days = ["Seg", "Ter", "Qua", "Qui", "Sex", "Sáb", "Dom"];
-    
-    // Group trends by category
-    const categoryVolumes: Record<string, number> = {};
-    trends.forEach(t => {
-      const cat = t.category || "Geral";
-      const vol = parseInt(String(t.volume).replace(/[^0-9]/g, "")) || 1;
-      categoryVolumes[cat] = (categoryVolumes[cat] || 0) + vol;
-    });
+  const [weeklyData, setWeeklyData] = useState<Array<{
+    day: string;
+    politica: number;
+    tecnologia: number;
+    entretenimento: number;
+    esportes: number;
+  }>>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-    // Generate simulated weekly evolution based on current data
-    return days.map((day, idx) => {
-      const dayFactor = 0.7 + Math.random() * 0.6;
-      const weekendBoost = idx >= 5 ? 1.2 : 1;
-      
-      return {
-        day,
-        politica: Math.round((categoryVolumes["Política"] || 50) * dayFactor * weekendBoost / 7),
-        tecnologia: Math.round((categoryVolumes["Tecnologia"] || 80) * dayFactor / 7),
-        economia: Math.round((categoryVolumes["Economia"] || 40) * dayFactor / 7),
-        criticos: Math.round(trends.filter(t => {
-          const ch = parseFloat(t.change?.replace(/[^0-9.-]/g, "") || "0");
-          return ch > 100;
-        }).length * dayFactor * 3),
-      };
-    });
-  }, [trends]);
+  // Fetch real data from trend_snapshots
+  useEffect(() => {
+    const fetchHistoricalData = async () => {
+      try {
+        setLoading(true);
+        const { data, error: fetchError } = await supabase
+          .from("trend_snapshots")
+          .select("category, snapshot_at, volume_raw")
+          .gte("snapshot_at", new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString())
+          .order("snapshot_at", { ascending: true });
+
+        if (fetchError) throw fetchError;
+
+        // Group by day and category
+        const dayMap = new Map<string, Record<string, number>>();
+        const dayNames = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
+        
+        (data || []).forEach((row) => {
+          const date = new Date(row.snapshot_at);
+          const dayKey = dayNames[date.getDay()];
+          const cat = (row.category || "Geral").toLowerCase();
+          
+          if (!dayMap.has(dayKey)) {
+            dayMap.set(dayKey, { politica: 0, tecnologia: 0, entretenimento: 0, esportes: 0 });
+          }
+          
+          const dayData = dayMap.get(dayKey)!;
+          const vol = row.volume_raw || 0;
+          
+          if (cat.includes("polít")) dayData.politica += vol;
+          else if (cat.includes("tecno")) dayData.tecnologia += vol;
+          else if (cat.includes("entret") || cat.includes("cultur")) dayData.entretenimento += vol;
+          else if (cat.includes("espor")) dayData.esportes += vol;
+        });
+
+        // Convert to array in week order
+        const orderedDays = ["Seg", "Ter", "Qua", "Qui", "Sex", "Sáb", "Dom"];
+        const chartData = orderedDays.map(day => ({
+          day,
+          politica: Math.round((dayMap.get(day)?.politica || 0) / 1000000), // Convert to millions
+          tecnologia: Math.round((dayMap.get(day)?.tecnologia || 0) / 1000000),
+          entretenimento: Math.round((dayMap.get(day)?.entretenimento || 0) / 1000000),
+          esportes: Math.round((dayMap.get(day)?.esportes || 0) / 1000000),
+        }));
+
+        setWeeklyData(chartData);
+        setError(null);
+      } catch (err) {
+        console.error("Error fetching weekly data:", err);
+        setError("Erro ao carregar dados históricos");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchHistoricalData();
+  }, []);
 
   // Calculate weekly insights
   const insights = useMemo(() => {
+    if (weeklyData.length === 0) return { topCategory: "Dados", topValue: 0, growth: 0 };
+    
     const totals = {
       politica: weeklyData.reduce((acc, d) => acc + d.politica, 0),
       tecnologia: weeklyData.reduce((acc, d) => acc + d.tecnologia, 0),
-      economia: weeklyData.reduce((acc, d) => acc + d.economia, 0),
-      criticos: weeklyData.reduce((acc, d) => acc + d.criticos, 0),
+      entretenimento: weeklyData.reduce((acc, d) => acc + d.entretenimento, 0),
+      esportes: weeklyData.reduce((acc, d) => acc + d.esportes, 0),
     };
     
     const maxCategory = Object.entries(totals).reduce((a, b) => a[1] > b[1] ? a : b);
     const categoryLabels: Record<string, string> = {
       politica: "Política",
       tecnologia: "Tecnologia",
-      economia: "Economia",
-      criticos: "Alertas Críticos",
+      entretenimento: "Entretenimento",
+      esportes: "Esportes",
     };
+
+    // Calculate growth (compare last 2 days vs previous 2 days)
+    const recent = weeklyData.slice(-2).reduce((acc, d) => acc + d.politica + d.tecnologia + d.entretenimento + d.esportes, 0);
+    const previous = weeklyData.slice(-4, -2).reduce((acc, d) => acc + d.politica + d.tecnologia + d.entretenimento + d.esportes, 0);
+    const growth = previous > 0 ? Math.round(((recent - previous) / previous) * 100) : 0;
 
     return {
       topCategory: categoryLabels[maxCategory[0]] || maxCategory[0],
       topValue: maxCategory[1],
+      growth,
     };
   }, [weeklyData]);
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center py-8 text-muted-foreground">
+        <div className="w-4 h-4 border-2 border-primary/30 border-t-primary rounded-full animate-spin mr-2" />
+        <span className="text-[11px]">{lang === "pt" ? "Carregando dados históricos..." : "Loading historical data..."}</span>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex flex-col items-center justify-center py-8 text-muted-foreground">
+        <Activity className="w-8 h-8 mb-2 opacity-30" />
+        <p className="text-[11px]">{error}</p>
+      </div>
+    );
+  }
 
   return (
     <div className="p-3 space-y-3">
@@ -278,10 +341,10 @@ function WeeklyPulse({ trends }: { trends: TrendCardProps[] }) {
                 fontSize: "10px",
               }} 
             />
-            <Line type="monotone" dataKey="politica" stroke="#3b82f6" strokeWidth={2} dot={{ r: 2 }} name="Política" />
-            <Line type="monotone" dataKey="tecnologia" stroke="#22c55e" strokeWidth={2} dot={{ r: 2 }} name="Tecnologia" />
-            <Line type="monotone" dataKey="economia" stroke="#f59e0b" strokeWidth={2} dot={{ r: 2 }} name="Economia" />
-            <Line type="monotone" dataKey="criticos" stroke="#ef4444" strokeWidth={2} dot={{ r: 2 }} name="Críticos" />
+            <Line type="monotone" dataKey="politica" stroke="hsl(var(--chart-1))" strokeWidth={2} dot={{ r: 2 }} name="Política" />
+            <Line type="monotone" dataKey="tecnologia" stroke="hsl(var(--chart-2))" strokeWidth={2} dot={{ r: 2 }} name="Tecnologia" />
+            <Line type="monotone" dataKey="entretenimento" stroke="hsl(var(--chart-3))" strokeWidth={2} dot={{ r: 2 }} name="Entretenimento" />
+            <Line type="monotone" dataKey="esportes" stroke="hsl(var(--chart-4))" strokeWidth={2} dot={{ r: 2 }} name="Esportes" />
           </LineChart>
         </ResponsiveContainer>
       </div>
@@ -289,20 +352,29 @@ function WeeklyPulse({ trends }: { trends: TrendCardProps[] }) {
       {/* Legend */}
       <div className="flex flex-wrap items-center gap-3 text-[9px]">
         <span className="flex items-center gap-1">
-          <span className="w-2 h-2 rounded-full bg-blue-500" />
+          <span className="w-2 h-2 rounded-full" style={{ background: "hsl(var(--chart-1))" }} />
           Política
         </span>
         <span className="flex items-center gap-1">
-          <span className="w-2 h-2 rounded-full bg-green-500" />
+          <span className="w-2 h-2 rounded-full" style={{ background: "hsl(var(--chart-2))" }} />
           Tecnologia
         </span>
         <span className="flex items-center gap-1">
-          <span className="w-2 h-2 rounded-full bg-amber-500" />
-          Economia
+          <span className="w-2 h-2 rounded-full" style={{ background: "hsl(var(--chart-3))" }} />
+          Entretenimento
         </span>
         <span className="flex items-center gap-1">
-          <span className="w-2 h-2 rounded-full bg-red-500" />
-          Críticos
+          <span className="w-2 h-2 rounded-full" style={{ background: "hsl(var(--chart-4))" }} />
+          Esportes
+        </span>
+      </div>
+
+      {/* Insight */}
+      <div className="p-2 rounded-lg bg-primary/5 border border-primary/20 text-[10px]">
+        <span className="mr-1">📈</span>
+        <span className="font-medium text-primary">{insights.topCategory}</span>
+        <span className="text-muted-foreground">
+          {" "}{lang === "pt" ? `foi a categoria mais ativa (${insights.growth > 0 ? "+" : ""}${insights.growth}% vs semana anterior)` : `was the most active (${insights.growth > 0 ? "+" : ""}${insights.growth}% vs previous week)`}
         </span>
       </div>
 
@@ -475,7 +547,7 @@ export default function TrendRadar({ trends, allTrends, criticalMoments, anomali
             )}
             
             <div className="flex-1 min-h-0 overflow-hidden relative">
-              <TabsContent value="emerging" className="mt-0 h-full flex flex-col">
+              <TabsContent value="emerging" className="absolute inset-0 mt-0 flex flex-col data-[state=inactive]:hidden">
                 <Legend tab="emerging" lang={lang} />
                 <ScrollArea className="flex-1">
                   {hasEmerging ? (
@@ -491,7 +563,7 @@ export default function TrendRadar({ trends, allTrends, criticalMoments, anomali
                 </ScrollArea>
               </TabsContent>
 
-              <TabsContent value="critical" className="mt-0 h-full flex flex-col">
+              <TabsContent value="critical" className="absolute inset-0 mt-0 flex flex-col data-[state=inactive]:hidden">
                 <Legend tab="critical" lang={lang} />
                 <ScrollArea className="flex-1">
                   {hasCritical ? (
@@ -507,7 +579,7 @@ export default function TrendRadar({ trends, allTrends, criticalMoments, anomali
                 </ScrollArea>
               </TabsContent>
 
-              <TabsContent value="top" className="mt-0 h-full flex flex-col">
+              <TabsContent value="top" className="absolute inset-0 mt-0 flex flex-col data-[state=inactive]:hidden">
                 <Legend tab="top" lang={lang} />
                 <ScrollArea className="flex-1">
                   <div className="px-3 py-2">
@@ -516,7 +588,7 @@ export default function TrendRadar({ trends, allTrends, criticalMoments, anomali
                 </ScrollArea>
               </TabsContent>
 
-              <TabsContent value="weekly" className="mt-0 h-full flex flex-col">
+              <TabsContent value="weekly" className="absolute inset-0 mt-0 flex flex-col data-[state=inactive]:hidden">
                 <Legend tab="weekly" lang={lang} />
                 <ScrollArea className="flex-1">
                   <WeeklyPulse trends={allTrends} />
