@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useRef, memo } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Sprout, Flame, Trophy, Info, ChevronUp, ChevronDown, Activity, AlertTriangle, ExternalLink, TrendingUp, Zap, Globe2 } from "lucide-react";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
@@ -420,7 +420,7 @@ function WeeklyPulse({ trends }: { trends: TrendCardProps[] }) {
   );
 }
 
-function TrendRadarInner({ trends, allTrends, criticalMoments, anomalies = [], onSelectTrend, onFilterCountry, onAnomalyClick }: TrendRadarProps) {
+export default function TrendRadar({ trends, allTrends, criticalMoments, anomalies = [], onSelectTrend, onFilterCountry, onAnomalyClick }: TrendRadarProps) {
   const { lang, t } = useLanguage();
   const [tab, setTab] = useState("emerging");
   const [collapsed, setCollapsed] = useState(() => {
@@ -639,6 +639,3 @@ function TrendRadarInner({ trends, allTrends, criticalMoments, anomalies = [], o
     </div>
   );
 }
-
-const TrendRadar = memo(TrendRadarInner);
-export default TrendRadar;
