@@ -691,12 +691,28 @@ export default function TrendRadar({ trends, allTrends, criticalMoments, anomali
     expand: lang === "pt" ? "Expandir radar" : "Expand radar",
   };
 
-  // Tab config — anomalies are merged into the Critical tab; no separate Anomalies tab
+  const hasAnomalies = anomalies.length > 0;
+  // Track unseen anomalies separately
+  const [unseenAnomalies, setUnseenAnomalies] = useState(0);
+  const prevAnomalyCountRef = useRef(0);
+
+  useEffect(() => {
+    if (anomalies.length > prevAnomalyCountRef.current && tab !== "anomalies") {
+      setUnseenAnomalies(anomalies.length);
+    }
+    prevAnomalyCountRef.current = anomalies.length;
+  }, [anomalies.length, tab]);
+
+  useEffect(() => {
+    if (tab === "anomalies") setUnseenAnomalies(0);
+  }, [tab]);
+
   const tabConfig = [
-    { value: "emerging", icon: Sprout, label: "Emerging", activeClass: "data-[state=active]:bg-emerald-500/15 data-[state=active]:text-emerald-600 dark:data-[state=active]:text-emerald-400 data-[state=active]:border-emerald-500/30", dot: hasEmerging ? "bg-emerald-500" : null, badge: null, pulse: false },
-    { value: "critical", icon: Flame, label: "Critical", activeClass: "data-[state=active]:bg-rose-500/15 data-[state=active]:text-rose-600 dark:data-[state=active]:text-rose-400 data-[state=active]:border-rose-500/30", dot: null, badge: unseenCritical > 0 ? unseenCritical : (hasCritical ? totalCriticalItems : null), pulse: unseenCritical > 0 },
+    { value: "emerging", icon: Sprout, label: lang === "pt" ? "Emergentes" : "Emerging", activeClass: "data-[state=active]:bg-emerald-500/15 data-[state=active]:text-emerald-600 dark:data-[state=active]:text-emerald-400 data-[state=active]:border-emerald-500/30", dot: hasEmerging ? "bg-emerald-500" : null, badge: null, pulse: false },
+    { value: "critical", icon: Flame, label: lang === "pt" ? "Crítico" : "Critical", activeClass: "data-[state=active]:bg-rose-500/15 data-[state=active]:text-rose-600 dark:data-[state=active]:text-rose-400 data-[state=active]:border-rose-500/30", dot: null, badge: unseenCritical > 0 ? unseenCritical : (criticalMoments.length > 0 ? criticalMoments.length : null), pulse: unseenCritical > 0 },
+    { value: "anomalies", icon: AlertTriangle, label: lang === "pt" ? "Anomalias" : "Anomalies", activeClass: "data-[state=active]:bg-red-500/15 data-[state=active]:text-red-600 dark:data-[state=active]:text-red-400 data-[state=active]:border-red-500/30", dot: null, badge: unseenAnomalies > 0 ? unseenAnomalies : (hasAnomalies ? anomalies.length : null), pulse: unseenAnomalies > 0 },
     { value: "top", icon: Trophy, label: "Top", activeClass: "data-[state=active]:bg-amber-500/15 data-[state=active]:text-amber-600 dark:data-[state=active]:text-amber-400 data-[state=active]:border-amber-500/30", dot: null, badge: null, pulse: false },
-    { value: "weekly", icon: Activity, label: "Weekly", activeClass: "data-[state=active]:bg-sky-500/15 data-[state=active]:text-sky-600 dark:data-[state=active]:text-sky-400 data-[state=active]:border-sky-500/30", dot: null, badge: null, pulse: false },
+    { value: "weekly", icon: Activity, label: lang === "pt" ? "Semana" : "Weekly", activeClass: "data-[state=active]:bg-sky-500/15 data-[state=active]:text-sky-600 dark:data-[state=active]:text-sky-400 data-[state=active]:border-sky-500/30", dot: null, badge: null, pulse: false },
   ];
 
   return (
