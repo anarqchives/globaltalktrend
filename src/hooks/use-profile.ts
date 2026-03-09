@@ -233,7 +233,7 @@ export function usePublicProfile(username: string | null) {
         if (error) {
           setProfile(null);
         } else {
-          setProfile(data as Profile);
+          setProfile(parseProfile(data));
         }
       } catch (err) {
         console.error("Public profile fetch error:", err);
