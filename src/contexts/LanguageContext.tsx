@@ -65,7 +65,13 @@ type TranslationKey =
   | "mapFlowMap" | "mapSentiment" | "mapHeatmap"
   | "mapFlowLegendTitle" | "mapFlowOrigin" | "mapFlowDestination" | "mapFlowPropagation" | "mapFlowTimeDelta" | "mapFlowClickToFilter" | "mapFlowNoData"
   | "mapSentLegendTitle" | "mapSentPositive" | "mapSentNegative" | "mapSentMixed" | "mapSentNeutral" | "mapSentBreakdown" | "mapSentTopTrends" | "mapSentNoData"
-  | "mapSentVolume" | "mapSentGrowth" | "mapSentActiveTrends";
+  | "mapSentVolume" | "mapSentGrowth" | "mapSentActiveTrends"
+  // Card expanded metrics
+  | "growth" | "volumeLabel" | "sourcesLabel" | "narrativeOrigin" | "confidenceLabel"
+  | "confidenceHigh" | "confidenceMedium" | "confidenceLow"
+  | "propagationPath" | "sourceLabel" | "sentimentAnalysis"
+  | "tviGrowthLabel" | "tviVolumeLabel" | "tviSourcesLabel" | "tviGeographyLabel" | "tviDescription"
+  | "sourcesSingular" | "sourcesPlural";
 
 const translations: Record<LangCode, Record<TranslationKey, string>> = {
   pt: {
@@ -171,6 +177,12 @@ const translations: Record<LangCode, Record<TranslationKey, string>> = {
     mapFlowLegendTitle: "Propagação de Trends", mapFlowOrigin: "Origem", mapFlowDestination: "Destino", mapFlowPropagation: "Propagação", mapFlowTimeDelta: "Tempo de propagação", mapFlowClickToFilter: "Clique para filtrar timeline", mapFlowNoData: "Dados de propagação insuficientes para este período",
     mapSentLegendTitle: "Paisagem Emocional", mapSentPositive: "Positivo", mapSentNegative: "Negativo", mapSentMixed: "Polarizado", mapSentNeutral: "Neutro", mapSentBreakdown: "Distribuição de sentimento", mapSentTopTrends: "Top tendências", mapSentNoData: "Dados de sentimento insuficientes",
     mapSentVolume: "Volume total", mapSentGrowth: "Crescimento médio", mapSentActiveTrends: "Trends ativas",
+    growth: "Crescimento", volumeLabel: "Volume", sourcesLabel: "Fontes", narrativeOrigin: "Origem Narrativa",
+    confidenceLabel: "Confiança", confidenceHigh: "Alta", confidenceMedium: "Média", confidenceLow: "Baixa",
+    propagationPath: "Caminho de Propagação", sourceLabel: "Fonte", sentimentAnalysis: "Análise de Sentimento",
+    tviGrowthLabel: "Crescimento (30%)", tviVolumeLabel: "Volume (30%)", tviSourcesLabel: "Fontes (20%)", tviGeographyLabel: "Geografia (20%)",
+    tviDescription: "Mede a velocidade de propagação baseada em:",
+    sourcesSingular: "fonte", sourcesPlural: "fontes",
   },
   en: {
     trends: "Trends", moreTrends: "More trends", filters: "Filters",
@@ -275,6 +287,12 @@ const translations: Record<LangCode, Record<TranslationKey, string>> = {
     mapFlowLegendTitle: "Trend Propagation", mapFlowOrigin: "Origin", mapFlowDestination: "Destination", mapFlowPropagation: "Propagation", mapFlowTimeDelta: "Propagation time", mapFlowClickToFilter: "Click to filter timeline", mapFlowNoData: "Not enough propagation data for this period",
     mapSentLegendTitle: "Emotional Landscape", mapSentPositive: "Positive", mapSentNegative: "Negative", mapSentMixed: "Polarized", mapSentNeutral: "Neutral", mapSentBreakdown: "Sentiment breakdown", mapSentTopTrends: "Top trends", mapSentNoData: "Not enough sentiment data",
     mapSentVolume: "Total volume", mapSentGrowth: "Avg growth", mapSentActiveTrends: "Active trends",
+    growth: "Growth", volumeLabel: "Volume", sourcesLabel: "Sources", narrativeOrigin: "Narrative Origin",
+    confidenceLabel: "Confidence", confidenceHigh: "High", confidenceMedium: "Medium", confidenceLow: "Low",
+    propagationPath: "Propagation Path", sourceLabel: "Source", sentimentAnalysis: "Sentiment Analysis",
+    tviGrowthLabel: "Growth (30%)", tviVolumeLabel: "Volume (30%)", tviSourcesLabel: "Sources (20%)", tviGeographyLabel: "Geography (20%)",
+    tviDescription: "Measures propagation speed based on:",
+    sourcesSingular: "source", sourcesPlural: "sources",
   },
   es: {
     trends: "Tendencias", moreTrends: "Más trends", filters: "Filtros",
@@ -346,6 +364,12 @@ const translations: Record<LangCode, Record<TranslationKey, string>> = {
     mapFlowLegendTitle: "Propagación de Trends", mapFlowOrigin: "Origen", mapFlowDestination: "Destino", mapFlowPropagation: "Propagación", mapFlowTimeDelta: "Tiempo de propagación", mapFlowClickToFilter: "Clic para filtrar timeline", mapFlowNoData: "Datos de propagación insuficientes",
     mapSentLegendTitle: "Paisaje Emocional", mapSentPositive: "Positivo", mapSentNegative: "Negativo", mapSentMixed: "Polarizado", mapSentNeutral: "Neutro", mapSentBreakdown: "Distribución de sentimiento", mapSentTopTrends: "Top tendencias", mapSentNoData: "Datos de sentimiento insuficientes",
     mapSentVolume: "Volumen total", mapSentGrowth: "Crecimiento medio", mapSentActiveTrends: "Trends activas",
+    growth: "Crecimiento", volumeLabel: "Volumen", sourcesLabel: "Fuentes", narrativeOrigin: "Origen Narrativo",
+    confidenceLabel: "Confianza", confidenceHigh: "Alta", confidenceMedium: "Media", confidenceLow: "Baja",
+    propagationPath: "Ruta de Propagación", sourceLabel: "Fuente", sentimentAnalysis: "Análisis de Sentimiento",
+    tviGrowthLabel: "Crecimiento (30%)", tviVolumeLabel: "Volumen (30%)", tviSourcesLabel: "Fuentes (20%)", tviGeographyLabel: "Geografía (20%)",
+    tviDescription: "Mide la velocidad de propagación basada en:",
+    sourcesSingular: "fuente", sourcesPlural: "fuentes",
   },
   fr: {
     trends: "Tendances", moreTrends: "Plus de tendances", filters: "Filtres",
@@ -417,6 +441,12 @@ const translations: Record<LangCode, Record<TranslationKey, string>> = {
     mapFlowLegendTitle: "Propagation des Trends", mapFlowOrigin: "Origine", mapFlowDestination: "Destination", mapFlowPropagation: "Propagation", mapFlowTimeDelta: "Temps de propagation", mapFlowClickToFilter: "Cliquer pour filtrer", mapFlowNoData: "Données de propagation insuffisantes",
     mapSentLegendTitle: "Paysage Émotionnel", mapSentPositive: "Positif", mapSentNegative: "Négatif", mapSentMixed: "Polarisé", mapSentNeutral: "Neutre", mapSentBreakdown: "Répartition du sentiment", mapSentTopTrends: "Top tendances", mapSentNoData: "Données de sentiment insuffisantes",
     mapSentVolume: "Volume total", mapSentGrowth: "Croissance moyenne", mapSentActiveTrends: "Trends actives",
+    growth: "Croissance", volumeLabel: "Volume", sourcesLabel: "Sources", narrativeOrigin: "Origine Narrative",
+    confidenceLabel: "Confiance", confidenceHigh: "Élevée", confidenceMedium: "Moyenne", confidenceLow: "Faible",
+    propagationPath: "Chemin de Propagation", sourceLabel: "Source", sentimentAnalysis: "Analyse de Sentiment",
+    tviGrowthLabel: "Croissance (30%)", tviVolumeLabel: "Volume (30%)", tviSourcesLabel: "Sources (20%)", tviGeographyLabel: "Géographie (20%)",
+    tviDescription: "Mesure la vitesse de propagation basée sur :",
+    sourcesSingular: "source", sourcesPlural: "sources",
   },
   de: {
     trends: "Trends", moreTrends: "Mehr Trends", filters: "Filter",
@@ -488,6 +518,12 @@ const translations: Record<LangCode, Record<TranslationKey, string>> = {
     mapFlowLegendTitle: "Trend-Verbreitung", mapFlowOrigin: "Ursprung", mapFlowDestination: "Ziel", mapFlowPropagation: "Verbreitung", mapFlowTimeDelta: "Verbreitungszeit", mapFlowClickToFilter: "Klicken zum Filtern", mapFlowNoData: "Nicht genügend Verbreitungsdaten",
     mapSentLegendTitle: "Emotionale Landschaft", mapSentPositive: "Positiv", mapSentNegative: "Negativ", mapSentMixed: "Polarisiert", mapSentNeutral: "Neutral", mapSentBreakdown: "Stimmungsverteilung", mapSentTopTrends: "Top Trends", mapSentNoData: "Nicht genügend Stimmungsdaten",
     mapSentVolume: "Gesamtvolumen", mapSentGrowth: "Durchschn. Wachstum", mapSentActiveTrends: "Aktive Trends",
+    growth: "Wachstum", volumeLabel: "Volumen", sourcesLabel: "Quellen", narrativeOrigin: "Narrative Herkunft",
+    confidenceLabel: "Vertrauen", confidenceHigh: "Hoch", confidenceMedium: "Mittel", confidenceLow: "Niedrig",
+    propagationPath: "Verbreitungspfad", sourceLabel: "Quelle", sentimentAnalysis: "Stimmungsanalyse",
+    tviGrowthLabel: "Wachstum (30%)", tviVolumeLabel: "Volumen (30%)", tviSourcesLabel: "Quellen (20%)", tviGeographyLabel: "Geographie (20%)",
+    tviDescription: "Misst die Verbreitungsgeschwindigkeit basierend auf:",
+    sourcesSingular: "Quelle", sourcesPlural: "Quellen",
   },
   it: {
     trends: "Tendenze", moreTrends: "Più tendenze", filters: "Filtri",
@@ -559,6 +595,12 @@ const translations: Record<LangCode, Record<TranslationKey, string>> = {
     mapFlowLegendTitle: "Propagazione dei Trend", mapFlowOrigin: "Origine", mapFlowDestination: "Destinazione", mapFlowPropagation: "Propagazione", mapFlowTimeDelta: "Tempo di propagazione", mapFlowClickToFilter: "Clicca per filtrare", mapFlowNoData: "Dati di propagazione insufficienti",
     mapSentLegendTitle: "Paesaggio Emotivo", mapSentPositive: "Positivo", mapSentNegative: "Negativo", mapSentMixed: "Polarizzato", mapSentNeutral: "Neutro", mapSentBreakdown: "Distribuzione del sentimento", mapSentTopTrends: "Top tendenze", mapSentNoData: "Dati di sentimento insufficienti",
     mapSentVolume: "Volume totale", mapSentGrowth: "Crescita media", mapSentActiveTrends: "Trend attive",
+    growth: "Crescita", volumeLabel: "Volume", sourcesLabel: "Fonti", narrativeOrigin: "Origine Narrativa",
+    confidenceLabel: "Affidabilità", confidenceHigh: "Alta", confidenceMedium: "Media", confidenceLow: "Bassa",
+    propagationPath: "Percorso di Propagazione", sourceLabel: "Fonte", sentimentAnalysis: "Analisi del Sentimento",
+    tviGrowthLabel: "Crescita (30%)", tviVolumeLabel: "Volume (30%)", tviSourcesLabel: "Fonti (20%)", tviGeographyLabel: "Geografia (20%)",
+    tviDescription: "Misura la velocità di propagazione basata su:",
+    sourcesSingular: "fonte", sourcesPlural: "fonti",
   },
   zh: {
     trends: "趋势", moreTrends: "更多趋势", filters: "筛选",
@@ -630,6 +672,12 @@ const translations: Record<LangCode, Record<TranslationKey, string>> = {
     mapFlowLegendTitle: "趋势传播", mapFlowOrigin: "来源", mapFlowDestination: "目的地", mapFlowPropagation: "传播", mapFlowTimeDelta: "传播时间", mapFlowClickToFilter: "点击筛选时间线", mapFlowNoData: "该时段传播数据不足",
     mapSentLegendTitle: "情绪全景", mapSentPositive: "积极", mapSentNegative: "消极", mapSentMixed: "两极化", mapSentNeutral: "中性", mapSentBreakdown: "情绪分布", mapSentTopTrends: "热门趋势", mapSentNoData: "情绪数据不足",
     mapSentVolume: "总量", mapSentGrowth: "平均增长", mapSentActiveTrends: "活跃趋势",
+    growth: "增长", volumeLabel: "量", sourcesLabel: "来源", narrativeOrigin: "叙事来源",
+    confidenceLabel: "可信度", confidenceHigh: "高", confidenceMedium: "中", confidenceLow: "低",
+    propagationPath: "传播路径", sourceLabel: "来源", sentimentAnalysis: "情绪分析",
+    tviGrowthLabel: "增长 (30%)", tviVolumeLabel: "量 (30%)", tviSourcesLabel: "来源 (20%)", tviGeographyLabel: "地理 (20%)",
+    tviDescription: "基于以下指标衡量传播速度：",
+    sourcesSingular: "来源", sourcesPlural: "来源",
   },
   ja: {
     trends: "トレンド", moreTrends: "もっと見る", filters: "フィルター",
@@ -701,6 +749,12 @@ const translations: Record<LangCode, Record<TranslationKey, string>> = {
     mapFlowLegendTitle: "トレンド伝播", mapFlowOrigin: "発信元", mapFlowDestination: "宛先", mapFlowPropagation: "伝播", mapFlowTimeDelta: "伝播時間", mapFlowClickToFilter: "クリックでフィルター", mapFlowNoData: "この期間の伝播データが不足しています",
     mapSentLegendTitle: "感情の風景", mapSentPositive: "ポジティブ", mapSentNegative: "ネガティブ", mapSentMixed: "分極化", mapSentNeutral: "ニュートラル", mapSentBreakdown: "感情分布", mapSentTopTrends: "トップトレンド", mapSentNoData: "感情データが不足しています",
     mapSentVolume: "合計ボリューム", mapSentGrowth: "平均成長", mapSentActiveTrends: "アクティブトレンド",
+    growth: "成長", volumeLabel: "ボリューム", sourcesLabel: "ソース", narrativeOrigin: "ナラティブの起源",
+    confidenceLabel: "信頼度", confidenceHigh: "高い", confidenceMedium: "中程度", confidenceLow: "低い",
+    propagationPath: "伝播パス", sourceLabel: "ソース", sentimentAnalysis: "感情分析",
+    tviGrowthLabel: "成長 (30%)", tviVolumeLabel: "ボリューム (30%)", tviSourcesLabel: "ソース (20%)", tviGeographyLabel: "地理 (20%)",
+    tviDescription: "以下に基づく伝播速度を測定：",
+    sourcesSingular: "ソース", sourcesPlural: "ソース",
   },
   ko: {
     trends: "트렌드", moreTrends: "더 많은 트렌드", filters: "필터",
@@ -772,6 +826,12 @@ const translations: Record<LangCode, Record<TranslationKey, string>> = {
     mapFlowLegendTitle: "트렌드 전파", mapFlowOrigin: "출발지", mapFlowDestination: "도착지", mapFlowPropagation: "전파", mapFlowTimeDelta: "전파 시간", mapFlowClickToFilter: "클릭하여 필터링", mapFlowNoData: "이 기간의 전파 데이터가 부족합니다",
     mapSentLegendTitle: "감정 풍경", mapSentPositive: "긍정적", mapSentNegative: "부정적", mapSentMixed: "양극화", mapSentNeutral: "중립", mapSentBreakdown: "감정 분포", mapSentTopTrends: "주요 트렌드", mapSentNoData: "감정 데이터가 부족합니다",
     mapSentVolume: "총 볼륨", mapSentGrowth: "평균 성장", mapSentActiveTrends: "활성 트렌드",
+    growth: "성장", volumeLabel: "볼륨", sourcesLabel: "출처", narrativeOrigin: "내러티브 기원",
+    confidenceLabel: "신뢰도", confidenceHigh: "높음", confidenceMedium: "중간", confidenceLow: "낮음",
+    propagationPath: "전파 경로", sourceLabel: "출처", sentimentAnalysis: "감정 분석",
+    tviGrowthLabel: "성장 (30%)", tviVolumeLabel: "볼륨 (30%)", tviSourcesLabel: "출처 (20%)", tviGeographyLabel: "지리 (20%)",
+    tviDescription: "다음에 기반한 전파 속도 측정:",
+    sourcesSingular: "출처", sourcesPlural: "출처",
   },
   ar: {
     trends: "الاتجاهات", moreTrends: "المزيد", filters: "التصفية",
@@ -843,6 +903,12 @@ const translations: Record<LangCode, Record<TranslationKey, string>> = {
     mapFlowLegendTitle: "انتشار الاتجاهات", mapFlowOrigin: "المصدر", mapFlowDestination: "الوجهة", mapFlowPropagation: "الانتشار", mapFlowTimeDelta: "وقت الانتشار", mapFlowClickToFilter: "انقر للتصفية", mapFlowNoData: "بيانات انتشار غير كافية",
     mapSentLegendTitle: "المشهد العاطفي", mapSentPositive: "إيجابي", mapSentNegative: "سلبي", mapSentMixed: "مستقطب", mapSentNeutral: "محايد", mapSentBreakdown: "توزيع المشاعر", mapSentTopTrends: "أهم الاتجاهات", mapSentNoData: "بيانات مشاعر غير كافية",
     mapSentVolume: "الحجم الإجمالي", mapSentGrowth: "متوسط النمو", mapSentActiveTrends: "اتجاهات نشطة",
+    growth: "النمو", volumeLabel: "الحجم", sourcesLabel: "المصادر", narrativeOrigin: "أصل السرد",
+    confidenceLabel: "الثقة", confidenceHigh: "عالية", confidenceMedium: "متوسطة", confidenceLow: "منخفضة",
+    propagationPath: "مسار الانتشار", sourceLabel: "المصدر", sentimentAnalysis: "تحليل المشاعر",
+    tviGrowthLabel: "النمو (30%)", tviVolumeLabel: "الحجم (30%)", tviSourcesLabel: "المصادر (20%)", tviGeographyLabel: "الجغرافيا (20%)",
+    tviDescription: "يقيس سرعة الانتشار بناءً على:",
+    sourcesSingular: "مصدر", sourcesPlural: "مصادر",
   },
   hi: {
     trends: "रुझान", moreTrends: "और रुझान", filters: "फ़िल्टर",
@@ -914,6 +980,12 @@ const translations: Record<LangCode, Record<TranslationKey, string>> = {
     mapFlowLegendTitle: "ट्रेंड प्रसार", mapFlowOrigin: "मूल", mapFlowDestination: "गंतव्य", mapFlowPropagation: "प्रसार", mapFlowTimeDelta: "प्रसार समय", mapFlowClickToFilter: "फ़िल्टर करने के लिए क्लिक करें", mapFlowNoData: "इस अवधि के लिए पर्याप्त प्रसार डेटा नहीं",
     mapSentLegendTitle: "भावनात्मक परिदृश्य", mapSentPositive: "सकारात्मक", mapSentNegative: "नकारात्मक", mapSentMixed: "ध्रुवीकृत", mapSentNeutral: "तटस्थ", mapSentBreakdown: "भावना वितरण", mapSentTopTrends: "शीर्ष रुझान", mapSentNoData: "भावना डेटा अपर्याप्त",
     mapSentVolume: "कुल मात्रा", mapSentGrowth: "औसत वृद्धि", mapSentActiveTrends: "सक्रिय रुझान",
+    growth: "वृद्धि", volumeLabel: "मात्रा", sourcesLabel: "स्रोत", narrativeOrigin: "कथा मूल",
+    confidenceLabel: "विश्वसनीयता", confidenceHigh: "उच्च", confidenceMedium: "मध्यम", confidenceLow: "निम्न",
+    propagationPath: "प्रसार पथ", sourceLabel: "स्रोत", sentimentAnalysis: "भावना विश्लेषण",
+    tviGrowthLabel: "वृद्धि (30%)", tviVolumeLabel: "मात्रा (30%)", tviSourcesLabel: "स्रोत (20%)", tviGeographyLabel: "भूगोल (20%)",
+    tviDescription: "इन पर आधारित प्रसार गति मापता है:",
+    sourcesSingular: "स्रोत", sourcesPlural: "स्रोत",
   },
   ru: {
     trends: "Тренды", moreTrends: "Больше трендов", filters: "Фильтры",
@@ -985,6 +1057,12 @@ const translations: Record<LangCode, Record<TranslationKey, string>> = {
     mapFlowLegendTitle: "Распространение трендов", mapFlowOrigin: "Источник", mapFlowDestination: "Назначение", mapFlowPropagation: "Распространение", mapFlowTimeDelta: "Время распространения", mapFlowClickToFilter: "Нажмите для фильтрации", mapFlowNoData: "Недостаточно данных о распространении",
     mapSentLegendTitle: "Эмоциональный ландшафт", mapSentPositive: "Позитивный", mapSentNegative: "Негативный", mapSentMixed: "Поляризованный", mapSentNeutral: "Нейтральный", mapSentBreakdown: "Распределение настроений", mapSentTopTrends: "Топ трендов", mapSentNoData: "Недостаточно данных о настроениях",
     mapSentVolume: "Общий объём", mapSentGrowth: "Средний рост", mapSentActiveTrends: "Активные тренды",
+    growth: "Рост", volumeLabel: "Объём", sourcesLabel: "Источники", narrativeOrigin: "Нарративный источник",
+    confidenceLabel: "Достоверность", confidenceHigh: "Высокая", confidenceMedium: "Средняя", confidenceLow: "Низкая",
+    propagationPath: "Путь распространения", sourceLabel: "Источник", sentimentAnalysis: "Анализ настроений",
+    tviGrowthLabel: "Рост (30%)", tviVolumeLabel: "Объём (30%)", tviSourcesLabel: "Источники (20%)", tviGeographyLabel: "География (20%)",
+    tviDescription: "Измеряет скорость распространения на основе:",
+    sourcesSingular: "источник", sourcesPlural: "источников",
   },
 };
 

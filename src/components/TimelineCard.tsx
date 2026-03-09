@@ -319,11 +319,11 @@ const TimelineCard = ({
               </TooltipTrigger>
               <TooltipContent side="top" className="p-3 text-[11px] space-y-1.5 min-w-[200px] z-50 bg-popover/95 backdrop-blur-md">
                 <div className="font-bold text-[12px] mb-1 text-foreground">Trend Velocity Index (TVI)</div>
-                <p className="text-muted-foreground mb-2 leading-tight">Mede a velocidade de propagação baseada em:</p>
-                <div className="flex justify-between"><span>📈 Crescimento (30%)</span><span className="font-bold text-foreground">{tviBreakdown.velocity}</span></div>
-                <div className="flex justify-between"><span>💬 Volume (30%)</span><span className="font-bold text-foreground">{tviBreakdown.volume}</span></div>
-                <div className="flex justify-between"><span>📰 Fontes (20%)</span><span className="font-bold text-foreground">{tviBreakdown.sources}</span></div>
-                <div className="flex justify-between"><span>🌍 Países (20%)</span><span className="font-bold text-foreground">{tviBreakdown.geography}</span></div>
+                <p className="text-muted-foreground mb-2 leading-tight">{t("tviDescription" as any)}</p>
+                <div className="flex justify-between"><span>📈 {t("tviGrowthLabel" as any)}</span><span className="font-bold text-foreground">{tviBreakdown.velocity}</span></div>
+                <div className="flex justify-between"><span>💬 {t("tviVolumeLabel" as any)}</span><span className="font-bold text-foreground">{tviBreakdown.volume}</span></div>
+                <div className="flex justify-between"><span>📰 {t("tviSourcesLabel" as any)}</span><span className="font-bold text-foreground">{tviBreakdown.sources}</span></div>
+                <div className="flex justify-between"><span>🌍 {t("tviGeographyLabel" as any)}</span><span className="font-bold text-foreground">{tviBreakdown.geography}</span></div>
                 <div className="h-px bg-gradient-to-r from-transparent via-border to-transparent my-2" />
                 <div className="text-[11px] font-medium text-center text-foreground">{trendScore}% - {trendScoreLabel.text}</div>
               </TooltipContent>
@@ -363,7 +363,7 @@ const TimelineCard = ({
             {sources && sources.length > 0 && (
               <span className="text-muted-foreground font-medium inline-flex items-center gap-0.5">
                 <Radio className="w-2.5 h-2.5" />
-                {sources.length} {sources.length === 1 ? "fonte" : "fontes"}
+                {sources.length} {sources.length === 1 ? t("sourcesSingular" as any) : t("sourcesPlural" as any)}
               </span>
             )}
 
@@ -491,11 +491,11 @@ const TimelineCard = ({
           {/* Intelligence Metrics Grid */}
           <div className="grid grid-cols-4 gap-1.5 mb-3">
             <div className="text-center p-2 rounded-lg bg-secondary/50">
-              <span className="block text-[8px] text-muted-foreground uppercase tracking-wide mb-0.5">Growth</span>
+              <span className="block text-[8px] text-muted-foreground uppercase tracking-wide mb-0.5">{t("growth" as any)}</span>
               <span className={`block text-xs font-bold ${changePositive ? "text-green-600 dark:text-green-400" : "text-destructive"}`}>{change}</span>
             </div>
             <div className="text-center p-2 rounded-lg bg-secondary/50">
-              <span className="block text-[8px] text-muted-foreground uppercase tracking-wide mb-0.5">Volume</span>
+              <span className="block text-[8px] text-muted-foreground uppercase tracking-wide mb-0.5">{t("volumeLabel" as any)}</span>
               <span className="block text-xs font-bold text-foreground">{volume || "—"}</span>
             </div>
             <Tooltip>
@@ -507,14 +507,14 @@ const TimelineCard = ({
               </TooltipTrigger>
               <TooltipContent side="top" className="text-[10px] space-y-0.5">
                 <div className="font-bold mb-1">Trend Velocity Index</div>
-                <div className="flex justify-between gap-3"><span>⚡ Velocity (30%)</span><span className="font-bold">{tviBreakdown.velocity}</span></div>
-                <div className="flex justify-between gap-3"><span>💬 Volume (30%)</span><span className="font-bold">{tviBreakdown.volume}</span></div>
-                <div className="flex justify-between gap-3"><span>📰 Sources (20%)</span><span className="font-bold">{tviBreakdown.sources}</span></div>
-                <div className="flex justify-between gap-3"><span>🌍 Geography (20%)</span><span className="font-bold">{tviBreakdown.geography}</span></div>
+                <div className="flex justify-between gap-3"><span>⚡ {t("tviGrowthLabel" as any)}</span><span className="font-bold">{tviBreakdown.velocity}</span></div>
+                <div className="flex justify-between gap-3"><span>💬 {t("tviVolumeLabel" as any)}</span><span className="font-bold">{tviBreakdown.volume}</span></div>
+                <div className="flex justify-between gap-3"><span>📰 {t("tviSourcesLabel" as any)}</span><span className="font-bold">{tviBreakdown.sources}</span></div>
+                <div className="flex justify-between gap-3"><span>🌍 {t("tviGeographyLabel" as any)}</span><span className="font-bold">{tviBreakdown.geography}</span></div>
               </TooltipContent>
             </Tooltip>
             <div className="text-center p-2 rounded-lg bg-secondary/50">
-              <span className="block text-[8px] text-muted-foreground uppercase tracking-wide mb-0.5">Sources</span>
+              <span className="block text-[8px] text-muted-foreground uppercase tracking-wide mb-0.5">{t("sourcesLabel" as any)}</span>
               <span className="block text-xs font-bold text-foreground">{sources?.length || 1}</span>
             </div>
           </div>
@@ -523,7 +523,7 @@ const TimelineCard = ({
           <div className="flex items-start gap-2 mb-3 p-2 rounded-lg bg-secondary/30 border border-border/50">
             <div className="flex-1 min-w-0">
               <div className="text-[9px] font-semibold text-muted-foreground uppercase tracking-wide mb-0.5">
-                🗺️ Narrative Origin
+                🗺️ {t("narrativeOrigin" as any)}
               </div>
               <div className="text-[11px] text-foreground font-medium">{platform}</div>
               {countryCode && countryCode !== "GL" && (
@@ -532,10 +532,10 @@ const TimelineCard = ({
             </div>
             <div className="text-right flex-shrink-0">
               <div className="text-[9px] font-semibold text-muted-foreground uppercase tracking-wide mb-0.5">
-                Confidence
+                {t("confidenceLabel" as any)}
               </div>
               <div className={`text-[11px] font-bold ${trendScore >= 70 ? "text-green-600 dark:text-green-400" : trendScore >= 40 ? "text-amber-600 dark:text-amber-400" : "text-muted-foreground"}`}>
-                {trendScore >= 70 ? "High" : trendScore >= 40 ? "Medium" : "Low"}
+                {trendScore >= 70 ? t("confidenceHigh" as any) : trendScore >= 40 ? t("confidenceMedium" as any) : t("confidenceLow" as any)}
               </div>
               <div className="text-[9px] text-muted-foreground">{trendScore}%</div>
             </div>
@@ -545,7 +545,7 @@ const TimelineCard = ({
           {sources && sources.length > 0 && (
             <div className="mb-3">
               <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide flex items-center gap-1 mb-1.5">
-                <Radio className="w-2.5 h-2.5" /> {sources.length >= 2 ? "Propagation Path" : "Source"}
+                <Radio className="w-2.5 h-2.5" /> {sources.length >= 2 ? t("propagationPath" as any) : t("sourceLabel" as any)}
               </span>
               <div className="flex items-center gap-1 flex-wrap text-[10px]">
                 {sources.slice(0, 6).map((s, idx) => (
@@ -561,7 +561,7 @@ const TimelineCard = ({
           {/* Sentiment Analysis Section — with labeled legend */}
           <div className="mb-3 p-2.5 rounded-lg bg-secondary/30 border border-border/50">
             <span className="text-[9px] font-semibold text-muted-foreground uppercase tracking-wide mb-2 block">
-              📊 Sentiment Analysis
+              📊 {t("sentimentAnalysis" as any)}
             </span>
             <div className="flex items-center gap-4">
               <SentimentDonut
@@ -575,9 +575,9 @@ const TimelineCard = ({
             <div className="mt-2 pt-2 border-t border-border/30">
               <EmotionBars
                 emotions={[
-                  { icon: "😊", label: "Positivo", percentage: changePositive ? 55 : 25, color: "hsl(142, 60%, 45%)" },
-                  { icon: "😐", label: "Neutro", percentage: 30, color: "hsl(var(--muted-foreground))" },
-                  { icon: "😠", label: "Negativo", percentage: changePositive ? 15 : 45, color: "hsl(var(--destructive))" },
+                  { icon: "😊", label: t("positive"), percentage: changePositive ? 55 : 25, color: "hsl(142, 60%, 45%)" },
+                  { icon: "😐", label: t("neutral"), percentage: 30, color: "hsl(var(--muted-foreground))" },
+                  { icon: "😠", label: t("negative"), percentage: changePositive ? 15 : 45, color: "hsl(var(--destructive))" },
                 ]}
               />
             </div>

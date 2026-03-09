@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useRef } from "react";
+import { useState, useEffect, useMemo, useRef, lazy, Suspense } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Sprout, Flame, Trophy, Info, ChevronUp, ChevronDown, Activity, AlertTriangle, ExternalLink, TrendingUp, Zap, Globe2, Radio, BarChart3, Eye, Target, Radar, ArrowRight, Sparkles, Clock, Crown, Medal, Award, GripHorizontal, Loader2, Minimize2, Maximize2, X } from "lucide-react";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
@@ -6,7 +6,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip
 import { AreaChart, Area, ResponsiveContainer } from "recharts";
 import EmergingTrendsSection from "./EmergingTrendsSection";
 import CriticalMomentsSection from "./CriticalMomentsSection";
-import WeeklyPulseDashboard from "./WeeklyPulseDashboard";
+const WeeklyPulseDashboard = lazy(() => import("./WeeklyPulseDashboard"));
 import { TrendCardProps } from "./TrendCard";
 import { CriticalMoment } from "@/hooks/use-critical-moments";
 import { AnomalyAlert } from "@/hooks/use-anomaly-alerts";
@@ -667,7 +667,9 @@ export default function TrendRadar({ trends, allTrends, criticalMoments, anomali
 
             <TabsContent value="weekly" className="absolute inset-0 mt-0 overflow-y-auto scrollbar-thin data-[state=inactive]:hidden animate-in fade-in-0 duration-200">
               <Legend tab="weekly" lang={lang} />
-              <WeeklyPulseDashboard trends={allTrends} />
+              <Suspense fallback={<TabLoadingState lang={lang} />}>
+                <WeeklyPulseDashboard trends={allTrends} />
+              </Suspense>
             </TabsContent>
           </div>
         </div>
