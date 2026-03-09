@@ -1057,6 +1057,12 @@ const translations: Record<LangCode, Record<TranslationKey, string>> = {
     mapFlowLegendTitle: "Распространение трендов", mapFlowOrigin: "Источник", mapFlowDestination: "Назначение", mapFlowPropagation: "Распространение", mapFlowTimeDelta: "Время распространения", mapFlowClickToFilter: "Нажмите для фильтрации", mapFlowNoData: "Недостаточно данных о распространении",
     mapSentLegendTitle: "Эмоциональный ландшафт", mapSentPositive: "Позитивный", mapSentNegative: "Негативный", mapSentMixed: "Поляризованный", mapSentNeutral: "Нейтральный", mapSentBreakdown: "Распределение настроений", mapSentTopTrends: "Топ трендов", mapSentNoData: "Недостаточно данных о настроениях",
     mapSentVolume: "Общий объём", mapSentGrowth: "Средний рост", mapSentActiveTrends: "Активные тренды",
+    growth: "Рост", volumeLabel: "Объём", sourcesLabel: "Источники", narrativeOrigin: "Нарративный источник",
+    confidenceLabel: "Достоверность", confidenceHigh: "Высокая", confidenceMedium: "Средняя", confidenceLow: "Низкая",
+    propagationPath: "Путь распространения", sourceLabel: "Источник", sentimentAnalysis: "Анализ настроений",
+    tviGrowthLabel: "Рост (30%)", tviVolumeLabel: "Объём (30%)", tviSourcesLabel: "Источники (20%)", tviGeographyLabel: "География (20%)",
+    tviDescription: "Измеряет скорость распространения на основе:",
+    sourcesSingular: "источник", sourcesPlural: "источников",
   },
 };
 
