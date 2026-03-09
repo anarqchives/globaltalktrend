@@ -660,14 +660,31 @@ export default function TrendRadar({ trends, allTrends, criticalMoments, anomali
     if (typeof window !== "undefined") return localStorage.getItem(RADAR_STORAGE_KEY) === "true";
     return false;
   });
+  // Track unseen anomaly/critical count — resets when user views the Critical tab
+  const [unseenCritical, setUnseenCritical] = useState(0);
+  const prevCriticalCountRef = useRef(0);
 
   useEffect(() => {
     localStorage.setItem(RADAR_STORAGE_KEY, String(collapsed));
   }, [collapsed]);
 
+  const totalCriticalItems = criticalMoments.length + anomalies.length;
+
+  // When new critical items arrive and user is NOT on the critical tab, increment unseen
+  useEffect(() => {
+    if (totalCriticalItems > prevCriticalCountRef.current && tab !== "critical") {
+      setUnseenCritical(totalCriticalItems);
+    }
+    prevCriticalCountRef.current = totalCriticalItems;
+  }, [totalCriticalItems, tab]);
+
+  // When user clicks the Critical tab, reset unseen
+  useEffect(() => {
+    if (tab === "critical") setUnseenCritical(0);
+  }, [tab]);
+
   const hasEmerging = trends.length > 3;
-  const hasCritical = criticalMoments.length > 0;
-  const hasAnomalies = anomalies.length > 0;
+  const hasCritical = criticalMoments.length > 0 || anomalies.length > 0;
 
   const labels = {
     collapse: lang === "pt" ? "Recolher radar" : "Collapse radar",
