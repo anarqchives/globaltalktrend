@@ -1,5 +1,6 @@
 import { useState, useMemo, useEffect } from "react";
 import { motion } from "framer-motion";
+import { SentimentDonut, EmotionBars } from "./SentimentCharts";
 import { ChevronDown, ChevronUp, Link2, Bell, ExternalLink, Shield, CheckCircle2, FlaskConical, Globe, Newspaper, Bookmark, Flag, Share2, Eye, TrendingUp, Radio, Clock, BarChart3 } from "lucide-react";
 import { AreaChart, Area, ResponsiveContainer, XAxis, YAxis, Tooltip as RechartsTooltip, CartesianGrid } from "recharts";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
@@ -249,7 +250,7 @@ const TimelineCard = ({
 
   return (
     <motion.div
-      className="timeline-card-wrapper"
+      className={`timeline-card-wrapper ${expanded ? 'timeline-card-expanded-wrapper' : ''}`}
       layout
       initial={{ opacity: 0, y: 12 }}
       whileInView={{ opacity: 1, y: 0 }}
@@ -373,27 +374,58 @@ const TimelineCard = ({
             )}
           </div>
 
-          {/* === TAGS ROW === */}
+          {/* === TAGS ROW with Tooltips === */}
           <div className="flex items-center gap-1 flex-wrap mb-1">
-            <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-medium bg-secondary text-muted-foreground">
-              {localizedCategory}
-            </span>
-            <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-medium bg-secondary text-muted-foreground">
-              {signalType}
-            </span>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-medium bg-secondary text-muted-foreground cursor-help">
+                  {localizedCategory}
+                </span>
+              </TooltipTrigger>
+              <TooltipContent side="top" className="text-[10px]">Categoria da trend</TooltipContent>
+            </Tooltip>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-medium bg-secondary text-muted-foreground cursor-help">
+                  {signalType}
+                </span>
+              </TooltipTrigger>
+              <TooltipContent side="top" className="text-[10px]">Tipo de sinal detectado</TooltipContent>
+            </Tooltip>
             {trustBadge && trustBadgeKeys[trustBadge] && (
-              <span className={`inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded text-[9px] font-medium ${trustBadgeKeys[trustBadge].className}`}>
-                {trustBadgeKeys[trustBadge].icon}
-                {t(trustBadgeKeys[trustBadge].labelKey as any)}
-              </span>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <span className={`inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded text-[9px] font-medium cursor-help ${trustBadgeKeys[trustBadge].className}`}>
+                    {trustBadgeKeys[trustBadge].icon}
+                    {t(trustBadgeKeys[trustBadge].labelKey as any)}
+                  </span>
+                </TooltipTrigger>
+                <TooltipContent side="top" className="text-[10px]">
+                  {trustBadge === "verified" ? "Fonte verificada – alta confiabilidade" :
+                   trustBadge === "official" ? "Fonte oficial – dados governamentais" :
+                   trustBadge === "scientific" ? "Fonte científica – dados revisados" :
+                   trustBadge === "press" ? "Imprensa verificada" :
+                   "Fonte internacional"}
+                </TooltipContent>
+              </Tooltip>
             )}
             {trigger && (
-              <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-medium bg-accent/10 text-accent-foreground">
-                {trigger.emoji} {t(trigger.labelKey as any)}
-              </span>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-medium bg-accent/10 text-accent-foreground cursor-help">
+                    {trigger.emoji} {t(trigger.labelKey as any)}
+                  </span>
+                </TooltipTrigger>
+                <TooltipContent side="top" className="text-[10px]">Gatilho contextual detectado no título</TooltipContent>
+              </Tooltip>
             )}
             {translated && (
-              <span className="text-[9px] text-blue-500" title={t("autoTranslated")}>🌐 Traduzido</span>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <span className="text-[9px] text-blue-500 cursor-help">🌐 Traduzido</span>
+                </TooltipTrigger>
+                <TooltipContent side="top" className="text-[10px]">{t("autoTranslated")}</TooltipContent>
+              </Tooltip>
             )}
           </div>
         </div>
@@ -541,6 +573,30 @@ const TimelineCard = ({
               </div>
             </div>
           )}
+
+          {/* Sentiment Analysis Section */}
+          <div className="mb-3 p-2 rounded-lg bg-secondary/30 border border-border/50">
+            <span className="text-[9px] font-semibold text-muted-foreground uppercase tracking-wide mb-2 block">
+              📊 Sentiment Analysis
+            </span>
+            <div className="flex items-start gap-3">
+              <SentimentDonut
+                positive={changePositive ? 55 : 25}
+                neutral={30}
+                negative={changePositive ? 15 : 45}
+                size={64}
+              />
+              <div className="flex-1 min-w-0">
+                <EmotionBars
+                  emotions={[
+                    { icon: "😊", label: "Positivo", percentage: changePositive ? 55 : 25, color: "hsl(142, 60%, 45%)" },
+                    { icon: "😐", label: "Neutro", percentage: 30, color: "hsl(var(--muted-foreground))" },
+                    { icon: "😠", label: "Negativo", percentage: changePositive ? 15 : 45, color: "hsl(var(--destructive))" },
+                  ]}
+                />
+              </div>
+            </div>
+          </div>
 
           {/* Platform-specific metrics */}
           <div className="flex flex-wrap gap-2 mb-3 text-[11px]">

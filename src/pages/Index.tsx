@@ -22,6 +22,7 @@ import { useSavedCards } from "@/hooks/use-saved-cards";
 import { useSavedFilters } from "@/hooks/use-saved-filters";
 import { supabase } from "@/integrations/supabase/client";
 import { ChevronRight, X, Map, Newspaper, LayoutList, LayoutGrid, RefreshCw } from "lucide-react";
+import TagLegend from "@/components/TagLegend";
 import { useUserActivity } from "@/hooks/use-user-activity";
 import {
   ResizablePanelGroup,
@@ -371,7 +372,16 @@ const Index = () => {
     setFilters(f => ({ ...f, [key]: defaultFilters[key] }));
   };
 
-  const gridStyle = { gridTemplateColumns: `repeat(${gridColumns}, 1fr)`, gap: compactMode ? '8px' : '16px' };
+  // Smart grid: use CSS auto-fill for perfect fit, reduce columns when a card is expanded
+  const hasExpanded = expandedTrendId !== null;
+  const gridStyle = useMemo(() => ({
+    display: 'grid' as const,
+    gridTemplateColumns: hasExpanded && gridColumns > 2
+      ? `repeat(${gridColumns - 1}, 1fr)`
+      : `repeat(${gridColumns}, 1fr)`,
+    gap: compactMode ? '8px' : '12px',
+    alignItems: 'start' as const,
+  }), [gridColumns, compactMode, hasExpanded]);
 
   const renderTimeline = () => (
     <div ref={(el) => { (scrollRef as any).current = el; (gridRef as any).current = el; }} className={`flex flex-col gap-1 p-2 h-full overflow-y-auto overflow-x-hidden scrollbar-thin relative transition-opacity duration-200 w-full max-w-full ${filterTransitioning ? 'opacity-60' : 'opacity-100'}`}>
@@ -390,6 +400,7 @@ const Index = () => {
               Atualizar Agora
             </button>
           )}
+          <TagLegend />
           <button
             onClick={() => setCompactMode(c => !c)}
             className="h-6 w-6 flex items-center justify-center rounded-md hover:bg-secondary transition-colors text-muted-foreground hover:text-foreground"
