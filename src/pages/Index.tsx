@@ -653,18 +653,16 @@ const Index = () => {
       />
 
       <div className="flex-1 overflow-hidden flex flex-col">
-        {/* Trend Radar: Emerging / Critical / Top Trends - Fixed height container */}
-        {!loading && filteredTrends.length > 1 && (
-          <TrendRadar
-            trends={filteredTrends}
-            allTrends={allTrends}
-            criticalMoments={criticalMoments}
-            anomalies={anomalies}
-            onSelectTrend={handleSelectTrend}
-            onFilterCountry={(code) => setFilters(f => ({ ...f, country: code }))}
-            onAnomalyClick={handleAnomalyClick}
-          />
-        )}
+        {/* Trend Radar: Always rendered once data exists - independent of timeline refresh */}
+        <TrendRadar
+          trends={filteredTrends}
+          allTrends={allTrends}
+          criticalMoments={criticalMoments}
+          anomalies={anomalies}
+          onSelectTrend={handleSelectTrend}
+          onFilterCountry={(code) => setFilters(f => ({ ...f, country: code }))}
+          onAnomalyClick={handleAnomalyClick}
+        />
 
         {/* Main content area - expands to fill remaining space */}
 
