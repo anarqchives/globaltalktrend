@@ -173,6 +173,7 @@ const GoogleMapView = ({
   highlightCountry,
 }: GoogleMapViewProps) => {
   const { t, lang } = useLanguage();
+  const isMobile = useIsMobile();
   const mapRef = useRef<HTMLDivElement>(null);
   const googleMapRef = useRef<any>(null);
   const markersRef = useRef<any[]>([]);
