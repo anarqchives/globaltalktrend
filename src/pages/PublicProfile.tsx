@@ -6,6 +6,7 @@ import {
   FileText, Users, ArrowLeft, Globe, MessageSquare, BookOpen, Clock,
   TrendingUp, ExternalLink
 } from "lucide-react";
+import BoardComments from "@/components/BoardComments";
 import { supabase } from "@/integrations/supabase/client";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
