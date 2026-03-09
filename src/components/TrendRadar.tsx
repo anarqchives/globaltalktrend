@@ -170,7 +170,7 @@ function TopTrendsGrid({ trends, onSelectTrend }: { trends: TrendCardProps[]; on
       </div>
 
       {/* Ranking list #4-20 */}
-      <div className="columns-2 sm:columns-3 md:columns-4 lg:columns-5 gap-1.5 space-y-0 [&>*]:break-inside-avoid [&>*]:mb-1.5">
+      <div className="columns-2 sm:columns-3 md:columns-4 lg:columns-5 xl:columns-6 gap-1.5 space-y-0 [&>*]:break-inside-avoid [&>*]:mb-1.5">
         {ranked.slice(3).map((trend, i) => {
           const pf = platformIcons[trend.platform] || { emoji: "●", color: "hsl(var(--muted-foreground))" };
           const flag = countryCodeToFlag(trend.countryCode);
@@ -321,7 +321,7 @@ function AnomaliesPredictive({ anomalies, lang, onAnomalyClick }: {
   };
 
   return (
-    <div className="px-3 space-y-2">
+    <div className="px-3 space-y-1.5">
       {/* Prediction card */}
       <div className="rounded-lg border border-primary/15 bg-primary/5 p-2">
         <div className="flex items-start gap-1.5">
@@ -341,7 +341,7 @@ function AnomaliesPredictive({ anomalies, lang, onAnomalyClick }: {
       </div>
 
       {/* Anomaly cards — intelligence hierarchy */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+      <div className="grid grid-cols-2 sm:grid-cols-3 gap-1.5">
         {anomalies.map((anomaly, i) => {
           const info = anomalyTypeInfo[anomaly.type] || anomalyTypeInfo.spike;
           const pf = platformIcons[anomaly.trend.platform] || { emoji: "●", color: "hsl(var(--muted-foreground))" };
@@ -365,19 +365,19 @@ function AnomaliesPredictive({ anomalies, lang, onAnomalyClick }: {
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: i * 0.03 }}
               onClick={() => setExpandedIdx(isExpanded ? null : i)}
-              className={`rounded-xl border border-border/30 bg-card/80 p-3 cursor-pointer transition-all hover:border-primary/20 flex flex-col gap-1.5 ${isExpanded ? "ring-1 ring-primary/15" : ""}`}
+              className={`rounded-lg border border-border/30 bg-card/80 p-2 cursor-pointer transition-all hover:border-primary/20 flex flex-col gap-1 ${isExpanded ? "ring-1 ring-primary/15" : ""}`}
             >
               {/* WHAT — Title */}
               <div>
-                <p className="text-[11px] font-bold text-foreground leading-tight line-clamp-2">{anomaly.trend.title}</p>
-                <p className="text-[9px] text-muted-foreground/70 italic mt-0.5">
+                <p className="text-[10px] font-bold text-foreground leading-tight line-clamp-2">{anomaly.trend.title}</p>
+                <p className="text-[8px] text-muted-foreground/70 mt-0.5">
                   {anomaly.trend.category || "Geral"} · {anomaly.trend.platform}
                 </p>
               </div>
 
               {/* WHY — Explanation */}
-              <div className="rounded-md bg-amber-500/8 border border-amber-500/15 px-2 py-1">
-                <p className="text-[9px] text-amber-700 dark:text-amber-300 leading-relaxed">
+              <div className="rounded bg-amber-500/8 border border-amber-500/15 px-1.5 py-0.5">
+                <p className="text-[8px] text-amber-700 dark:text-amber-300 leading-relaxed">
                   {whyText}
                 </p>
               </div>
@@ -516,31 +516,31 @@ export default function TrendRadar({ trends, allTrends, criticalMoments, anomali
   };
 
   return (
-    <div className="flex flex-col overflow-hidden h-full rounded-b-lg">
+    <div className="flex flex-col overflow-hidden h-full rounded-b-lg bg-card/40 border-t border-border/10">
       <Tabs value={tab} onValueChange={setTab} className="flex flex-col h-full min-h-0">
-        {/* Unified header bar — part of the module block */}
-        <div className="px-3 h-9 flex items-center gap-2 flex-shrink-0 bg-muted/20 border-b border-border/15">
+        {/* Unified header bar — differentiated block */}
+        <div className="px-4 h-10 flex items-center gap-3 flex-shrink-0 bg-muted/30 border-b border-border/20">
           {/* Label */}
-          <div className="flex items-center gap-1.5 mr-1 flex-shrink-0">
-            <Radar className="w-3.5 h-3.5 text-primary" />
-            <span className="text-[10px] font-bold text-primary uppercase tracking-widest hidden sm:inline">Radar</span>
+          <div className="flex items-center gap-1.5 mr-2 flex-shrink-0">
+            <Radar className="w-4 h-4 text-primary" />
+            <span className="text-[11px] font-bold text-primary uppercase tracking-widest hidden sm:inline">Radar</span>
           </div>
 
-          {/* Tabs */}
-          <TabsList className="h-7 bg-transparent p-0 gap-0 rounded-none border-none flex-shrink-0">
+          {/* Tabs — segmented modern style */}
+          <TabsList className="h-7 bg-muted/50 p-0.5 gap-0 rounded-lg border border-border/20 flex-shrink-0">
             {tabConfig.map(tc => {
               const Icon = tc.icon;
               return (
                 <TabsTrigger
                   key={tc.value}
                   value={tc.value}
-                  className={`h-6 px-2.5 text-[9px] font-semibold gap-1 rounded-md border-none transition-all duration-200 data-[state=inactive]:bg-transparent data-[state=inactive]:text-muted-foreground ${activeColorMap[tc.activeColor]} data-[state=active]:shadow-sm`}
+                  className={`h-6 px-3 text-[10px] font-semibold gap-1.5 rounded-md border-none transition-all duration-200 data-[state=inactive]:bg-transparent data-[state=inactive]:text-muted-foreground ${activeColorMap[tc.activeColor]} data-[state=active]:shadow-sm`}
                 >
                   <Icon className="w-3 h-3" />
                   <span className="hidden sm:inline">{tc.label}</span>
-                  {tc.dot && <span className={`w-1 h-1 rounded-full ${tc.dot} animate-pulse`} />}
+                  {tc.dot && <span className={`w-1.5 h-1.5 rounded-full ${tc.dot} animate-pulse`} />}
                   {tc.badge && (
-                    <span className={`px-1 py-px rounded-full bg-destructive text-destructive-foreground text-[7px] font-bold leading-none ${tc.pulse ? "animate-pulse" : ""}`}>
+                    <span className={`px-1.5 py-px rounded-full bg-destructive text-destructive-foreground text-[7px] font-bold leading-none ${tc.pulse ? "animate-pulse" : ""}`}>
                       {tc.badge}
                     </span>
                   )}

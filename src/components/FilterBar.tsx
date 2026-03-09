@@ -103,7 +103,7 @@ export const countries = [
   ]},
 ];
 
-const selectClass = "appearance-none bg-transparent text-foreground text-[12px] font-medium pl-3 pr-7 h-8 min-h-[32px] max-h-[32px] rounded-full cursor-pointer min-w-0 hover:bg-muted/50 dark:hover:bg-white/5 transition-colors focus:outline-none focus:ring-0 box-border touch-manipulation";
+const selectClass = "appearance-none bg-secondary/60 text-foreground text-[12px] font-medium pl-3 pr-7 h-8 min-h-[32px] max-h-[32px] rounded-full cursor-pointer min-w-0 hover:bg-muted/80 dark:bg-secondary/40 dark:hover:bg-secondary/60 transition-colors focus:outline-none focus:ring-1 focus:ring-primary/20 box-border touch-manipulation border border-border/20";
 
 const FilterBar = ({ filters, onChange, onForceReset, onSaveFilter, isLoggedIn }: FilterBarProps) => {
   const { t } = useLanguage();
@@ -149,8 +149,8 @@ const FilterBar = ({ filters, onChange, onForceReset, onSaveFilter, isLoggedIn }
   ];
 
   return (
-    <div className="px-2 md:px-6 py-1.5 sticky top-12 z-40 bg-background/95 backdrop-blur-sm border-b border-border/30">
-      <div className="flex items-center gap-0.5 md:gap-1 overflow-x-auto scrollbar-thin flex-nowrap pb-1 md:pb-0" style={{ WebkitOverflowScrolling: 'touch' }}>
+    <div className="px-3 md:px-6 py-1.5 sticky top-12 z-40 bg-muted/40 backdrop-blur-sm border-b border-border/20 shadow-sm">
+      <div className="flex items-center gap-1 md:gap-1.5 overflow-x-auto scrollbar-thin flex-nowrap pb-1 md:pb-0" style={{ WebkitOverflowScrolling: 'touch' }}>
         <div className="relative flex-shrink-0">
           <select
             className={selectClass}

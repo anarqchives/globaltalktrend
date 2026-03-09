@@ -25,7 +25,7 @@ import { ChevronRight, X, Map, Newspaper, RefreshCw, ChevronsUp, ChevronsDown, R
 import ArchiveDrawer from "@/components/ArchiveDrawer";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import TagLegend from "@/components/TagLegend";
-import WatchlistPanel from "@/components/WatchlistPanel";
+
 import OnboardingFlow, { hasCompletedOnboarding } from "@/components/OnboardingFlow";
 import { useUserActivity } from "@/hooks/use-user-activity";
 import {
@@ -472,10 +472,6 @@ const Index = () => {
         </div>
       </div>
 
-      {/* Watchlist Panel */}
-      {user && (
-        <WatchlistPanel trends={filteredTrends} onSelectTrend={handleSelectTrend} />
-      )}
 
       {breadcrumbs.length > 0 && (
         <div className="px-1.5 py-0.5 flex items-center gap-1 flex-wrap text-[9px]">
