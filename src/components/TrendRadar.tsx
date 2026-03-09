@@ -648,7 +648,7 @@ export default function TrendRadar({ trends, allTrends, criticalMoments, anomali
               <WeeklyPulseDashboard trends={allTrends} />
             </TabsContent>
           </div>
-        </motion.div>
+        </div>
       </Tabs>
     </div>
   );
