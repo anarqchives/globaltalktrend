@@ -742,6 +742,11 @@ const Index = () => {
         lastUpdated={lastUpdated}
         totalTrends={filteredTrends.length}
       />
+
+      {/* Onboarding Flow */}
+      {showOnboarding && user?.id && (
+        <OnboardingFlow userId={user.id} onComplete={() => setShowOnboarding(false)} />
+      )}
     </div>
   );
 };
