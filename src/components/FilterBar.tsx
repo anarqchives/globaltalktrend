@@ -103,7 +103,7 @@ export const countries = [
   ]},
 ];
 
-const selectClass = "appearance-none bg-secondary/60 text-foreground text-[12px] font-medium pl-3 pr-7 h-8 min-h-[32px] max-h-[32px] rounded-full cursor-pointer min-w-0 hover:bg-muted/80 dark:bg-secondary/40 dark:hover:bg-secondary/60 transition-colors focus:outline-none focus:ring-1 focus:ring-primary/20 box-border touch-manipulation border border-border/20";
+const selectClass = "appearance-none bg-secondary/50 text-foreground text-[12px] font-medium pl-3 pr-7 h-8 min-h-[32px] max-h-[32px] rounded-full cursor-pointer min-w-0 hover:bg-secondary/80 dark:bg-secondary/50 dark:hover:bg-secondary/70 transition-colors focus:outline-none focus:ring-2 focus:ring-primary/20 box-border touch-manipulation border-none";
 
 const FilterBar = ({ filters, onChange, onForceReset, onSaveFilter, isLoggedIn }: FilterBarProps) => {
   const { t } = useLanguage();
@@ -149,8 +149,8 @@ const FilterBar = ({ filters, onChange, onForceReset, onSaveFilter, isLoggedIn }
   ];
 
   return (
-    <div className="px-3 md:px-6 py-1.5 sticky top-12 z-40 bg-muted/40 backdrop-blur-sm border-b border-border/20 shadow-sm">
-      <div className="flex items-center gap-1 md:gap-1.5 overflow-x-auto scrollbar-thin flex-nowrap pb-1 md:pb-0" style={{ WebkitOverflowScrolling: 'touch' }}>
+    <div className="px-3 md:px-6 py-1.5 sticky top-12 z-40 bg-secondary/20 backdrop-blur-sm border-b border-border/50">
+      <div className="flex items-center gap-1.5 md:gap-2 overflow-x-auto scrollbar-thin flex-nowrap pb-1 md:pb-0" style={{ WebkitOverflowScrolling: 'touch' }}>
         <div className="relative flex-shrink-0">
           <select
             className={selectClass}
@@ -184,9 +184,8 @@ const FilterBar = ({ filters, onChange, onForceReset, onSaveFilter, isLoggedIn }
         </div>
 
         <div className="relative flex-shrink-0">
-          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[11px] text-muted-foreground pointer-events-none hidden md:inline">{t("filterCategory")}:</span>
           <select
-            className={`${selectClass} md:pl-[80px]`}
+            className={selectClass}
             value={filters.category}
             onChange={(e) => update("category", e.target.value)}
             aria-label={t("category")}
@@ -199,9 +198,8 @@ const FilterBar = ({ filters, onChange, onForceReset, onSaveFilter, isLoggedIn }
         </div>
 
         <div className="relative flex-shrink-0">
-          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[11px] text-muted-foreground pointer-events-none hidden md:inline">{t("filterSource")}:</span>
           <select
-            className={`${selectClass} md:pl-[52px]`}
+            className={selectClass}
             value={filters.type}
             onChange={(e) => update("type", e.target.value)}
             aria-label={t("type")}
@@ -218,7 +216,7 @@ const FilterBar = ({ filters, onChange, onForceReset, onSaveFilter, isLoggedIn }
             <TooltipTrigger asChild>
               <button
                 onClick={() => onChange(defaultFilters)}
-                className="flex items-center gap-1 px-3 h-8 min-h-[32px] max-h-[32px] rounded-full text-[12px] font-medium text-primary hover:bg-muted/50 transition-colors flex-shrink-0 focus:outline-none"
+                className="flex items-center gap-1 px-3 h-8 min-h-[32px] max-h-[32px] rounded-full text-[12px] font-medium text-primary hover:bg-primary/8 transition-colors flex-shrink-0 focus:outline-none"
                 aria-label={t("all")}
               >
                 <RotateCcw className="w-3 h-3" />
@@ -235,7 +233,7 @@ const FilterBar = ({ filters, onChange, onForceReset, onSaveFilter, isLoggedIn }
           <TooltipTrigger asChild>
             <button
               onClick={() => onForceReset?.()}
-              className="flex items-center gap-1 px-3 h-8 min-h-[32px] max-h-[32px] rounded-full text-[12px] font-medium text-muted-foreground hover:bg-muted/50 transition-colors flex-shrink-0 focus:outline-none"
+              className="flex items-center gap-1 px-3 h-8 min-h-[32px] max-h-[32px] rounded-full text-[12px] font-medium text-muted-foreground hover:bg-secondary/50 transition-colors flex-shrink-0 focus:outline-none"
               aria-label="Reset forçado"
             >
               <RotateCcw className="w-3 h-3" />
@@ -251,7 +249,7 @@ const FilterBar = ({ filters, onChange, onForceReset, onSaveFilter, isLoggedIn }
             <TooltipTrigger asChild>
               <button
                 onClick={onSaveFilter}
-                className="flex items-center gap-1.5 px-3.5 h-8 min-h-[32px] max-h-[32px] rounded-full text-[12px] font-medium border-[1.5px] border-primary text-primary bg-transparent hover:bg-primary hover:text-primary-foreground transition-all flex-shrink-0 focus:outline-none"
+                className="flex items-center gap-1.5 px-3.5 h-8 min-h-[32px] max-h-[32px] rounded-full text-[12px] font-medium text-primary bg-primary/6 hover:bg-primary hover:text-primary-foreground transition-all flex-shrink-0 focus:outline-none"
                 aria-label={t("createAlert")}
               >
                 <Bell className="w-3 h-3" />
@@ -264,7 +262,7 @@ const FilterBar = ({ filters, onChange, onForceReset, onSaveFilter, isLoggedIn }
           </Tooltip>
         )}
 
-        <div className="flex items-center gap-2 ml-auto flex-shrink-0 whitespace-nowrap pl-2 border-l border-border/20">
+        <div className="flex items-center gap-2 ml-auto flex-shrink-0 whitespace-nowrap pl-2 border-l border-border/30">
           <Tooltip>
             <TooltipTrigger asChild>
               <span className="flex items-center gap-1.5 cursor-help">
@@ -276,9 +274,9 @@ const FilterBar = ({ filters, onChange, onForceReset, onSaveFilter, isLoggedIn }
               {t("liveTooltip")}
             </TooltipContent>
           </Tooltip>
-          <span className="text-border/40">·</span>
+          <span className="text-muted-foreground/20">·</span>
           <OnlineUsersCount />
-          <span className="text-border/40">·</span>
+          <span className="text-muted-foreground/20">·</span>
           <Tooltip>
             <TooltipTrigger asChild>
               <span className="cursor-help">
@@ -295,7 +293,6 @@ const FilterBar = ({ filters, onChange, onForceReset, onSaveFilter, isLoggedIn }
   );
 };
 
-// Online users estimate
 const OnlineUsersCount = () => {
   const [count, setCount] = useState(() => Math.floor(80 + Math.random() * 60));
   useEffect(() => {
@@ -314,8 +311,7 @@ const OnlineUsersCount = () => {
   );
 };
 
-// Countdown Timer Component
-const REFRESH_INTERVAL_SECONDS = 10 * 60; // 10 minutes
+const REFRESH_INTERVAL_SECONDS = 10 * 60;
 
 const CountdownTimer = () => {
   const [seconds, setSeconds] = useState(() => {
