@@ -532,47 +532,51 @@ const GoogleMapView = ({
               const pColor = platformColors[tr.platform] || "#888";
               const changeVal = parseFloat(String(tr.change).replace(/[^0-9.-]/g, '')) || 0;
               const growthBadge = changeVal > 50
-                ? `<span style="position:absolute;top:8px;right:8px;background:#ef4444;color:#fff;font-size:9px;font-weight:600;padding:2px 6px;border-radius:10px;">+${Math.round(changeVal)}%</span>`
+                ? `<span style="position:absolute;top:${isMobile ? '10px' : '8px'};right:${isMobile ? '10px' : '8px'};background:#ef4444;color:#fff;font-size:${isMobile ? '10px' : '9px'};font-weight:600;padding:${isMobile ? '3px 8px' : '2px 6px'};border-radius:10px;">+${Math.round(changeVal)}%</span>`
                 : '';
-              return `<div class="map-tooltip-trend" data-trend-idx="${idx}" style="position:relative;display:flex;align-items:center;gap:6px;padding:8px 10px;border-radius:8px;cursor:pointer;margin-bottom:4px;background:transparent;border:1px solid ${border};transition:all 0.15s ease;">
-                <div style="width:3px;height:20px;border-radius:2px;background:${pColor};flex-shrink:0;"></div>
+              return `<div class="map-tooltip-trend" data-trend-idx="${idx}" style="position:relative;display:flex;align-items:center;gap:${isMobile ? '10px' : '6px'};padding:${isMobile ? '12px 14px' : '8px 10px'};border-radius:${isMobile ? '12px' : '8px'};cursor:pointer;margin-bottom:${isMobile ? '6px' : '4px'};background:transparent;border:1px solid ${border};transition:all 0.15s ease;min-height:${isMobile ? '48px' : 'auto'};touch-action:manipulation;">
+                <div style="width:${isMobile ? '4px' : '3px'};height:${isMobile ? '24px' : '20px'};border-radius:2px;background:${pColor};flex-shrink:0;"></div>
                 <div style="flex:1;min-width:0;">
-                  <div style="font-size:11px;color:${text};overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:180px;font-weight:500;">${tr.title.slice(0, 40)}${tr.title.length > 40 ? '…' : ''}</div>
-                  <div style="display:flex;align-items:center;gap:4px;margin-top:2px;">
-                    <span style="font-size:8px;background:${badgeBg};color:${subtext};padding:1px 5px;border-radius:4px;font-weight:600;">${tr.volume}</span>
-                    <span style="font-size:8px;color:${subtext};">${tr.platform}</span>
+                  <div style="font-size:${isMobile ? '13px' : '11px'};color:${text};overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:${isMobile ? '220px' : '180px'};font-weight:500;">${tr.title.slice(0, isMobile ? 50 : 40)}${tr.title.length > (isMobile ? 50 : 40) ? '…' : ''}</div>
+                  <div style="display:flex;align-items:center;gap:${isMobile ? '6px' : '4px'};margin-top:${isMobile ? '4px' : '2px'};">
+                    <span style="font-size:${isMobile ? '10px' : '8px'};background:${badgeBg};color:${subtext};padding:${isMobile ? '2px 7px' : '1px 5px'};border-radius:4px;font-weight:600;">${tr.volume}</span>
+                    <span style="font-size:${isMobile ? '10px' : '8px'};color:${subtext};">${tr.platform}</span>
                   </div>
                 </div>
                 ${growthBadge}
               </div>`;
             }).join('')
-          : `<div style="font-size:11px;color:${subtext};padding:12px 0;text-align:center;">${t("noTrends")}</div>`;
+          : `<div style="font-size:${isMobile ? '13px' : '11px'};color:${subtext};padding:12px 0;text-align:center;">${t("noTrends")}</div>`;
 
         const moreCount = trends.filter(tr => tr.countryCode === cp.id).length - 5;
         const moreSection = moreCount > 0
-          ? `<div style="text-align:center;font-size:10px;color:${subtext};padding:6px;background:${badgeBg};border-radius:8px;margin-bottom:10px;">+ ${moreCount} outras tendências</div>`
+          ? `<div style="text-align:center;font-size:${isMobile ? '12px' : '10px'};color:${subtext};padding:${isMobile ? '8px' : '6px'};background:${badgeBg};border-radius:8px;margin-bottom:10px;">+ ${moreCount} ${lang === "pt" ? "outras tendências" : "more trends"}</div>`
           : '';
 
-        const closeBtn = `<button id="map-tooltip-close" style="position:absolute;top:10px;right:10px;width:22px;height:22px;border-radius:11px;background:${isDark ? 'rgba(30,41,59,0.8)' : '#f1f5f9'};border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:11px;color:${subtext};transition:all 0.15s ease;z-index:10;">✕</button>`;
+        const closeBtnSize = isMobile ? '32' : '22';
+        const closeBtn = `<button id="map-tooltip-close" style="position:absolute;top:${isMobile ? '8px' : '10px'};right:${isMobile ? '8px' : '10px'};width:${closeBtnSize}px;height:${closeBtnSize}px;border-radius:${parseInt(closeBtnSize)/2}px;background:${isDark ? 'rgba(30,41,59,0.8)' : '#f1f5f9'};border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:${isMobile ? '14px' : '11px'};color:${subtext};transition:all 0.15s ease;z-index:10;touch-action:manipulation;">✕</button>`;
         
-        const filterBtn = `<button id="map-tooltip-filter" style="width:100%;background:${isDark ? 'rgba(59,130,246,0.9)' : '#3b82f6'};color:white;border:none;border-radius:8px;padding:8px;font-size:11px;font-weight:600;cursor:pointer;transition:all 0.2s ease;margin-top:8px;">${lang === "pt" ? "Filtrar timeline por este país" : "Filter timeline by country"}</button>`;
+        const filterBtn = `<button id="map-tooltip-filter" style="width:100%;background:${isDark ? 'rgba(59,130,246,0.9)' : '#3b82f6'};color:white;border:none;border-radius:${isMobile ? '12px' : '8px'};padding:${isMobile ? '12px' : '8px'};font-size:${isMobile ? '13px' : '11px'};font-weight:600;cursor:pointer;transition:all 0.2s ease;margin-top:8px;touch-action:manipulation;min-height:${isMobile ? '48px' : 'auto'};">${lang === "pt" ? "Filtrar timeline por este país" : "Filter timeline by country"}</button>`;
+
+        const tooltipWidth = isMobile ? 'min-width:280px;max-width:92vw' : 'min-width:260px;max-width:290px';
+        const tooltipPadding = isMobile ? '18px' : '16px';
 
         infoWindowRef.current.setContent(`
-          <div style="font-family:Inter,system-ui,-apple-system,sans-serif;position:relative;padding:16px;min-width:260px;max-width:290px;background:${bg};color:${text};border-radius:16px;backdrop-filter:blur(20px);border:1px solid ${border};box-shadow:0 12px 32px rgba(0,0,0,0.15);">
+          <div style="font-family:Inter,system-ui,-apple-system,sans-serif;position:relative;padding:${tooltipPadding};${tooltipWidth};background:${bg};color:${text};border-radius:16px;backdrop-filter:blur(20px);border:1px solid ${border};box-shadow:0 12px 32px rgba(0,0,0,0.15);">
             ${closeBtn}
-            <div style="display:flex;align-items:center;gap:8px;padding-bottom:10px;border-bottom:1px solid ${border};">
-              <span style="font-size:24px;line-height:1;">${flag}</span>
+            <div style="display:flex;align-items:center;gap:${isMobile ? '12px' : '8px'};padding-bottom:${isMobile ? '12px' : '10px'};border-bottom:1px solid ${border};">
+              <span style="font-size:${isMobile ? '28px' : '24px'};line-height:1;">${flag}</span>
               <div>
-                <div style="font-size:15px;font-weight:700;color:${text};letter-spacing:-0.02em;">${cp.name}</div>
-                <div style="font-size:10px;color:${subtext};margin-top:1px;">${count} trends ativas</div>
+                <div style="font-size:${isMobile ? '17px' : '15px'};font-weight:700;color:${text};letter-spacing:-0.02em;">${cp.name}</div>
+                <div style="font-size:${isMobile ? '12px' : '10px'};color:${subtext};margin-top:1px;">${count} trends ${lang === "pt" ? "ativas" : "active"}</div>
               </div>
             </div>
-            <div style="margin:10px 0;background:${critSectionBg};border-radius:12px;padding:10px 12px;border-left:3px solid ${critColor};">
-              <span style="display:inline-flex;align-items:center;gap:4px;background:${critColor};color:#fff;padding:2px 8px;border-radius:10px;font-weight:700;font-size:9px;letter-spacing:0.5px;text-transform:uppercase;margin-bottom:6px;">${critTag}</span>
-              <p style="font-size:11px;color:${isDark ? '#94a3b8' : '#475569'};line-height:1.4;margin:0;">${critReason}</p>
+            <div style="margin:${isMobile ? '12px 0' : '10px 0'};background:${critSectionBg};border-radius:12px;padding:${isMobile ? '12px 14px' : '10px 12px'};border-left:3px solid ${critColor};">
+              <span style="display:inline-flex;align-items:center;gap:4px;background:${critColor};color:#fff;padding:${isMobile ? '3px 10px' : '2px 8px'};border-radius:10px;font-weight:700;font-size:${isMobile ? '10px' : '9px'};letter-spacing:0.5px;text-transform:uppercase;margin-bottom:6px;">${critTag}</span>
+              <p style="font-size:${isMobile ? '12px' : '11px'};color:${isDark ? '#94a3b8' : '#475569'};line-height:1.4;margin:0;">${critReason}</p>
             </div>
-            ${countryTrends.length > 0 ? `<div style="font-size:10px;font-weight:700;color:${text};text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;">Principais tendências</div>` : ''}
-            <div style="border-radius:10px;max-height:140px;overflow-y:auto;">${trendsList}</div>
+            ${countryTrends.length > 0 ? `<div style="font-size:${isMobile ? '11px' : '10px'};font-weight:700;color:${text};text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;">${lang === "pt" ? "Principais tendências" : "Top trends"}</div>` : ''}
+            <div style="border-radius:10px;max-height:${isMobile ? '200px' : '140px'};overflow-y:auto;-webkit-overflow-scrolling:touch;">${trendsList}</div>
             ${moreSection}
             ${filterBtn}
           </div>
