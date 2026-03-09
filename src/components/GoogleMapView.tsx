@@ -1262,7 +1262,7 @@ const GoogleMapView = ({
               <span style="display:inline-flex;align-items:center;gap:4px;background:${critColor};color:#fff;padding:${isMobile ? '3px 10px' : '2px 8px'};border-radius:10px;font-weight:700;font-size:${isMobile ? '10px' : '9px'};letter-spacing:0.5px;text-transform:uppercase;margin-bottom:6px;">${critTag}</span>
               <p style="font-size:${isMobile ? '12px' : '11px'};color:${isDark ? '#94a3b8' : '#475569'};line-height:1.4;margin:0;">${critReason}</p>
             </div>
-            ${countryTrends.length > 0 ? `<div style="font-size:${isMobile ? '11px' : '10px'};font-weight:700;color:${text};text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;">${lang === "pt" ? "Principais tendências" : "Top trends"}</div>` : ''}
+            ${countryTrends.length > 0 ? `<div style="font-size:${isMobile ? '11px' : '10px'};font-weight:700;color:${text};text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;">${t("mapTopTrendsLabel")}</div>` : ''}
             <div style="border-radius:10px;max-height:${isMobile ? '200px' : '140px'};overflow-y:auto;-webkit-overflow-scrolling:touch;">${trendsList}</div>
             ${moreSection}
             ${filterBtn}
