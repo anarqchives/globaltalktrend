@@ -749,6 +749,12 @@ const translations: Record<LangCode, Record<TranslationKey, string>> = {
     mapFlowLegendTitle: "トレンド伝播", mapFlowOrigin: "発信元", mapFlowDestination: "宛先", mapFlowPropagation: "伝播", mapFlowTimeDelta: "伝播時間", mapFlowClickToFilter: "クリックでフィルター", mapFlowNoData: "この期間の伝播データが不足しています",
     mapSentLegendTitle: "感情の風景", mapSentPositive: "ポジティブ", mapSentNegative: "ネガティブ", mapSentMixed: "分極化", mapSentNeutral: "ニュートラル", mapSentBreakdown: "感情分布", mapSentTopTrends: "トップトレンド", mapSentNoData: "感情データが不足しています",
     mapSentVolume: "合計ボリューム", mapSentGrowth: "平均成長", mapSentActiveTrends: "アクティブトレンド",
+    growth: "成長", volumeLabel: "ボリューム", sourcesLabel: "ソース", narrativeOrigin: "ナラティブの起源",
+    confidenceLabel: "信頼度", confidenceHigh: "高い", confidenceMedium: "中程度", confidenceLow: "低い",
+    propagationPath: "伝播パス", sourceLabel: "ソース", sentimentAnalysis: "感情分析",
+    tviGrowthLabel: "成長 (30%)", tviVolumeLabel: "ボリューム (30%)", tviSourcesLabel: "ソース (20%)", tviGeographyLabel: "地理 (20%)",
+    tviDescription: "以下に基づく伝播速度を測定：",
+    sourcesSingular: "ソース", sourcesPlural: "ソース",
   },
   ko: {
     trends: "트렌드", moreTrends: "더 많은 트렌드", filters: "필터",
