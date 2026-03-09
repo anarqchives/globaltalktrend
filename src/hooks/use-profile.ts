@@ -112,7 +112,7 @@ export function useProfile(userId: string | null) {
           console.error("Error fetching profile:", error);
         }
       } else {
-        setProfile(data as Profile);
+        setProfile(parseProfile(data));
       }
     } catch (err) {
       console.error("Profile fetch error:", err);
