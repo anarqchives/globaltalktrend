@@ -171,7 +171,7 @@ const GoogleMapView = ({
   onSelectTrend,
   highlightCountry,
 }: GoogleMapViewProps) => {
-  const { t } = useLanguage();
+  const { t, lang } = useLanguage();
   const mapRef = useRef<HTMLDivElement>(null);
   const googleMapRef = useRef<any>(null);
   const markersRef = useRef<any[]>([]);
