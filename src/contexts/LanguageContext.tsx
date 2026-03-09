@@ -1115,6 +1115,10 @@ const translations: Record<LangCode, Record<TranslationKey, string>> = {
     tviGrowthLabel: "Рост (30%)", tviVolumeLabel: "Объём (30%)", tviSourcesLabel: "Источники (20%)", tviGeographyLabel: "География (20%)",
     tviDescription: "Измеряет скорость распространения на основе:",
     sourcesSingular: "источник", sourcesPlural: "источников",
+    mapMentions: "упоминаний", mapSimilarity: "сходство", mapThinLowVol: "Тонкая = низкий объём", mapThickHighVol: "Толстая = высокий объём", mapPropArcs: "дуг распространения", mapSizeVolume: "Размер = объём", mapFastPulse: "Быстрый пульс = ускоренный рост", mapTrendsActiveLabel: "активных", mapClickDetails: "Нажмите для деталей", mapLoadingMap: "Загрузка карты...", mapReconnectMsg: "Карта отобразится после восстановления соединения.", mapRetry: "Повторить", mapFilterByCountry: "Фильтр таймлайна по стране", mapTopTrendsLabel: "Топ тренды", mapMoreTrends: "ещё трендов", mapCloseMap: "Закрыть карту",
+    mapIntCritical: "🔥 КРИТИЧЕСКИЙ", mapIntHigh: "⚡ ВЫСОКИЙ", mapIntModerate: "📊 УМЕРЕННЫЙ", mapIntAttention: "📈 ВНИМАНИЕ", mapIntNormal: "ℹ️ НОРМАЛЬНЫЙ",
+    mapStatusExceptional: "Исключительный объём — множество активных источников", mapStatusHigh: "Высокая активность — ускоренный рост", mapStatusModerate: "Умеренная активность — развивающиеся тренды", mapStatusLow: "Низкая активность — мало сигналов", mapStatusNormal: "Нормальный мониторинг — без аномалий",
+    mapCritVolume: "Исключительно высокий объём", mapCritGrowth: "Ускоренный рост", mapCritMultiplatform: "Мультиплатформенность", mapCritActive: "одновременно активных трендов", mapCritMonitoring: "мониторинг — нормальная активность", mapCritNone: "Нет активных трендов",
   },
 };
 
