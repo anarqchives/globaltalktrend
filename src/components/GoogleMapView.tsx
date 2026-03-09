@@ -1565,7 +1565,7 @@ const GoogleMapView = ({
                 </div>
                 <div className="flex items-center gap-2 text-[9px] text-muted-foreground mt-0.5">
                   <div className="w-5 h-[5px] rounded-full bg-foreground/40" />
-                  <span>{lang === "pt" ? "Grosso = alto volume" : "Thick = high volume"}</span>
+                  <span>{t("mapThickHighVol")}</span>
                 </div>
                 <div className="mt-2 pt-2 border-t border-border/30 text-[10px] text-muted-foreground">
                   {flowArcs.length} {lang === "pt" ? "arcos de propagação" : "propagation arcs"}
