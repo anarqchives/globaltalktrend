@@ -695,52 +695,69 @@ const Index = () => {
       />
 
       <div className="flex-1 overflow-hidden flex flex-col">
-        {/* Gradient divider between filter and radar */}
-        <div className="section-gradient-divider" />
-        {/* Trend Radar */}
-        <TrendRadar
-          trends={filteredTrends}
-          allTrends={allTrends}
-          criticalMoments={criticalMoments}
-          anomalies={anomalies}
-          onSelectTrend={handleSelectTrend}
-          onFilterCountry={(code) => setFilters(f => ({ ...f, country: code }))}
-          onAnomalyClick={handleAnomalyClick}
-        />
-
-        {/* Gradient divider between radar and content */}
-        <div className="section-gradient-divider" />
-
         {isMobile ? (
-          <div className="flex-1 min-h-0 flex flex-col relative">
-            <div className="flex-1 min-h-0 overflow-hidden">
-              {viewMode === "timeline" ? renderTimeline() : (
-                <div className="h-full">{renderMap()}</div>
-              )}
+          <>
+            <div className="section-gradient-divider" />
+            <TrendRadar
+              trends={filteredTrends}
+              allTrends={allTrends}
+              criticalMoments={criticalMoments}
+              anomalies={anomalies}
+              onSelectTrend={handleSelectTrend}
+              onFilterCountry={(code) => setFilters(f => ({ ...f, country: code }))}
+              onAnomalyClick={handleAnomalyClick}
+            />
+            <div className="section-gradient-divider" />
+            <div className="flex-1 min-h-0 flex flex-col relative">
+              <div className="flex-1 min-h-0 overflow-hidden">
+                {viewMode === "timeline" ? renderTimeline() : (
+                  <div className="h-full">{renderMap()}</div>
+                )}
+              </div>
+              <motion.button
+                onClick={() => setViewMode(v => v === "timeline" ? "map" : "timeline")}
+                className="absolute bottom-4 right-4 z-30 flex items-center gap-2 px-4 py-3 rounded-full bg-primary text-primary-foreground text-xs font-semibold shadow-[0_4px_20px_rgba(0,0,0,0.15)] active:scale-95 transition-transform touch-manipulation"
+                whileTap={{ scale: 0.93 }}
+                style={{ minHeight: 48, minWidth: 48 }}
+              >
+                {viewMode === "timeline" ? (
+                  <><Map className="w-4 h-4" /> {t("map")}</>
+                ) : (
+                  <><Newspaper className="w-4 h-4" /> {t("timeline")}</>
+                )}
+              </motion.button>
             </div>
-            <motion.button
-              onClick={() => setViewMode(v => v === "timeline" ? "map" : "timeline")}
-              className="absolute bottom-4 right-4 z-30 flex items-center gap-2 px-4 py-3 rounded-full bg-primary text-primary-foreground text-xs font-semibold shadow-[0_4px_20px_rgba(0,0,0,0.15)] active:scale-95 transition-transform touch-manipulation"
-              whileTap={{ scale: 0.93 }}
-              style={{ minHeight: 48, minWidth: 48 }}
-            >
-              {viewMode === "timeline" ? (
-                <><Map className="w-4 h-4" /> {t("map")}</>
-              ) : (
-                <><Newspaper className="w-4 h-4" /> {t("timeline")}</>
-              )}
-            </motion.button>
-          </div>
+          </>
         ) : (
-          <ResizablePanelGroup direction="horizontal" className="flex-1 min-h-0">
-            <ResizablePanel defaultSize={65} minSize={25} maxSize={85}>
-               <div className="h-full min-h-0 overflow-hidden" ref={timelinePanelRef}>
-                {renderTimeline()}
+          <ResizablePanelGroup direction="vertical" className="flex-1 min-h-0">
+            {/* Trend Radar Panel — resizable vertically */}
+            <ResizablePanel defaultSize={30} minSize={5} maxSize={60} collapsible>
+              <div className="h-full overflow-hidden">
+                <TrendRadar
+                  trends={filteredTrends}
+                  allTrends={allTrends}
+                  criticalMoments={criticalMoments}
+                  anomalies={anomalies}
+                  onSelectTrend={handleSelectTrend}
+                  onFilterCountry={(code) => setFilters(f => ({ ...f, country: code }))}
+                  onAnomalyClick={handleAnomalyClick}
+                />
               </div>
             </ResizablePanel>
             <ResizableHandle withHandle />
-            <ResizablePanel defaultSize={35} minSize={15} maxSize={60}>
-              <div className="h-full">{renderMap()}</div>
+            {/* Timeline + Map Panel */}
+            <ResizablePanel defaultSize={70} minSize={30}>
+              <ResizablePanelGroup direction="horizontal" className="h-full">
+                <ResizablePanel defaultSize={65} minSize={25} maxSize={85}>
+                  <div className="h-full min-h-0 overflow-hidden" ref={timelinePanelRef}>
+                    {renderTimeline()}
+                  </div>
+                </ResizablePanel>
+                <ResizableHandle withHandle />
+                <ResizablePanel defaultSize={35} minSize={15} maxSize={60}>
+                  <div className="h-full">{renderMap()}</div>
+                </ResizablePanel>
+              </ResizablePanelGroup>
             </ResizablePanel>
           </ResizablePanelGroup>
         )}
