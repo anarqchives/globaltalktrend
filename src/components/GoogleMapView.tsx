@@ -425,29 +425,39 @@ const GoogleMapView = ({
       const hoverScale = scale * 1.4;
       const flag = cp.id.length === 2 ? String.fromCodePoint(...[...cp.id.toUpperCase()].map(c => 0x1F1E6 + c.charCodeAt(0) - 65)) : "";
 
-      // Hover: show lightweight preview tooltip
+      // Hover: show lightweight preview tooltip with status explanation
       marker.addListener("mouseover", () => {
         animateMarkerScale(scale, hoverScale);
         // Don't show hover tooltip if click tooltip is already open for this country
         if (openInfoCountryRef.current === cp.id) return;
         if (!hoverInfoRef.current) return;
-        const hBg = isDark ? "rgba(19,22,32,0.95)" : "rgba(255,255,255,0.95)";
+        const hBg = isDark ? "rgba(19,22,32,0.97)" : "rgba(255,255,255,0.97)";
         const hText = isDark ? "#e2e8f0" : "#111827";
-        const hSub = isDark ? "#6b7280" : "#9ca3af";
+        const hSub = isDark ? "#94a3b8" : "#6b7280";
         const { tag: hTag, color: hColor } = getIntensityLabel(intensity);
+        
+        // Status explanation based on intensity
+        let statusExplain = "";
+        if (intensity > 0.8) statusExplain = lang === "pt" ? "Volume excepcional detectado — múltiplas fontes ativas" : "Exceptional volume — multiple active sources";
+        else if (intensity > 0.6) statusExplain = lang === "pt" ? "Alta atividade — crescimento acelerado em várias plataformas" : "High activity — accelerating across platforms";
+        else if (intensity > 0.4) statusExplain = lang === "pt" ? "Atividade moderada — tendências em desenvolvimento" : "Moderate activity — developing trends";
+        else if (intensity > 0.2) statusExplain = lang === "pt" ? "Baixa atividade — poucos sinais detectados" : "Low activity — few signals detected";
+        else statusExplain = lang === "pt" ? "Monitoramento normal — sem anomalias" : "Normal monitoring — no anomalies";
+        
         hoverInfoRef.current.setContent(`
-          <div style="font-family:Inter,system-ui,sans-serif;padding:10px 12px;min-width:180px;max-width:220px;background:${hBg};color:${hText};border-radius:12px;backdrop-filter:blur(12px);border:1px solid ${isDark ? 'rgba(45,51,72,0.4)' : 'rgba(0,0,0,0.06)'};">
-            <div style="display:flex;align-items:center;gap:6px;margin-bottom:6px;">
-              <span style="font-size:18px;">${flag}</span>
+          <div style="font-family:Inter,system-ui,sans-serif;padding:10px 14px;min-width:190px;max-width:240px;background:${hBg};color:${hText};border-radius:14px;backdrop-filter:blur(16px);border:1px solid ${isDark ? 'rgba(45,51,72,0.5)' : 'rgba(0,0,0,0.08)'}; box-shadow:0 8px 24px rgba(0,0,0,0.12);">
+            <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
+              <span style="font-size:20px;">${flag}</span>
               <div>
-                <div style="font-size:13px;font-weight:600;">${cp.name}</div>
-                <div style="font-size:10px;color:${hSub};">${count} trends</div>
+                <div style="font-size:13px;font-weight:700;letter-spacing:-0.01em;">${cp.name}</div>
+                <div style="font-size:10px;color:${hSub};margin-top:1px;">${count} trend${count !== 1 ? 's' : ''} ${lang === "pt" ? "ativas" : "active"}</div>
               </div>
             </div>
-            <div style="display:flex;align-items:center;gap:6px;">
-              <span style="background:${hColor};color:#fff;padding:2px 8px;border-radius:12px;font-size:9px;font-weight:600;letter-spacing:0.3px;">${hTag}</span>
+            <div style="display:flex;align-items:center;gap:6px;margin-bottom:6px;">
+              <span style="background:${hColor};color:#fff;padding:2px 10px;border-radius:12px;font-size:9px;font-weight:700;letter-spacing:0.5px;">${hTag}</span>
             </div>
-            <div style="margin-top:8px;font-size:10px;color:${hSub};text-align:center;font-style:italic;">Clique para ver detalhes</div>
+            <div style="font-size:10px;color:${hSub};line-height:1.4;margin-bottom:8px;">${statusExplain}</div>
+            <div style="font-size:9px;color:${isDark ? '#60a5fa' : '#3b82f6'};text-align:center;font-weight:600;padding-top:6px;border-top:1px solid ${isDark ? 'rgba(45,51,72,0.4)' : 'rgba(0,0,0,0.06)'};">👆 ${lang === "pt" ? "Clique para ver detalhes" : "Click for details"}</div>
           </div>
         `);
         hoverInfoRef.current.open({ anchor: marker, map });
@@ -455,7 +465,7 @@ const GoogleMapView = ({
 
       marker.addListener("mouseout", () => {
         animateMarkerScale(hoverScale, scale);
-        // Close hover tooltip (but not click tooltip)
+        // Only close hover tooltip, never close the click InfoWindow
         if (openInfoCountryRef.current !== cp.id && hoverInfoRef.current) {
           hoverInfoRef.current.close();
         }
