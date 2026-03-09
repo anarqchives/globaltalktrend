@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Sprout, Flame, Trophy, Info, ChevronUp, ChevronDown, Activity, AlertTriangle, ExternalLink, TrendingUp, Zap, Globe2, Radio, BarChart3, Eye, Target, Radar, ArrowRight, Sparkles, Clock, Crown, Medal, Award, GripHorizontal, Loader2 } from "lucide-react";
+import { Sprout, Flame, Trophy, Info, ChevronUp, ChevronDown, Activity, AlertTriangle, ExternalLink, TrendingUp, Zap, Globe2, Radio, BarChart3, Eye, Target, Radar, ArrowRight, Sparkles, Clock, Crown, Medal, Award, GripHorizontal, Loader2, Minimize2, Maximize2 } from "lucide-react";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { AreaChart, Area, ResponsiveContainer } from "recharts";
@@ -52,8 +52,8 @@ function Legend({ tab, lang }: { tab: string; lang: string }) {
   const text = legendText[tab]?.[lang] || legendText[tab]?.en || "";
   if (!text) return null;
   return (
-    <div className="text-[10px] text-muted-foreground/70 leading-relaxed px-3 py-1.5 flex-shrink-0 flex items-center gap-1.5">
-      <Info className="w-3 h-3 opacity-40 flex-shrink-0" />
+    <div className="text-[10px] text-muted-foreground/60 leading-relaxed px-3 py-1 flex-shrink-0 flex items-center gap-1.5">
+      <Info className="w-3 h-3 opacity-30 flex-shrink-0" />
       <span>{text}</span>
     </div>
   );
@@ -62,8 +62,8 @@ function Legend({ tab, lang }: { tab: string; lang: string }) {
 /* Loading placeholder for tab content */
 function TabLoadingState({ lang }: { lang: string }) {
   return (
-    <div className="flex flex-col items-center justify-center py-12 gap-3 text-muted-foreground animate-in fade-in-0 duration-500">
-      <Loader2 className="w-6 h-6 animate-spin text-primary/40" />
+    <div className="flex flex-col items-center justify-center py-10 gap-2.5 text-muted-foreground animate-in fade-in-0 duration-500">
+      <Loader2 className="w-5 h-5 animate-spin text-primary/40" />
       <p className="text-[11px] font-medium">{lang === "pt" ? "Carregando dados..." : "Loading data..."}</p>
     </div>
   );
@@ -118,7 +118,7 @@ function TopTrendsGrid({ trends, onSelectTrend }: { trends: TrendCardProps[]; on
   const podiumOrder = ranked.length >= 3 ? [ranked[1], ranked[0], ranked[2]] : ranked.slice(0, 3);
   const podiumOrigIdx = ranked.length >= 3 ? [1, 0, 2] : [0, 1, 2];
   const medals = ["🥇", "🥈", "🥉"];
-  const podiumHeights = ["h-16", "h-20", "h-14"];
+  const podiumHeights = ["h-14", "h-18", "h-12"];
   const podiumBg = [
     "from-slate-400/20 to-slate-400/5 border-slate-400/30",
     "from-amber-500/20 to-amber-400/5 border-amber-500/40",
@@ -126,90 +126,48 @@ function TopTrendsGrid({ trends, onSelectTrend }: { trends: TrendCardProps[]; on
   ];
 
   return (
-    <div className="space-y-3">
+    <div className="space-y-2">
       {/* Podium - Top 3 visual */}
-      <div className="flex items-end justify-center gap-2 pb-1">
+      <div className="flex items-end justify-center gap-1.5 pb-1">
         {podiumOrder.map((trend, vi) => {
           if (!trend) return null;
           const realIdx = podiumOrigIdx[vi];
           const pf = platformIcons[trend.platform] || { emoji: "●", color: "hsl(var(--muted-foreground))" };
           const changeNum = parseFloat(trend.change?.replace(/[^0-9.\-]/g, "") || "0");
-          const isExpanded = expandedIdx === realIdx;
 
           return (
             <motion.div
               key={`podium-${realIdx}`}
-              layout
-              initial={{ opacity: 0, y: 12 }}
+              initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: vi * 0.06, layout: { duration: 0.2 } }}
-              className={`flex-1 max-w-[160px] ${isExpanded ? "max-w-[280px]" : ""}`}
+              transition={{ delay: vi * 0.05 }}
+              className="flex-1 max-w-[150px]"
             >
               <button
                 onClick={(e) => handleClick(trend, realIdx, e)}
-                className={`w-full rounded-t-lg border bg-gradient-to-b ${podiumBg[vi]} p-2.5 text-left transition-all hover:shadow-md ${podiumHeights[vi]} flex flex-col justify-end`}
+                className={`w-full rounded-lg border bg-gradient-to-b ${podiumBg[vi]} p-2 text-left transition-all hover:shadow-sm ${podiumHeights[vi]} flex flex-col justify-end`}
               >
-                <span className="text-lg leading-none">{medals[realIdx]}</span>
-                <p className="text-[11px] font-medium text-foreground line-clamp-2 leading-snug mt-1">{trend.title}</p>
-                <div className="flex items-center gap-1.5 mt-1">
-                  <span className="text-[9px]" style={{ color: pf.color }}>{pf.emoji}</span>
-                  <span className="text-[9px] text-muted-foreground">{trend.platform}</span>
-                  <span className="text-[9px] text-muted-foreground/60">·</span>
-                  <span className="text-[9px] text-muted-foreground">{trend.volume || "—"}</span>
+                <span className="text-base leading-none">{medals[realIdx]}</span>
+                <p className="text-[10px] font-semibold text-foreground line-clamp-2 leading-tight mt-0.5">{trend.title}</p>
+                <div className="flex items-center gap-1 mt-0.5">
+                  <span className="text-[8px]" style={{ color: pf.color }}>{pf.emoji}</span>
+                  <span className="text-[8px] text-muted-foreground">{trend.platform}</span>
+                  <span className="text-[8px] text-muted-foreground/50">·</span>
+                  <span className="text-[8px] text-muted-foreground">{trend.volume || "—"}</span>
                   {changeNum !== 0 && (
-                    <span className={`text-[9px] font-semibold ${changeNum > 0 ? "text-emerald-500" : "text-destructive"}`}>
+                    <span className={`text-[8px] font-bold ${changeNum > 0 ? "text-emerald-500" : "text-destructive"}`}>
                       {changeNum > 0 ? "+" : ""}{Math.round(changeNum)}%
                     </span>
                   )}
                 </div>
               </button>
-              <AnimatePresence>
-                {isExpanded && (
-                  <motion.div
-                    initial={{ height: 0, opacity: 0 }}
-                    animate={{ height: "auto", opacity: 1 }}
-                    exit={{ height: 0, opacity: 0 }}
-                    transition={{ duration: 0.15 }}
-                    className="overflow-hidden border border-t-0 border-border/30 rounded-b-lg bg-card px-2.5 pb-2.5"
-                  >
-                    {trend.description && <p className="text-[10px] text-muted-foreground mt-2 leading-relaxed line-clamp-3">{trend.description}</p>}
-                    <div className="flex items-center gap-1.5 mt-1.5">
-                      <span className="px-1.5 py-0.5 rounded-md bg-secondary text-secondary-foreground text-[9px] font-medium">{trend.category || "Geral"}</span>
-                      {trend.sources && trend.sources.length > 1 && (
-                        <span className="text-[9px] text-muted-foreground">{trend.sources.length} sources</span>
-                      )}
-                    </div>
-                    {trend.sparkData && trend.sparkData.length > 2 && (
-                      <div className="h-7 w-full mt-1.5">
-                        <ResponsiveContainer width="100%" height="100%">
-                          <AreaChart data={trend.sparkData.map(v => ({ v }))}>
-                            <Area type="monotone" dataKey="v" stroke="hsl(var(--primary))" strokeWidth={1} fill="hsl(var(--primary))" fillOpacity={0.1} dot={false} />
-                          </AreaChart>
-                        </ResponsiveContainer>
-                      </div>
-                    )}
-                    <div className="flex gap-1.5 mt-2" onClick={e => e.stopPropagation()}>
-                      {trend.sourceUrl && (
-                        <a href={trend.sourceUrl} target="_blank" rel="noopener noreferrer"
-                          className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md bg-primary text-primary-foreground text-[9px] font-semibold hover:bg-primary/90 transition-colors">
-                          <ExternalLink className="w-2.5 h-2.5" /> {lang === "pt" ? "Abrir" : "Open"}
-                        </a>
-                      )}
-                      <button onClick={() => onSelectTrend?.(trend)}
-                        className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md bg-secondary text-secondary-foreground text-[9px] font-medium hover:bg-secondary/80 transition-colors">
-                        Timeline →
-                      </button>
-                    </div>
-                  </motion.div>
-                )}
-              </AnimatePresence>
             </motion.div>
           );
         })}
       </div>
 
       {/* Ranking list #4-20 */}
-      <div className="columns-2 sm:columns-3 md:columns-4 lg:columns-5 gap-2 space-y-0 [&>*]:break-inside-avoid [&>*]:mb-2">
+      <div className="columns-2 sm:columns-3 md:columns-4 lg:columns-5 gap-1.5 space-y-0 [&>*]:break-inside-avoid [&>*]:mb-1.5">
         {ranked.slice(3).map((trend, i) => {
           const pf = platformIcons[trend.platform] || { emoji: "●", color: "hsl(var(--muted-foreground))" };
           const flag = countryCodeToFlag(trend.countryCode);
@@ -220,29 +178,28 @@ function TopTrendsGrid({ trends, onSelectTrend }: { trends: TrendCardProps[]; on
           return (
             <motion.div
               key={`top-${trend.platform}-${trend.title.slice(0, 15)}-${i}`}
-              layout
-              initial={{ opacity: 0, x: -4 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: i * 0.02, layout: { duration: 0.2 } }}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: i * 0.015 }}
               onClick={() => setExpandedIdx(isExpanded ? null : idx)}
-              className={`rounded-lg border border-border/40 bg-card p-2.5 cursor-pointer transition-all hover:border-primary/30 hover:shadow-sm ${
-                isExpanded ? "shadow-md ring-1 ring-primary/20" : ""
+              className={`rounded-lg border border-border/30 bg-card/80 p-2 cursor-pointer transition-all hover:border-primary/20 hover:shadow-sm ${
+                isExpanded ? "shadow-md ring-1 ring-primary/15" : ""
               }`}
             >
-              <div className="flex items-start gap-2">
-                <span className={`text-[11px] font-black w-6 flex-shrink-0 pt-0.5 ${idx < 6 ? "text-amber-500" : idx < 10 ? "text-muted-foreground" : "text-muted-foreground/50"}`}>#{idx + 1}</span>
+              <div className="flex items-start gap-1.5">
+                <span className={`text-[10px] font-black w-5 flex-shrink-0 pt-0.5 ${idx < 6 ? "text-amber-500" : idx < 10 ? "text-muted-foreground" : "text-muted-foreground/40"}`}>#{idx + 1}</span>
                 <div className="flex-1 min-w-0">
-                  <p className={`text-[11px] font-medium text-foreground leading-snug ${isExpanded ? "" : "line-clamp-1"}`}>{trend.title}</p>
-                  <div className="flex items-center gap-1.5 text-[9px] text-muted-foreground mt-0.5">
+                  <p className={`text-[10px] font-semibold text-foreground leading-tight ${isExpanded ? "" : "line-clamp-1"}`}>{trend.title}</p>
+                  <div className="flex items-center gap-1 text-[8px] text-muted-foreground mt-0.5">
                     <span style={{ color: pf.color }}>{pf.emoji}</span>
                     <span>{trend.platform}</span>
                     {flag && <span>{flag}</span>}
-                    <span className="text-muted-foreground/40">·</span>
+                    <span className="text-muted-foreground/30">·</span>
                     <span>{trend.volume || "—"}</span>
                   </div>
                 </div>
                 {changeNum !== 0 && (
-                  <span className={`text-[10px] font-semibold flex-shrink-0 ${changeNum > 0 ? "text-emerald-600 dark:text-emerald-400" : "text-destructive"}`}>
+                  <span className={`text-[9px] font-bold flex-shrink-0 ${changeNum > 0 ? "text-emerald-500" : "text-destructive"}`}>
                     {changeNum > 0 ? "+" : ""}{Math.round(changeNum)}%
                   </span>
                 )}
@@ -257,29 +214,29 @@ function TopTrendsGrid({ trends, onSelectTrend }: { trends: TrendCardProps[]; on
                     transition={{ duration: 0.15 }}
                     className="overflow-hidden"
                   >
-                    <div className="mt-2 pt-2 border-t border-border/30 space-y-2">
-                      {trend.description && <p className="text-[10px] text-muted-foreground leading-relaxed line-clamp-3">{trend.description}</p>}
-                      <div className="flex items-center gap-1.5">
-                        <span className="px-1.5 py-0.5 rounded-md bg-secondary text-secondary-foreground text-[9px] font-medium">{trend.category || "Geral"}</span>
+                    <div className="mt-1.5 pt-1.5 border-t border-border/20 space-y-1.5">
+                      {trend.description && <p className="text-[9px] text-muted-foreground leading-relaxed line-clamp-3">{trend.description}</p>}
+                      <div className="flex items-center gap-1">
+                        <span className="px-1.5 py-0.5 rounded bg-secondary text-secondary-foreground text-[8px] font-medium">{trend.category || "Geral"}</span>
                       </div>
                       {trend.sparkData && trend.sparkData.length > 2 && (
-                        <div className="h-7 w-full">
+                        <div className="h-6 w-full">
                           <ResponsiveContainer width="100%" height="100%">
                             <AreaChart data={trend.sparkData.map(v => ({ v }))}>
-                              <Area type="monotone" dataKey="v" stroke="hsl(var(--primary))" strokeWidth={1} fill="hsl(var(--primary))" fillOpacity={0.1} dot={false} />
+                              <Area type="monotone" dataKey="v" stroke="hsl(var(--primary))" strokeWidth={1} fill="hsl(var(--primary))" fillOpacity={0.08} dot={false} />
                             </AreaChart>
                           </ResponsiveContainer>
                         </div>
                       )}
-                      <div className="flex items-center gap-2" onClick={e => e.stopPropagation()}>
+                      <div className="flex items-center gap-1.5" onClick={e => e.stopPropagation()}>
                         {trend.sourceUrl && (
                           <a href={trend.sourceUrl} target="_blank" rel="noopener noreferrer"
-                            className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md bg-primary text-primary-foreground text-[9px] font-semibold hover:bg-primary/90 transition-colors">
-                            <ExternalLink className="w-2.5 h-2.5" /> {lang === "pt" ? "Abrir fonte" : "Open source"}
+                            className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-primary text-primary-foreground text-[8px] font-semibold hover:bg-primary/90 transition-colors">
+                            <ExternalLink className="w-2.5 h-2.5" /> {lang === "pt" ? "Abrir" : "Open"}
                           </a>
                         )}
                         <button onClick={() => onSelectTrend?.(trend)}
-                          className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md bg-secondary text-secondary-foreground text-[9px] font-medium hover:bg-secondary/80 transition-colors">
+                          className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-secondary text-secondary-foreground text-[8px] font-medium hover:bg-secondary/80 transition-colors">
                           Timeline →
                         </button>
                       </div>
@@ -336,118 +293,79 @@ function AnomaliesPredictive({ anomalies, lang, onAnomalyClick }: {
     } else if (avgChange > 150) {
       prediction = lang === "pt"
         ? "Crescimento acelerado anômalo — possível viralização nas próximas 2-6h."
-        : "Anomalous growth — possible viralization in 2-6h.";
+        : "Anomalous accelerated growth — possible viralization in the next 2-6h.";
     } else {
       prediction = lang === "pt"
-        ? "Padrões sob observação — comportamentos atípicos em fontes diversas."
-        : "Patterns under observation — atypical behaviors across sources.";
+        ? "Monitorando padrões incomuns — sem convergência detectada ainda."
+        : "Monitoring unusual patterns — no convergence detected yet.";
     }
 
     return { platformCount: platformSet.size, countryCount: countrySet.size, dominantType, avgChange, prediction };
   }, [anomalies, lang]);
 
+  if (anomalies.length === 0) {
+    return (
+      <div className="flex flex-col items-center justify-center py-6 text-muted-foreground">
+        <AlertTriangle className="w-6 h-6 mb-2 opacity-20" />
+        <p className="text-[10px]">{lang === "pt" ? "Nenhuma anomalia detectada." : "No anomalies detected."}</p>
+      </div>
+    );
+  }
+
   return (
-    <div className="p-3 space-y-2.5">
-      {/* Global summary bar */}
-      <div className="rounded-lg border border-destructive/15 bg-destructive/5 px-3 py-2 flex items-center gap-3 flex-wrap">
-        <div className="flex items-center gap-1.5">
-          <Target className="w-3.5 h-3.5 text-destructive" />
-          <span className="text-[9px] font-black uppercase tracking-wider text-destructive">
-            {lang === "pt" ? "Análise Preditiva" : "Predictive Analysis"}
-          </span>
+    <div className="px-3 space-y-2">
+      {/* Prediction card */}
+      <div className="rounded-lg border border-primary/15 bg-primary/5 p-2">
+        <div className="flex items-start gap-1.5">
+          <Target className="w-3 h-3 text-primary mt-0.5 flex-shrink-0" />
+          <div>
+            <p className="text-[9px] font-bold text-primary uppercase tracking-wide">
+              {lang === "pt" ? "Previsão" : "Prediction"}
+            </p>
+            <p className="text-[9px] text-foreground/80 leading-relaxed mt-0.5">{patterns.prediction}</p>
+            <div className="flex items-center gap-2 mt-1">
+              <span className="text-[8px] text-muted-foreground">{patterns.platformCount} plat.</span>
+              <span className="text-[8px] text-muted-foreground">{patterns.countryCount} reg.</span>
+              <span className="text-[8px] text-muted-foreground">Δ {patterns.avgChange}%</span>
+            </div>
+          </div>
         </div>
-        <div className="flex items-center gap-2 text-[9px] text-muted-foreground">
-          <span>{anomalies.length} {lang === "pt" ? "anomalias" : "anomalies"}</span>
-          <span className="text-muted-foreground/30">·</span>
-          <span>{patterns.platformCount} {lang === "pt" ? "plataformas" : "platforms"}</span>
-          <span className="text-muted-foreground/30">·</span>
-          <span>{patterns.countryCount} {lang === "pt" ? "países" : "countries"}</span>
-          <span className="text-muted-foreground/30">·</span>
-          <span className="font-semibold text-destructive">Δ +{patterns.avgChange}%</span>
-        </div>
-        <p className="text-[9px] text-foreground/70 leading-relaxed basis-full">{patterns.prediction}</p>
       </div>
 
       {/* Anomaly cards */}
-      <div className="columns-2 sm:columns-3 md:columns-4 lg:columns-5 xl:columns-6 gap-2 space-y-0 [&>*]:break-inside-avoid [&>*]:mb-2">
+      <div className="space-y-1">
         {anomalies.map((anomaly, i) => {
           const info = anomalyTypeInfo[anomaly.type] || anomalyTypeInfo.spike;
-          const changeNum = parseFloat(anomaly.trend.change?.replace(/[^0-9.\-]/g, "") || "0");
           const pf = platformIcons[anomaly.trend.platform] || { emoji: "●", color: "hsl(var(--muted-foreground))" };
-          const flag = countryCodeToFlag(anomaly.trend.countryCode);
-          const sparkData = anomaly.trend.sparkData?.map((v) => ({ v })) || [];
           const isExpanded = expandedIdx === i;
-          const trendId = `${anomaly.trend.platform}-${anomaly.trend.title.slice(0, 20)}`;
-
-          const cardPrediction = changeNum > 300
-            ? (lang === "pt" ? "Viralização confirmada — ciclo noticioso mainstream em 2-4h." : "Viral pattern confirmed.")
-            : changeNum > 150
-            ? (lang === "pt" ? "Aceleração acima da média — tração adicional provável." : "Above-average acceleration.")
-            : (lang === "pt" ? "Sinal em evolução — monitoramento contínuo ativo." : "Evolving signal — monitoring active.");
-
-          const confidenceLevel = changeNum > 300 ? 92 : changeNum > 150 ? 74 : 51;
+          const changeNum = parseFloat(anomaly.trend.change?.replace(/[^0-9.\-]/g, "") || "0");
 
           return (
             <motion.div
-              key={`anomaly-${anomaly.trend.title.slice(0, 15)}-${i}`}
-              layout
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ delay: i * 0.03, layout: { duration: 0.2, type: "spring", stiffness: 300, damping: 30 } }}
+              key={`anomaly-${i}`}
+              initial={{ opacity: 0, x: -4 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: i * 0.03 }}
               onClick={() => setExpandedIdx(isExpanded ? null : i)}
-              className={`rounded-lg border border-destructive/15 bg-card p-2.5 cursor-pointer transition-all hover:border-destructive/30 hover:shadow-sm ${
-                isExpanded ? "shadow-md ring-1 ring-destructive/15 bg-destructive/5" : ""
-              }`}
+              className={`rounded-lg border border-border/30 bg-card/80 p-2 cursor-pointer transition-all hover:border-primary/20 ${isExpanded ? "ring-1 ring-primary/15" : ""}`}
             >
-              {/* Badge + change */}
-              <div className="flex items-center justify-between mb-1.5">
-                <span className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md text-[8px] font-semibold ${info.color}`}
-                  style={{ backgroundColor: `color-mix(in srgb, currentColor 8%, transparent)` }}>
-                  {info.emoji} {info.label}
-                </span>
-                <span className="text-destructive font-bold text-[10px] tabular-nums">+{Math.round(changeNum)}%</span>
-              </div>
-
-              {/* Title */}
-              <p className={`text-[11px] font-medium text-foreground leading-snug mb-1.5 ${isExpanded ? "" : "line-clamp-2 min-h-[28px]"}`}>
-                {anomaly.trend.title}
-              </p>
-
-              {/* Meta */}
-              <div className="flex items-center gap-1.5 text-[9px] text-muted-foreground flex-wrap mb-1.5">
-                <span style={{ color: pf.color }}>{pf.emoji}</span>
-                <span>{anomaly.trend.platform}</span>
-                {flag && <span>{flag}</span>}
-                {anomaly.trend.volume && (
-                  <>
-                    <span className="text-muted-foreground/30">·</span>
-                    <span>{anomaly.trend.volume}</span>
-                  </>
-                )}
-                <span className={`px-1.5 py-0.5 rounded-md text-[8px] font-semibold ${
-                  anomaly.severity === "high" ? "bg-destructive/10 text-destructive" : "bg-amber-500/10 text-amber-600"
-                }`}>
-                  {anomaly.severity === "high" ? (lang === "pt" ? "ALTO" : "HIGH") : (lang === "pt" ? "MÉDIO" : "MEDIUM")}
-                </span>
-              </div>
-
-              {/* Mini sparkline */}
-              {!isExpanded && sparkData.length > 2 && (
-                <div className="h-4 w-full opacity-50">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <AreaChart data={sparkData}>
-                      <Area type="monotone" dataKey="v" stroke="hsl(var(--destructive))" strokeWidth={1} fill="hsl(var(--destructive))" fillOpacity={0.15} dot={false} />
-                    </AreaChart>
-                  </ResponsiveContainer>
+              <div className="flex items-start gap-1.5">
+                <span className="text-sm flex-shrink-0">{info.emoji}</span>
+                <div className="flex-1 min-w-0">
+                  <p className="text-[10px] font-semibold text-foreground leading-tight line-clamp-1">{anomaly.trend.title}</p>
+                  <div className="flex items-center gap-1 mt-0.5">
+                    <span className={`text-[8px] font-bold ${info.color}`}>{info.label}</span>
+                    <span className="text-[8px] text-muted-foreground/40">·</span>
+                    <span className="text-[8px]" style={{ color: pf.color }}>{pf.emoji} {anomaly.trend.platform}</span>
+                    {changeNum !== 0 && (
+                      <span className={`text-[8px] font-bold ml-auto ${changeNum > 0 ? "text-emerald-500" : "text-destructive"}`}>
+                        {changeNum > 0 ? "+" : ""}{Math.round(changeNum)}%
+                      </span>
+                    )}
+                  </div>
                 </div>
-              )}
-
-              {/* Expand indicator */}
-              <div className="flex items-center justify-center mt-1">
-                {isExpanded ? <ChevronUp className="w-3 h-3 text-muted-foreground/50" /> : <ChevronDown className="w-3 h-3 text-muted-foreground/30" />}
               </div>
 
-              {/* Expanded */}
               <AnimatePresence>
                 {isExpanded && (
                   <motion.div
@@ -457,62 +375,17 @@ function AnomaliesPredictive({ anomalies, lang, onAnomalyClick }: {
                     transition={{ duration: 0.15 }}
                     className="overflow-hidden"
                   >
-                    <div className="mt-2 pt-2 border-t border-destructive/10 space-y-2">
-                      <div className="space-y-1">
-                        <p className="text-[10px] text-muted-foreground leading-relaxed">
-                          <span className="font-medium text-foreground">{lang === "pt" ? "Tipo: " : "Type: "}</span>
-                          {info.emoji} {info.label}
-                        </p>
-                        <p className="text-[10px] text-muted-foreground leading-relaxed">
-                          <span className="font-medium text-foreground">{lang === "pt" ? "Análise: " : "Analysis: "}</span>
-                          {anomaly.message}
-                        </p>
-                        <p className="text-[10px] text-muted-foreground leading-relaxed">
-                          <span className="font-medium text-foreground">{lang === "pt" ? "Magnitude: " : "Magnitude: "}</span>
-                          +{Math.round(changeNum)}% {lang === "pt" ? "acima do normal" : "above baseline"}
-                        </p>
-                      </div>
-
-                      {sparkData.length > 2 && (
-                        <div className="h-10 w-full">
-                          <ResponsiveContainer width="100%" height="100%">
-                            <AreaChart data={sparkData}>
-                              <defs>
-                                <linearGradient id={`anom-grad-${i}`} x1="0" y1="0" x2="0" y2="1">
-                                  <stop offset="0%" stopColor="hsl(var(--destructive))" stopOpacity={0.3} />
-                                  <stop offset="100%" stopColor="hsl(var(--destructive))" stopOpacity={0} />
-                                </linearGradient>
-                              </defs>
-                              <Area type="monotone" dataKey="v" stroke="hsl(var(--destructive))" strokeWidth={1.5} fill={`url(#anom-grad-${i})`} dot={false} />
-                            </AreaChart>
-                          </ResponsiveContainer>
-                        </div>
+                    <div className="mt-1.5 pt-1.5 border-t border-border/20 space-y-1">
+                      {anomaly.trend.description && (
+                        <p className="text-[9px] text-muted-foreground leading-relaxed line-clamp-3">{anomaly.trend.description}</p>
                       )}
-
-                      <div className="rounded-md bg-primary/5 border border-primary/10 px-2.5 py-2">
-                        <div className="flex items-center justify-between mb-1">
-                          <span className="text-[8px] font-bold uppercase tracking-wider text-primary/70">
-                            {lang === "pt" ? "Previsão" : "Prediction"}
-                          </span>
-                          <span className="text-[8px] font-semibold text-primary/60">{confidenceLevel}% {lang === "pt" ? "confiança" : "confidence"}</span>
-                        </div>
-                        <p className="text-[10px] text-foreground/80 leading-relaxed">{cardPrediction}</p>
-                        <div className="mt-1.5 h-1 w-full rounded-full bg-muted overflow-hidden">
-                          <div className="h-full rounded-full bg-primary/60 transition-all" style={{ width: `${confidenceLevel}%` }} />
-                        </div>
-                      </div>
-
-                      <div className="flex gap-2" onClick={e => e.stopPropagation()}>
-                        <button onClick={() => onAnomalyClick?.(trendId)}
-                          className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md bg-destructive/10 hover:bg-destructive/20 text-destructive text-[9px] font-semibold transition-colors">
-                          {lang === "pt" ? "Ver na timeline" : "Timeline"} →
+                      <div className="flex items-center gap-1.5" onClick={e => e.stopPropagation()}>
+                        <button
+                          onClick={() => onAnomalyClick?.(anomaly.id)}
+                          className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-primary text-primary-foreground text-[8px] font-semibold hover:bg-primary/90 transition-colors"
+                        >
+                          <Eye className="w-2.5 h-2.5" /> {lang === "pt" ? "Ver na timeline" : "View in timeline"}
                         </button>
-                        {anomaly.trend.sourceUrl && (
-                          <a href={anomaly.trend.sourceUrl} target="_blank" rel="noopener noreferrer"
-                            className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md bg-secondary text-secondary-foreground text-[9px] font-medium hover:bg-secondary/80 transition-colors">
-                            <ExternalLink className="w-2.5 h-2.5" /> {lang === "pt" ? "Fonte" : "Source"}
-                          </a>
-                        )}
                       </div>
                     </div>
                   </motion.div>
@@ -532,7 +405,7 @@ export default function TrendRadar({ trends, allTrends, criticalMoments, anomali
   const [tab, setTab] = useState("signals");
   const [collapsed, setCollapsed] = useState(() => {
     if (typeof window !== "undefined") return localStorage.getItem(RADAR_STORAGE_KEY) === "true";
-    return false;
+    return true; // default collapsed
   });
 
   // Track unseen
@@ -562,8 +435,8 @@ export default function TrendRadar({ trends, allTrends, criticalMoments, anomali
   const hasSignals = hasEmerging || hasAnomalies;
 
   const labels = {
-    collapse: lang === "pt" ? "Recolher radar" : "Collapse radar",
-    expand: lang === "pt" ? "Expandir radar" : "Expand radar",
+    collapse: lang === "pt" ? "Recolher" : "Collapse",
+    expand: lang === "pt" ? "Expandir" : "Expand",
   };
 
   // Consolidated tab structure
@@ -572,7 +445,7 @@ export default function TrendRadar({ trends, allTrends, criticalMoments, anomali
       value: "signals",
       icon: Sprout,
       label: lang === "pt" ? "Sinais" : "Signals",
-      activeClass: "data-[state=active]:bg-emerald-500/15 data-[state=active]:text-emerald-600 dark:data-[state=active]:text-emerald-400 data-[state=active]:border-emerald-500/30",
+      activeColor: "emerald",
       dot: hasSignals ? "bg-emerald-500" : null,
       badge: hasAnomalies ? anomalies.length : null,
       pulse: false,
@@ -581,7 +454,7 @@ export default function TrendRadar({ trends, allTrends, criticalMoments, anomali
       value: "critical",
       icon: Flame,
       label: lang === "pt" ? "Crítico" : "Critical",
-      activeClass: "data-[state=active]:bg-rose-500/15 data-[state=active]:text-rose-600 dark:data-[state=active]:text-rose-400 data-[state=active]:border-rose-500/30",
+      activeColor: "rose",
       dot: null,
       badge: unseenCritical > 0 ? unseenCritical : (hasCritical ? criticalMoments.length : null),
       pulse: unseenCritical > 0,
@@ -590,7 +463,7 @@ export default function TrendRadar({ trends, allTrends, criticalMoments, anomali
       value: "top",
       icon: Trophy,
       label: "Top",
-      activeClass: "data-[state=active]:bg-amber-500/15 data-[state=active]:text-amber-600 dark:data-[state=active]:text-amber-400 data-[state=active]:border-amber-500/30",
+      activeColor: "amber",
       dot: null,
       badge: null,
       pulse: false,
@@ -599,160 +472,170 @@ export default function TrendRadar({ trends, allTrends, criticalMoments, anomali
       value: "weekly",
       icon: Activity,
       label: lang === "pt" ? "Semana" : "Weekly",
-      activeClass: "data-[state=active]:bg-sky-500/15 data-[state=active]:text-sky-600 dark:data-[state=active]:text-sky-400 data-[state=active]:border-sky-500/30",
+      activeColor: "sky",
       dot: null,
       badge: null,
       pulse: false,
     },
   ];
 
-  return (
-    <div className="h-full flex flex-col overflow-hidden">
-      <Tabs value={tab} onValueChange={setTab} className="h-full flex flex-col">
-        {/* Header — visually distinct section label */}
-        <div className="px-3 py-2 flex items-center gap-2 flex-shrink-0 border-b border-border/40 bg-muted/30">
-          <span className="text-[10px] font-bold text-primary uppercase tracking-widest mr-1 flex items-center gap-1.5">
-            <Radar className="w-3.5 h-3.5" /> Trend Radar
-          </span>
+  const activeColorMap: Record<string, string> = {
+    emerald: "data-[state=active]:bg-emerald-500/10 data-[state=active]:text-emerald-600 dark:data-[state=active]:text-emerald-400",
+    rose: "data-[state=active]:bg-rose-500/10 data-[state=active]:text-rose-600 dark:data-[state=active]:text-rose-400",
+    amber: "data-[state=active]:bg-amber-500/10 data-[state=active]:text-amber-600 dark:data-[state=active]:text-amber-400",
+    sky: "data-[state=active]:bg-sky-500/10 data-[state=active]:text-sky-600 dark:data-[state=active]:text-sky-400",
+  };
 
-          <TabsList className="h-8 bg-background/80 p-0.5 gap-0.5 rounded-xl border border-border/30">
+  return (
+    <div className="h-full flex flex-col overflow-hidden bg-muted/15 border-b border-border/30">
+      <Tabs value={tab} onValueChange={setTab} className="h-full flex flex-col">
+        {/* Header bar — unified with content */}
+        <div className="px-3 py-1.5 flex items-center gap-2 flex-shrink-0 bg-muted/30">
+          {/* Section label */}
+          <div className="flex items-center gap-1.5 mr-1 flex-shrink-0">
+            <Radar className="w-3.5 h-3.5 text-primary" />
+            <span className="text-[10px] font-bold text-primary uppercase tracking-widest hidden sm:inline">Radar</span>
+          </div>
+
+          {/* Tabs */}
+          <TabsList className="h-7 bg-background/60 p-0.5 gap-0.5 rounded-lg border border-border/20 flex-shrink-0">
             {tabConfig.map(tc => {
               const Icon = tc.icon;
               return (
-                <Tooltip key={tc.value}>
-                  <TooltipTrigger asChild>
-                    <TabsTrigger
-                      value={tc.value}
-                      className={`h-7 px-3 text-[10px] font-semibold gap-1.5 rounded-lg transition-all duration-200 ${tc.activeClass} data-[state=active]:shadow-sm`}
-                    >
-                      <Icon className="w-3 h-3" />
-                      <span className="hidden sm:inline">{tc.label}</span>
-                      {tc.dot && <span className={`w-1.5 h-1.5 rounded-full ${tc.dot} animate-pulse`} />}
-                      {tc.badge && (
-                        <span className={`px-1.5 py-0.5 rounded-full bg-destructive text-destructive-foreground text-[8px] font-bold leading-tight ${tc.pulse ? "animate-pulse" : ""}`}>
-                          {tc.badge}
-                        </span>
-                      )}
-                    </TabsTrigger>
-                  </TooltipTrigger>
-                  <TooltipContent side="bottom" className="text-[10px]">
-                    {legendText[tc.value]?.[lang] || legendText[tc.value]?.en || tc.label}
-                  </TooltipContent>
-                </Tooltip>
+                <TabsTrigger
+                  key={tc.value}
+                  value={tc.value}
+                  className={`h-6 px-2.5 text-[9px] font-semibold gap-1 rounded-md transition-all duration-200 ${activeColorMap[tc.activeColor]} data-[state=active]:shadow-sm`}
+                >
+                  <Icon className="w-3 h-3" />
+                  <span className="hidden sm:inline">{tc.label}</span>
+                  {tc.dot && <span className={`w-1 h-1 rounded-full ${tc.dot} animate-pulse`} />}
+                  {tc.badge && (
+                    <span className={`px-1 py-px rounded-full bg-destructive text-destructive-foreground text-[7px] font-bold leading-none ${tc.pulse ? "animate-pulse" : ""}`}>
+                      {tc.badge}
+                    </span>
+                  )}
+                </TabsTrigger>
               );
             })}
           </TabsList>
 
-          <div className="ml-auto flex items-center gap-1">
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <button
-                  onClick={() => setCollapsed(c => !c)}
-                  className="w-7 h-7 rounded-lg flex items-center justify-center text-muted-foreground hover:text-primary hover:bg-primary/10 transition-all duration-200 border border-transparent hover:border-primary/20"
-                  aria-label={collapsed ? labels.expand : labels.collapse}
-                >
-                  {collapsed ? <ChevronDown className="w-4 h-4" /> : <ChevronUp className="w-4 h-4" />}
-                </button>
-              </TooltipTrigger>
-              <TooltipContent side="bottom" className="text-[10px]">
-                {collapsed ? labels.expand : labels.collapse}
-              </TooltipContent>
-            </Tooltip>
-          </div>
+          {/* Collapse toggle */}
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <button
+                onClick={() => setCollapsed(c => !c)}
+                className="ml-auto w-6 h-6 rounded-md flex items-center justify-center text-muted-foreground hover:text-primary hover:bg-primary/10 transition-all duration-200"
+                aria-label={collapsed ? labels.expand : labels.collapse}
+              >
+                {collapsed ? <Maximize2 className="w-3.5 h-3.5" /> : <Minimize2 className="w-3.5 h-3.5" />}
+              </button>
+            </TooltipTrigger>
+            <TooltipContent side="bottom" className="text-[10px]">
+              {collapsed ? labels.expand : labels.collapse}
+            </TooltipContent>
+          </Tooltip>
         </div>
 
-        {/* Content */}
-        {!collapsed && (
-          <div className="flex-1 min-h-0 overflow-hidden relative">
-            {/* SIGNALS TAB */}
-            <TabsContent value="signals" className="absolute inset-0 mt-0 overflow-y-auto scrollbar-thin data-[state=inactive]:hidden animate-in fade-in-0 duration-300">
-              <Legend tab="signals" lang={lang} />
-              {!hasSignals && !hasEmerging ? (
-                <TabLoadingState lang={lang} />
-              ) : (
-                <>
-                  {hasAnomalies && (
-                    <div className="mb-1">
-                      <div className="px-3 pt-2 pb-1">
-                        <span className="text-[9px] font-bold text-destructive uppercase tracking-wider flex items-center gap-1.5">
-                          <AlertTriangle className="w-3 h-3" />
-                          {lang === "pt" ? "Anomalias Detectadas" : "Detected Anomalies"}
-                          <span className="px-1.5 py-0.5 rounded-full bg-destructive/10 text-destructive text-[8px] font-bold ml-0.5">
-                            {anomalies.length}
-                          </span>
-                        </span>
-                      </div>
-                      <AnomaliesPredictive anomalies={anomalies} lang={lang} onAnomalyClick={onAnomalyClick} />
-                    </div>
-                  )}
-                  {hasEmerging ? (
-                    <div>
-                      <div className="px-3 pt-2 pb-1">
-                        <span className="text-[9px] font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider flex items-center gap-1.5">
-                          <Sprout className="w-3 h-3" />
-                          {lang === "pt" ? "Sinais Emergentes" : "Emerging Signals"}
-                        </span>
-                      </div>
-                      <EmergingTrendsSection trends={trends} onSelectTrend={onSelectTrend} />
-                    </div>
-                  ) : !hasAnomalies && (
-                    <div className="flex flex-col items-center justify-center py-8 text-muted-foreground">
-                      <Sprout className="w-8 h-8 mb-2 opacity-30" />
-                      <p className="text-[11px]">{lang === "pt" ? "Nenhum sinal detectado no momento." : "No signals detected."}</p>
-                    </div>
-                  )}
-                </>
-              )}
-            </TabsContent>
-
-            {/* CRITICAL TAB */}
-            <TabsContent value="critical" className="absolute inset-0 mt-0 overflow-y-auto scrollbar-thin data-[state=inactive]:hidden animate-in fade-in-0 duration-300">
-              <Legend tab="critical" lang={lang} />
-              {hasCritical ? (
-                <CriticalMomentsSection moments={criticalMoments} onSelectTrend={onSelectTrend} />
-              ) : (
-                <div className="flex flex-col items-center justify-center py-8 text-muted-foreground">
-                  <Flame className="w-8 h-8 mb-2 opacity-30" />
-                  <p className="text-[11px] text-center px-4">
-                    {lang === "pt" 
-                      ? "Nenhum evento crítico detectado." 
-                      : "No critical events detected."}
-                  </p>
-                  {allTrends.length > 0 && (
-                    <div className="mt-3 w-full px-4">
-                      <p className="text-[9px] text-muted-foreground/60 mb-1.5 text-center">
-                        {lang === "pt" ? "Tendências mais ativas agora:" : "Most active trends now:"}
-                      </p>
-                      <div className="space-y-1">
-                        {allTrends.slice(0, 3).map((t, i) => (
-                          <div key={i} className="flex items-center gap-1.5 text-[10px] text-muted-foreground/80 bg-muted/20 rounded-lg px-2.5 py-1.5">
-                            <span className="font-medium text-foreground/70 truncate flex-1">{t.title}</span>
-                            <span className="text-[9px] text-muted-foreground/60">{t.platform}</span>
-                            {t.change && <span className="text-emerald-500 font-semibold text-[9px]">{t.change}</span>}
+        {/* Content area — visually part of the same block */}
+        <AnimatePresence initial={false}>
+          {!collapsed && (
+            <motion.div
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: "auto", opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }}
+              transition={{ duration: 0.25, ease: "easeInOut" }}
+              className="flex-1 min-h-0 overflow-hidden"
+              style={{ minHeight: collapsed ? 0 : undefined }}
+            >
+              <div className="h-full relative">
+                {/* SIGNALS TAB */}
+                <TabsContent value="signals" className="absolute inset-0 mt-0 overflow-y-auto scrollbar-thin data-[state=inactive]:hidden animate-in fade-in-0 duration-200">
+                  <Legend tab="signals" lang={lang} />
+                  {!hasSignals && !hasEmerging ? (
+                    <TabLoadingState lang={lang} />
+                  ) : (
+                    <>
+                      {hasAnomalies && (
+                        <div className="mb-1">
+                          <div className="px-3 pt-1.5 pb-1">
+                            <span className="text-[9px] font-bold text-destructive uppercase tracking-wider flex items-center gap-1">
+                              <AlertTriangle className="w-3 h-3" />
+                              {lang === "pt" ? "Anomalias" : "Anomalies"}
+                              <span className="px-1 py-px rounded-full bg-destructive/10 text-destructive text-[7px] font-bold ml-0.5">{anomalies.length}</span>
+                            </span>
                           </div>
-                        ))}
-                      </div>
+                          <AnomaliesPredictive anomalies={anomalies} lang={lang} onAnomalyClick={onAnomalyClick} />
+                        </div>
+                      )}
+                      {hasEmerging ? (
+                        <div>
+                          <div className="px-3 pt-1.5 pb-1">
+                            <span className="text-[9px] font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider flex items-center gap-1">
+                              <Sprout className="w-3 h-3" />
+                              {lang === "pt" ? "Sinais Emergentes" : "Emerging Signals"}
+                            </span>
+                          </div>
+                          <EmergingTrendsSection trends={trends} onSelectTrend={onSelectTrend} />
+                        </div>
+                      ) : !hasAnomalies && (
+                        <div className="flex flex-col items-center justify-center py-6 text-muted-foreground">
+                          <Sprout className="w-6 h-6 mb-1.5 opacity-20" />
+                          <p className="text-[10px]">{lang === "pt" ? "Nenhum sinal detectado." : "No signals detected."}</p>
+                        </div>
+                      )}
+                    </>
+                  )}
+                </TabsContent>
+
+                {/* CRITICAL TAB */}
+                <TabsContent value="critical" className="absolute inset-0 mt-0 overflow-y-auto scrollbar-thin data-[state=inactive]:hidden animate-in fade-in-0 duration-200">
+                  <Legend tab="critical" lang={lang} />
+                  {hasCritical ? (
+                    <CriticalMomentsSection moments={criticalMoments} onSelectTrend={onSelectTrend} />
+                  ) : (
+                    <div className="flex flex-col items-center justify-center py-6 text-muted-foreground">
+                      <Flame className="w-6 h-6 mb-1.5 opacity-20" />
+                      <p className="text-[10px] text-center px-4">
+                        {lang === "pt" ? "Nenhum evento crítico detectado." : "No critical events detected."}
+                      </p>
+                      {allTrends.length > 0 && (
+                        <div className="mt-2 w-full px-4">
+                          <p className="text-[8px] text-muted-foreground/50 mb-1 text-center">
+                            {lang === "pt" ? "Tendências ativas:" : "Active trends:"}
+                          </p>
+                          <div className="space-y-0.5">
+                            {allTrends.slice(0, 3).map((t, i) => (
+                              <div key={i} className="flex items-center gap-1 text-[9px] text-muted-foreground/70 bg-muted/20 rounded px-2 py-1">
+                                <span className="font-medium text-foreground/60 truncate flex-1">{t.title}</span>
+                                <span className="text-[8px] text-muted-foreground/50">{t.platform}</span>
+                                {t.change && <span className="text-emerald-500 font-bold text-[8px]">{t.change}</span>}
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
                     </div>
                   )}
-                </div>
-              )}
-            </TabsContent>
+                </TabsContent>
 
-            {/* TOP TAB */}
-            <TabsContent value="top" className="absolute inset-0 mt-0 overflow-y-auto scrollbar-thin data-[state=inactive]:hidden animate-in fade-in-0 duration-300">
-              <Legend tab="top" lang={lang} />
-              <div className="px-3 py-2">
-                <TopTrendsGrid trends={allTrends} onSelectTrend={onSelectTrend} />
+                {/* TOP TAB */}
+                <TabsContent value="top" className="absolute inset-0 mt-0 overflow-y-auto scrollbar-thin data-[state=inactive]:hidden animate-in fade-in-0 duration-200">
+                  <Legend tab="top" lang={lang} />
+                  <div className="px-2 py-1.5">
+                    <TopTrendsGrid trends={allTrends} onSelectTrend={onSelectTrend} />
+                  </div>
+                </TabsContent>
+
+                {/* WEEKLY TAB */}
+                <TabsContent value="weekly" className="absolute inset-0 mt-0 overflow-y-auto scrollbar-thin data-[state=inactive]:hidden animate-in fade-in-0 duration-200">
+                  <Legend tab="weekly" lang={lang} />
+                  <WeeklyPulseDashboard trends={allTrends} />
+                </TabsContent>
               </div>
-            </TabsContent>
-
-            {/* WEEKLY TAB */}
-            <TabsContent value="weekly" className="absolute inset-0 mt-0 overflow-y-auto scrollbar-thin data-[state=inactive]:hidden animate-in fade-in-0 duration-300">
-              <Legend tab="weekly" lang={lang} />
-              <WeeklyPulseDashboard trends={allTrends} />
-            </TabsContent>
-          </div>
-        )}
+            </motion.div>
+          )}
+        </AnimatePresence>
       </Tabs>
     </div>
   );
