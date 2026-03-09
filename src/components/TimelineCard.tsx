@@ -491,11 +491,11 @@ const TimelineCard = ({
           {/* Intelligence Metrics Grid */}
           <div className="grid grid-cols-4 gap-1.5 mb-3">
             <div className="text-center p-2 rounded-lg bg-secondary/50">
-              <span className="block text-[8px] text-muted-foreground uppercase tracking-wide mb-0.5">Growth</span>
+              <span className="block text-[8px] text-muted-foreground uppercase tracking-wide mb-0.5">{t("growth" as any)}</span>
               <span className={`block text-xs font-bold ${changePositive ? "text-green-600 dark:text-green-400" : "text-destructive"}`}>{change}</span>
             </div>
             <div className="text-center p-2 rounded-lg bg-secondary/50">
-              <span className="block text-[8px] text-muted-foreground uppercase tracking-wide mb-0.5">Volume</span>
+              <span className="block text-[8px] text-muted-foreground uppercase tracking-wide mb-0.5">{t("volumeLabel" as any)}</span>
               <span className="block text-xs font-bold text-foreground">{volume || "—"}</span>
             </div>
             <Tooltip>
@@ -507,14 +507,14 @@ const TimelineCard = ({
               </TooltipTrigger>
               <TooltipContent side="top" className="text-[10px] space-y-0.5">
                 <div className="font-bold mb-1">Trend Velocity Index</div>
-                <div className="flex justify-between gap-3"><span>⚡ Velocity (30%)</span><span className="font-bold">{tviBreakdown.velocity}</span></div>
-                <div className="flex justify-between gap-3"><span>💬 Volume (30%)</span><span className="font-bold">{tviBreakdown.volume}</span></div>
-                <div className="flex justify-between gap-3"><span>📰 Sources (20%)</span><span className="font-bold">{tviBreakdown.sources}</span></div>
-                <div className="flex justify-between gap-3"><span>🌍 Geography (20%)</span><span className="font-bold">{tviBreakdown.geography}</span></div>
+                <div className="flex justify-between gap-3"><span>⚡ {t("tviGrowthLabel" as any)}</span><span className="font-bold">{tviBreakdown.velocity}</span></div>
+                <div className="flex justify-between gap-3"><span>💬 {t("tviVolumeLabel" as any)}</span><span className="font-bold">{tviBreakdown.volume}</span></div>
+                <div className="flex justify-between gap-3"><span>📰 {t("tviSourcesLabel" as any)}</span><span className="font-bold">{tviBreakdown.sources}</span></div>
+                <div className="flex justify-between gap-3"><span>🌍 {t("tviGeographyLabel" as any)}</span><span className="font-bold">{tviBreakdown.geography}</span></div>
               </TooltipContent>
             </Tooltip>
             <div className="text-center p-2 rounded-lg bg-secondary/50">
-              <span className="block text-[8px] text-muted-foreground uppercase tracking-wide mb-0.5">Sources</span>
+              <span className="block text-[8px] text-muted-foreground uppercase tracking-wide mb-0.5">{t("sourcesLabel" as any)}</span>
               <span className="block text-xs font-bold text-foreground">{sources?.length || 1}</span>
             </div>
           </div>
