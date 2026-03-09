@@ -177,6 +177,7 @@ const GoogleMapView = ({
   trends = [],
   onSelectTrend,
   highlightCountry,
+  onClose,
 }: GoogleMapViewProps) => {
   const { t, lang } = useLanguage();
   const isMobile = useIsMobile();
