@@ -376,8 +376,8 @@ function AnomaliesPredictive({ anomalies, lang, onAnomalyClick }: {
               </div>
 
               {/* WHY — Explanation */}
-              <div className="rounded-md bg-amber-500/8 border border-amber-500/15 px-2 py-1">
-                <p className="text-[9px] text-amber-700 dark:text-amber-300 leading-relaxed">
+              <div className="rounded bg-amber-500/8 border border-amber-500/15 px-1.5 py-0.5">
+                <p className="text-[8px] text-amber-700 dark:text-amber-300 leading-relaxed">
                   {whyText}
                 </p>
               </div>
