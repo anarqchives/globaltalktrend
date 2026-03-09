@@ -218,6 +218,18 @@ export default function TrendRadar({ trends, allTrends, criticalMoments, anomali
                 </div>
               </ScrollArea>
             </TabsContent>
+
+            <TabsContent value="weekly" className="mt-0 h-full flex flex-col">
+              <Legend tab="weekly" lang={lang} />
+              <ScrollArea className="flex-1">
+                <div className="p-4 flex flex-col items-center justify-center text-muted-foreground min-h-[160px]">
+                  <Activity className="w-8 h-8 mb-2 opacity-50 text-blue-500" />
+                  <p className="text-[11px] font-medium">Evolução semanal de tendências</p>
+                  <p className="text-[10px] mt-1 opacity-70">Gráfico de visualização semanal será carregado aqui.</p>
+                </div>
+              </ScrollArea>
+            </TabsContent>
+          </div>
           </div>
         )}
       </Tabs>
