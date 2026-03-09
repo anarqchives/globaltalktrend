@@ -523,7 +523,7 @@ const TimelineCard = ({
           <div className="flex items-start gap-2 mb-3 p-2 rounded-lg bg-secondary/30 border border-border/50">
             <div className="flex-1 min-w-0">
               <div className="text-[9px] font-semibold text-muted-foreground uppercase tracking-wide mb-0.5">
-                🗺️ Narrative Origin
+                🗺️ {t("narrativeOrigin" as any)}
               </div>
               <div className="text-[11px] text-foreground font-medium">{platform}</div>
               {countryCode && countryCode !== "GL" && (
@@ -532,10 +532,10 @@ const TimelineCard = ({
             </div>
             <div className="text-right flex-shrink-0">
               <div className="text-[9px] font-semibold text-muted-foreground uppercase tracking-wide mb-0.5">
-                Confidence
+                {t("confidenceLabel" as any)}
               </div>
               <div className={`text-[11px] font-bold ${trendScore >= 70 ? "text-green-600 dark:text-green-400" : trendScore >= 40 ? "text-amber-600 dark:text-amber-400" : "text-muted-foreground"}`}>
-                {trendScore >= 70 ? "High" : trendScore >= 40 ? "Medium" : "Low"}
+                {trendScore >= 70 ? t("confidenceHigh" as any) : trendScore >= 40 ? t("confidenceMedium" as any) : t("confidenceLow" as any)}
               </div>
               <div className="text-[9px] text-muted-foreground">{trendScore}%</div>
             </div>
