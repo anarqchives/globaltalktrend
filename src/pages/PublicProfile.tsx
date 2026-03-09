@@ -96,8 +96,13 @@ const PublicProfile = () => {
   }, [username]);
 
   const handleShare = () => {
-    navigator.clipboard.writeText(window.location.href);
-    toast({ title: "Link copiado!", description: "Link do perfil copiado para a área de transferência." });
+    const shareUrl = `${window.location.origin}/@${profile?.username}`;
+    if (navigator.share) {
+      navigator.share({ title: `@${profile?.username} — Global Talk Trend`, url: shareUrl }).catch(() => {});
+    } else {
+      navigator.clipboard.writeText(shareUrl);
+    }
+    toast({ title: "Link copiado!", description: shareUrl });
   };
 
   const handleFollow = async () => {

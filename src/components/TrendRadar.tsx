@@ -824,14 +824,7 @@ export default function TrendRadar({ trends, allTrends, criticalMoments, anomali
                 </ScrollArea>
               </TabsContent>
 
-              {hasAnomalies && (
-                <TabsContent value="anomalies" className="absolute inset-0 mt-0 flex flex-col data-[state=inactive]:hidden animate-in fade-in-0 duration-300">
-                  <Legend tab="anomalies" lang={lang} />
-                  <ScrollArea className="flex-1">
-                    <AnomaliesPredictive anomalies={anomalies} lang={lang} onAnomalyClick={onAnomalyClick} />
-                  </ScrollArea>
-                </TabsContent>
-              )}
+              {/* Anomalies tab removed — anomalies are now shown inside Critical Alerts tab */}
             </div>
           </div>
         )}
