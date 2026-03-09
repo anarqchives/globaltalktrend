@@ -53,7 +53,7 @@ function Legend({ tab, lang }: { tab: string; lang: string }) {
   const text = legendText[tab]?.[lang] || legendText[tab]?.en || "";
   if (!text) return null;
   return (
-    <div className="text-[10px] text-muted-foreground/80 leading-relaxed px-3 py-1.5 border-b border-border/20 flex-shrink-0">
+    <div className="text-[10px] text-muted-foreground/80 leading-relaxed px-3 py-1.5 flex-shrink-0 bg-muted/30">
       <Info className="w-3 h-3 inline mr-1.5 opacity-50" />
       {text}
     </div>
