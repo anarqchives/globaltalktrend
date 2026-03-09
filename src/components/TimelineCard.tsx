@@ -75,6 +75,15 @@ interface TimelineCardProps extends TrendCardProps {
 
 const normalizeText = (value: string) => value.toLowerCase().normalize("NFD").replace(/\p{Diacritic}/gu, "").trim();
 
+// Decode HTML entities (e.g. &#39; &amp; &quot;)
+const decodeEntities = (text: string): string => {
+  if (!text || (!text.includes("&") && !text.includes("&#"))) return text;
+  const el = typeof document !== "undefined" ? document.createElement("textarea") : null;
+  if (!el) return text;
+  el.innerHTML = text;
+  return el.value;
+};
+
 const localizeCategory = (category: string, t: (key: any) => string) => {
   const normalized = normalizeText(category || "");
   const map: Record<string, string> = {
@@ -286,13 +295,13 @@ const TimelineCard = ({
           </div>
           {/* Title */}
           <h3 className={`font-semibold text-foreground leading-snug mb-1 ${compact ? 'text-xs line-clamp-1' : 'text-[14px] line-clamp-2'}`}>
-            {title}
+            {decodeEntities(title)}
           </h3>
 
           {/* Contextual Description — the core intelligence layer */}
           {displayDescription && !compact && (
             <p className="text-[12px] text-muted-foreground leading-relaxed line-clamp-2 mb-2">
-              {displayDescription}
+              {decodeEntities(displayDescription)}
             </p>
           )}
 
@@ -441,7 +450,7 @@ const TimelineCard = ({
               target="_blank"
               rel="noopener noreferrer"
               onClick={(e) => e.stopPropagation()}
-              className="inline-flex items-center gap-1 px-2 py-1 rounded-md text-[10px] font-medium text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors"
+              className="inline-flex items-center gap-1 px-2 py-1 min-h-[36px] min-w-[36px] rounded-md text-[10px] font-medium text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors"
             >
               <ExternalLink className="w-3 h-3" />
               {t("viewSource")}
@@ -449,12 +458,12 @@ const TimelineCard = ({
           )}
           <button
             onClick={(e) => { e.stopPropagation(); handleToggle(); }}
-            className="inline-flex items-center gap-1 px-2 py-1 rounded-md text-[10px] font-medium text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors"
+            className="inline-flex items-center gap-1 px-2 py-1 min-h-[36px] min-w-[36px] rounded-md text-[10px] font-medium text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors"
           >
             <Eye className="w-3 h-3" />
             {expanded ? "Fechar" : "Análise"}
           </button>
-          <button onClick={handleShare} className="inline-flex items-center gap-1 px-2 py-1 rounded-md text-[10px] font-medium text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors">
+          <button onClick={handleShare} className="inline-flex items-center gap-1 px-2 py-1 min-h-[36px] min-w-[36px] rounded-md text-[10px] font-medium text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors">
             <Share2 className="w-3 h-3" />
             {t("share")}
           </button>
@@ -466,7 +475,7 @@ const TimelineCard = ({
               toast({ title: "📸 Screenshot gerado!", description: title.slice(0, 50) });
               onTrackAction?.("screenshot", 3, { title, platform });
             }}
-            className="inline-flex items-center gap-1 px-2 py-1 rounded-md text-[10px] font-medium text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors"
+            className="inline-flex items-center gap-1 px-2 py-1 min-h-[36px] min-w-[36px] rounded-md text-[10px] font-medium text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors"
           >
             <Camera className="w-3 h-3" />
             📸
@@ -474,14 +483,14 @@ const TimelineCard = ({
 
           <div className="flex-1" />
 
-          <button onClick={handleAlertClick} className="p-1 rounded-md text-muted-foreground/50 hover:text-primary transition-colors">
-            <Bell className="w-3 h-3" />
+          <button onClick={handleAlertClick} className="p-1.5 min-h-[36px] min-w-[36px] flex items-center justify-center rounded-md text-muted-foreground/50 hover:text-primary transition-colors">
+            <Bell className="w-3.5 h-3.5" />
           </button>
-          <button onClick={(e) => { e.stopPropagation(); onSaveCard?.({ title, platform, category, country_code: countryCode, source_url: sourceUrl, thumbnail, description: displayDescription, volume, change, changePositive, historicalData, platformColor: pf.color, sources }); }} className="p-1 rounded-md text-muted-foreground/50 hover:text-primary transition-colors">
-            <Bookmark className="w-3 h-3" />
+          <button onClick={(e) => { e.stopPropagation(); onSaveCard?.({ title, platform, category, country_code: countryCode, source_url: sourceUrl, thumbnail, description: displayDescription, volume, change, changePositive, historicalData, platformColor: pf.color, sources }); }} className="p-1.5 min-h-[36px] min-w-[36px] flex items-center justify-center rounded-md text-muted-foreground/50 hover:text-primary transition-colors">
+            <Bookmark className="w-3.5 h-3.5" />
           </button>
-          <button onClick={(e) => { e.stopPropagation(); toast({ title: "⚠️ Denúncia enviada", description: `Obrigado por reportar: ${title.slice(0, 40)}` }); }} className="p-1 rounded-md text-muted-foreground/50 hover:text-destructive transition-colors">
-            <Flag className="w-3 h-3" />
+          <button onClick={(e) => { e.stopPropagation(); toast({ title: "⚠️ Denúncia enviada", description: `Obrigado por reportar: ${title.slice(0, 40)}` }); }} className="p-1.5 min-h-[36px] min-w-[36px] flex items-center justify-center rounded-md text-muted-foreground/50 hover:text-destructive transition-colors">
+            <Flag className="w-3.5 h-3.5" />
           </button>
         </div>
       </div>

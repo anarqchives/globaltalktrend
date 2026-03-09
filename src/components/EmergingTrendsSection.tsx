@@ -62,6 +62,14 @@ function getSignalLabel(platform: string): string {
   return "📊 Signal";
 }
 
+const decodeEntities = (text: string): string => {
+  if (!text || (!text.includes("&") && !text.includes("&#"))) return text;
+  const el = typeof document !== "undefined" ? document.createElement("textarea") : null;
+  if (!el) return text;
+  el.innerHTML = text;
+  return el.value;
+};
+
 export default function EmergingTrendsSection({ trends, onSelectTrend }: EmergingTrendsSectionProps) {
   const { t } = useLanguage();
   const emerging = useMemo(() => detectEmergingTrends(trends), [trends]);
@@ -100,7 +108,7 @@ export default function EmergingTrendsSection({ trends, onSelectTrend }: Emergin
 
                     {/* Title */}
                     <p className="text-[11px] font-semibold text-foreground line-clamp-2 leading-tight mb-1.5 min-h-[28px]">
-                      {e.trend.title}
+                      {decodeEntities(e.trend.title)}
                     </p>
 
                     {/* Description hint */}
@@ -149,7 +157,7 @@ export default function EmergingTrendsSection({ trends, onSelectTrend }: Emergin
                   </motion.button>
                 </TooltipTrigger>
                 <TooltipContent side="bottom" className="max-w-[220px] text-[10px]">
-                  <p className="font-semibold">{e.trend.title}</p>
+                  <p className="font-semibold">{decodeEntities(e.trend.title)}</p>
                   <p className="text-muted-foreground mt-0.5">
                     {e.trend.platform} · +{Math.round(e.growthRate)}% · {e.sourceCount} source{e.sourceCount > 1 ? "s" : ""} · {e.ageMinutes}min ago
                   </p>
