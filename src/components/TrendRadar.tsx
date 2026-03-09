@@ -158,7 +158,32 @@ export default function TrendRadar({ trends, allTrends, criticalMoments, anomali
 
         {/* Content - Scrollable area with fixed height */}
         {!collapsed && (
-          <div className="flex-1 min-h-0 overflow-hidden">
+          <div className="flex-1 min-h-0 flex flex-col overflow-hidden">
+            {anomalies.length > 0 && (
+              <div className="px-3 py-2 bg-destructive/10 border-b border-destructive/20 flex-shrink-0">
+                <div className="flex items-center gap-1.5 text-destructive mb-1.5">
+                  <AlertTriangle className="w-3.5 h-3.5" />
+                  <span className="text-[10px] font-bold uppercase tracking-wider">Anomalias Detectadas</span>
+                </div>
+                <div className="flex flex-col gap-1">
+                  {anomalies.map((anomaly, i) => {
+                    const trendId = `${anomaly.trend.platform}-${anomaly.trend.title.slice(0, 20)}`;
+                    return (
+                      <button
+                        key={i}
+                        onClick={() => onAnomalyClick?.(trendId)}
+                        className="text-left bg-background/50 hover:bg-background/80 rounded px-2 py-1.5 text-[11px] transition-colors border border-destructive/10 flex items-center justify-between"
+                      >
+                        <span className="font-medium truncate mr-2">{anomaly.trend.title}</span>
+                        <span className="text-destructive font-bold whitespace-nowrap">+{anomaly.trend.change}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+            
+            <div className="flex-1 min-h-0 overflow-hidden relative">
             <TabsContent value="emerging" className="mt-0 h-full flex flex-col">
               <Legend tab="emerging" lang={lang} />
               <ScrollArea className="flex-1">
