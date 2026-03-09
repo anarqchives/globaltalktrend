@@ -690,7 +690,8 @@ const Index = () => {
   );
 
   // Count closed panels
-  const closedPanels = [!panelVisibility.radar, !panelVisibility.timeline, !panelVisibility.map].filter(Boolean).length;
+  const closedPanelsList = (["radar", "timeline", "map"] as const).filter(p => !panelVisibility[p]);
+  const closedPanels = closedPanelsList.length;
 
   return (
     <div className="h-screen flex flex-col bg-background overflow-hidden w-full max-w-[100vw]">
