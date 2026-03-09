@@ -672,6 +672,12 @@ const translations: Record<LangCode, Record<TranslationKey, string>> = {
     mapFlowLegendTitle: "趋势传播", mapFlowOrigin: "来源", mapFlowDestination: "目的地", mapFlowPropagation: "传播", mapFlowTimeDelta: "传播时间", mapFlowClickToFilter: "点击筛选时间线", mapFlowNoData: "该时段传播数据不足",
     mapSentLegendTitle: "情绪全景", mapSentPositive: "积极", mapSentNegative: "消极", mapSentMixed: "两极化", mapSentNeutral: "中性", mapSentBreakdown: "情绪分布", mapSentTopTrends: "热门趋势", mapSentNoData: "情绪数据不足",
     mapSentVolume: "总量", mapSentGrowth: "平均增长", mapSentActiveTrends: "活跃趋势",
+    growth: "增长", volumeLabel: "量", sourcesLabel: "来源", narrativeOrigin: "叙事来源",
+    confidenceLabel: "可信度", confidenceHigh: "高", confidenceMedium: "中", confidenceLow: "低",
+    propagationPath: "传播路径", sourceLabel: "来源", sentimentAnalysis: "情绪分析",
+    tviGrowthLabel: "增长 (30%)", tviVolumeLabel: "量 (30%)", tviSourcesLabel: "来源 (20%)", tviGeographyLabel: "地理 (20%)",
+    tviDescription: "基于以下指标衡量传播速度：",
+    sourcesSingular: "来源", sourcesPlural: "来源",
   },
   ja: {
     trends: "トレンド", moreTrends: "もっと見る", filters: "フィルター",
