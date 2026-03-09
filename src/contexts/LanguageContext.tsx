@@ -791,6 +791,10 @@ const translations: Record<LangCode, Record<TranslationKey, string>> = {
     tviGrowthLabel: "成長 (30%)", tviVolumeLabel: "ボリューム (30%)", tviSourcesLabel: "ソース (20%)", tviGeographyLabel: "地理 (20%)",
     tviDescription: "以下に基づく伝播速度を測定：",
     sourcesSingular: "ソース", sourcesPlural: "ソース",
+    mapMentions: "言及", mapSimilarity: "類似度", mapThinLowVol: "細い = 低ボリューム", mapThickHighVol: "太い = 高ボリューム", mapPropArcs: "伝播アーク", mapSizeVolume: "サイズ = ボリューム", mapFastPulse: "速い脈動 = 急成長", mapTrendsActiveLabel: "アクティブ", mapClickDetails: "詳細はクリック", mapLoadingMap: "マップ読み込み中...", mapReconnectMsg: "接続が復旧次第マップが表示されます。", mapRetry: "再試行", mapFilterByCountry: "国でタイムラインをフィルター", mapTopTrendsLabel: "トップトレンド", mapMoreTrends: "その他のトレンド", mapCloseMap: "マップを閉じる",
+    mapIntCritical: "🔥 緊急", mapIntHigh: "⚡ 高い", mapIntModerate: "📊 中程度", mapIntAttention: "📈 注意", mapIntNormal: "ℹ️ 通常",
+    mapStatusExceptional: "異常なボリューム — 複数のソースがアクティブ", mapStatusHigh: "高いアクティビティ — 加速的成長", mapStatusModerate: "中程度のアクティビティ — 発展中のトレンド", mapStatusLow: "低いアクティビティ — 少ない信号", mapStatusNormal: "通常の監視 — 異常なし",
+    mapCritVolume: "異常に高いボリューム", mapCritGrowth: "加速的成長", mapCritMultiplatform: "マルチプラットフォーム", mapCritActive: "同時アクティブトレンド", mapCritMonitoring: "監視中 — 通常のアクティビティ", mapCritNone: "アクティブなトレンドなし",
   },
   ko: {
     trends: "트렌드", moreTrends: "더 많은 트렌드", filters: "필터",
