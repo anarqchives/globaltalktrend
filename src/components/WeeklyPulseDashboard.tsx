@@ -124,8 +124,8 @@ function WeeklyHeatmap({ data }: { data: Record<string, Record<number, number>> 
           <div key={h} className="text-[7px] text-muted-foreground text-center">{h}h</div>
         ))}
         {days.map(day => (
-          <>
-            <div key={`label-${day}`} className="text-[8px] text-muted-foreground font-medium flex items-center">{day}</div>
+          <React.Fragment key={day}>
+            <div className="text-[8px] text-muted-foreground font-medium flex items-center">{day}</div>
             {hours.map(h => {
               const v = data[day]?.[h] || 0;
               const intensity = maxVal > 0 ? v / maxVal : 0;
