@@ -663,8 +663,10 @@ const GoogleMapView = ({
     
   }, [mapMode, flowArcs, mapLoaded, isDark, isMobile, t, onSelectCountry, lang]);
 
-  // ─── SENTIMENT BUBBLE MAP rendering ───
+  // ─── SENTIMENT BUBBLE MAP rendering with enhanced animations ───
   const sentimentBubbles = useMemo(() => computeSentimentBubbles(trends, countryPoints), [trends]);
+  const [hoveredBubbleId, setHoveredBubbleId] = useState<string | null>(null);
+  const sentimentRipplesRef = useRef<any[]>([]);
 
   useEffect(() => {
     const map = googleMapRef.current;
@@ -675,6 +677,8 @@ const GoogleMapView = ({
     sentimentMarkersRef.current = [];
     sentimentCirclesRef.current.forEach(c => c.setMap(null));
     sentimentCirclesRef.current = [];
+    sentimentRipplesRef.current.forEach(r => r.setMap(null));
+    sentimentRipplesRef.current = [];
 
     if (mapMode !== "sentiment") return;
     if (sentimentBubbles.length === 0) return;
@@ -684,70 +688,111 @@ const GoogleMapView = ({
 
     const maxVol = Math.max(...sentimentBubbles.map(b => b.volume), 1);
 
-    sentimentBubbles.forEach(bubble => {
+    sentimentBubbles.forEach((bubble, bubbleIndex) => {
       const cp = countryPoints.find(c => c.id === bubble.countryId);
       if (!cp) return;
 
+      const bubbleId = `${bubble.countryId}-${bubbleIndex}`;
       const color = sentimentColors[bubble.dominantSentiment];
       const logScale = Math.log10(Math.max(bubble.volume, 10)) / Math.log10(maxVol || 10);
-      const radius = 80000 + logScale * 600000; // meters
-      const pulseSpeed = 1500 + Math.max(0, 50 - bubble.growth) * 40; // faster growth = faster pulse
+      const baseRadius = 100000 + logScale * 550000;
+      
+      // Organic pulse: 3-4s cycle, speed modulated by growth
+      const basePulseSpeed = 3500 - Math.min(bubble.growth, 100) * 15; // 2000-3500ms
+      const pulseSpeed = Math.max(basePulseSpeed, 1800);
 
-      // Base circle
+      // Main bubble circle with smooth color transitions
       const circle = new google.maps.Circle({
         center: { lat: cp.lat, lng: cp.lng },
-        radius,
+        radius: baseRadius,
         fillColor: color,
-        fillOpacity: 0.25,
+        fillOpacity: 0.22,
         strokeColor: color,
         strokeWeight: 2,
-        strokeOpacity: 0.6,
+        strokeOpacity: 0.55,
         map,
         zIndex: 3,
         clickable: true,
       });
+      (circle as any)._bubbleId = bubbleId;
+      (circle as any)._baseRadius = baseRadius;
+      (circle as any)._color = color;
 
-      // Pulse ring marker
-      const pulseMarker = new g.maps.Marker({
+      // Inner glow circle for depth
+      const innerGlow = new google.maps.Circle({
+        center: { lat: cp.lat, lng: cp.lng },
+        radius: baseRadius * 0.6,
+        fillColor: color,
+        fillOpacity: 0.12,
+        strokeOpacity: 0,
+        map,
+        zIndex: 2,
+        clickable: false,
+      });
+
+      // Organic pulsing animation (scale: 1.0 → 1.03 → 1.0)
+      let pulseStart = performance.now() + Math.random() * pulseSpeed;
+      let isPaused = false;
+      
+      const animateBubblePulse = (now: number) => {
+        if (!circle.getMap()) return;
+        
+        if (!isPaused) {
+          const elapsed = (now - pulseStart) % pulseSpeed;
+          const progress = elapsed / pulseSpeed;
+          // Smooth sine wave for organic feel
+          const pulseScale = 1 + 0.03 * Math.sin(progress * Math.PI * 2);
+          const opacityPulse = 0.22 + 0.04 * Math.sin(progress * Math.PI * 2);
+          
+          circle.setRadius(baseRadius * pulseScale);
+          circle.setOptions({ fillOpacity: opacityPulse });
+          innerGlow.setRadius(baseRadius * 0.6 * pulseScale);
+        }
+        
+        requestAnimationFrame(animateBubblePulse);
+      };
+      requestAnimationFrame(animateBubblePulse);
+
+      // Outer breathing ring
+      const breathingRing = new g.maps.Marker({
         map,
         position: { lat: cp.lat, lng: cp.lng },
         icon: {
           path: g.maps.SymbolPath.CIRCLE,
           fillColor: color,
-          fillOpacity: 0.15,
+          fillOpacity: 0.08,
           strokeColor: color,
-          strokeWeight: 1.5,
-          strokeOpacity: 0.4,
-          scale: 15 + logScale * 20,
+          strokeWeight: 1,
+          strokeOpacity: 0.25,
+          scale: 18 + logScale * 22,
         },
         clickable: false,
-        zIndex: 2,
+        zIndex: 1,
         optimized: false,
       });
 
-      // Animate pulse
-      let startTime = performance.now();
-      const animatePulse = (now: number) => {
-        if (!pulseMarker.getMap()) return;
-        const elapsed = (now - startTime) % pulseSpeed;
-        const progress = elapsed / pulseSpeed;
-        const baseScale = 15 + logScale * 20;
-        const scale = baseScale + baseScale * 0.4 * Math.sin(progress * Math.PI * 2);
-        const opacity = 0.15 + 0.1 * Math.sin(progress * Math.PI * 2);
-        pulseMarker.setIcon({
+      let breathStart = performance.now();
+      const breathDuration = 4000;
+      const animateBreathing = (now: number) => {
+        if (!breathingRing.getMap()) return;
+        const progress = ((now - breathStart) % breathDuration) / breathDuration;
+        const baseScale = 18 + logScale * 22;
+        const breathScale = baseScale * (1 + 0.15 * Math.sin(progress * Math.PI * 2));
+        const breathOpacity = 0.08 + 0.04 * Math.sin(progress * Math.PI * 2);
+        breathingRing.setIcon({
           path: g.maps.SymbolPath.CIRCLE,
           fillColor: color,
-          fillOpacity: opacity,
+          fillOpacity: breathOpacity,
           strokeColor: color,
-          strokeWeight: 1.5,
-          strokeOpacity: 0.3 + 0.2 * Math.sin(progress * Math.PI * 2),
-          scale,
+          strokeWeight: 1,
+          strokeOpacity: 0.2 + 0.1 * Math.sin(progress * Math.PI * 2),
+          scale: breathScale,
         });
-        requestAnimationFrame(animatePulse);
+        requestAnimationFrame(animateBreathing);
       };
-      requestAnimationFrame(animatePulse);
+      requestAnimationFrame(animateBreathing);
 
-      // Flag label marker
+      // Flag label
       const flag = bubble.countryId.length === 2
         ? String.fromCodePoint(...[...bubble.countryId.toUpperCase()].map(c => 0x1F1E6 + c.charCodeAt(0) - 65))
         : "";
@@ -755,90 +800,199 @@ const GoogleMapView = ({
       const labelMarker = new g.maps.Marker({
         map,
         position: { lat: cp.lat, lng: cp.lng },
-        label: {
-          text: flag,
-          fontSize: "18px",
-        },
+        label: { text: flag, fontSize: "20px" },
         icon: {
           path: g.maps.SymbolPath.CIRCLE,
           fillOpacity: 0,
           strokeOpacity: 0,
           scale: 0,
         },
-        zIndex: 10,
+        zIndex: 12,
         optimized: false,
       });
 
-      // Hover tooltip for sentiment bubble
-      const showTooltip = (anchor: any) => {
+      // Hover ripple effect
+      const hoverRipple = new g.maps.Marker({
+        map: null, // Hidden by default
+        position: { lat: cp.lat, lng: cp.lng },
+        icon: {
+          path: g.maps.SymbolPath.CIRCLE,
+          fillColor: color,
+          fillOpacity: 0,
+          strokeColor: color,
+          strokeWeight: 2,
+          strokeOpacity: 0.5,
+          scale: 25,
+        },
+        zIndex: 0,
+        optimized: false,
+        clickable: false,
+      });
+
+      // Tooltip with staggered reveal animation
+      const showTooltip = (anchor: any, isHover = false) => {
         if (!infoWindowRef.current) return;
+        
+        // Pause pulse on hover
+        isPaused = isHover;
+        
+        // Expand bubble on hover
+        if (isHover) {
+          circle.setRadius(baseRadius * 1.08);
+          circle.setOptions({ fillOpacity: 0.32, strokeWeight: 2.5 });
+          
+          // Show ripple
+          hoverRipple.setMap(map);
+          let rippleStart = performance.now();
+          const animateRipple = (now: number) => {
+            if (!hoverRipple.getMap()) return;
+            const elapsed = now - rippleStart;
+            if (elapsed > 800) {
+              rippleStart = now;
+            }
+            const progress = Math.min(elapsed / 800, 1);
+            const rippleScale = 30 + progress * 35;
+            const rippleOpacity = 0.4 * (1 - progress);
+            hoverRipple.setIcon({
+              path: g.maps.SymbolPath.CIRCLE,
+              fillColor: color,
+              fillOpacity: 0,
+              strokeColor: color,
+              strokeWeight: 2 * (1 - progress * 0.5),
+              strokeOpacity: rippleOpacity,
+              scale: rippleScale,
+            });
+            requestAnimationFrame(animateRipple);
+          };
+          requestAnimationFrame(animateRipple);
+        }
+
         const bg = isDark ? "rgba(19,22,32,0.97)" : "rgba(255,255,255,0.97)";
         const txt = isDark ? "#e2e8f0" : "#111827";
         const sub = isDark ? "#94a3b8" : "#6b7280";
         const border = isDark ? "rgba(45,51,72,0.5)" : "rgba(0,0,0,0.08)";
 
-        const sentBar = (label: string, pct: number, barColor: string) =>
-          `<div style="display:flex;align-items:center;gap:6px;margin-bottom:3px;">
+        // Animated sentiment bars
+        const sentBar = (label: string, pct: number, barColor: string, delay: number) =>
+          `<div style="display:flex;align-items:center;gap:6px;margin-bottom:4px;opacity:0;animation:barFadeIn 0.3s ease ${delay}ms forwards;">
             <span style="font-size:9px;color:${sub};width:55px;">${label}</span>
-            <div style="flex:1;height:6px;border-radius:3px;background:${isDark ? 'rgba(30,41,59,0.8)' : '#f1f5f9'};overflow:hidden;">
-              <div style="width:${Math.round(pct * 100)}%;height:100%;border-radius:3px;background:${barColor};transition:width 0.3s;"></div>
+            <div style="flex:1;height:7px;border-radius:4px;background:${isDark ? 'rgba(30,41,59,0.8)' : '#f1f5f9'};overflow:hidden;">
+              <div style="width:0;height:100%;border-radius:4px;background:${barColor};animation:barGrow 0.5s cubic-bezier(0.34,1.56,0.64,1) ${delay + 100}ms forwards;" data-width="${Math.round(pct * 100)}%"></div>
             </div>
-            <span style="font-size:9px;color:${sub};width:30px;text-align:right;">${Math.round(pct * 100)}%</span>
+            <span style="font-size:9px;color:${sub};width:32px;text-align:right;font-weight:500;">${Math.round(pct * 100)}%</span>
           </div>`;
 
-        const trendsHtml = bubble.topTrends.map(tr =>
-          `<div style="display:flex;align-items:center;gap:4px;padding:4px 0;">
-            <span style="width:6px;height:6px;border-radius:50%;background:${sentimentColors[tr.sentiment]};flex-shrink:0;"></span>
-            <span style="font-size:10px;color:${txt};overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:200px;">${tr.title.slice(0, 45)}${tr.title.length > 45 ? '…' : ''}</span>
+        const trendsHtml = bubble.topTrends.map((tr, i) =>
+          `<div style="display:flex;align-items:center;gap:5px;padding:5px 0;opacity:0;animation:trendFadeIn 0.25s ease ${400 + i * 80}ms forwards;">
+            <span style="width:7px;height:7px;border-radius:50%;background:${sentimentColors[tr.sentiment]};flex-shrink:0;box-shadow:0 0 6px ${sentimentColors[tr.sentiment]}40;"></span>
+            <span style="font-size:10px;color:${txt};overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:200px;font-weight:450;">${tr.title.slice(0, 42)}${tr.title.length > 42 ? '…' : ''}</span>
           </div>`
         ).join('');
 
-        const tooltipW = isMobile ? 'min-width:260px;max-width:92vw' : 'min-width:240px;max-width:280px';
+        const tooltipW = isMobile ? 'min-width:270px;max-width:92vw' : 'min-width:250px;max-width:290px';
         const fs = isMobile ? '13px' : '11px';
 
         infoWindowRef.current.setContent(`
-          <div style="font-family:Inter,system-ui,sans-serif;padding:${isMobile ? '16px' : '14px'};${tooltipW};background:${bg};color:${txt};border-radius:16px;backdrop-filter:blur(20px);border:1px solid ${border};box-shadow:0 12px 32px rgba(0,0,0,0.15);">
-            <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">
-              <span style="font-size:${isMobile ? '28px' : '22px'};">${flag}</span>
-              <div>
-                <div style="font-size:${isMobile ? '16px' : '14px'};font-weight:700;">${bubble.countryName}</div>
-                <div style="font-size:10px;color:${sub};">${bubble.trendCount} ${t("mapSentActiveTrends")}</div>
+          <div style="font-family:Inter,system-ui,sans-serif;padding:${isMobile ? '18px' : '16px'};${tooltipW};background:${bg};color:${txt};border-radius:18px;backdrop-filter:blur(24px);border:1px solid ${border};box-shadow:0 16px 48px rgba(0,0,0,0.18);animation:tooltipEnter 0.3s cubic-bezier(0.25,0.1,0.25,1) forwards;">
+            <style>
+              @keyframes tooltipEnter { from { opacity: 0; transform: translateY(8px) scale(0.95); } to { opacity: 1; transform: translateY(0) scale(1); } }
+              @keyframes barFadeIn { from { opacity: 0; transform: translateX(-8px); } to { opacity: 1; transform: translateX(0); } }
+              @keyframes barGrow { to { width: var(--target-width); } }
+              @keyframes trendFadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
+            </style>
+            <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;animation:barFadeIn 0.25s ease forwards;">
+              <span style="font-size:${isMobile ? '32px' : '26px'};filter:drop-shadow(0 2px 4px rgba(0,0,0,0.1));">${flag}</span>
+              <div style="flex:1;">
+                <div style="font-size:${isMobile ? '17px' : '15px'};font-weight:700;letter-spacing:-0.02em;">${bubble.countryName}</div>
+                <div style="font-size:10px;color:${sub};margin-top:1px;">${bubble.trendCount} ${t("mapSentActiveTrends")}</div>
               </div>
-              <span style="margin-left:auto;background:${color};color:#fff;padding:2px 10px;border-radius:12px;font-size:9px;font-weight:700;letter-spacing:0.5px;">${t("mapSent" + bubble.dominantSentiment.charAt(0).toUpperCase() + bubble.dominantSentiment.slice(1) as any)}</span>
+              <span style="background:linear-gradient(135deg,${color},${color}cc);color:#fff;padding:4px 12px;border-radius:14px;font-size:9px;font-weight:700;letter-spacing:0.4px;box-shadow:0 2px 8px ${color}40;">${t("mapSent" + bubble.dominantSentiment.charAt(0).toUpperCase() + bubble.dominantSentiment.slice(1) as any)}</span>
             </div>
-            <div style="font-size:10px;font-weight:700;color:${txt};text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;">${t("mapSentBreakdown")}</div>
-            ${sentBar(t("mapSentPositive"), bubble.sentiment.positive, sentimentColors.positive)}
-            ${sentBar(t("mapSentNeutral"), bubble.sentiment.neutral, sentimentColors.neutral)}
-            ${sentBar(t("mapSentNegative"), bubble.sentiment.negative, sentimentColors.negative)}
-            ${sentBar(t("mapSentMixed"), bubble.sentiment.mixed, sentimentColors.mixed)}
-            ${bubble.topTrends.length > 0 ? `<div style="font-size:10px;font-weight:700;color:${txt};text-transform:uppercase;letter-spacing:0.5px;margin:10px 0 4px;">${t("mapSentTopTrends")}</div>${trendsHtml}` : ''}
-            <div style="display:flex;gap:12px;margin-top:10px;padding-top:8px;border-top:1px solid ${border};">
+            <div style="font-size:10px;font-weight:700;color:${txt};text-transform:uppercase;letter-spacing:0.6px;margin-bottom:8px;opacity:0;animation:barFadeIn 0.25s ease 100ms forwards;">${t("mapSentBreakdown")}</div>
+            ${sentBar(t("mapSentPositive"), bubble.sentiment.positive, sentimentColors.positive, 150)}
+            ${sentBar(t("mapSentNeutral"), bubble.sentiment.neutral, sentimentColors.neutral, 200)}
+            ${sentBar(t("mapSentNegative"), bubble.sentiment.negative, sentimentColors.negative, 250)}
+            ${sentBar(t("mapSentMixed"), bubble.sentiment.mixed, sentimentColors.mixed, 300)}
+            ${bubble.topTrends.length > 0 ? `<div style="font-size:10px;font-weight:700;color:${txt};text-transform:uppercase;letter-spacing:0.6px;margin:12px 0 6px;opacity:0;animation:barFadeIn 0.25s ease 350ms forwards;">${t("mapSentTopTrends")}</div>${trendsHtml}` : ''}
+            <div style="display:flex;gap:14px;margin-top:12px;padding-top:10px;border-top:1px solid ${border};opacity:0;animation:barFadeIn 0.3s ease 500ms forwards;">
               <div style="text-align:center;flex:1;">
-                <div style="font-size:${isMobile ? '14px' : '12px'};font-weight:600;color:${txt};">${bubble.volume.toLocaleString()}</div>
-                <div style="font-size:8px;color:${sub};text-transform:uppercase;">${t("mapSentVolume")}</div>
+                <div style="font-size:${isMobile ? '15px' : '13px'};font-weight:700;color:${txt};">${bubble.volume.toLocaleString()}</div>
+                <div style="font-size:8px;color:${sub};text-transform:uppercase;letter-spacing:0.5px;">${t("mapSentVolume")}</div>
               </div>
               <div style="text-align:center;flex:1;">
-                <div style="font-size:${isMobile ? '14px' : '12px'};font-weight:600;color:${bubble.growth > 0 ? sentimentColors.positive : sentimentColors.negative};">${bubble.growth > 0 ? '+' : ''}${Math.round(bubble.growth)}%</div>
-                <div style="font-size:8px;color:${sub};text-transform:uppercase;">${t("mapSentGrowth")}</div>
+                <div style="font-size:${isMobile ? '15px' : '13px'};font-weight:700;color:${bubble.growth > 0 ? sentimentColors.positive : sentimentColors.negative};">${bubble.growth > 0 ? '+' : ''}${Math.round(bubble.growth)}%</div>
+                <div style="font-size:8px;color:${sub};text-transform:uppercase;letter-spacing:0.5px;">${t("mapSentGrowth")}</div>
               </div>
             </div>
-            <button onclick="document.dispatchEvent(new CustomEvent('map-sentiment-filter',{detail:'${bubble.countryId}'}))" style="width:100%;background:${isDark ? 'rgba(59,130,246,0.9)' : '#3b82f6'};color:white;border:none;border-radius:${isMobile ? '12px' : '8px'};padding:${isMobile ? '12px' : '8px'};font-size:${fs};font-weight:600;cursor:pointer;margin-top:8px;min-height:${isMobile ? '48px' : 'auto'};touch-action:manipulation;">${t("mapFlowClickToFilter")}</button>
+            <button onclick="document.dispatchEvent(new CustomEvent('map-sentiment-filter',{detail:'${bubble.countryId}'}))" style="width:100%;background:linear-gradient(135deg,${isDark ? 'rgba(59,130,246,0.95)' : '#3b82f6'},${isDark ? 'rgba(37,99,235,0.95)' : '#2563eb'});color:white;border:none;border-radius:${isMobile ? '14px' : '10px'};padding:${isMobile ? '14px' : '10px'};font-size:${fs};font-weight:600;cursor:pointer;margin-top:10px;min-height:${isMobile ? '50px' : 'auto'};touch-action:manipulation;box-shadow:0 4px 12px rgba(59,130,246,0.3);transition:transform 0.15s ease,box-shadow 0.15s ease;opacity:0;animation:barFadeIn 0.3s ease 550ms forwards;" onmouseover="this.style.transform='scale(1.02)';this.style.boxShadow='0 6px 16px rgba(59,130,246,0.4)';" onmouseout="this.style.transform='scale(1)';this.style.boxShadow='0 4px 12px rgba(59,130,246,0.3)';">${t("mapFlowClickToFilter")}</button>
           </div>
+          <script>
+            document.querySelectorAll('[data-width]').forEach(el => {
+              el.style.setProperty('--target-width', el.getAttribute('data-width'));
+            });
+          </script>
         `);
         infoWindowRef.current.open({ anchor, map });
       };
 
-      labelMarker.addListener("click", () => showTooltip(labelMarker));
-      circle.addListener("click", () => {
-        showTooltip(labelMarker);
-      });
+      const hideTooltip = () => {
+        isPaused = false;
+        circle.setRadius(baseRadius);
+        circle.setOptions({ fillOpacity: 0.22, strokeWeight: 2 });
+        hoverRipple.setMap(null);
+      };
+
+      // Click with "pop" animation
+      const handleClick = () => {
+        // Pop animation
+        const popStart = performance.now();
+        const popDuration = 150;
+        const animatePop = (now: number) => {
+          const progress = Math.min((now - popStart) / popDuration, 1);
+          // Elastic easing out
+          const eased = 1 - Math.pow(1 - progress, 3);
+          const popScale = progress < 0.5 
+            ? 1 + 0.15 * (progress / 0.5)
+            : 1.15 - 0.15 * ((progress - 0.5) / 0.5);
+          circle.setRadius(baseRadius * popScale);
+          circle.setOptions({ fillOpacity: 0.22 + 0.15 * (1 - eased) });
+          
+          if (progress < 1) {
+            requestAnimationFrame(animatePop);
+          }
+        };
+        requestAnimationFrame(animatePop);
+        
+        showTooltip(labelMarker, false);
+      };
+
+      labelMarker.addListener("click", handleClick);
+      circle.addListener("click", handleClick);
 
       if (!isMobile) {
-        labelMarker.addListener("mouseover", () => showTooltip(labelMarker));
+        labelMarker.addListener("mouseover", () => {
+          setHoveredBubbleId(bubbleId);
+          showTooltip(labelMarker, true);
+        });
+        labelMarker.addListener("mouseout", () => {
+          setHoveredBubbleId(null);
+          hideTooltip();
+          infoWindowRef.current?.close();
+        });
+        circle.addListener("mouseover", () => {
+          setHoveredBubbleId(bubbleId);
+          showTooltip(labelMarker, true);
+        });
+        circle.addListener("mouseout", () => {
+          setHoveredBubbleId(null);
+          hideTooltip();
+          infoWindowRef.current?.close();
+        });
       }
 
-      sentimentMarkersRef.current.push(pulseMarker, labelMarker);
-      sentimentCirclesRef.current.push(circle);
+      sentimentMarkersRef.current.push(breathingRing, labelMarker);
+      sentimentCirclesRef.current.push(circle, innerGlow);
+      sentimentRipplesRef.current.push(hoverRipple);
     });
 
     // Listen for filter event from tooltip button
