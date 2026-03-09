@@ -444,8 +444,8 @@ const TimelineCard = ({
       {/* === EXPANDED CONTENT === */}
       {expanded && (
         <div className="timeline-card-expanded-content">
-          {/* Image */}
-          {thumbnail && !imgError && (
+          {/* Image (only show in expanded if it was hidden by compact mode) */}
+          {thumbnail && !imgError && compact && (
             <div className="relative w-full mb-3 rounded-lg overflow-hidden bg-secondary aspect-video">
               <img src={thumbnail} alt="" className="w-full h-full object-cover" loading="lazy" onError={() => setImgError(true)} />
             </div>
