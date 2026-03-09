@@ -244,13 +244,13 @@ const TrendHeader = ({ totalTrends = 0, countriesCount = 0, onRefresh, refreshin
 
             <div className="w-px h-5 bg-border/50 dark:bg-white/15 mx-1" />
 
-            {/* Support button - yellow liquid glass */}
+            {/* Support button - integrated soft accent */}
             <a
               href="https://buy.stripe.com/fZu7sMgw6cHLeTnbWVdIA00"
               target="_blank"
               rel="noopener noreferrer"
-              className="px-3 h-8 min-h-[32px] max-h-[32px] rounded-full text-[11px] font-semibold transition-all whitespace-nowrap flex items-center hover:scale-105 border border-yellow-400/50 dark:border-yellow-400/60 backdrop-blur-sm shadow-[0_4px_15px_rgba(255,215,0,0.3)] hover:shadow-[0_6px_20px_rgba(255,215,0,0.5)] dark:shadow-[0_4px_15px_rgba(255,215,0,0.2)]"
-              style={{ background: "rgba(255, 215, 0, 0.2)", color: "hsl(var(--foreground))" }}>
+              className="px-3 h-8 min-h-[32px] max-h-[32px] rounded-full text-[11px] font-semibold transition-all whitespace-nowrap flex items-center hover:scale-[1.03] border border-primary/20 dark:border-primary/30 bg-primary/5 dark:bg-primary/10 text-primary hover:bg-primary/10 dark:hover:bg-primary/15 backdrop-blur-sm"
+            >
               Apoie
             </a>
 
