@@ -1034,6 +1034,10 @@ const translations: Record<LangCode, Record<TranslationKey, string>> = {
     tviGrowthLabel: "वृद्धि (30%)", tviVolumeLabel: "मात्रा (30%)", tviSourcesLabel: "स्रोत (20%)", tviGeographyLabel: "भूगोल (20%)",
     tviDescription: "इन पर आधारित प्रसार गति मापता है:",
     sourcesSingular: "स्रोत", sourcesPlural: "स्रोत",
+    mapMentions: "उल्लेख", mapSimilarity: "समानता", mapThinLowVol: "पतला = कम मात्रा", mapThickHighVol: "मोटा = अधिक मात्रा", mapPropArcs: "प्रसार आर्क", mapSizeVolume: "आकार = मात्रा", mapFastPulse: "तेज़ धड़कन = तेज़ वृद्धि", mapTrendsActiveLabel: "सक्रिय", mapClickDetails: "विवरण के लिए क्लिक करें", mapLoadingMap: "मानचित्र लोड हो रहा है...", mapReconnectMsg: "कनेक्शन बहाल होने पर मानचित्र दिखाई देगा।", mapRetry: "पुनः प्रयास", mapFilterByCountry: "देश से टाइमलाइन फ़िल्टर करें", mapTopTrendsLabel: "शीर्ष रुझान", mapMoreTrends: "और रुझान", mapCloseMap: "मानचित्र बंद करें",
+    mapIntCritical: "🔥 गंभीर", mapIntHigh: "⚡ उच्च", mapIntModerate: "📊 मध्यम", mapIntAttention: "📈 ध्यान", mapIntNormal: "ℹ️ सामान्य",
+    mapStatusExceptional: "असाधारण मात्रा — कई स्रोत सक्रिय", mapStatusHigh: "उच्च गतिविधि — त्वरित वृद्धि", mapStatusModerate: "मध्यम गतिविधि — विकासशील रुझान", mapStatusLow: "कम गतिविधि — कम संकेत", mapStatusNormal: "सामान्य निगरानी — कोई विसंगति नहीं",
+    mapCritVolume: "असाधारण रूप से उच्च मात्रा", mapCritGrowth: "त्वरित वृद्धि", mapCritMultiplatform: "मल्टी-प्लेटफ़ॉर्म", mapCritActive: "एक साथ सक्रिय रुझान", mapCritMonitoring: "निगरानी में — सामान्य गतिविधि", mapCritNone: "कोई सक्रिय रुझान नहीं",
   },
   ru: {
     trends: "Тренды", moreTrends: "Больше трендов", filters: "Фильтры",
