@@ -291,7 +291,13 @@ function TopTrendsGrid({ trends, onSelectTrend, onFilterCountry }: {
             initial={{ opacity: 0, y: 4 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: i * 0.02 }}
-            onClick={() => onSelectTrend?.(trend)}
+            onClick={() => {
+              if (trend.sourceUrl) {
+                window.open(trend.sourceUrl, "_blank", "noopener,noreferrer");
+              } else {
+                onSelectTrend?.(trend);
+              }
+            }}
             className="flex items-center gap-2 p-2 rounded-lg hover:bg-secondary/60 transition-all text-left group"
           >
             <span className="text-[10px] font-bold text-muted-foreground w-5 text-right flex-shrink-0">
