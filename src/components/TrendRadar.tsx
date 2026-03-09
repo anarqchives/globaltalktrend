@@ -209,7 +209,7 @@ function TopTrendsGrid({ trends, onSelectTrend }: { trends: TrendCardProps[]; on
       </div>
 
       {/* Ranking list #4-20 */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-1.5">
+      <div className="columns-2 sm:columns-3 md:columns-4 lg:columns-5 gap-1.5 space-y-0 [&>*]:break-inside-avoid [&>*]:mb-1.5">
         {ranked.slice(3).map((trend, i) => {
           const pf = platformIcons[trend.platform] || { emoji: "●", color: "hsl(var(--muted-foreground))" };
           const flag = countryCodeToFlag(trend.countryCode);
@@ -226,7 +226,7 @@ function TopTrendsGrid({ trends, onSelectTrend }: { trends: TrendCardProps[]; on
               transition={{ delay: i * 0.02, layout: { duration: 0.2 } }}
               onClick={() => setExpandedIdx(isExpanded ? null : idx)}
               className={`rounded-lg border border-border/40 bg-card p-2 cursor-pointer transition-all hover:border-primary/30 hover:shadow-sm ${
-                isExpanded ? "col-span-2 shadow-md ring-1 ring-primary/20" : ""
+                isExpanded ? "shadow-md ring-1 ring-primary/20" : ""
               }`}
             >
               <div className="flex items-start gap-1.5">
@@ -368,7 +368,7 @@ function AnomaliesPredictive({ anomalies, lang, onAnomalyClick }: {
       </div>
 
       {/* Anomaly cards */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-2 auto-rows-auto">
+      <div className="columns-2 sm:columns-3 md:columns-4 lg:columns-5 xl:columns-6 gap-2 space-y-0 [&>*]:break-inside-avoid [&>*]:mb-2">
         {anomalies.map((anomaly, i) => {
           const info = anomalyTypeInfo[anomaly.type] || anomalyTypeInfo.spike;
           const changeNum = parseFloat(anomaly.trend.change?.replace(/[^0-9.\-]/g, "") || "0");
@@ -395,7 +395,7 @@ function AnomaliesPredictive({ anomalies, lang, onAnomalyClick }: {
               transition={{ delay: i * 0.03, layout: { duration: 0.2, type: "spring", stiffness: 300, damping: 30 } }}
               onClick={() => setExpandedIdx(isExpanded ? null : i)}
               className={`rounded-lg border border-destructive/15 bg-card p-2.5 cursor-pointer transition-all hover:border-destructive/30 hover:shadow-sm ${
-                isExpanded ? "col-span-2 row-span-2 shadow-md ring-1 ring-destructive/15 bg-destructive/5" : ""
+                isExpanded ? "shadow-md ring-1 ring-destructive/15 bg-destructive/5" : ""
               }`}
             >
               {/* Badge + change */}
@@ -561,7 +561,11 @@ export default function TrendRadar({ trends, allTrends, criticalMoments, anomali
     };
     const handleEnd = () => {
       isDragging.current = false;
-      localStorage.setItem(RADAR_HEIGHT_KEY, String(radarHeight));
+      // Use ref to get latest height
+      setRadarHeight(prev => {
+        localStorage.setItem(RADAR_HEIGHT_KEY, String(prev));
+        return prev;
+      });
       window.removeEventListener("mousemove", handleMove);
       window.removeEventListener("mouseup", handleEnd);
       window.removeEventListener("touchmove", handleMove);
