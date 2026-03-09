@@ -1455,7 +1455,7 @@ const GoogleMapView = ({
         <div className="absolute inset-0 flex items-center justify-center bg-background/50 backdrop-blur-sm">
           <div className="flex items-center gap-3 text-muted-foreground text-sm">
             <div className="w-5 h-5 border-2 border-primary/30 border-t-primary rounded-full animate-spin" />
-            <span className="font-medium">Carregando mapa...</span>
+            <span className="font-medium">{t("mapLoadingMap")}</span>
           </div>
         </div>
       )}
