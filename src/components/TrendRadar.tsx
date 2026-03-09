@@ -639,6 +639,3 @@ export default function TrendRadar({ trends, allTrends, criticalMoments, anomali
     </div>
   );
 }
-
-const TrendRadar = memo(TrendRadarInner);
-export default TrendRadar;
