@@ -33,8 +33,8 @@ const legendText: Record<string, Record<string, string>> = {
     en: "Accelerating trends in the last 2h — detected by anomalous growth.",
   },
   critical: {
-    pt: "Momentos de pico anômalo — alta velocidade de propagação multiplataforma.",
-    en: "Anomalous peak moments — high multi-platform propagation speed.",
+    pt: "⚡ Explosão de sinal — crescimento acima de +150% em menos de 2h.",
+    en: "⚡ Signal burst — growth above +150% in less than 2h.",
   },
   top: {
     pt: "Os 20 assuntos mais discutidos agora — ordenados por volume total.",
