@@ -1152,9 +1152,9 @@ export default function WeeklyPulseDashboard({ trends }: { trends: TrendCardProp
                   <XAxis dataKey="day" tick={{ fontSize: 8, fill: "hsl(var(--muted-foreground))" }} tickLine={false} axisLine={false}
                     cursor="pointer" />
                   <YAxis tick={{ fontSize: 7, fill: "hsl(var(--muted-foreground))" }} tickLine={false} axisLine={false}
-                    tickFormatter={(v: number) => v >= 1000 ? `${(v / 1000).toFixed(0)}M` : `${v}K`} />
+                    tickFormatter={(v: number) => fmtNum(v)} />
                   <RTooltip contentStyle={{ background: "hsl(var(--popover))", border: "1px solid hsl(var(--border))", borderRadius: "8px", fontSize: "9px" }}
-                    formatter={(v: any, name: string) => [v !== null ? fmtNum(v * 1000) : t(lang, "Sem dados", "No data"), name]}
+                    formatter={(v: any, name: string) => [v !== null ? fmtNum(v) : t(lang, "Sem dados", "No data"), name]}
                     labelFormatter={(l: string) => `${l} — ${t(lang, "clique para explorar", "click to explore")}`} />
                   {analysis.topCats.map(cat => (
                     <Area key={cat} type="monotone" dataKey={cat} stroke={getCatColor(cat)} strokeWidth={1.5}
