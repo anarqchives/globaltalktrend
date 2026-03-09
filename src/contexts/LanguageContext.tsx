@@ -71,7 +71,15 @@ type TranslationKey =
   | "confidenceHigh" | "confidenceMedium" | "confidenceLow"
   | "propagationPath" | "sourceLabel" | "sentimentAnalysis"
   | "tviGrowthLabel" | "tviVolumeLabel" | "tviSourcesLabel" | "tviGeographyLabel" | "tviDescription"
-  | "sourcesSingular" | "sourcesPlural";
+  | "sourcesSingular" | "sourcesPlural"
+  // Map tooltip extended keys
+  | "mapMentions" | "mapSimilarity" | "mapThinLowVol" | "mapThickHighVol" | "mapPropArcs"
+  | "mapSizeVolume" | "mapFastPulse" | "mapTrendsActiveLabel" | "mapClickDetails"
+  | "mapLoadingMap" | "mapReconnectMsg" | "mapRetry" | "mapFilterByCountry"
+  | "mapTopTrendsLabel" | "mapMoreTrends" | "mapCloseMap"
+  | "mapIntCritical" | "mapIntHigh" | "mapIntModerate" | "mapIntAttention" | "mapIntNormal"
+  | "mapStatusExceptional" | "mapStatusHigh" | "mapStatusModerate" | "mapStatusLow" | "mapStatusNormal"
+  | "mapCritVolume" | "mapCritGrowth" | "mapCritMultiplatform" | "mapCritActive" | "mapCritMonitoring" | "mapCritNone";
 
 const translations: Record<LangCode, Record<TranslationKey, string>> = {
   pt: {
