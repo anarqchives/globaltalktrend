@@ -771,7 +771,7 @@ const Index = () => {
             <div className="flex-1 min-h-0 flex flex-col">
               {!panelVisibility.radar && !panelVisibility.timeline && !panelVisibility.map ? (
                 <div className="flex-1 flex items-center justify-center text-muted-foreground">
-                  <p className="text-sm">{lang === "pt" ? "Clique nas abas laterais para reabrir os painéis." : "Click the side tabs to reopen panels."}</p>
+                  <p className="text-sm">{lang === "pt" ? "Todos os painéis foram arquivados. Use o menu lateral para restaurá-los." : "All panels archived. Use the side drawer to restore them."}</p>
                 </div>
               ) : (
                 <ResizablePanelGroup
