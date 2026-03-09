@@ -32,10 +32,10 @@ import ReportsTab from "@/components/ReportsTab";
 import BentoDashboard from "@/components/BentoDashboard";
 
 const tabs = [
-  { key: "dashboard", label: "Meu Painel", icon: LayoutGrid },
-  { key: "filters", label: "Meus Filtros", icon: Star },
+  { key: "dashboard", label: "Visão Geral", icon: LayoutGrid },
+  { key: "filters", label: "Filtros", icon: Star },
   { key: "reports", label: "Relatórios", icon: Star },
-  { key: "alerts", label: "Meus Alertas", icon: Bell },
+  { key: "alerts", label: "Alertas", icon: Bell },
   { key: "history", label: "Histórico", icon: Clock },
   { key: "stats", label: "Estatísticas", icon: BarChart3 },
   { key: "privacy", label: "Privacidade", icon: Shield },
@@ -149,122 +149,124 @@ const Profile = () => {
         <div className="w-20" />
       </header>
 
-      <div className="max-w-3xl mx-auto px-4 py-6 space-y-6">
-        {/* Enhanced Profile Card */}
-        <motion.div
-          initial={{ opacity: 0, y: 12 }}
+      <div className="max-w-4xl mx-auto px-4 md:px-8 py-8 space-y-8">
+        {/* ─── Editorial Profile Header ─── */}
+        <motion.section
+          initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
-          className="bg-card rounded-2xl border border-border/50 overflow-hidden"
+          transition={{ duration: 0.4 }}
+          className="flex flex-col sm:flex-row gap-6 items-start"
         >
-          {/* Cover gradient */}
-          <div className="h-20 bg-gradient-to-r from-primary/20 via-primary/10 to-accent/20" />
-          
-          <div className="px-5 pb-5 -mt-10">
-            <div className="flex flex-col sm:flex-row sm:items-end gap-4">
-              {/* Avatar with online indicator */}
-              <div className="relative">
-                <Avatar className="w-20 h-20 ring-4 ring-card">
-                  {avatar && <AvatarImage src={avatar} alt={displayName} />}
-                  <AvatarFallback className="text-2xl bg-primary/10 text-primary font-bold">{initial}</AvatarFallback>
-                </Avatar>
-                <span className="absolute bottom-1 right-1 w-4 h-4 bg-green-500 border-2 border-card rounded-full" title="Online" />
-              </div>
+          {/* Avatar */}
+          <div className="relative shrink-0">
+            <Avatar className="w-24 h-24 ring-2 ring-border">
+              {avatar && <AvatarImage src={avatar} alt={displayName} />}
+              <AvatarFallback className="text-3xl bg-primary/10 text-primary font-bold">{initial}</AvatarFallback>
+            </Avatar>
+            <span className="absolute bottom-1 right-1 w-4 h-4 bg-green-500 border-2 border-background rounded-full" />
+          </div>
 
-              <div className="flex-1 min-w-0">
-                <div className="flex flex-wrap items-center gap-2">
-                  <h2 className="text-xl font-bold text-foreground truncate">{displayName}</h2>
-                  {profile?.is_public === false && (
-                    <Tooltip>
-                      <TooltipTrigger>
-                        <Lock className="w-4 h-4 text-muted-foreground" />
-                      </TooltipTrigger>
-                      <TooltipContent>Perfil privado</TooltipContent>
-                    </Tooltip>
-                  )}
-                </div>
-                
-                {username ? (
-                  <p className="text-sm text-primary font-medium">@{username}</p>
-                ) : (
-                  <button 
-                    onClick={() => setShowEditProfile(true)}
-                    className="text-sm text-muted-foreground hover:text-primary flex items-center gap-1 transition-colors"
-                  >
-                    <AtSign className="w-3.5 h-3.5" /> Definir username
-                  </button>
-                )}
-
-                {profile?.bio && (
-                  <p className="text-sm text-muted-foreground mt-1 line-clamp-2">{profile.bio}</p>
-                )}
-              </div>
-
-              {/* Action buttons */}
-              <div className="flex gap-2 shrink-0">
-                <Button variant="outline" size="sm" onClick={() => setShowEditProfile(true)}>
-                  <Pencil className="w-3.5 h-3.5 mr-1.5" /> Editar
-                </Button>
-                <Button variant="outline" size="sm" onClick={() => setShowShareProfile(true)}>
-                  <Share2 className="w-3.5 h-3.5 mr-1.5" /> Compartilhar
-                </Button>
-              </div>
+          {/* Info */}
+          <div className="flex-1 min-w-0 space-y-2">
+            <div className="flex flex-wrap items-baseline gap-3">
+              <h1 className="text-2xl font-bold text-foreground tracking-tight">{displayName}</h1>
+              {username ? (
+                <span className="text-base text-primary font-medium">@{username}</span>
+              ) : (
+                <button
+                  onClick={() => setShowEditProfile(true)}
+                  className="text-sm text-muted-foreground hover:text-primary flex items-center gap-1 transition-colors"
+                >
+                  <AtSign className="w-3.5 h-3.5" /> Definir username
+                </button>
+              )}
+              {profile?.is_public === false && (
+                <Tooltip>
+                  <TooltipTrigger><Lock className="w-4 h-4 text-muted-foreground" /></TooltipTrigger>
+                  <TooltipContent>Perfil privado</TooltipContent>
+                </Tooltip>
+              )}
             </div>
 
-            {/* Stats row */}
-            <div className="flex items-center gap-6 mt-4 pt-4 border-t border-border/50">
-              <button 
-                onClick={() => setShowFollowers("followers")}
-                className="text-center hover:bg-secondary/50 px-3 py-1.5 rounded-lg transition-colors"
-              >
-                <div className="text-lg font-bold text-foreground">{profile?.followers_count || 0}</div>
-                <div className="text-xs text-muted-foreground">seguidores</div>
-              </button>
-              <button 
-                onClick={() => setShowFollowers("following")}
-                className="text-center hover:bg-secondary/50 px-3 py-1.5 rounded-lg transition-colors"
-              >
-                <div className="text-lg font-bold text-foreground">{profile?.following_count || 0}</div>
-                <div className="text-xs text-muted-foreground">seguindo</div>
-              </button>
-              <div className="text-center px-3 py-1.5">
-                <div className="text-lg font-bold text-foreground">{profile?.boards_count || 0}</div>
-                <div className="text-xs text-muted-foreground">boards</div>
-              </div>
-              <div className="ml-auto flex items-center gap-2">
-                <span className="px-2.5 py-1 rounded-full bg-primary/10 text-primary text-xs font-semibold">
-                  {totalPoints >= 100 ? "Curador" : "Usuário"}
-                </span>
-                <span className="px-2.5 py-1 rounded-full bg-secondary text-muted-foreground text-xs font-medium">
-                  {totalPoints} pts
-                </span>
-              </div>
-            </div>
-
-            {/* Badges */}
-            {profile?.badges && profile.badges.length > 0 && (
-              <div className="flex flex-wrap gap-1.5 mt-3">
-                {profile.badges.map((badge, idx) => (
-                  <span 
-                    key={idx} 
-                    className="px-2 py-1 rounded-full bg-accent/10 text-accent-foreground text-xs font-medium flex items-center gap-1"
-                  >
-                    {badge.icon} {badge.name}
-                  </span>
-                ))}
-              </div>
+            {profile?.bio && (
+              <p className="text-sm text-muted-foreground leading-relaxed max-w-xl">{profile.bio}</p>
             )}
+
+            <div className="flex items-center gap-3 text-xs text-muted-foreground">
+              <span className="flex items-center gap-1"><Globe className="w-3.5 h-3.5" /> Desde {createdAt}</span>
+              {username && (
+                <span className="text-primary/70">globaltalktrend.com/@{username}</span>
+              )}
+            </div>
+          </div>
+
+          {/* Actions */}
+          <div className="flex gap-2 shrink-0 self-start">
+            <Button size="sm" variant="outline" onClick={() => setShowEditProfile(true)}>
+              <Pencil className="w-3.5 h-3.5 mr-1.5" /> Editar
+            </Button>
+            <Button size="sm" variant="outline" onClick={() => setShowShareProfile(true)}>
+              <Share2 className="w-3.5 h-3.5 mr-1.5" /> Compartilhar
+            </Button>
+          </div>
+        </motion.section>
+
+        {/* ─── Stats Row ─── */}
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.1 }}
+          className="flex gap-8 pb-6"
+          style={{ borderBottom: "1px solid hsl(var(--border) / 0.5)" }}
+        >
+          {[
+            { value: profile?.followers_count || 0, label: "seguidores", click: () => setShowFollowers("followers") },
+            { value: profile?.following_count || 0, label: "seguindo", click: () => setShowFollowers("following") },
+            { value: profile?.boards_count || 0, label: "boards", click: undefined },
+            { value: savedCards.length, label: "projetos", click: undefined },
+          ].map((s) => (
+            <button
+              key={s.label}
+              onClick={s.click}
+              className="text-center hover:bg-secondary/50 px-3 py-1.5 rounded-lg transition-colors"
+            >
+              <div className="text-xl font-bold text-foreground">{s.value}</div>
+              <div className="text-xs text-muted-foreground uppercase tracking-wider">{s.label}</div>
+            </button>
+          ))}
+          <div className="ml-auto flex items-center gap-2">
+            <span className="px-2.5 py-1 rounded-full bg-primary/10 text-primary text-xs font-semibold">
+              {totalPoints >= 100 ? "Curador" : "Usuário"}
+            </span>
+            <span className="px-2.5 py-1 rounded-full bg-secondary text-muted-foreground text-xs font-medium">
+              {totalPoints} pts
+            </span>
           </div>
         </motion.div>
 
-        {/* Tabs */}
-        <div className="flex gap-1 overflow-x-auto scrollbar-thin pb-1">
+        {/* Badges */}
+        {profile?.badges && profile.badges.length > 0 && (
+          <div className="flex flex-wrap gap-2">
+            {profile.badges.map((badge, idx) => (
+              <span
+                key={idx}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-card border border-border/50 rounded-full text-xs font-medium text-foreground"
+              >
+                {badge.icon} {badge.name}
+              </span>
+            ))}
+          </div>
+        )}
+
+        {/* ─── Tab Navigation ─── */}
+        <div className="flex gap-1 overflow-x-auto scrollbar-thin">
           {tabs.map((tab) => (
             <button
               key={tab.key}
               onClick={() => handleTabChange(tab.key)}
-              className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-medium whitespace-nowrap transition-all ${
+              className={`flex items-center gap-1.5 px-4 py-2 rounded-full text-xs font-medium whitespace-nowrap transition-all ${
                 activeTab === tab.key
-                  ? "bg-primary text-primary-foreground shadow-sm"
+                  ? "bg-primary text-primary-foreground"
                   : "text-muted-foreground hover:bg-secondary"
               }`}
             >

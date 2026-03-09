@@ -19,6 +19,7 @@ const AuthCallback = lazy(() => import("./pages/AuthCallback"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 const Teste = lazy(() => import("./pages/Teste"));
 const Admin = lazy(() => import("./pages/Admin"));
+const PublicProfile = lazy(() => import("./pages/PublicProfile"));
 
 const queryClient = new QueryClient({ defaultOptions: { queries: { retry: 1 } } });
 
@@ -74,6 +75,7 @@ const App = () => {
                   <Route path="/perfil" element={<Profile />} />
                   <Route path="/teste" element={<Teste />} />
                   <Route path="/admin" element={<Admin />} />
+                  <Route path="/@:username" element={<PublicProfile />} />
                   <Route path="*" element={<NotFound />} />
                 </Routes>
               </Suspense>
