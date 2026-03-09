@@ -400,6 +400,7 @@ const Index = () => {
               Atualizar Agora
             </button>
           )}
+          <TagLegend />
           <button
             onClick={() => setCompactMode(c => !c)}
             className="h-6 w-6 flex items-center justify-center rounded-md hover:bg-secondary transition-colors text-muted-foreground hover:text-foreground"
