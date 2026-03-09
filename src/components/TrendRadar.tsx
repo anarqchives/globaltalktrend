@@ -53,7 +53,7 @@ function Legend({ tab, lang }: { tab: string; lang: string }) {
   const text = legendText[tab]?.[lang] || legendText[tab]?.en || "";
   if (!text) return null;
   return (
-    <div className="text-[10px] text-muted-foreground/80 leading-relaxed px-3 py-1.5 border-b border-border/20 flex-shrink-0">
+    <div className="text-[10px] text-muted-foreground/80 leading-relaxed px-3 py-1.5 flex-shrink-0 bg-muted/30">
       <Info className="w-3 h-3 inline mr-1.5 opacity-50" />
       {text}
     </div>
@@ -684,7 +684,7 @@ export default function TrendRadar({ trends, allTrends, criticalMoments, anomali
 
   return (
     <div
-      className="border-b border-border/40 bg-background flex-shrink-0 transition-all duration-300 ease-out overflow-hidden"
+      className="bg-card/50 backdrop-blur-sm flex-shrink-0 transition-all duration-300 ease-out overflow-hidden shadow-[0_2px_8px_-2px_hsl(var(--primary)/0.08)]"
       style={{
         height: collapsed ? 40 : RADAR_HEIGHT,
         minHeight: collapsed ? 40 : RADAR_HEIGHT,
@@ -698,7 +698,7 @@ export default function TrendRadar({ trends, allTrends, criticalMoments, anomali
             <Radar className="w-3 h-3" /> Trend Radar
           </span>
 
-          <TabsList className="h-7 bg-muted/40 p-0.5 gap-0.5 border border-border/30 rounded-lg">
+          <TabsList className="h-8 bg-muted/50 p-0.5 gap-1 rounded-xl backdrop-blur-sm">
             {tabConfig.map(tc => {
               const Icon = tc.icon;
               return (
@@ -706,7 +706,7 @@ export default function TrendRadar({ trends, allTrends, criticalMoments, anomali
                   <TooltipTrigger asChild>
                     <TabsTrigger
                       value={tc.value}
-                      className={`h-6 px-2.5 text-[10px] font-semibold gap-1 rounded-md border border-transparent transition-all ${tc.activeClass}`}
+                      className={`h-7 px-3 text-[10px] font-semibold gap-1.5 rounded-lg transition-all duration-200 ${tc.activeClass} data-[state=active]:shadow-sm`}
                     >
                       <Icon className="w-3 h-3" />
                       <span className="hidden sm:inline">{tc.label}</span>
@@ -748,7 +748,7 @@ export default function TrendRadar({ trends, allTrends, criticalMoments, anomali
         {!collapsed && (
           <div className="flex-1 min-h-0 flex flex-col overflow-hidden">
             <div className="flex-1 min-h-0 overflow-hidden relative">
-              <TabsContent value="emerging" className="absolute inset-0 mt-0 flex flex-col data-[state=inactive]:hidden">
+              <TabsContent value="emerging" className="absolute inset-0 mt-0 flex flex-col data-[state=inactive]:hidden animate-in fade-in-0 duration-300">
                 <Legend tab="emerging" lang={lang} />
                 <ScrollArea className="flex-1">
                   {hasEmerging ? (
@@ -762,7 +762,7 @@ export default function TrendRadar({ trends, allTrends, criticalMoments, anomali
                 </ScrollArea>
               </TabsContent>
 
-              <TabsContent value="critical" className="absolute inset-0 mt-0 flex flex-col data-[state=inactive]:hidden">
+              <TabsContent value="critical" className="absolute inset-0 mt-0 flex flex-col data-[state=inactive]:hidden animate-in fade-in-0 duration-300">
                 <Legend tab="critical" lang={lang} />
                 <ScrollArea className="flex-1">
                   {hasCritical ? (
@@ -776,7 +776,7 @@ export default function TrendRadar({ trends, allTrends, criticalMoments, anomali
                 </ScrollArea>
               </TabsContent>
 
-              <TabsContent value="top" className="absolute inset-0 mt-0 flex flex-col data-[state=inactive]:hidden">
+              <TabsContent value="top" className="absolute inset-0 mt-0 flex flex-col data-[state=inactive]:hidden animate-in fade-in-0 duration-300">
                 <Legend tab="top" lang={lang} />
                 <ScrollArea className="flex-1">
                   <div className="px-3 py-2">
@@ -785,7 +785,7 @@ export default function TrendRadar({ trends, allTrends, criticalMoments, anomali
                 </ScrollArea>
               </TabsContent>
 
-              <TabsContent value="weekly" className="absolute inset-0 mt-0 flex flex-col data-[state=inactive]:hidden">
+              <TabsContent value="weekly" className="absolute inset-0 mt-0 flex flex-col data-[state=inactive]:hidden animate-in fade-in-0 duration-300">
                 <Legend tab="weekly" lang={lang} />
                 <ScrollArea className="flex-1">
                   <WeeklyDashboard trends={allTrends} />
@@ -793,7 +793,7 @@ export default function TrendRadar({ trends, allTrends, criticalMoments, anomali
               </TabsContent>
 
               {hasAnomalies && (
-                <TabsContent value="anomalies" className="absolute inset-0 mt-0 flex flex-col data-[state=inactive]:hidden">
+                <TabsContent value="anomalies" className="absolute inset-0 mt-0 flex flex-col data-[state=inactive]:hidden animate-in fade-in-0 duration-300">
                   <Legend tab="anomalies" lang={lang} />
                   <ScrollArea className="flex-1">
                     <AnomaliesPredictive anomalies={anomalies} lang={lang} onAnomalyClick={onAnomalyClick} />
