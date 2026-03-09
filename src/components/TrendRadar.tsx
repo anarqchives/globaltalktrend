@@ -657,98 +657,88 @@ export default function TrendRadar({ trends, allTrends, criticalMoments, anomali
 
         {/* Content */}
         {!collapsed && (
-          <div className="flex-1 min-h-0 flex flex-col overflow-hidden">
-            <div className="flex-1 min-h-0 overflow-hidden relative">
-              {/* SIGNALS TAB */}
-              <TabsContent value="signals" className="absolute inset-0 mt-0 flex flex-col data-[state=inactive]:hidden animate-in fade-in-0 duration-300">
-                <Legend tab="signals" lang={lang} />
-                <ScrollArea className="flex-1">
-                  {hasAnomalies && (
-                    <div className="mb-1">
-                      <div className="px-3 pt-2 pb-1">
-                        <span className="text-[9px] font-bold text-destructive uppercase tracking-wider flex items-center gap-1">
-                          <AlertTriangle className="w-3 h-3" />
-                          {lang === "pt" ? "Anomalias Detectadas" : "Detected Anomalies"}
-                          <span className="px-1 py-0 rounded-full bg-destructive/10 text-destructive text-[8px] font-bold ml-1">
-                            {anomalies.length}
-                          </span>
-                        </span>
-                      </div>
-                      <AnomaliesPredictive anomalies={anomalies} lang={lang} onAnomalyClick={onAnomalyClick} />
-                    </div>
-                  )}
-                  {hasEmerging ? (
-                    <div>
-                      <div className="px-3 pt-2 pb-1">
-                        <span className="text-[9px] font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider flex items-center gap-1">
-                          <Sprout className="w-3 h-3" />
-                          {lang === "pt" ? "Sinais Emergentes" : "Emerging Signals"}
-                        </span>
-                      </div>
-                      <EmergingTrendsSection trends={trends} onSelectTrend={onSelectTrend} />
-                    </div>
-                  ) : !hasAnomalies && (
-                    <div className="flex flex-col items-center justify-center py-8 text-muted-foreground">
-                      <Sprout className="w-8 h-8 mb-2 opacity-30" />
-                      <p className="text-[11px]">{lang === "pt" ? "Nenhum sinal detectado no momento." : "No signals detected."}</p>
-                    </div>
-                  )}
-                </ScrollArea>
-              </TabsContent>
-
-              {/* CRITICAL TAB */}
-              <TabsContent value="critical" className="absolute inset-0 mt-0 flex flex-col data-[state=inactive]:hidden animate-in fade-in-0 duration-300">
-                <Legend tab="critical" lang={lang} />
-                <ScrollArea className="flex-1">
-                  {hasCritical ? (
-                    <CriticalMomentsSection moments={criticalMoments} onSelectTrend={onSelectTrend} />
-                  ) : (
-                    <div className="flex flex-col items-center justify-center py-8 text-muted-foreground">
-                      <Flame className="w-8 h-8 mb-2 opacity-30" />
-                      <p className="text-[11px] text-center px-4">
-                        {lang === "pt" 
-                          ? "Nenhum evento crítico detectado." 
-                          : "No critical events detected."}
-                      </p>
-                      {allTrends.length > 0 && (
-                        <div className="mt-3 w-full px-4">
-                          <p className="text-[9px] text-muted-foreground/60 mb-1.5 text-center">
-                            {lang === "pt" ? "Tendências mais ativas agora:" : "Most active trends now:"}
-                          </p>
-                          <div className="space-y-1">
-                            {allTrends.slice(0, 3).map((t, i) => (
-                              <div key={i} className="flex items-center gap-1.5 text-[9px] text-muted-foreground/80 bg-muted/20 rounded px-2 py-1">
-                                <span className="font-semibold text-foreground/70 truncate flex-1">{t.title}</span>
-                                <span className="text-[8px]">{t.platform}</span>
-                                {t.change && <span className="text-emerald-500 font-bold">{t.change}</span>}
-                              </div>
-                            ))}
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                  )}
-                </ScrollArea>
-              </TabsContent>
-
-              {/* TOP TAB */}
-              <TabsContent value="top" className="absolute inset-0 mt-0 flex flex-col data-[state=inactive]:hidden animate-in fade-in-0 duration-300">
-                <Legend tab="top" lang={lang} />
-                <ScrollArea className="flex-1">
-                  <div className="px-3 py-2">
-                    <TopTrendsGrid trends={allTrends} onSelectTrend={onSelectTrend} />
+          <div className="flex-1 min-h-0 overflow-hidden relative">
+            {/* SIGNALS TAB */}
+            <TabsContent value="signals" className="absolute inset-0 mt-0 overflow-y-auto scrollbar-thin data-[state=inactive]:hidden animate-in fade-in-0 duration-300">
+              <Legend tab="signals" lang={lang} />
+              {hasAnomalies && (
+                <div className="mb-1">
+                  <div className="px-3 pt-2 pb-1">
+                    <span className="text-[9px] font-bold text-destructive uppercase tracking-wider flex items-center gap-1">
+                      <AlertTriangle className="w-3 h-3" />
+                      {lang === "pt" ? "Anomalias Detectadas" : "Detected Anomalies"}
+                      <span className="px-1 py-0 rounded-full bg-destructive/10 text-destructive text-[8px] font-bold ml-1">
+                        {anomalies.length}
+                      </span>
+                    </span>
                   </div>
-                </ScrollArea>
-              </TabsContent>
+                  <AnomaliesPredictive anomalies={anomalies} lang={lang} onAnomalyClick={onAnomalyClick} />
+                </div>
+              )}
+              {hasEmerging ? (
+                <div>
+                  <div className="px-3 pt-2 pb-1">
+                    <span className="text-[9px] font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider flex items-center gap-1">
+                      <Sprout className="w-3 h-3" />
+                      {lang === "pt" ? "Sinais Emergentes" : "Emerging Signals"}
+                    </span>
+                  </div>
+                  <EmergingTrendsSection trends={trends} onSelectTrend={onSelectTrend} />
+                </div>
+              ) : !hasAnomalies && (
+                <div className="flex flex-col items-center justify-center py-8 text-muted-foreground">
+                  <Sprout className="w-8 h-8 mb-2 opacity-30" />
+                  <p className="text-[11px]">{lang === "pt" ? "Nenhum sinal detectado no momento." : "No signals detected."}</p>
+                </div>
+              )}
+            </TabsContent>
 
-              {/* WEEKLY TAB */}
-              <TabsContent value="weekly" className="absolute inset-0 mt-0 flex flex-col data-[state=inactive]:hidden animate-in fade-in-0 duration-300">
-                <Legend tab="weekly" lang={lang} />
-                <ScrollArea className="flex-1">
-                  <WeeklyPulseDashboard trends={allTrends} />
-                </ScrollArea>
-              </TabsContent>
-            </div>
+            {/* CRITICAL TAB */}
+            <TabsContent value="critical" className="absolute inset-0 mt-0 overflow-y-auto scrollbar-thin data-[state=inactive]:hidden animate-in fade-in-0 duration-300">
+              <Legend tab="critical" lang={lang} />
+              {hasCritical ? (
+                <CriticalMomentsSection moments={criticalMoments} onSelectTrend={onSelectTrend} />
+              ) : (
+                <div className="flex flex-col items-center justify-center py-8 text-muted-foreground">
+                  <Flame className="w-8 h-8 mb-2 opacity-30" />
+                  <p className="text-[11px] text-center px-4">
+                    {lang === "pt" 
+                      ? "Nenhum evento crítico detectado." 
+                      : "No critical events detected."}
+                  </p>
+                  {allTrends.length > 0 && (
+                    <div className="mt-3 w-full px-4">
+                      <p className="text-[9px] text-muted-foreground/60 mb-1.5 text-center">
+                        {lang === "pt" ? "Tendências mais ativas agora:" : "Most active trends now:"}
+                      </p>
+                      <div className="space-y-1">
+                        {allTrends.slice(0, 3).map((t, i) => (
+                          <div key={i} className="flex items-center gap-1.5 text-[9px] text-muted-foreground/80 bg-muted/20 rounded px-2 py-1">
+                            <span className="font-semibold text-foreground/70 truncate flex-1">{t.title}</span>
+                            <span className="text-[8px]">{t.platform}</span>
+                            {t.change && <span className="text-emerald-500 font-bold">{t.change}</span>}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+            </TabsContent>
+
+            {/* TOP TAB */}
+            <TabsContent value="top" className="absolute inset-0 mt-0 overflow-y-auto scrollbar-thin data-[state=inactive]:hidden animate-in fade-in-0 duration-300">
+              <Legend tab="top" lang={lang} />
+              <div className="px-3 py-2">
+                <TopTrendsGrid trends={allTrends} onSelectTrend={onSelectTrend} />
+              </div>
+            </TabsContent>
+
+            {/* WEEKLY TAB */}
+            <TabsContent value="weekly" className="absolute inset-0 mt-0 overflow-y-auto scrollbar-thin data-[state=inactive]:hidden animate-in fade-in-0 duration-300">
+              <Legend tab="weekly" lang={lang} />
+              <WeeklyPulseDashboard trends={allTrends} />
+            </TabsContent>
           </div>
         )}
       </Tabs>
