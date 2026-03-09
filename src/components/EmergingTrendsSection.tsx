@@ -108,7 +108,7 @@ export default function EmergingTrendsSection({ trends, onSelectTrend }: Emergin
 
                     {/* Title */}
                     <p className="text-[11px] font-semibold text-foreground line-clamp-2 leading-tight mb-1.5 min-h-[28px]">
-                      {e.trend.title}
+                      {decodeEntities(e.trend.title)}
                     </p>
 
                     {/* Description hint */}
