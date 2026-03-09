@@ -822,7 +822,12 @@ const Index = () => {
 
             {/* Main content area */}
             <div className="flex-1 min-h-0 flex flex-col">
-              <ResizablePanelGroup direction="vertical" className="flex-1 min-h-0">
+              {!panelVisibility.radar && !panelVisibility.timeline && !panelVisibility.map ? (
+                <div className="flex-1 flex items-center justify-center text-muted-foreground">
+                  <p className="text-sm">{lang === "pt" ? "Clique nas abas laterais para reabrir os painéis." : "Click the side tabs to reopen panels."}</p>
+                </div>
+              ) : (
+              <ResizablePanelGroup direction="vertical" className="flex-1 min-h-0" key={`v-${panelVisibility.radar}-${panelVisibility.timeline}-${panelVisibility.map}`}>
                 {/* Trend Radar Panel */}
                 {panelVisibility.radar && (
                   <>
