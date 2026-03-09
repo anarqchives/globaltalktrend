@@ -703,8 +703,8 @@ const Index = () => {
           </div>
         ) : (
           <ResizablePanelGroup direction="horizontal" className="flex-1 min-h-0">
-            <ResizablePanel defaultSize={65} minSize={40} maxSize={85}>
-              <div className="h-full min-h-0 overflow-hidden" ref={timelinePanelRef}>
+            <ResizablePanel defaultSize={65} minSize={25} maxSize={85}>
+               <div className="h-full min-h-0 overflow-hidden" ref={timelinePanelRef}>
                 {renderTimeline()}
               </div>
             </ResizablePanel>
