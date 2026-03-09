@@ -991,10 +991,22 @@ export default function WeeklyPulseDashboard({ trends }: { trends: TrendCardProp
     };
   }, [weeklyData, trends, lang]);
 
+  // If no weekly data and no trends, show empty state
+  const hasAnyData = weeklyData.length > 0 || trends.length > 0;
+
   if (loading) {
     return (
       <div className="p-3 space-y-2">
         {[...Array(4)].map((_, i) => <div key={i} className="h-14 rounded-xl bg-muted/30 animate-pulse" />)}
+      </div>
+    );
+  }
+
+  if (!hasAnyData) {
+    return (
+      <div className="flex flex-col items-center justify-center py-12 text-muted-foreground">
+        <BarChart3 className="w-8 h-8 mb-2 opacity-30" />
+        <p className="text-[11px]">{t(lang, "Nenhum dado semanal disponível ainda.", "No weekly data available yet.", "No hay datos semanales disponibles aún.")}</p>
       </div>
     );
   }
