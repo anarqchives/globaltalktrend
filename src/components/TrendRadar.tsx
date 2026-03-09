@@ -839,7 +839,7 @@ export default function TrendRadar({ trends, allTrends, criticalMoments, anomali
                 </ScrollArea>
               </TabsContent>
 
-              {/* Anomalies tab removed — anomalies are now shown inside Critical Alerts tab */}
+              
             </div>
           </div>
         )}

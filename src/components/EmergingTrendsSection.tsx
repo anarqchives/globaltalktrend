@@ -128,7 +128,7 @@ export default function EmergingTrendsSection({ trends, onSelectTrend }: Emergin
                       )}
                       <span className="inline-flex items-center gap-0.5">
                         <Clock className="w-2 h-2" />
-                        {e.ageMinutes < 60 ? `${e.ageMinutes}m` : `${Math.round(e.ageMinutes / 60)}h`}
+                        {e.ageMinutes < 1 ? "agora" : e.ageMinutes < 60 ? `há ${e.ageMinutes}min` : `há ${Math.round(e.ageMinutes / 60)}h`}
                       </span>
                     </div>
 

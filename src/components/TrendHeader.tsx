@@ -206,7 +206,7 @@ const TrendHeader = ({ totalTrends = 0, countriesCount = 0, onRefresh, refreshin
             <button
               onClick={onRefresh}
               disabled={refreshing}
-              className="p-1.5 rounded-full text-muted-foreground hover:bg-secondary transition-colors disabled:opacity-50"
+              className="p-1.5 rounded-full text-muted-foreground dark:text-white/70 hover:bg-secondary dark:hover:bg-white/10 transition-colors disabled:opacity-50"
               title={t("updated")}>
 
                 <RefreshCw className={`w-3.5 h-3.5 ${refreshing ? "animate-spin" : ""}`} />

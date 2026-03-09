@@ -374,18 +374,24 @@ export default function WeeklyPulseDashboard({ trends }: { trends: TrendCardProp
             { label: lang === "pt" ? "Trends ativas" : "Active trends", value: analysis.totalTrends, icon: "📊", tooltip: lang === "pt" ? "Total de tendências monitoradas agora" : "Total trends currently monitored" },
             { label: lang === "pt" ? "Snapshots 7d" : "7d Snapshots", value: analysis.totalSnapshots > 999 ? `${(analysis.totalSnapshots / 1000).toFixed(1)}k` : analysis.totalSnapshots, icon: "📸", tooltip: lang === "pt" ? "Número de capturas de dados nos últimos 7 dias" : "Number of data captures in the last 7 days" },
             { label: "Momentum", value: analysis.totalSnapshots < 50 ? "—" : `${analysis.momentum > 0 ? "+" : ""}${analysis.momentum}%`, icon: analysis.momentum > 0 ? "🔥" : analysis.totalSnapshots < 50 ? "⏳" : "📉", tooltip: lang === "pt" ? "Variação do volume entre a 1ª e 2ª metade da semana" : "Volume variation between first and second half of the week" },
-          ].map((kpi, i) => (
-            <motion.div
-              key={i}
-              initial={{ opacity: 0, y: 8 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: i * 0.05 }}
-              className="rounded-lg border border-border/40 bg-card p-2 text-center"
-            >
-              <span className="text-sm block">{kpi.icon}</span>
-              <span className="text-[13px] font-black text-foreground block">{kpi.value}</span>
-              <span className="text-[7px] text-muted-foreground">{kpi.label}</span>
-            </motion.div>
+          ].map((kpi: any, i: number) => (
+            <Tooltip key={i}>
+              <TooltipTrigger asChild>
+                <motion.div
+                  initial={{ opacity: 0, y: 8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: i * 0.05 }}
+                  className="rounded-lg border border-border/40 bg-card p-2 text-center cursor-help"
+                >
+                  <span className="text-sm block">{kpi.icon}</span>
+                  <span className="text-[13px] font-black text-foreground block">{kpi.value}</span>
+                  <span className="text-[7px] text-muted-foreground">{kpi.label}</span>
+                </motion.div>
+              </TooltipTrigger>
+              <TooltipContent side="top" className="text-[10px] max-w-[200px]">
+                {kpi.tooltip || kpi.label}
+              </TooltipContent>
+            </Tooltip>
           ))}
         </div>
       </div>
