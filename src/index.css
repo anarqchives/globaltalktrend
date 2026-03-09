@@ -265,6 +265,39 @@
     border-radius: 4px;
   }
 }
+/* Profile animations */
+@keyframes slideIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes pulse-badge {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+}
+
+.profile-card {
+  animation: slideIn 0.3s ease;
+}
+
+.profile-badge {
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.profile-badge:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px hsl(var(--primary) / 0.15);
+}
+
+.follower-card {
+  transition: all 0.2s ease;
+}
+
+.follower-card:hover {
+  background: hsl(var(--secondary) / 0.7);
+  transform: scale(1.01);
+}
+
 
 /* ===== Mobile Responsiveness ===== */
 @media (max-width: 768px) {
