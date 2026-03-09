@@ -980,6 +980,12 @@ const translations: Record<LangCode, Record<TranslationKey, string>> = {
     mapFlowLegendTitle: "ट्रेंड प्रसार", mapFlowOrigin: "मूल", mapFlowDestination: "गंतव्य", mapFlowPropagation: "प्रसार", mapFlowTimeDelta: "प्रसार समय", mapFlowClickToFilter: "फ़िल्टर करने के लिए क्लिक करें", mapFlowNoData: "इस अवधि के लिए पर्याप्त प्रसार डेटा नहीं",
     mapSentLegendTitle: "भावनात्मक परिदृश्य", mapSentPositive: "सकारात्मक", mapSentNegative: "नकारात्मक", mapSentMixed: "ध्रुवीकृत", mapSentNeutral: "तटस्थ", mapSentBreakdown: "भावना वितरण", mapSentTopTrends: "शीर्ष रुझान", mapSentNoData: "भावना डेटा अपर्याप्त",
     mapSentVolume: "कुल मात्रा", mapSentGrowth: "औसत वृद्धि", mapSentActiveTrends: "सक्रिय रुझान",
+    growth: "वृद्धि", volumeLabel: "मात्रा", sourcesLabel: "स्रोत", narrativeOrigin: "कथा मूल",
+    confidenceLabel: "विश्वसनीयता", confidenceHigh: "उच्च", confidenceMedium: "मध्यम", confidenceLow: "निम्न",
+    propagationPath: "प्रसार पथ", sourceLabel: "स्रोत", sentimentAnalysis: "भावना विश्लेषण",
+    tviGrowthLabel: "वृद्धि (30%)", tviVolumeLabel: "मात्रा (30%)", tviSourcesLabel: "स्रोत (20%)", tviGeographyLabel: "भूगोल (20%)",
+    tviDescription: "इन पर आधारित प्रसार गति मापता है:",
+    sourcesSingular: "स्रोत", sourcesPlural: "स्रोत",
   },
   ru: {
     trends: "Тренды", moreTrends: "Больше трендов", filters: "Фильтры",
