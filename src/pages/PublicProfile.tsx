@@ -6,6 +6,7 @@ import {
   FileText, Users, ArrowLeft, Globe, MessageSquare, BookOpen, Clock,
   TrendingUp, ExternalLink
 } from "lucide-react";
+import BoardComments from "@/components/BoardComments";
 import { supabase } from "@/integrations/supabase/client";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -266,7 +267,7 @@ const PublicProfile = () => {
               <OverviewTab savedCards={savedCards} reports={reports} profile={profile} />
             )}
             {activeTab === "boards" && (
-              <BoardsTab cards={savedCards} />
+              <BoardsTab cards={savedCards} currentUserId={currentUserId} />
             )}
             {activeTab === "reports" && (
               <ReportsListTab reports={reports} />
@@ -376,7 +377,7 @@ function OverviewTab({ savedCards, reports, profile }: { savedCards: any[]; repo
 }
 
 /* ─── Boards Tab ─── */
-function BoardsTab({ cards }: { cards: any[] }) {
+function BoardsTab({ cards, currentUserId }: { cards: any[]; currentUserId: string | null }) {
   if (!cards.length) {
     return (
       <div className="bg-card border border-border/50 rounded-2xl p-12 text-center">
@@ -406,6 +407,8 @@ function BoardsTab({ cards }: { cards: any[] }) {
             {card.category && <span className="px-2 py-0.5 bg-secondary rounded-md">{card.category}</span>}
             <span>{format(new Date(card.created_at), "dd/MM/yyyy")}</span>
           </div>
+          {/* Comments section */}
+          <BoardComments cardId={card.id} currentUserId={currentUserId} />
         </motion.div>
       ))}
     </div>
