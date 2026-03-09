@@ -103,7 +103,7 @@ export const countries = [
   ]},
 ];
 
-const selectClass = "appearance-none bg-transparent text-foreground text-[12px] font-medium pl-3 pr-7 h-8 min-h-[32px] max-h-[32px] rounded-full cursor-pointer min-w-0 hover:bg-muted/50 dark:hover:bg-white/5 transition-colors focus:outline-none focus:ring-0 box-border touch-manipulation";
+const selectClass = "appearance-none bg-secondary/60 text-foreground text-[12px] font-medium pl-3 pr-7 h-8 min-h-[32px] max-h-[32px] rounded-full cursor-pointer min-w-0 hover:bg-muted/80 dark:bg-secondary/40 dark:hover:bg-secondary/60 transition-colors focus:outline-none focus:ring-1 focus:ring-primary/20 box-border touch-manipulation border border-border/20";
 
 const FilterBar = ({ filters, onChange, onForceReset, onSaveFilter, isLoggedIn }: FilterBarProps) => {
   const { t } = useLanguage();

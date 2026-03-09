@@ -170,7 +170,7 @@ function TopTrendsGrid({ trends, onSelectTrend }: { trends: TrendCardProps[]; on
       </div>
 
       {/* Ranking list #4-20 */}
-      <div className="columns-2 sm:columns-3 md:columns-4 lg:columns-5 gap-1.5 space-y-0 [&>*]:break-inside-avoid [&>*]:mb-1.5">
+      <div className="columns-2 sm:columns-3 md:columns-4 lg:columns-5 xl:columns-6 gap-1.5 space-y-0 [&>*]:break-inside-avoid [&>*]:mb-1.5">
         {ranked.slice(3).map((trend, i) => {
           const pf = platformIcons[trend.platform] || { emoji: "●", color: "hsl(var(--muted-foreground))" };
           const flag = countryCodeToFlag(trend.countryCode);
