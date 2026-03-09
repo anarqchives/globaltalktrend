@@ -141,11 +141,11 @@ const FilterBar = ({ filters, onChange, onForceReset, onSaveFilter, isLoggedIn }
 
   const typeOptions = [
     { value: "Todas mídias", label: t("allMedia") },
-    { value: "Multiplataforma", label: "🔄 Multiplataforma" },
+    { value: "Multiplataforma", label: "Multiplataforma" },
     { value: "Redes sociais", label: t("socialMedia") },
     { value: "Imprensa", label: t("press") },
     { value: "Buscas (Google)", label: t("searches") },
-    { value: "Dados oficiais", label: "🏛️ Dados Oficiais" },
+    { value: "Dados oficiais", label: "Dados Oficiais" },
   ];
 
   return (
