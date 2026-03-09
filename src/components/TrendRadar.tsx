@@ -321,7 +321,7 @@ function AnomaliesPredictive({ anomalies, lang, onAnomalyClick }: {
   };
 
   return (
-    <div className="px-3 space-y-2">
+    <div className="px-3 space-y-1.5">
       {/* Prediction card */}
       <div className="rounded-lg border border-primary/15 bg-primary/5 p-2">
         <div className="flex items-start gap-1.5">
