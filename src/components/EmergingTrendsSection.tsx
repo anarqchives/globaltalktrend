@@ -78,7 +78,7 @@ export default function EmergingTrendsSection({ trends, onSelectTrend }: Emergin
 
   return (
     <div className="px-3 py-2">
-      <div className="columns-2 sm:columns-3 md:columns-4 lg:columns-5 xl:columns-6 gap-2 space-y-0 [&>*]:break-inside-avoid [&>*]:mb-2">
+      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
         <AnimatePresence mode="popLayout">
           {emerging.map((e, i) => {
             const sparkData = e.trend.historicalData?.slice(-12) || [];
@@ -89,51 +89,46 @@ export default function EmergingTrendsSection({ trends, onSelectTrend }: Emergin
               <Tooltip key={`${e.trend.platform}-${e.trend.title.slice(0, 20)}`}>
                 <TooltipTrigger asChild>
                   <motion.button
-                    initial={{ opacity: 0, scale: 0.95 }}
-                    animate={{ opacity: 1, scale: 1 }}
+                    layout
+                    initial={{ opacity: 0, y: 8, scale: 0.97 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
                     exit={{ opacity: 0, scale: 0.95 }}
-                    transition={{ delay: i * 0.03, duration: 0.25 }}
+                    transition={{ delay: i * 0.04, duration: 0.3, ease: [0.25, 0.46, 0.45, 0.94] }}
+                    whileHover={{ y: -2, boxShadow: "0 4px 16px rgba(0,0,0,0.08)" }}
                     onClick={() => onSelectTrend?.(e.trend)}
-                    className="group relative overflow-hidden rounded-lg border border-emerald-500/20 bg-card hover:border-emerald-500/40 transition-all duration-150 text-left p-2.5 hover:shadow-sm"
+                    className="group relative overflow-hidden rounded-xl border border-border/30 bg-card hover:border-emerald-500/30 transition-colors duration-200 text-left p-3 flex flex-col"
                   >
                     {/* Score + Category */}
                     <div className="flex items-center justify-between mb-1.5">
-                      <span className="inline-flex items-center gap-0.5 px-1 py-0.5 rounded text-[8px] font-bold bg-secondary text-muted-foreground">
+                      <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-md text-[8px] font-bold bg-secondary text-muted-foreground">
                         {e.trend.category || "Geral"}
                       </span>
-                      <span className={`text-[10px] font-black ${tviScore >= 70 ? 'text-emerald-600' : 'text-muted-foreground'}`}>
+                      <span className={`text-sm font-black tabular-nums ${tviScore >= 70 ? 'text-emerald-600 dark:text-emerald-400' : 'text-muted-foreground'}`}>
                         {tviScore}
                       </span>
                     </div>
 
                     {/* Title */}
-                    <p className="text-[11px] font-semibold text-foreground line-clamp-2 leading-tight mb-1.5 min-h-[28px]">
+                    <p className="text-[11px] font-semibold text-foreground line-clamp-2 leading-snug mb-2 min-h-[32px]">
                       {decodeEntities(e.trend.title)}
                     </p>
 
-                    {/* Description hint */}
-                    {e.trend.description && (
-                      <p className="text-[9px] text-muted-foreground line-clamp-1 mb-1">
-                        {e.trend.description}
-                      </p>
-                    )}
-
                     {/* Metrics row */}
-                    <div className="flex items-center gap-1.5 text-[9px] text-muted-foreground mb-1 flex-wrap">
+                    <div className="flex items-center gap-2 text-[9px] text-muted-foreground mb-1.5 flex-wrap">
                       <span className="font-bold text-emerald-600 dark:text-emerald-400 inline-flex items-center gap-0.5">
                         <TrendingUp className="w-2.5 h-2.5" />+{Math.round(e.growthRate)}%
                       </span>
                       {e.trend.volume && e.trend.volume !== "0" && (
-                        <span>💬 {e.trend.volume}</span>
+                        <span className="inline-flex items-center gap-0.5">💬 {e.trend.volume}</span>
                       )}
                       <span className="inline-flex items-center gap-0.5">
-                        <Clock className="w-2 h-2" />
+                        <Clock className="w-2.5 h-2.5" />
                         {e.ageMinutes < 1 ? "agora" : e.ageMinutes < 60 ? `há ${e.ageMinutes}min` : `há ${Math.round(e.ageMinutes / 60)}h`}
                       </span>
                     </div>
 
                     {/* Source + Region + Signal */}
-                    <div className="flex items-center gap-1 text-[8px] text-muted-foreground flex-wrap">
+                    <div className="flex items-center gap-1.5 text-[8px] text-muted-foreground flex-wrap mt-auto">
                       <span>{e.trend.platform}</span>
                       {e.trend.countryCode && <span>{countryCodeToFlag(e.trend.countryCode)}</span>}
                       {e.sourceCount > 1 && (
@@ -141,19 +136,22 @@ export default function EmergingTrendsSection({ trends, onSelectTrend }: Emergin
                           <Radio className="w-2 h-2" />{e.sourceCount}
                         </span>
                       )}
-                      <span className="px-1 py-0 rounded bg-secondary text-[7px] font-medium">{signalLabel}</span>
+                      <span className="px-1 py-0.5 rounded-md bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 text-[7px] font-semibold">{signalLabel}</span>
                     </div>
 
                     {/* Mini sparkline */}
                     {sparkData.length > 2 && (
-                      <div className="mt-1.5 h-3 w-full opacity-60">
+                      <div className="mt-2 h-4 w-full opacity-50 group-hover:opacity-80 transition-opacity">
                         <ResponsiveContainer width="100%" height="100%">
                           <AreaChart data={sparkData}>
-                            <Area type="monotone" dataKey="value" stroke="hsl(142, 60%, 40%)" strokeWidth={1} fill="hsl(142, 60%, 40%)" fillOpacity={0.15} dot={false} />
+                            <Area type="monotone" dataKey="value" stroke="hsl(var(--primary))" strokeWidth={1} fill="hsl(var(--primary))" fillOpacity={0.1} dot={false} />
                           </AreaChart>
                         </ResponsiveContainer>
                       </div>
                     )}
+
+                    {/* Bottom accent line */}
+                    <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-emerald-500/40 via-emerald-500/20 to-transparent scale-x-0 group-hover:scale-x-100 transition-transform duration-300 origin-left" />
                   </motion.button>
                 </TooltipTrigger>
                 <TooltipContent side="bottom" className="max-w-[220px] text-[10px]">
