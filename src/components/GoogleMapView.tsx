@@ -572,14 +572,49 @@ const GoogleMapView = ({
         setOpenInfoCountry(cp.id);
         map.panTo({ lat: cp.lat, lng: cp.lng });
 
-        // Attach click handlers to trend items after InfoWindow DOM is ready
+        // Attach click handlers after InfoWindow DOM is ready
         google.maps.event.addListenerOnce(infoWindowRef.current, 'domready', () => {
+          // Close button
+          const closeBtn = document.getElementById('map-tooltip-close');
+          if (closeBtn) {
+            closeBtn.addEventListener('click', () => {
+              infoWindowRef.current?.close();
+              openInfoCountryRef.current = null;
+              setOpenInfoCountry(null);
+            });
+            closeBtn.addEventListener('mouseenter', () => {
+              closeBtn.style.background = isDark ? 'rgba(51,65,85,1)' : '#e2e8f0';
+            });
+            closeBtn.addEventListener('mouseleave', () => {
+              closeBtn.style.background = isDark ? 'rgba(30,41,59,0.8)' : '#f1f5f9';
+            });
+          }
+          
+          // Filter button
+          const filterBtn = document.getElementById('map-tooltip-filter');
+          if (filterBtn) {
+            filterBtn.addEventListener('click', () => {
+              onSelectCountry(cp.id === selectedCountry ? "global" : cp.id);
+              infoWindowRef.current?.close();
+              openInfoCountryRef.current = null;
+              setOpenInfoCountry(null);
+              map.panTo({ lat: cp.lat, lng: cp.lng });
+              map.setZoom(cp.id === selectedCountry ? 2.5 : 5);
+            });
+            filterBtn.addEventListener('mouseenter', () => {
+              filterBtn.style.background = '#2563eb';
+            });
+            filterBtn.addEventListener('mouseleave', () => {
+              filterBtn.style.background = '#3b82f6';
+            });
+          }
+          
+          // Trend items
           const items = document.querySelectorAll('.map-tooltip-trend');
           items.forEach((item) => {
             const idx = parseInt(item.getAttribute('data-trend-idx') || '0');
             const trend = countryTrends[idx];
             if (!trend) return;
-            // Hover effect
             (item as HTMLElement).addEventListener('mouseenter', () => {
               (item as HTMLElement).style.background = hoverBg;
               (item as HTMLElement).style.transform = 'translateX(4px)';
@@ -588,7 +623,6 @@ const GoogleMapView = ({
               (item as HTMLElement).style.background = 'transparent';
               (item as HTMLElement).style.transform = 'translateX(0)';
             });
-            // Click to select trend
             item.addEventListener('click', () => {
               if (onSelectTrend) onSelectTrend(trend);
               infoWindowRef.current?.close();

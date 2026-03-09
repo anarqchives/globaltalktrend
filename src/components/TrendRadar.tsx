@@ -4,7 +4,7 @@ import { Sprout, Flame, Trophy, Info, ChevronUp, ChevronDown, Activity, AlertTri
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { AreaChart, Area, ResponsiveContainer, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip as RTooltip, Legend } from "recharts";
+import { AreaChart, Area, ResponsiveContainer, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip as RTooltip } from "recharts";
 import EmergingTrendsSection from "./EmergingTrendsSection";
 import CriticalMomentsSection from "./CriticalMomentsSection";
 import { TrendCardProps } from "./TrendCard";
