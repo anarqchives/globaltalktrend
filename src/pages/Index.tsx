@@ -669,6 +669,7 @@ const Index = () => {
         trends={allTrends}
         onSelectTrend={handleSelectTrend}
         highlightCountry={expandedTrendCountry}
+        onClose={!isMobile ? () => togglePanel("map") : undefined}
       />
     </Suspense>
   );
