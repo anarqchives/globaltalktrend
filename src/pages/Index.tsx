@@ -857,7 +857,7 @@ const Index = () => {
                 {/* Timeline + Map Panel */}
                 {(panelVisibility.timeline || panelVisibility.map) && (
                   <ResizablePanel defaultSize={panelVisibility.radar ? 70 : 100} minSize={30}>
-                    <ResizablePanelGroup direction="horizontal" className="h-full">
+                    <ResizablePanelGroup direction="horizontal" className="h-full" key={`h-${panelVisibility.timeline}-${panelVisibility.map}`}>
                       {panelVisibility.timeline && (
                         <>
                           <ResizablePanel defaultSize={panelVisibility.map ? 65 : 100} minSize={25} maxSize={panelVisibility.map ? 85 : 100}>
