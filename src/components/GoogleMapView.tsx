@@ -678,9 +678,7 @@ const GoogleMapView = ({
             </>
           )}
         </div>
-        {mapLoaded && trends.length > 0 && (
-          <GlobalRanking trends={trends} onSelectTrend={onSelectTrend} onFilterCountry={onSelectCountry} collapsed={true} />
-        )}
+        {/* GlobalRanking removed to avoid duplication, now exclusively in TrendRadar */}
       </div>
 
       {/* Update notification */}
