@@ -561,7 +561,7 @@ const TimelineCard = ({
           {/* Sentiment Analysis Section — with labeled legend */}
           <div className="mb-3 p-2.5 rounded-lg bg-secondary/30 border border-border/50">
             <span className="text-[9px] font-semibold text-muted-foreground uppercase tracking-wide mb-2 block">
-              📊 Sentiment Analysis
+              📊 {t("sentimentAnalysis" as any)}
             </span>
             <div className="flex items-center gap-4">
               <SentimentDonut
