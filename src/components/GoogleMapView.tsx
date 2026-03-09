@@ -1378,7 +1378,7 @@ const GoogleMapView = ({
   }, [mapViewType, mapLoaded, isDark]);
 
   const controlBtnClass = (active: boolean) =>
-    `h-8 min-h-[32px] max-h-[32px] px-3 rounded-full transition-all duration-200 outline-none ring-0 focus:outline-none focus:ring-0 focus-visible:ring-1 focus-visible:ring-primary/30 inline-flex items-center gap-1 text-[11px] font-medium ${
+    `h-6 min-h-[24px] max-h-[24px] px-2 rounded-full transition-all duration-200 outline-none ring-0 focus:outline-none focus:ring-0 focus-visible:ring-1 focus-visible:ring-primary/30 inline-flex items-center gap-1 text-[9px] font-semibold tracking-wide uppercase ${
       active ? "bg-primary text-primary-foreground shadow-sm" : "text-muted-foreground hover:text-foreground hover:bg-white/60 dark:hover:bg-white/10"
     }`;
 
