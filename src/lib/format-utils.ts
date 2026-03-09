@@ -112,7 +112,6 @@ const sourceMap: Record<string, SourceInfo> = {
   "world bank": { label: "World Bank", emoji: "🏛️", color: "#009fda" },
   ibge: { label: "IBGE", emoji: "🏛️", color: "#006633" },
   openAlex: { label: "OpenAlex", emoji: "🔬", color: "#7c4dff" },
-  openAlex: { label: "OpenAlex", emoji: "🔬", color: "#7c4dff" },
   arxiv: { label: "arXiv", emoji: "📄", color: "#b31b1b" },
   pubmed: { label: "PubMed", emoji: "🧬", color: "#326599" },
   crossref: { label: "Crossref", emoji: "📚", color: "#f36f21" },
