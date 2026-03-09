@@ -102,6 +102,14 @@ const Index = () => {
   const [criticalDismissed, setCriticalDismissed] = useState(false);
   const [emergingDismissed, setEmergingDismissed] = useState(false);
   const [heatmapDismissed, setHeatmapDismissed] = useState(false);
+  const [showOnboarding, setShowOnboarding] = useState(false);
+
+  // Show onboarding for new logged-in users
+  useEffect(() => {
+    if (user?.id && !hasCompletedOnboarding(user.id)) {
+      setShowOnboarding(true);
+    }
+  }, [user?.id]);
 
   // Reset dismissed state when new critical moments appear
   useEffect(() => {
