@@ -1172,7 +1172,7 @@ export default function WeeklyPulseDashboard({ trends }: { trends: TrendCardProp
       </div>
 
       {/* ═══════ HEATMAP + TERM CLOUD ═══════ */}
-      <div className="grid grid-cols-2 gap-1.5">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5">
         <div className="rounded-xl border border-border/50 bg-card p-2.5">
           <span className="text-[9px] font-bold text-muted-foreground uppercase tracking-wider flex items-center gap-1 mb-1">
             <Target className="w-3 h-3" />Trend Pulse Matrix
