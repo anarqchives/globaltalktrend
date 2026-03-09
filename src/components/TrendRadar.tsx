@@ -1,10 +1,10 @@
 import { useState, useEffect, useMemo, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Sprout, Flame, Trophy, Info, ChevronUp, ChevronDown, Activity, AlertTriangle, ExternalLink, TrendingUp, Zap, Globe2 } from "lucide-react";
+import { Sprout, Flame, Trophy, Info, ChevronUp, ChevronDown, Activity, AlertTriangle, ExternalLink, TrendingUp, Zap, Globe2, Radio, BarChart3, Eye, Target, Radar, ArrowRight, Sparkles } from "lucide-react";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { AreaChart, Area, ResponsiveContainer, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip as RTooltip } from "recharts";
+import { AreaChart, Area, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RTooltip, Cell, RadialBarChart, RadialBar, PieChart, Pie } from "recharts";
 import EmergingTrendsSection from "./EmergingTrendsSection";
 import CriticalMomentsSection from "./CriticalMomentsSection";
 import { TrendCardProps } from "./TrendCard";
@@ -30,36 +30,31 @@ const legendText: Record<string, Record<string, string>> = {
   emerging: {
     pt: "Tendências em aceleração nas últimas 2h — detectadas por crescimento anômalo.",
     en: "Accelerating trends in the last 2h — detected by anomalous growth.",
-    es: "Tendencias en aceleración en las últimas 2h — detectadas por crecimiento anómalo.",
   },
   critical: {
     pt: "Momentos de pico anômalo — alta velocidade de propagação multiplataforma.",
     en: "Anomalous peak moments — high multi-platform propagation speed.",
-    es: "Momentos de pico anómalo — alta velocidad de propagación multiplataforma.",
   },
   top: {
     pt: "Os 20 assuntos mais discutidos agora — ordenados por volume total.",
     en: "The 20 most discussed topics right now — sorted by total volume.",
-    es: "Los 20 temas más discutidos ahora — ordenados por volumen total.",
   },
   weekly: {
-    pt: "Evolução semanal por categoria — análise de tendências dos últimos 7 dias.",
-    en: "Weekly evolution by category — trend analysis from the last 7 days.",
-    es: "Evolución semanal por categoría — análisis de tendencias de los últimos 7 días.",
+    pt: "Painel semanal de inteligência — volume, categorias e tendências dos últimos 7 dias.",
+    en: "Weekly intelligence dashboard — volume, categories and trends from the last 7 days.",
   },
   anomalies: {
-    pt: "Padrões anômalos detectados — picos, viralização e propagação multiplataforma.",
-    en: "Anomalous patterns detected — spikes, viralization and multi-platform propagation.",
-    es: "Patrones anómalos detectados — picos, viralización y propagación multiplataforma.",
+    pt: "Análise preditiva de padrões — comportamentos anômalos detectados em múltiplas plataformas.",
+    en: "Predictive pattern analysis — anomalous behaviors detected across multiple platforms.",
   },
 };
 
 const tabDescriptions: Record<string, Record<string, string>> = {
-  emerging: { pt: "Tendências em aceleração", en: "Accelerating trends", es: "Tendencias en aceleración" },
-  critical: { pt: "Momentos de pico anômalo", en: "Anomalous peak moments", es: "Momentos de pico anómalo" },
-  top: { pt: "Assuntos mais discutidos agora", en: "Most discussed right now", es: "Temas más discutidos" },
-  weekly: { pt: "Evolução semanal", en: "Weekly evolution", es: "Evolución semanal" },
-  anomalies: { pt: "Anomalias detectadas", en: "Detected anomalies", es: "Anomalías detectadas" },
+  emerging: { pt: "Tendências em aceleração", en: "Accelerating trends" },
+  critical: { pt: "Momentos de pico anômalo", en: "Anomalous peak moments" },
+  top: { pt: "Assuntos mais discutidos agora", en: "Most discussed right now" },
+  weekly: { pt: "Painel semanal", en: "Weekly dashboard" },
+  anomalies: { pt: "Análise preditiva", en: "Predictive analysis" },
 };
 
 function Legend({ tab, lang }: { tab: string; lang: string }) {
@@ -91,112 +86,13 @@ const countryCodeToFlag = (code?: string) => {
   return String.fromCodePoint(...[...code.toUpperCase()].map(c => 0x1F1E6 + c.charCodeAt(0) - 65));
 };
 
-const anomalyTypeInfo: Record<string, { icon: React.ReactNode; label: string; labelEn: string; color: string }> = {
-  spike: { icon: <TrendingUp className="w-3 h-3" />, label: "Pico anômalo", labelEn: "Anomalous spike", color: "text-destructive" },
-  viral: { icon: <Zap className="w-3 h-3" />, label: "Viralização", labelEn: "Going viral", color: "text-amber-500" },
-  multi_platform: { icon: <Globe2 className="w-3 h-3" />, label: "Multiplataforma", labelEn: "Multi-platform", color: "text-blue-500" },
-  rapid_growth: { icon: <Activity className="w-3 h-3" />, label: "Crescimento rápido", labelEn: "Rapid growth", color: "text-orange-500" },
-};
-
-// Anomaly detail card
-function AnomalyCard({ anomaly, lang, onClick }: { anomaly: AnomalyAlert; lang: string; onClick: () => void }) {
-  const [expanded, setExpanded] = useState(false);
-  const info = anomalyTypeInfo[anomaly.type] || anomalyTypeInfo.spike;
-  const changeNum = parseFloat(anomaly.trend.change?.replace(/[^0-9.\-]/g, "") || "0");
-  const pf = platformIcons[anomaly.trend.platform] || { emoji: "●", color: "hsl(var(--muted-foreground))" };
-  const flag = countryCodeToFlag(anomaly.trend.countryCode);
-
-  return (
-    <motion.div
-      initial={{ opacity: 0, y: 4 }}
-      animate={{ opacity: 1, y: 0 }}
-      className="rounded-lg border border-destructive/20 bg-destructive/5 overflow-hidden"
-    >
-      <button
-        onClick={() => setExpanded(!expanded)}
-        className="w-full text-left px-3 py-2 flex items-center gap-2 hover:bg-destructive/10 transition-colors"
-      >
-        <span className={`flex-shrink-0 ${info.color}`}>{info.icon}</span>
-        <span className="flex-1 min-w-0 text-[11px] font-medium text-foreground truncate">{anomaly.trend.title}</span>
-        <span className="text-destructive font-bold text-[10px] whitespace-nowrap">
-          {changeNum > 0 ? "+" : ""}{anomaly.trend.change}
-        </span>
-        <ChevronDown className={`w-3 h-3 text-muted-foreground transition-transform ${expanded ? "rotate-180" : ""}`} />
-      </button>
-      <AnimatePresence>
-        {expanded && (
-          <motion.div
-            initial={{ height: 0, opacity: 0 }}
-            animate={{ height: "auto", opacity: 1 }}
-            exit={{ height: 0, opacity: 0 }}
-            transition={{ duration: 0.2 }}
-            className="overflow-hidden"
-          >
-            <div className="px-3 pb-3 space-y-2 border-t border-destructive/10 pt-2">
-              {/* Why anomaly */}
-              <div className="text-[10px] text-muted-foreground leading-relaxed">
-                <span className="font-semibold text-foreground">{lang === "pt" ? "Por que é uma anomalia?" : "Why is it anomalous?"}</span>
-                <br />
-                {anomaly.message}
-              </div>
-              {/* Meta */}
-              <div className="flex items-center gap-2 flex-wrap text-[9px]">
-                <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-secondary text-secondary-foreground font-medium">
-                  <span style={{ color: pf.color }}>{pf.emoji}</span> {anomaly.trend.platform}
-                </span>
-                <span className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full font-semibold ${info.color} bg-current/10`}
-                  style={{ backgroundColor: `color-mix(in srgb, currentColor 10%, transparent)` }}>
-                  {lang === "pt" ? info.label : info.labelEn}
-                </span>
-                {flag && <span>{flag}</span>}
-                {anomaly.trend.volume && (
-                  <span className="text-muted-foreground">💬 {anomaly.trend.volume}</span>
-                )}
-              </div>
-              {/* Sparkline */}
-              {anomaly.trend.sparkData?.length > 0 && (
-                <div className="h-[40px] w-full">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <AreaChart data={anomaly.trend.sparkData.map((v, i) => ({ i, v }))}>
-                      <defs>
-                        <linearGradient id={`anomaly-grad-${anomaly.trend.title.slice(0, 10)}`} x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="0%" stopColor="hsl(var(--destructive))" stopOpacity={0.3} />
-                          <stop offset="100%" stopColor="hsl(var(--destructive))" stopOpacity={0} />
-                        </linearGradient>
-                      </defs>
-                      <Area type="monotone" dataKey="v" stroke="hsl(var(--destructive))" strokeWidth={1.5} fill={`url(#anomaly-grad-${anomaly.trend.title.slice(0, 10)})`} dot={false} />
-                    </AreaChart>
-                  </ResponsiveContainer>
-                </div>
-              )}
-              {/* CTA */}
-              <button
-                onClick={(e) => { e.stopPropagation(); onClick(); }}
-                className="w-full h-7 rounded-md bg-destructive/10 hover:bg-destructive/20 text-destructive text-[10px] font-semibold transition-colors flex items-center justify-center gap-1"
-              >
-                {lang === "pt" ? "Ver na timeline" : "View in timeline"} →
-              </button>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </motion.div>
-  );
-}
-
-// Top Trends Grid
-function TopTrendsGrid({ trends, onSelectTrend }: {
-  trends: TrendCardProps[];
-  onSelectTrend?: (trend: TrendCardProps) => void;
-}) {
+// ─── TOP TRENDS ─────────────────────────────────────────────────────────
+function TopTrendsGrid({ trends, onSelectTrend }: { trends: TrendCardProps[]; onSelectTrend?: (trend: TrendCardProps) => void }) {
   const { lang } = useLanguage();
-  
+  const [expandedIdx, setExpandedIdx] = useState<number | null>(null);
+
   const ranked = useMemo(() => {
-    const filtered = trends.filter(t => 
-      !["GitHub", "Stack Overflow", "Hacker News"].includes(t.platform) || 
-      parseInt(String(t.volume).replace(/[^0-9]/g, "")) > 1000
-    );
-    return [...filtered]
+    return [...trends]
       .sort((a, b) => {
         const volA = parseInt(String(a.volume).replace(/[^0-9]/g, "")) || 0;
         const volB = parseInt(String(b.volume).replace(/[^0-9]/g, "")) || 0;
@@ -214,231 +110,558 @@ function TopTrendsGrid({ trends, onSelectTrend }: {
     );
   }
 
-  return (
-    <div className="space-y-1">
-      {ranked.map((trend, i) => {
-        const pf = platformIcons[trend.platform] || { emoji: "●", color: "hsl(var(--muted-foreground))" };
-        const flag = countryCodeToFlag(trend.countryCode);
-        const medal = i === 0 ? "🥇" : i === 1 ? "🥈" : i === 2 ? "🥉" : null;
-        const changeNum = parseFloat(trend.change?.replace(/[^0-9.\-]/g, "") || "0");
+  const podium = ranked.slice(0, 3);
+  const rest = ranked.slice(3);
 
-        return (
-          <motion.a
-            key={`top-${trend.platform}-${trend.title.slice(0, 15)}-${i}`}
-            href={trend.sourceUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            onClick={(e) => {
-              if (!trend.sourceUrl) {
-                e.preventDefault();
-                onSelectTrend?.(trend);
-              }
-            }}
-            initial={{ opacity: 0, x: -8 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: i * 0.02, duration: 0.15 }}
-            className="flex items-center gap-2 p-2 rounded-lg hover:bg-secondary/60 transition-all group cursor-pointer border border-transparent hover:border-border/40"
-          >
-            <div className="w-6 text-center flex-shrink-0">
-              {medal ? (
-                <span className="text-sm">{medal}</span>
-              ) : (
-                <span className="text-[10px] font-bold text-muted-foreground">#{i + 1}</span>
-              )}
-            </div>
-            <div
-              className="w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold flex-shrink-0"
-              style={{ background: `${pf.color}15`, color: pf.color }}
+  return (
+    <div className="space-y-3">
+      {/* Podium - Top 3 */}
+      <div className="grid grid-cols-3 gap-2">
+        {podium.map((trend, i) => {
+          const pf = platformIcons[trend.platform] || { emoji: "●", color: "hsl(var(--muted-foreground))" };
+          const flag = countryCodeToFlag(trend.countryCode);
+          const medals = ["🥇", "🥈", "🥉"];
+          const changeNum = parseFloat(trend.change?.replace(/[^0-9.\-]/g, "") || "0");
+          const sparkData = trend.sparkData?.map((v, idx) => ({ v })) || [];
+          const bgColors = [
+            "bg-amber-500/10 border-amber-500/30",
+            "bg-slate-400/10 border-slate-400/30",
+            "bg-orange-600/10 border-orange-600/30"
+          ];
+
+          return (
+            <motion.button
+              key={`podium-${i}`}
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: i * 0.05 }}
+              onClick={() => trend.sourceUrl ? window.open(trend.sourceUrl, "_blank") : onSelectTrend?.(trend)}
+              className={`rounded-lg border p-2.5 text-left transition-all hover:shadow-md ${bgColors[i]}`}
             >
-              {pf.emoji}
-            </div>
-            <div className="flex-1 min-w-0">
-              <p className="text-[11px] font-medium text-foreground truncate group-hover:text-primary transition-colors">
-                {trend.title}
-              </p>
-              <div className="flex items-center gap-2 text-[9px] text-muted-foreground mt-0.5">
-                <span className="font-medium">{trend.platform}</span>
-                <span>·</span>
+              <div className="flex items-center justify-between mb-1">
+                <span className="text-lg">{medals[i]}</span>
+                {changeNum !== 0 && (
+                  <span className={`text-[10px] font-bold ${changeNum > 0 ? "text-emerald-600 dark:text-emerald-400" : "text-destructive"}`}>
+                    {changeNum > 0 ? "+" : ""}{Math.round(changeNum)}%
+                  </span>
+                )}
+              </div>
+              <p className="text-[11px] font-bold text-foreground line-clamp-2 leading-tight mb-1">{trend.title}</p>
+              <div className="flex items-center gap-1 text-[8px] text-muted-foreground flex-wrap">
+                <span style={{ color: pf.color }}>{pf.emoji}</span>
+                <span>{trend.platform}</span>
+                {flag && <span>{flag}</span>}
                 <span>💬 {trend.volume || "—"}</span>
-                {flag && <><span>·</span><span>{flag}</span></>}
               </div>
-            </div>
-            {changeNum !== 0 && (
-              <div className={`flex items-center gap-0.5 px-2 py-0.5 rounded-full text-[10px] font-bold flex-shrink-0 ${
-                changeNum > 0 
-                  ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400" 
-                  : "bg-destructive/10 text-destructive"
-              }`}>
-                <TrendingUp className={`w-2.5 h-2.5 ${changeNum < 0 ? "rotate-180" : ""}`} />
-                {changeNum > 0 ? "+" : ""}{Math.round(changeNum)}%
+              {sparkData.length > 2 && (
+                <div className="mt-1 h-4 w-full opacity-50">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <AreaChart data={sparkData}>
+                      <Area type="monotone" dataKey="v" stroke="hsl(var(--primary))" strokeWidth={1} fill="hsl(var(--primary))" fillOpacity={0.1} dot={false} />
+                    </AreaChart>
+                  </ResponsiveContainer>
+                </div>
+              )}
+            </motion.button>
+          );
+        })}
+      </div>
+
+      {/* Rest - Interactive grid */}
+      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-1.5">
+        {rest.map((trend, i) => {
+          const pf = platformIcons[trend.platform] || { emoji: "●", color: "hsl(var(--muted-foreground))" };
+          const flag = countryCodeToFlag(trend.countryCode);
+          const changeNum = parseFloat(trend.change?.replace(/[^0-9.\-]/g, "") || "0");
+          const idx = i + 4;
+          const isExpanded = expandedIdx === i;
+
+          return (
+            <motion.div
+              key={`top-${trend.platform}-${trend.title.slice(0, 15)}-${i}`}
+              initial={{ opacity: 0, x: -4 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: i * 0.02 }}
+              onClick={() => setExpandedIdx(isExpanded ? null : i)}
+              className={`rounded-lg border border-border/40 bg-card p-2 cursor-pointer transition-all hover:border-primary/30 hover:shadow-sm ${
+                isExpanded ? "col-span-2 sm:col-span-3 md:col-span-4 border-primary/40 shadow-md" : ""
+              }`}
+            >
+              <div className="flex items-start gap-2">
+                <span className="text-[10px] font-bold text-muted-foreground w-5 flex-shrink-0 pt-0.5">#{idx}</span>
+                <div className="flex-1 min-w-0">
+                  <p className={`text-[10px] font-semibold text-foreground leading-tight ${isExpanded ? "" : "line-clamp-1"}`}>{trend.title}</p>
+                  <div className="flex items-center gap-1 text-[8px] text-muted-foreground mt-0.5">
+                    <span style={{ color: pf.color }}>{pf.emoji}</span>
+                    <span>{trend.platform}</span>
+                    {flag && <span>{flag}</span>}
+                    <span>💬 {trend.volume || "—"}</span>
+                  </div>
+                </div>
+                {changeNum !== 0 && (
+                  <span className={`text-[9px] font-bold flex-shrink-0 ${changeNum > 0 ? "text-emerald-600 dark:text-emerald-400" : "text-destructive"}`}>
+                    {changeNum > 0 ? "+" : ""}{Math.round(changeNum)}%
+                  </span>
+                )}
               </div>
-            )}
-            {trend.sourceUrl && (
-              <ExternalLink className="w-3 h-3 text-muted-foreground/50 group-hover:text-primary flex-shrink-0 transition-colors" />
-            )}
-          </motion.a>
-        );
-      })}
+
+              {/* Expanded */}
+              <AnimatePresence>
+                {isExpanded && (
+                  <motion.div
+                    initial={{ height: 0, opacity: 0 }}
+                    animate={{ height: "auto", opacity: 1 }}
+                    exit={{ height: 0, opacity: 0 }}
+                    transition={{ duration: 0.15 }}
+                    className="overflow-hidden"
+                  >
+                    <div className="mt-2 pt-2 border-t border-border/30 space-y-1.5">
+                      {trend.description && (
+                        <p className="text-[9px] text-muted-foreground leading-relaxed">{trend.description}</p>
+                      )}
+                      <div className="flex items-center gap-1.5" onClick={e => e.stopPropagation()}>
+                        {trend.sourceUrl && (
+                          <a href={trend.sourceUrl} target="_blank" rel="noopener noreferrer"
+                            className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-primary text-primary-foreground text-[9px] font-semibold hover:bg-primary/90 transition-colors">
+                            <ExternalLink className="w-2.5 h-2.5" /> {lang === "pt" ? "Abrir" : "Open"}
+                          </a>
+                        )}
+                        <button onClick={() => onSelectTrend?.(trend)}
+                          className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-secondary text-secondary-foreground text-[9px] font-medium hover:bg-secondary/80 transition-colors">
+                          {lang === "pt" ? "Timeline" : "Timeline"} →
+                        </button>
+                      </div>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </motion.div>
+          );
+        })}
+      </div>
     </div>
   );
 }
 
-// Weekly Pulse with real data
-function WeeklyPulse({ trends }: { trends: TrendCardProps[] }) {
+// ─── WEEKLY DASHBOARD ───────────────────────────────────────────────────
+function WeeklyDashboard({ trends }: { trends: TrendCardProps[] }) {
   const { lang } = useLanguage();
-  const [weeklyData, setWeeklyData] = useState<Array<{
-    day: string; politica: number; tecnologia: number; entretenimento: number; esportes: number;
-  }>>([]);
+  const [weeklyData, setWeeklyData] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    const fetchHistoricalData = async () => {
+    const fetch7d = async () => {
       try {
-        setLoading(true);
-        const { data, error: fetchError } = await supabase
+        const { data } = await supabase
           .from("trend_snapshots")
-          .select("category, snapshot_at, volume_raw")
+          .select("category, snapshot_at, volume_raw, platform, title")
           .gte("snapshot_at", new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString())
           .order("snapshot_at", { ascending: true });
 
-        if (fetchError) throw fetchError;
-
-        const dayMap = new Map<string, Record<string, number>>();
-        const dayNames = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
-        
-        (data || []).forEach((row) => {
-          const date = new Date(row.snapshot_at);
-          const dayKey = dayNames[date.getDay()];
-          const cat = (row.category || "Geral").toLowerCase();
-          if (!dayMap.has(dayKey)) dayMap.set(dayKey, { politica: 0, tecnologia: 0, entretenimento: 0, esportes: 0 });
-          const dayData = dayMap.get(dayKey)!;
-          const vol = row.volume_raw || 0;
-          if (cat.includes("polít")) dayData.politica += vol;
-          else if (cat.includes("tecno")) dayData.tecnologia += vol;
-          else if (cat.includes("entret") || cat.includes("cultur")) dayData.entretenimento += vol;
-          else if (cat.includes("espor")) dayData.esportes += vol;
-        });
-
-        const orderedDays = ["Seg", "Ter", "Qua", "Qui", "Sex", "Sáb", "Dom"];
-        const chartData = orderedDays.map(day => ({
-          day,
-          politica: Math.round((dayMap.get(day)?.politica || 0) / 1000000),
-          tecnologia: Math.round((dayMap.get(day)?.tecnologia || 0) / 1000000),
-          entretenimento: Math.round((dayMap.get(day)?.entretenimento || 0) / 1000000),
-          esportes: Math.round((dayMap.get(day)?.esportes || 0) / 1000000),
-        }));
-
-        setWeeklyData(chartData);
-        setError(null);
-      } catch (err) {
-        console.error("Error fetching weekly data:", err);
-        setError("Erro ao carregar dados históricos");
+        if (data) setWeeklyData(data);
+      } catch (e) {
+        console.error(e);
       } finally {
         setLoading(false);
       }
     };
-    fetchHistoricalData();
+    fetch7d();
   }, []);
 
-  const insights = useMemo(() => {
-    if (weeklyData.length === 0) return { topCategory: "Dados", topValue: 0, growth: 0 };
-    const totals = {
-      politica: weeklyData.reduce((acc, d) => acc + d.politica, 0),
-      tecnologia: weeklyData.reduce((acc, d) => acc + d.tecnologia, 0),
-      entretenimento: weeklyData.reduce((acc, d) => acc + d.entretenimento, 0),
-      esportes: weeklyData.reduce((acc, d) => acc + d.esportes, 0),
-    };
-    const maxCategory = Object.entries(totals).reduce((a, b) => a[1] > b[1] ? a : b);
-    const categoryLabels: Record<string, string> = {
-      politica: "Política", tecnologia: "Tecnologia", entretenimento: "Entretenimento", esportes: "Esportes",
-    };
-    const recent = weeklyData.slice(-2).reduce((acc, d) => acc + d.politica + d.tecnologia + d.entretenimento + d.esportes, 0);
-    const previous = weeklyData.slice(-4, -2).reduce((acc, d) => acc + d.politica + d.tecnologia + d.entretenimento + d.esportes, 0);
-    const growth = previous > 0 ? Math.round(((recent - previous) / previous) * 100) : 0;
-    return { topCategory: categoryLabels[maxCategory[0]] || maxCategory[0], topValue: maxCategory[1], growth };
-  }, [weeklyData]);
+  const stats = useMemo(() => {
+    // Category distribution from real data + current trends
+    const catCount: Record<string, number> = {};
+    const platformCount: Record<string, number> = {};
+    const countryCount: Record<string, number> = {};
+    const dailyVolume: Record<string, number> = {};
+    const dayLabels = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
+
+    // From snapshots
+    for (const row of weeklyData) {
+      const cat = (row.category || "Geral").replace(/^[a-z]/, (c: string) => c.toUpperCase());
+      catCount[cat] = (catCount[cat] || 0) + (row.volume_raw || 1);
+      if (row.platform) platformCount[row.platform] = (platformCount[row.platform] || 0) + 1;
+      const d = new Date(row.snapshot_at);
+      const dayKey = dayLabels[d.getDay()];
+      dailyVolume[dayKey] = (dailyVolume[dayKey] || 0) + (row.volume_raw || 0);
+    }
+
+    // From current trends too
+    for (const t of trends) {
+      const cat = (t.category || "Geral").replace(/^[a-z]/, (c: string) => c.toUpperCase());
+      catCount[cat] = (catCount[cat] || 0) + 1;
+      platformCount[t.platform] = (platformCount[t.platform] || 0) + 1;
+      if (t.countryCode) countryCount[t.countryCode] = (countryCount[t.countryCode] || 0) + 1;
+    }
+
+    // Top categories for bar chart
+    const topCats = Object.entries(catCount)
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 6)
+      .map(([name, value]) => ({ name: name.slice(0, 12), value }));
+
+    // Top platforms
+    const topPlatforms = Object.entries(platformCount)
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 5)
+      .map(([name, value]) => ({ name, value }));
+
+    // Daily volume chart
+    const orderedDays = ["Seg", "Ter", "Qua", "Qui", "Sex", "Sáb", "Dom"];
+    const dailyChart = orderedDays.map(day => ({
+      day,
+      vol: Math.round((dailyVolume[day] || 0) / 1_000_000),
+    }));
+
+    // Top countries
+    const topCountries = Object.entries(countryCount)
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 5);
+
+    // Momentum
+    const recentHalf = orderedDays.slice(4);
+    const olderHalf = orderedDays.slice(0, 4);
+    const recentVol = recentHalf.reduce((s, d) => s + (dailyVolume[d] || 0), 0);
+    const olderVol = olderHalf.reduce((s, d) => s + (dailyVolume[d] || 0), 0);
+    const momentum = olderVol > 0 ? Math.round(((recentVol - olderVol) / olderVol) * 100) : 0;
+
+    return { topCats, topPlatforms, dailyChart, topCountries, momentum, totalSnapshots: weeklyData.length, totalTrends: trends.length };
+  }, [weeklyData, trends]);
+
+  const chartColors = [
+    "hsl(var(--chart-1))", "hsl(var(--chart-2))", "hsl(var(--chart-3))",
+    "hsl(var(--chart-4))", "hsl(var(--chart-5))", "hsl(var(--primary))"
+  ];
 
   if (loading) {
     return (
       <div className="flex items-center justify-center py-8 text-muted-foreground">
         <div className="w-4 h-4 border-2 border-primary/30 border-t-primary rounded-full animate-spin mr-2" />
-        <span className="text-[11px]">{lang === "pt" ? "Carregando dados históricos..." : "Loading historical data..."}</span>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="flex flex-col items-center justify-center py-8 text-muted-foreground">
-        <Activity className="w-8 h-8 mb-2 opacity-30" />
-        <p className="text-[11px]">{error}</p>
+        <span className="text-[11px]">{lang === "pt" ? "Carregando dados..." : "Loading data..."}</span>
       </div>
     );
   }
 
   return (
     <div className="p-3 space-y-3">
-      <div className="text-[11px] font-semibold text-foreground">
-        {lang === "pt" ? "Evolução semanal por categoria" : "Weekly evolution by category"}
-      </div>
-      <div className="h-[140px] w-full">
-        <ResponsiveContainer width="100%" height="100%">
-          <LineChart data={weeklyData} margin={{ top: 5, right: 5, left: -20, bottom: 5 }}>
-            <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" opacity={0.3} />
-            <XAxis dataKey="day" tick={{ fontSize: 9 }} stroke="hsl(var(--muted-foreground))" />
-            <YAxis tick={{ fontSize: 9 }} stroke="hsl(var(--muted-foreground))" />
-            <RTooltip contentStyle={{ background: "hsl(var(--popover))", border: "1px solid hsl(var(--border))", borderRadius: "8px", fontSize: "10px" }} />
-            <Line type="monotone" dataKey="politica" stroke="hsl(var(--chart-1))" strokeWidth={2} dot={{ r: 2 }} name="Política" />
-            <Line type="monotone" dataKey="tecnologia" stroke="hsl(var(--chart-2))" strokeWidth={2} dot={{ r: 2 }} name="Tecnologia" />
-            <Line type="monotone" dataKey="entretenimento" stroke="hsl(var(--chart-3))" strokeWidth={2} dot={{ r: 2 }} name="Entretenimento" />
-            <Line type="monotone" dataKey="esportes" stroke="hsl(var(--chart-4))" strokeWidth={2} dot={{ r: 2 }} name="Esportes" />
-          </LineChart>
-        </ResponsiveContainer>
-      </div>
-      <div className="flex flex-wrap items-center gap-3 text-[9px]">
+      {/* KPI Row */}
+      <div className="grid grid-cols-4 gap-2">
         {[
-          { key: "chart-1", label: "Política" },
-          { key: "chart-2", label: "Tecnologia" },
-          { key: "chart-3", label: "Entretenimento" },
-          { key: "chart-4", label: "Esportes" },
-        ].map(({ key, label }) => (
-          <span key={key} className="flex items-center gap-1">
-            <span className="w-2 h-2 rounded-full" style={{ background: `hsl(var(--${key}))` }} />
-            {label}
-          </span>
+          { label: lang === "pt" ? "Tendências ativas" : "Active trends", value: stats.totalTrends, icon: "📊" },
+          { label: lang === "pt" ? "Snapshots 7d" : "7d Snapshots", value: stats.totalSnapshots > 999 ? `${(stats.totalSnapshots / 1000).toFixed(1)}k` : stats.totalSnapshots, icon: "📸" },
+          { label: lang === "pt" ? "Plataformas" : "Platforms", value: stats.topPlatforms.length, icon: "📡" },
+          { label: "Momentum", value: `${stats.momentum > 0 ? "+" : ""}${stats.momentum}%`, icon: stats.momentum > 0 ? "🔥" : "📉" },
+        ].map((kpi, i) => (
+          <div key={i} className="rounded-lg border border-border/40 bg-card p-2 text-center">
+            <span className="text-sm block">{kpi.icon}</span>
+            <span className="text-[13px] font-black text-foreground block">{kpi.value}</span>
+            <span className="text-[8px] text-muted-foreground">{kpi.label}</span>
+          </div>
         ))}
       </div>
-      <div className="p-2 rounded-lg bg-primary/5 border border-primary/20 text-[10px]">
-        <span className="mr-1">📈</span>
-        <span className="font-medium text-primary">{insights.topCategory}</span>
-        <span className="text-muted-foreground">
-          {" "}{lang === "pt" ? `foi a categoria mais ativa (${insights.growth > 0 ? "+" : ""}${insights.growth}% vs semana anterior)` : `was the most active (${insights.growth > 0 ? "+" : ""}${insights.growth}% vs previous week)`}
-        </span>
+
+      {/* Charts row */}
+      <div className="grid grid-cols-2 gap-2">
+        {/* Volume diário */}
+        <div className="rounded-lg border border-border/40 bg-card p-2">
+          <span className="text-[9px] font-bold text-muted-foreground uppercase tracking-wider block mb-1">
+            {lang === "pt" ? "Volume diário (M)" : "Daily volume (M)"}
+          </span>
+          <div className="h-[80px]">
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={stats.dailyChart} margin={{ top: 2, right: 2, left: -15, bottom: 0 }}>
+                <XAxis dataKey="day" tick={{ fontSize: 8 }} stroke="hsl(var(--muted-foreground))" />
+                <YAxis tick={{ fontSize: 8 }} stroke="hsl(var(--muted-foreground))" />
+                <RTooltip contentStyle={{ background: "hsl(var(--popover))", border: "1px solid hsl(var(--border))", borderRadius: "8px", fontSize: "10px" }} />
+                <Bar dataKey="vol" radius={[3, 3, 0, 0]}>
+                  {stats.dailyChart.map((_, i) => (
+                    <Cell key={i} fill={`hsl(var(--primary))`} fillOpacity={0.3 + (i / stats.dailyChart.length) * 0.7} />
+                  ))}
+                </Bar>
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
+
+        {/* Categorias */}
+        <div className="rounded-lg border border-border/40 bg-card p-2">
+          <span className="text-[9px] font-bold text-muted-foreground uppercase tracking-wider block mb-1">
+            {lang === "pt" ? "Top categorias" : "Top categories"}
+          </span>
+          <div className="h-[80px]">
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={stats.topCats} layout="vertical" margin={{ top: 2, right: 2, left: 0, bottom: 0 }}>
+                <XAxis type="number" tick={{ fontSize: 7 }} stroke="hsl(var(--muted-foreground))" />
+                <YAxis type="category" dataKey="name" tick={{ fontSize: 8 }} stroke="hsl(var(--muted-foreground))" width={60} />
+                <Bar dataKey="value" radius={[0, 3, 3, 0]}>
+                  {stats.topCats.map((_, i) => (
+                    <Cell key={i} fill={chartColors[i % chartColors.length]} />
+                  ))}
+                </Bar>
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
+      </div>
+
+      {/* Bottom row: platforms + countries */}
+      <div className="flex items-center gap-2 flex-wrap">
+        {/* Platforms mini */}
+        {stats.topPlatforms.map((p, i) => (
+          <span key={p.name} className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md text-[9px] font-medium bg-secondary text-secondary-foreground">
+            <span style={{ color: platformIcons[p.name]?.color }}>{platformIcons[p.name]?.emoji || "●"}</span>
+            {p.name} <span className="text-muted-foreground">({p.value})</span>
+          </span>
+        ))}
+        <span className="text-[9px] text-muted-foreground">·</span>
+        {/* Countries */}
+        {stats.topCountries.map(([code, count]) => (
+          <span key={code} className="text-[9px]">
+            {countryCodeToFlag(code)} <span className="text-muted-foreground">{count}</span>
+          </span>
+        ))}
       </div>
     </div>
   );
 }
 
+// ─── ANOMALIES PREDICTIVE ───────────────────────────────────────────────
+function AnomaliesPredictive({ anomalies, lang, onAnomalyClick }: {
+  anomalies: AnomalyAlert[]; lang: string; onAnomalyClick?: (id: string) => void;
+}) {
+  const [expandedIdx, setExpandedIdx] = useState<number | null>(null);
+
+  const anomalyTypeInfo: Record<string, { emoji: string; label: string; color: string }> = {
+    spike: { emoji: "📈", label: lang === "pt" ? "Pico anômalo" : "Anomalous spike", color: "text-destructive" },
+    viral: { emoji: "⚡", label: lang === "pt" ? "Viralização" : "Going viral", color: "text-amber-500" },
+    multi_platform: { emoji: "🌐", label: lang === "pt" ? "Multiplataforma" : "Multi-platform", color: "text-blue-500" },
+    rapid_growth: { emoji: "🚀", label: lang === "pt" ? "Crescimento rápido" : "Rapid growth", color: "text-orange-500" },
+  };
+
+  // Compute global patterns
+  const patterns = useMemo(() => {
+    const platformSet = new Set<string>();
+    const countrySet = new Set<string>();
+    const typeCount: Record<string, number> = {};
+    let totalChange = 0;
+
+    for (const a of anomalies) {
+      platformSet.add(a.trend.platform);
+      if (a.trend.countryCode) countrySet.add(a.trend.countryCode);
+      typeCount[a.type] = (typeCount[a.type] || 0) + 1;
+      totalChange += parseFloat(a.trend.change?.replace(/[^0-9.\-]/g, "") || "0");
+    }
+
+    const dominantType = Object.entries(typeCount).sort((a, b) => b[1] - a[1])[0]?.[0] || "spike";
+    const avgChange = anomalies.length > 0 ? Math.round(totalChange / anomalies.length) : 0;
+
+    // Generate prediction
+    let prediction = "";
+    if (platformSet.size >= 3 && avgChange > 200) {
+      prediction = lang === "pt"
+        ? "Padrão de convergência global detectado — múltiplas plataformas mostram aceleração simultânea. Probabilidade alta de intensificação nas próximas 4-8h."
+        : "Global convergence pattern detected — multiple platforms show simultaneous acceleration.";
+    } else if (countrySet.size >= 3) {
+      prediction = lang === "pt"
+        ? "Propagação geográfica em andamento — anomalias estão se espalhando entre regiões. Monitoramento intensificado recomendado."
+        : "Geographic spread underway — anomalies spreading across regions.";
+    } else if (avgChange > 150) {
+      prediction = lang === "pt"
+        ? "Crescimento acelerado anômalo — os sinais indicam possível viralização nas próximas 2-6h."
+        : "Anomalous accelerated growth — signals indicate possible viralization in 2-6h.";
+    } else {
+      prediction = lang === "pt"
+        ? "Padrões sob monitoramento — comportamentos fora do normal detectados em fontes diversas."
+        : "Patterns under monitoring — unusual behaviors detected across diverse sources.";
+    }
+
+    return { platformCount: platformSet.size, countryCount: countrySet.size, dominantType, avgChange, prediction };
+  }, [anomalies, lang]);
+
+  if (anomalies.length === 0) {
+    return (
+      <div className="px-3 py-6 text-center text-muted-foreground">
+        <Radar className="w-8 h-8 mx-auto mb-2 opacity-30" />
+        <p className="text-[11px]">{lang === "pt" ? "Nenhuma anomalia detectada no momento." : "No anomalies detected."}</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="p-3 space-y-3">
+      {/* Global prediction card */}
+      <div className="rounded-lg border border-destructive/20 bg-destructive/5 p-2.5">
+        <div className="flex items-start gap-2">
+          <Target className="w-4 h-4 text-destructive flex-shrink-0 mt-0.5" />
+          <div className="flex-1">
+            <div className="flex items-center gap-2 mb-1 flex-wrap">
+              <span className="text-[8px] font-black uppercase tracking-wider text-destructive">
+                {lang === "pt" ? "Análise Preditiva Global" : "Global Predictive Analysis"}
+              </span>
+              <span className="text-[9px] text-muted-foreground">
+                {anomalies.length} {lang === "pt" ? "anomalias" : "anomalies"} · {patterns.platformCount} {lang === "pt" ? "plataformas" : "platforms"} · {patterns.countryCount} {lang === "pt" ? "países" : "countries"}
+              </span>
+            </div>
+            <p className="text-[10px] text-foreground/80 leading-relaxed">{patterns.prediction}</p>
+            <div className="flex items-center gap-2 mt-1.5 flex-wrap">
+              <span className="text-[9px] font-medium text-destructive">
+                Δ {lang === "pt" ? "médio" : "avg"}: +{patterns.avgChange}%
+              </span>
+              <span className="text-[9px] text-muted-foreground">
+                {lang === "pt" ? "Tipo dominante" : "Dominant"}: {anomalyTypeInfo[patterns.dominantType]?.label}
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Anomaly cards grid - matching emerging style */}
+      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
+        <AnimatePresence mode="popLayout">
+          {anomalies.map((anomaly, i) => {
+            const info = anomalyTypeInfo[anomaly.type] || anomalyTypeInfo.spike;
+            const changeNum = parseFloat(anomaly.trend.change?.replace(/[^0-9.\-]/g, "") || "0");
+            const pf = platformIcons[anomaly.trend.platform] || { emoji: "●", color: "hsl(var(--muted-foreground))" };
+            const flag = countryCodeToFlag(anomaly.trend.countryCode);
+            const sparkData = anomaly.trend.sparkData?.map((v, idx) => ({ v })) || [];
+            const isExpanded = expandedIdx === i;
+            const trendId = `${anomaly.trend.platform}-${anomaly.trend.title.slice(0, 20)}`;
+
+            return (
+              <motion.div
+                key={`anomaly-${anomaly.trend.title.slice(0, 15)}-${i}`}
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.95 }}
+                transition={{ delay: i * 0.03 }}
+                onClick={() => setExpandedIdx(isExpanded ? null : i)}
+                className={`rounded-lg border border-destructive/20 bg-card p-2.5 cursor-pointer transition-all hover:border-destructive/40 hover:shadow-sm ${
+                  isExpanded ? "col-span-2 sm:col-span-3 md:col-span-4 border-destructive/40 shadow-md bg-destructive/5" : ""
+                }`}
+              >
+                {/* Badge + change */}
+                <div className="flex items-center justify-between mb-1.5">
+                  <span className={`inline-flex items-center gap-0.5 px-1 py-0.5 rounded text-[8px] font-bold ${info.color} bg-current/10`}
+                    style={{ backgroundColor: `color-mix(in srgb, currentColor 10%, transparent)` }}>
+                    {info.emoji} {info.label}
+                  </span>
+                  <span className="text-destructive font-black text-[10px]">+{Math.round(changeNum)}%</span>
+                </div>
+
+                {/* Title */}
+                <p className={`text-[11px] font-semibold text-foreground leading-tight mb-1 ${isExpanded ? "" : "line-clamp-2 min-h-[28px]"}`}>
+                  {anomaly.trend.title}
+                </p>
+
+                {/* Meta */}
+                <div className="flex items-center gap-1 text-[8px] text-muted-foreground flex-wrap mb-1">
+                  <span style={{ color: pf.color }}>{pf.emoji}</span>
+                  <span>{anomaly.trend.platform}</span>
+                  {flag && <span>{flag}</span>}
+                  {anomaly.trend.volume && <span>💬 {anomaly.trend.volume}</span>}
+                  <span className={`px-1 py-0 rounded text-[7px] font-bold ${
+                    anomaly.severity === "high" ? "bg-destructive/10 text-destructive" : "bg-amber-500/10 text-amber-600"
+                  }`}>
+                    {anomaly.severity === "high" ? "ALTO" : "MÉDIO"}
+                  </span>
+                </div>
+
+                {/* Mini sparkline */}
+                {!isExpanded && sparkData.length > 2 && (
+                  <div className="h-3 w-full opacity-50">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <AreaChart data={sparkData}>
+                        <Area type="monotone" dataKey="v" stroke="hsl(var(--destructive))" strokeWidth={1} fill="hsl(var(--destructive))" fillOpacity={0.15} dot={false} />
+                      </AreaChart>
+                    </ResponsiveContainer>
+                  </div>
+                )}
+
+                {/* Expanded details */}
+                <AnimatePresence>
+                  {isExpanded && (
+                    <motion.div
+                      initial={{ height: 0, opacity: 0 }}
+                      animate={{ height: "auto", opacity: 1 }}
+                      exit={{ height: 0, opacity: 0 }}
+                      transition={{ duration: 0.15 }}
+                      className="overflow-hidden"
+                    >
+                      <div className="mt-2 pt-2 border-t border-destructive/10 space-y-2">
+                        {/* Why anomaly */}
+                        <div className="text-[10px] text-muted-foreground leading-relaxed">
+                          <span className="font-semibold text-foreground block mb-0.5">
+                            {lang === "pt" ? "Por que é uma anomalia?" : "Why is it anomalous?"}
+                          </span>
+                          {anomaly.message}
+                        </div>
+
+                        {/* Sparkline large */}
+                        {sparkData.length > 2 && (
+                          <div className="h-10 w-full">
+                            <ResponsiveContainer width="100%" height="100%">
+                              <AreaChart data={sparkData}>
+                                <defs>
+                                  <linearGradient id={`anom-grad-${i}`} x1="0" y1="0" x2="0" y2="1">
+                                    <stop offset="0%" stopColor="hsl(var(--destructive))" stopOpacity={0.3} />
+                                    <stop offset="100%" stopColor="hsl(var(--destructive))" stopOpacity={0} />
+                                  </linearGradient>
+                                </defs>
+                                <Area type="monotone" dataKey="v" stroke="hsl(var(--destructive))" strokeWidth={1.5} fill={`url(#anom-grad-${i})`} dot={false} />
+                              </AreaChart>
+                            </ResponsiveContainer>
+                          </div>
+                        )}
+
+                        {/* Behavioral prediction */}
+                        <div className="rounded-lg bg-primary/5 border border-primary/10 px-2.5 py-2">
+                          <span className="text-[8px] font-bold uppercase tracking-wider text-primary/70 block mb-0.5">
+                            {lang === "pt" ? "Previsão comportamental" : "Behavioral prediction"}
+                          </span>
+                          <p className="text-[10px] text-foreground/80 leading-relaxed">
+                            {changeNum > 300
+                              ? (lang === "pt" ? "Padrão de viralização confirmado — espera-se que alcance o ciclo noticioso mainstream nas próximas 2-4h." : "Viral pattern confirmed — expected to reach mainstream in 2-4h.")
+                              : changeNum > 150
+                              ? (lang === "pt" ? "Aceleração acima da média — a tendência deve ganhar tração adicional se mantiver o ritmo atual." : "Above-average acceleration — trend should gain traction if pace holds.")
+                              : (lang === "pt" ? "Sinal em evolução — requer monitoramento contínuo para confirmar a direção." : "Evolving signal — requires continued monitoring.")}
+                          </p>
+                        </div>
+
+                        {/* CTA */}
+                        <div className="flex gap-1.5" onClick={e => e.stopPropagation()}>
+                          <button
+                            onClick={() => onAnomalyClick?.(trendId)}
+                            className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md bg-destructive/10 hover:bg-destructive/20 text-destructive text-[10px] font-semibold transition-colors">
+                            {lang === "pt" ? "Ver na timeline" : "View in timeline"} →
+                          </button>
+                          {anomaly.trend.sourceUrl && (
+                            <a href={anomaly.trend.sourceUrl} target="_blank" rel="noopener noreferrer"
+                              className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md bg-secondary text-secondary-foreground text-[10px] font-medium hover:bg-secondary/80 transition-colors">
+                              <ExternalLink className="w-2.5 h-2.5" /> {lang === "pt" ? "Fonte" : "Source"}
+                            </a>
+                          )}
+                        </div>
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </motion.div>
+            );
+          })}
+        </AnimatePresence>
+      </div>
+    </div>
+  );
+}
+
+// ─── MAIN COMPONENT ─────────────────────────────────────────────────────
 export default function TrendRadar({ trends, allTrends, criticalMoments, anomalies = [], onSelectTrend, onFilterCountry, onAnomalyClick }: TrendRadarProps) {
-  const { lang, t } = useLanguage();
+  const { lang } = useLanguage();
   const [tab, setTab] = useState("emerging");
   const [collapsed, setCollapsed] = useState(() => {
     if (typeof window !== "undefined") return localStorage.getItem(RADAR_STORAGE_KEY) === "true";
     return false;
   });
-
-  // Keep stable references to prevent re-renders from parent
-  const trendsRef = useRef(trends);
-  const allTrendsRef = useRef(allTrends);
-  const criticalRef = useRef(criticalMoments);
-  const anomaliesRef = useRef(anomalies);
-
-  // Only update refs when data meaningfully changes
-  useEffect(() => { trendsRef.current = trends; }, [trends]);
-  useEffect(() => { allTrendsRef.current = allTrends; }, [allTrends]);
-  useEffect(() => { criticalRef.current = criticalMoments; }, [criticalMoments]);
-  useEffect(() => { anomaliesRef.current = anomalies; }, [anomalies]);
 
   useEffect(() => {
     localStorage.setItem(RADAR_STORAGE_KEY, String(collapsed));
@@ -448,17 +671,15 @@ export default function TrendRadar({ trends, allTrends, criticalMoments, anomali
   const hasCritical = criticalMoments.length > 0;
   const hasAnomalies = anomalies.length > 0;
 
-  const collapseLabels = {
-    pt: { collapse: "Recolher radar", expand: "Expandir radar" },
-    en: { collapse: "Collapse radar", expand: "Expand radar" },
-    es: { collapse: "Contraer radar", expand: "Expandir radar" },
+  const labels = {
+    collapse: lang === "pt" ? "Recolher radar" : "Collapse radar",
+    expand: lang === "pt" ? "Expandir radar" : "Expand radar",
   };
-  const labels = collapseLabels[lang as keyof typeof collapseLabels] || collapseLabels.en;
 
   return (
-    <div 
+    <div
       className="border-b border-border/40 bg-background flex-shrink-0 transition-all duration-300 ease-out overflow-hidden"
-      style={{ 
+      style={{
         height: collapsed ? 40 : RADAR_HEIGHT,
         minHeight: collapsed ? 40 : RADAR_HEIGHT,
         maxHeight: collapsed ? 40 : RADAR_HEIGHT,
@@ -467,10 +688,8 @@ export default function TrendRadar({ trends, allTrends, criticalMoments, anomali
       <Tabs value={tab} onValueChange={setTab} className="h-full flex flex-col">
         {/* Header */}
         <div className="px-3 pt-2 pb-1.5 flex items-center gap-2 flex-shrink-0 bg-background z-10">
-          <span className="text-[10px] font-bold text-primary uppercase tracking-widest mr-1">
-            Trend Radar
-          </span>
-          
+          <span className="text-[10px] font-bold text-primary uppercase tracking-widest mr-1">Trend Radar</span>
+
           <TabsList className="h-7 bg-secondary/50 p-0.5 gap-0.5">
             <Tooltip>
               <TooltipTrigger asChild>
@@ -482,7 +701,7 @@ export default function TrendRadar({ trends, allTrends, criticalMoments, anomali
               </TooltipTrigger>
               <TooltipContent side="bottom" className="text-[10px]">{tabDescriptions.emerging[lang as keyof typeof tabDescriptions.emerging] || tabDescriptions.emerging.en}</TooltipContent>
             </Tooltip>
-            
+
             <Tooltip>
               <TooltipTrigger asChild>
                 <TabsTrigger value="critical" className="h-6 px-2.5 text-[10px] font-semibold data-[state=active]:bg-destructive/15 data-[state=active]:text-destructive gap-1">
@@ -493,7 +712,7 @@ export default function TrendRadar({ trends, allTrends, criticalMoments, anomali
               </TooltipTrigger>
               <TooltipContent side="bottom" className="text-[10px]">{tabDescriptions.critical[lang as keyof typeof tabDescriptions.critical] || tabDescriptions.critical.en}</TooltipContent>
             </Tooltip>
-            
+
             <Tooltip>
               <TooltipTrigger asChild>
                 <TabsTrigger value="top" className="h-6 px-2.5 text-[10px] font-semibold data-[state=active]:bg-amber-500/15 data-[state=active]:text-amber-600 dark:data-[state=active]:text-amber-400 gap-1">
@@ -529,7 +748,6 @@ export default function TrendRadar({ trends, allTrends, criticalMoments, anomali
           </TabsList>
 
           <div className="ml-auto flex items-center gap-1">
-            {/* Info button - enhanced visibility */}
             <Tooltip>
               <TooltipTrigger asChild>
                 <button className="w-7 h-7 rounded-lg flex items-center justify-center text-muted-foreground hover:text-primary hover:bg-primary/10 transition-all duration-200 border border-transparent hover:border-primary/20">
@@ -546,10 +764,9 @@ export default function TrendRadar({ trends, allTrends, criticalMoments, anomali
               </TooltipContent>
             </Tooltip>
 
-            {/* Collapse button - enhanced visibility */}
             <Tooltip>
               <TooltipTrigger asChild>
-                <button 
+                <button
                   onClick={() => setCollapsed(c => !c)}
                   className="w-7 h-7 rounded-lg flex items-center justify-center text-muted-foreground hover:text-primary hover:bg-primary/10 transition-all duration-200 border border-transparent hover:border-primary/20"
                   aria-label={collapsed ? labels.expand : labels.collapse}
@@ -576,7 +793,7 @@ export default function TrendRadar({ trends, allTrends, criticalMoments, anomali
                   ) : (
                     <div className="flex flex-col items-center justify-center py-8 text-muted-foreground">
                       <Sprout className="w-8 h-8 mb-2 opacity-30" />
-                      <p className="text-[11px]">{lang === "pt" ? "Nenhum sinal emergente detectado no momento." : "No emerging signals detected at this time."}</p>
+                      <p className="text-[11px]">{lang === "pt" ? "Nenhum sinal emergente detectado no momento." : "No emerging signals detected."}</p>
                     </div>
                   )}
                 </ScrollArea>
@@ -590,7 +807,7 @@ export default function TrendRadar({ trends, allTrends, criticalMoments, anomali
                   ) : (
                     <div className="flex flex-col items-center justify-center py-8 text-muted-foreground">
                       <Flame className="w-8 h-8 mb-2 opacity-30" />
-                      <p className="text-[11px]">{lang === "pt" ? "Nenhum alerta crítico no momento." : "No critical alerts at this time."}</p>
+                      <p className="text-[11px]">{lang === "pt" ? "Nenhum alerta crítico no momento." : "No critical alerts."}</p>
                     </div>
                   )}
                 </ScrollArea>
@@ -608,7 +825,7 @@ export default function TrendRadar({ trends, allTrends, criticalMoments, anomali
               <TabsContent value="weekly" className="absolute inset-0 mt-0 flex flex-col data-[state=inactive]:hidden">
                 <Legend tab="weekly" lang={lang} />
                 <ScrollArea className="flex-1">
-                  <WeeklyPulse trends={allTrends} />
+                  <WeeklyDashboard trends={allTrends} />
                 </ScrollArea>
               </TabsContent>
 
@@ -616,19 +833,7 @@ export default function TrendRadar({ trends, allTrends, criticalMoments, anomali
                 <TabsContent value="anomalies" className="absolute inset-0 mt-0 flex flex-col data-[state=inactive]:hidden">
                   <Legend tab="anomalies" lang={lang} />
                   <ScrollArea className="flex-1">
-                    <div className="p-3 space-y-2">
-                      {anomalies.map((anomaly, i) => {
-                        const trendId = `${anomaly.trend.platform}-${anomaly.trend.title.slice(0, 20)}`;
-                        return (
-                          <AnomalyCard
-                            key={`anomaly-${i}`}
-                            anomaly={anomaly}
-                            lang={lang}
-                            onClick={() => onAnomalyClick?.(trendId)}
-                          />
-                        );
-                      })}
-                    </div>
+                    <AnomaliesPredictive anomalies={anomalies} lang={lang} onAnomalyClick={onAnomalyClick} />
                   </ScrollArea>
                 </TabsContent>
               )}
