@@ -333,9 +333,325 @@ const GoogleMapView = ({
     }
   }, [trendCounts, mapLoaded]);
 
+  // Sync heatmap visibility with mapMode
   useEffect(() => {
-    if (heatmapRef.current) heatmapRef.current.setMap(heatmapEnabled ? googleMapRef.current : null);
-  }, [heatmapEnabled]);
+    if (heatmapRef.current) heatmapRef.current.setMap(mapMode === "heatmap" ? googleMapRef.current : null);
+  }, [mapMode]);
+
+  // ─── FLOW MAP rendering ───
+  const flowArcs = useMemo(() => computeFlowArcs(trends, countryPoints), [trends]);
+
+  useEffect(() => {
+    const map = googleMapRef.current;
+    if (!map || !mapLoaded) return;
+
+    // Cleanup previous flow polylines
+    flowPolylinesRef.current.forEach(p => p.setMap(null));
+    flowPolylinesRef.current = [];
+
+    if (mapMode !== "flow") return;
+    if (flowArcs.length === 0) return;
+
+    if (!flowHoverInfoRef.current && googleRef.current) {
+      flowHoverInfoRef.current = new googleRef.current.maps.InfoWindow({ disableAutoPan: true });
+    }
+
+    const maxVol = Math.max(...flowArcs.map(a => a.volume), 1);
+
+    flowArcs.forEach(arc => {
+      const cpOrigin = countryPoints.find(c => c.id === arc.originId);
+      const cpDest = countryPoints.find(c => c.id === arc.destId);
+      if (!cpOrigin || !cpDest) return;
+
+      const curvePoints = computeCurvePoints(cpOrigin.lat, cpOrigin.lng, cpDest.lat, cpDest.lng, 40);
+      const path = curvePoints.map(p => ({ lat: p.lat, lng: p.lng }));
+      const color = sentimentColors[arc.sentiment];
+      const weight = 2 + (arc.volume / maxVol) * 5;
+      const opacity = 0.4 + (arc.volume / maxVol) * 0.5;
+
+      const polyline = new google.maps.Polyline({
+        path,
+        geodesic: false,
+        strokeColor: color,
+        strokeOpacity: opacity,
+        strokeWeight: weight,
+        map,
+        zIndex: 5,
+      });
+
+      // Animated dash overlay
+      const dashLine = new google.maps.Polyline({
+        path,
+        geodesic: false,
+        strokeColor: "#ffffff",
+        strokeOpacity: 0,
+        strokeWeight: weight * 0.4,
+        map,
+        zIndex: 6,
+        icons: [{
+          icon: {
+            path: "M 0,-1 0,1",
+            strokeOpacity: 0.6,
+            strokeWeight: 2,
+            scale: 3,
+          },
+          offset: "0",
+          repeat: "20px",
+        }],
+      });
+
+      // Animate the dash offset
+      let offset = 0;
+      const speed = 0.5 + (1 - arc.timeDelta / 8) * 1.5; // faster = shorter timeDelta
+      const animateDash = () => {
+        if (!dashLine.getMap()) return;
+        offset = (offset + speed) % 200;
+        dashLine.set("icons", [{
+          icon: { path: "M 0,-1 0,1", strokeOpacity: 0.5, strokeWeight: 2, scale: 3 },
+          offset: offset + "px",
+          repeat: "20px",
+        }]);
+        requestAnimationFrame(animateDash);
+      };
+      requestAnimationFrame(animateDash);
+
+      // Hover tooltip
+      if (!isMobile) {
+        polyline.addListener("mouseover", (e: any) => {
+          if (!flowHoverInfoRef.current) return;
+          const bg = isDark ? "rgba(19,22,32,0.97)" : "rgba(255,255,255,0.97)";
+          const txt = isDark ? "#e2e8f0" : "#111827";
+          const sub = isDark ? "#94a3b8" : "#6b7280";
+          const border = isDark ? "rgba(45,51,72,0.5)" : "rgba(0,0,0,0.08)";
+          flowHoverInfoRef.current.setContent(`
+            <div style="font-family:Inter,system-ui,sans-serif;padding:12px 16px;min-width:200px;max-width:280px;background:${bg};color:${txt};border-radius:14px;backdrop-filter:blur(16px);border:1px solid ${border};box-shadow:0 8px 24px rgba(0,0,0,0.12);">
+              <div style="font-size:12px;font-weight:700;margin-bottom:8px;line-height:1.3;">${arc.trendTitle.slice(0, 60)}${arc.trendTitle.length > 60 ? '…' : ''}</div>
+              <div style="display:flex;align-items:center;gap:6px;margin-bottom:6px;">
+                <span style="font-size:16px;">${arc.originId.length === 2 ? String.fromCodePoint(...[...arc.originId.toUpperCase()].map(c => 0x1F1E6 + c.charCodeAt(0) - 65)) : ''}</span>
+                <span style="font-size:10px;color:${sub};">${arc.originName}</span>
+                <span style="font-size:12px;color:${color};">→</span>
+                <span style="font-size:16px;">${arc.destId.length === 2 ? String.fromCodePoint(...[...arc.destId.toUpperCase()].map(c => 0x1F1E6 + c.charCodeAt(0) - 65)) : ''}</span>
+                <span style="font-size:10px;color:${sub};">${arc.destName}</span>
+              </div>
+              <div style="display:flex;gap:8px;margin-bottom:4px;">
+                <span style="background:${color};color:#fff;padding:2px 8px;border-radius:10px;font-size:9px;font-weight:700;">${t("mapSent" + arc.sentiment.charAt(0).toUpperCase() + arc.sentiment.slice(1) as any)}</span>
+                <span style="font-size:9px;color:${sub};">~${arc.timeDelta}h ${t("mapFlowTimeDelta")}</span>
+              </div>
+              <div style="font-size:9px;color:${isDark ? '#60a5fa' : '#3b82f6'};text-align:center;padding-top:6px;border-top:1px solid ${border};font-weight:600;">👆 ${t("mapFlowClickToFilter")}</div>
+            </div>
+          `);
+          flowHoverInfoRef.current.setPosition(e.latLng);
+          flowHoverInfoRef.current.open(map);
+        });
+        polyline.addListener("mouseout", () => {
+          flowHoverInfoRef.current?.close();
+        });
+      }
+
+      // Click to filter
+      polyline.addListener("click", () => {
+        onSelectCountry(arc.originId);
+        flowHoverInfoRef.current?.close();
+      });
+
+      flowPolylinesRef.current.push(polyline, dashLine);
+    });
+  }, [mapMode, flowArcs, mapLoaded, isDark, isMobile, t, onSelectCountry]);
+
+  // ─── SENTIMENT BUBBLE MAP rendering ───
+  const sentimentBubbles = useMemo(() => computeSentimentBubbles(trends, countryPoints), [trends]);
+
+  useEffect(() => {
+    const map = googleMapRef.current;
+    if (!map || !mapLoaded) return;
+
+    // Cleanup previous sentiment overlays
+    sentimentMarkersRef.current.forEach(m => m.setMap(null));
+    sentimentMarkersRef.current = [];
+    sentimentCirclesRef.current.forEach(c => c.setMap(null));
+    sentimentCirclesRef.current = [];
+
+    if (mapMode !== "sentiment") return;
+    if (sentimentBubbles.length === 0) return;
+
+    const g = googleRef.current;
+    if (!g) return;
+
+    const maxVol = Math.max(...sentimentBubbles.map(b => b.volume), 1);
+
+    sentimentBubbles.forEach(bubble => {
+      const cp = countryPoints.find(c => c.id === bubble.countryId);
+      if (!cp) return;
+
+      const color = sentimentColors[bubble.dominantSentiment];
+      const logScale = Math.log10(Math.max(bubble.volume, 10)) / Math.log10(maxVol || 10);
+      const radius = 80000 + logScale * 600000; // meters
+      const pulseSpeed = 1500 + Math.max(0, 50 - bubble.growth) * 40; // faster growth = faster pulse
+
+      // Base circle
+      const circle = new google.maps.Circle({
+        center: { lat: cp.lat, lng: cp.lng },
+        radius,
+        fillColor: color,
+        fillOpacity: 0.25,
+        strokeColor: color,
+        strokeWeight: 2,
+        strokeOpacity: 0.6,
+        map,
+        zIndex: 3,
+        clickable: true,
+      });
+
+      // Pulse ring marker
+      const pulseMarker = new g.maps.Marker({
+        map,
+        position: { lat: cp.lat, lng: cp.lng },
+        icon: {
+          path: g.maps.SymbolPath.CIRCLE,
+          fillColor: color,
+          fillOpacity: 0.15,
+          strokeColor: color,
+          strokeWeight: 1.5,
+          strokeOpacity: 0.4,
+          scale: 15 + logScale * 20,
+        },
+        clickable: false,
+        zIndex: 2,
+        optimized: false,
+      });
+
+      // Animate pulse
+      let startTime = performance.now();
+      const animatePulse = (now: number) => {
+        if (!pulseMarker.getMap()) return;
+        const elapsed = (now - startTime) % pulseSpeed;
+        const progress = elapsed / pulseSpeed;
+        const baseScale = 15 + logScale * 20;
+        const scale = baseScale + baseScale * 0.4 * Math.sin(progress * Math.PI * 2);
+        const opacity = 0.15 + 0.1 * Math.sin(progress * Math.PI * 2);
+        pulseMarker.setIcon({
+          path: g.maps.SymbolPath.CIRCLE,
+          fillColor: color,
+          fillOpacity: opacity,
+          strokeColor: color,
+          strokeWeight: 1.5,
+          strokeOpacity: 0.3 + 0.2 * Math.sin(progress * Math.PI * 2),
+          scale,
+        });
+        requestAnimationFrame(animatePulse);
+      };
+      requestAnimationFrame(animatePulse);
+
+      // Flag label marker
+      const flag = bubble.countryId.length === 2
+        ? String.fromCodePoint(...[...bubble.countryId.toUpperCase()].map(c => 0x1F1E6 + c.charCodeAt(0) - 65))
+        : "";
+
+      const labelMarker = new g.maps.Marker({
+        map,
+        position: { lat: cp.lat, lng: cp.lng },
+        label: {
+          text: flag,
+          fontSize: "18px",
+        },
+        icon: {
+          path: g.maps.SymbolPath.CIRCLE,
+          fillOpacity: 0,
+          strokeOpacity: 0,
+          scale: 0,
+        },
+        zIndex: 10,
+        optimized: false,
+      });
+
+      // Hover tooltip for sentiment bubble
+      const showTooltip = (anchor: any) => {
+        if (!infoWindowRef.current) return;
+        const bg = isDark ? "rgba(19,22,32,0.97)" : "rgba(255,255,255,0.97)";
+        const txt = isDark ? "#e2e8f0" : "#111827";
+        const sub = isDark ? "#94a3b8" : "#6b7280";
+        const border = isDark ? "rgba(45,51,72,0.5)" : "rgba(0,0,0,0.08)";
+
+        const sentBar = (label: string, pct: number, barColor: string) =>
+          `<div style="display:flex;align-items:center;gap:6px;margin-bottom:3px;">
+            <span style="font-size:9px;color:${sub};width:55px;">${label}</span>
+            <div style="flex:1;height:6px;border-radius:3px;background:${isDark ? 'rgba(30,41,59,0.8)' : '#f1f5f9'};overflow:hidden;">
+              <div style="width:${Math.round(pct * 100)}%;height:100%;border-radius:3px;background:${barColor};transition:width 0.3s;"></div>
+            </div>
+            <span style="font-size:9px;color:${sub};width:30px;text-align:right;">${Math.round(pct * 100)}%</span>
+          </div>`;
+
+        const trendsHtml = bubble.topTrends.map(tr =>
+          `<div style="display:flex;align-items:center;gap:4px;padding:4px 0;">
+            <span style="width:6px;height:6px;border-radius:50%;background:${sentimentColors[tr.sentiment]};flex-shrink:0;"></span>
+            <span style="font-size:10px;color:${txt};overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:200px;">${tr.title.slice(0, 45)}${tr.title.length > 45 ? '…' : ''}</span>
+          </div>`
+        ).join('');
+
+        const tooltipW = isMobile ? 'min-width:260px;max-width:92vw' : 'min-width:240px;max-width:280px';
+        const fs = isMobile ? '13px' : '11px';
+
+        infoWindowRef.current.setContent(`
+          <div style="font-family:Inter,system-ui,sans-serif;padding:${isMobile ? '16px' : '14px'};${tooltipW};background:${bg};color:${txt};border-radius:16px;backdrop-filter:blur(20px);border:1px solid ${border};box-shadow:0 12px 32px rgba(0,0,0,0.15);">
+            <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">
+              <span style="font-size:${isMobile ? '28px' : '22px'};">${flag}</span>
+              <div>
+                <div style="font-size:${isMobile ? '16px' : '14px'};font-weight:700;">${bubble.countryName}</div>
+                <div style="font-size:10px;color:${sub};">${bubble.trendCount} ${t("mapSentActiveTrends")}</div>
+              </div>
+              <span style="margin-left:auto;background:${color};color:#fff;padding:2px 10px;border-radius:12px;font-size:9px;font-weight:700;letter-spacing:0.5px;">${t("mapSent" + bubble.dominantSentiment.charAt(0).toUpperCase() + bubble.dominantSentiment.slice(1) as any)}</span>
+            </div>
+            <div style="font-size:10px;font-weight:700;color:${txt};text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;">${t("mapSentBreakdown")}</div>
+            ${sentBar(t("mapSentPositive"), bubble.sentiment.positive, sentimentColors.positive)}
+            ${sentBar(t("mapSentNeutral"), bubble.sentiment.neutral, sentimentColors.neutral)}
+            ${sentBar(t("mapSentNegative"), bubble.sentiment.negative, sentimentColors.negative)}
+            ${sentBar(t("mapSentMixed"), bubble.sentiment.mixed, sentimentColors.mixed)}
+            ${bubble.topTrends.length > 0 ? `<div style="font-size:10px;font-weight:700;color:${txt};text-transform:uppercase;letter-spacing:0.5px;margin:10px 0 4px;">${t("mapSentTopTrends")}</div>${trendsHtml}` : ''}
+            <div style="display:flex;gap:12px;margin-top:10px;padding-top:8px;border-top:1px solid ${border};">
+              <div style="text-align:center;flex:1;">
+                <div style="font-size:${isMobile ? '14px' : '12px'};font-weight:600;color:${txt};">${bubble.volume.toLocaleString()}</div>
+                <div style="font-size:8px;color:${sub};text-transform:uppercase;">${t("mapSentVolume")}</div>
+              </div>
+              <div style="text-align:center;flex:1;">
+                <div style="font-size:${isMobile ? '14px' : '12px'};font-weight:600;color:${bubble.growth > 0 ? sentimentColors.positive : sentimentColors.negative};">${bubble.growth > 0 ? '+' : ''}${Math.round(bubble.growth)}%</div>
+                <div style="font-size:8px;color:${sub};text-transform:uppercase;">${t("mapSentGrowth")}</div>
+              </div>
+            </div>
+            <button onclick="document.dispatchEvent(new CustomEvent('map-sentiment-filter',{detail:'${bubble.countryId}'}))" style="width:100%;background:${isDark ? 'rgba(59,130,246,0.9)' : '#3b82f6'};color:white;border:none;border-radius:${isMobile ? '12px' : '8px'};padding:${isMobile ? '12px' : '8px'};font-size:${fs};font-weight:600;cursor:pointer;margin-top:8px;min-height:${isMobile ? '48px' : 'auto'};touch-action:manipulation;">${t("mapFlowClickToFilter")}</button>
+          </div>
+        `);
+        infoWindowRef.current.open({ anchor, map });
+      };
+
+      labelMarker.addListener("click", () => showTooltip(labelMarker));
+      circle.addListener("click", () => {
+        showTooltip(labelMarker);
+      });
+
+      if (!isMobile) {
+        labelMarker.addListener("mouseover", () => showTooltip(labelMarker));
+      }
+
+      sentimentMarkersRef.current.push(pulseMarker, labelMarker);
+      sentimentCirclesRef.current.push(circle);
+    });
+
+    // Listen for filter event from tooltip button
+    const handler = (e: Event) => {
+      const cc = (e as CustomEvent).detail;
+      onSelectCountry(cc);
+      infoWindowRef.current?.close();
+    };
+    document.addEventListener('map-sentiment-filter', handler);
+    return () => document.removeEventListener('map-sentiment-filter', handler);
+  }, [mapMode, sentimentBubbles, mapLoaded, isDark, isMobile, t, onSelectCountry]);
+
+  // Sync heatmap/markers visibility based on mapMode
+  useEffect(() => {
+    // Show/hide heatmap markers based on mode
+    markersRef.current.forEach(m => m.setVisible(mapMode === "heatmap"));
+    rippleOverlaysRef.current.forEach(r => r.setVisible(mapMode === "heatmap"));
+  }, [mapMode]);
 
   // Markers with animated ripple + vibrant colors
   useEffect(() => {
