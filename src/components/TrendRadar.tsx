@@ -684,7 +684,7 @@ export default function TrendRadar({ trends, allTrends, criticalMoments, anomali
 
   return (
     <div
-      className="border-b border-border/40 bg-background flex-shrink-0 transition-all duration-300 ease-out overflow-hidden"
+      className="bg-card/50 backdrop-blur-sm flex-shrink-0 transition-all duration-300 ease-out overflow-hidden shadow-[0_2px_8px_-2px_hsl(var(--primary)/0.08)]"
       style={{
         height: collapsed ? 40 : RADAR_HEIGHT,
         minHeight: collapsed ? 40 : RADAR_HEIGHT,
