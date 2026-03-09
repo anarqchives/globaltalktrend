@@ -21,7 +21,8 @@ import { useGamification } from "@/hooks/use-gamification";
 import { useSavedCards } from "@/hooks/use-saved-cards";
 import { useSavedFilters } from "@/hooks/use-saved-filters";
 import { supabase } from "@/integrations/supabase/client";
-import { ChevronRight, X, Map, Newspaper, LayoutList, LayoutGrid, RefreshCw, Camera } from "lucide-react";
+import { ChevronRight, X, Map, Newspaper, LayoutList, LayoutGrid, RefreshCw, Camera, ChevronsUp, ChevronsDown } from "lucide-react";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import TagLegend from "@/components/TagLegend";
 import WatchlistPanel from "@/components/WatchlistPanel";
 import OnboardingFlow, { hasCompletedOnboarding } from "@/components/OnboardingFlow";
@@ -73,6 +74,8 @@ const Index = () => {
   const [user, setUser] = useState<any>(null);
   const [viewMode, setViewMode] = useState<"timeline" | "map">("timeline");
   const [compactMode, setCompactMode] = useState(false);
+  const [allExpanded, setAllExpanded] = useState(false);
+  const [allCollapsed, setAllCollapsed] = useState(false);
   const timelinePanelRef = useRef<HTMLDivElement>(null);
   const { timelineRef: gridRef, columns: gridColumns } = useTimelineColumns();
 
@@ -423,18 +426,46 @@ const Index = () => {
             </button>
           )}
           <TagLegend />
+          {/* Expand/Collapse All toggle */}
+          <div className="flex items-center bg-secondary rounded-full p-0.5 gap-0.5">
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <button
+                  onClick={() => { setAllExpanded(true); setAllCollapsed(false); setCompactMode(false); }}
+                  className={`flex items-center justify-center w-6 h-6 rounded-full transition-all ${allExpanded && !compactMode ? 'bg-card text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}
+                  title={lang === "pt" ? "Todos expandidos" : "All expanded"}
+                >
+                  <ChevronsDown className="w-3 h-3" />
+                </button>
+              </TooltipTrigger>
+              <TooltipContent side="bottom" className="text-[10px]">{lang === "pt" ? "Expandir todos os cards" : "Expand all cards"}</TooltipContent>
+            </Tooltip>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <button
+                  onClick={() => { setAllCollapsed(true); setAllExpanded(false); setCompactMode(true); }}
+                  className={`flex items-center justify-center w-6 h-6 rounded-full transition-all ${allCollapsed || compactMode ? 'bg-card text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}
+                  title={lang === "pt" ? "Todos retraídos" : "All collapsed"}
+                >
+                  <ChevronsUp className="w-3 h-3" />
+                </button>
+              </TooltipTrigger>
+              <TooltipContent side="bottom" className="text-[10px]">{lang === "pt" ? "Retrair todos os cards" : "Collapse all cards"}</TooltipContent>
+            </Tooltip>
+          </div>
+          {/* View mode toggle */}
           <div className="flex items-center bg-secondary rounded-full p-0.5 gap-0.5">
             <button
-              onClick={() => setCompactMode(false)}
+              onClick={() => { setCompactMode(false); setAllCollapsed(false); }}
               className={`flex items-center justify-center w-6 h-6 rounded-full transition-all ${!compactMode ? 'bg-card text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}
-              title="Modo expandido"
+              title={lang === "pt" ? "Modo expandido" : "Expanded mode"}
             >
               <LayoutGrid className="w-3 h-3" />
             </button>
             <button
-              onClick={() => setCompactMode(true)}
+              onClick={() => { setCompactMode(true); setAllExpanded(false); }}
               className={`flex items-center justify-center w-6 h-6 rounded-full transition-all ${compactMode ? 'bg-card text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}
-              title="Modo compacto"
+              title={lang === "pt" ? "Modo compacto" : "Compact mode"}
             >
               <LayoutList className="w-3 h-3" />
             </button>
@@ -484,7 +515,7 @@ const Index = () => {
                   staggerIndex={i}
                   userId={user?.id}
                   onTrackAction={trackAction}
-                  forceExpanded={expandedTrendId === trendId}
+                  forceExpanded={allExpanded || expandedTrendId === trendId}
                   isMultiplatform={isMulti}
                   crossPlatformCluster={matchingCluster}
                   onSaveCard={saveCard}
@@ -694,7 +725,7 @@ const Index = () => {
         }}
       />
 
-      <div className="flex-1 overflow-hidden flex flex-col">
+      <div className="flex-1 overflow-hidden flex flex-col min-h-0">
         {isMobile ? (
           <>
             <div className="section-gradient-divider" />
