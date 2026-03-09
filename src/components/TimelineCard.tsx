@@ -1,7 +1,7 @@
 import { useState, useMemo, useEffect } from "react";
 import { motion } from "framer-motion";
 import { SentimentDonut, EmotionBars } from "./SentimentCharts";
-import { ChevronDown, ChevronUp, Link2, Bell, ExternalLink, Shield, CheckCircle2, FlaskConical, Globe, Newspaper, Bookmark, Flag, Share2, Eye, TrendingUp, Radio, Clock, BarChart3 } from "lucide-react";
+import { ChevronDown, ChevronUp, Link2, Bell, ExternalLink, Shield, CheckCircle2, FlaskConical, Globe, Newspaper, Bookmark, Flag, Share2, Eye, TrendingUp, Radio, Clock } from "lucide-react";
 import { AreaChart, Area, ResponsiveContainer, XAxis, YAxis, Tooltip as RechartsTooltip, CartesianGrid } from "recharts";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { toast } from "@/hooks/use-toast";
@@ -389,7 +389,7 @@ const TimelineCard = ({
           <div className="flex items-center gap-1 flex-wrap mb-1">
             <Tooltip>
               <TooltipTrigger asChild>
-                <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-medium bg-secondary text-muted-foreground cursor-help">
+                <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-semibold bg-primary/10 text-primary cursor-help">
                   {localizedCategory}
                 </span>
               </TooltipTrigger>
@@ -397,7 +397,7 @@ const TimelineCard = ({
             </Tooltip>
             <Tooltip>
               <TooltipTrigger asChild>
-                <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-medium bg-secondary text-muted-foreground cursor-help">
+                <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-semibold bg-accent/15 text-accent-foreground dark:bg-accent/20 dark:text-accent cursor-help">
                   {signalType}
                 </span>
               </TooltipTrigger>
@@ -406,7 +406,7 @@ const TimelineCard = ({
             {trustBadge && trustBadgeKeys[trustBadge] && (
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <span className={`inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded text-[9px] font-medium cursor-help ${trustBadgeKeys[trustBadge].className}`}>
+                  <span className={`inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded text-[9px] font-semibold cursor-help ${trustBadgeKeys[trustBadge].className}`}>
                     {trustBadgeKeys[trustBadge].icon}
                     {t(trustBadgeKeys[trustBadge].labelKey as any)}
                   </span>
@@ -419,7 +419,7 @@ const TimelineCard = ({
             {trigger && (
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-medium bg-accent/10 text-accent-foreground cursor-help">
+                  <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-semibold bg-destructive/10 text-destructive dark:bg-destructive/20 cursor-help">
                     {trigger.emoji} {t(trigger.labelKey as any)}
                   </span>
                 </TooltipTrigger>
@@ -429,7 +429,7 @@ const TimelineCard = ({
             {translated && (
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <span className="text-[9px] text-blue-500 cursor-help">🌐 Traduzido</span>
+                  <span className="text-[9px] font-semibold text-blue-600 dark:text-blue-400 bg-blue-500/10 px-1.5 py-0.5 rounded cursor-help">🌐 {t("autoTranslated")}</span>
                 </TooltipTrigger>
                 <TooltipContent side="top" className="text-[10px]">{t("autoTranslated")}</TooltipContent>
               </Tooltip>
@@ -548,60 +548,45 @@ const TimelineCard = ({
             </div>
           </div>
 
-          {/* Propagation path (always show if multi-source) */}
-          {sources && sources.length >= 2 && (
-            <div className="mb-3">
-              <span className="text-[9px] font-semibold text-muted-foreground uppercase tracking-wide flex items-center gap-1 mb-1">
-                <Radio className="w-2.5 h-2.5" /> Propagation path
-              </span>
-              <div className="flex items-center gap-1 flex-wrap text-[9px]">
-                {sources.slice(0, 5).map((s, idx) => (
-                  <span key={s} className="flex items-center gap-1">
-                    {idx > 0 && <span className="text-muted-foreground/40">→</span>}
-                    <span className="px-1.5 py-0.5 rounded-full bg-primary/10 text-primary font-medium">{s}</span>
-                  </span>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* Sources list (full) */}
+          {/* Sources & Propagation (unified — no duplication) */}
           {sources && sources.length > 0 && (
             <div className="mb-3">
               <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide flex items-center gap-1 mb-1.5">
-                <BarChart3 className="w-3 h-3" /> Verified Sources
+                <Radio className="w-2.5 h-2.5" /> {sources.length >= 2 ? "Propagation Path" : "Source"}
               </span>
-              <div className="flex flex-wrap gap-1">
-                {sources.slice(0, 5).map((s) => (
-                  <span key={s} className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium bg-primary/10 text-primary">
-                    {s}
+              <div className="flex items-center gap-1 flex-wrap text-[10px]">
+                {sources.slice(0, 6).map((s, idx) => (
+                  <span key={s} className="flex items-center gap-1">
+                    {idx > 0 && <span className="text-muted-foreground/40">→</span>}
+                    <span className="px-2 py-0.5 rounded-full bg-primary/10 text-primary font-medium">{s}</span>
                   </span>
                 ))}
               </div>
             </div>
           )}
 
-          {/* Sentiment Analysis Section */}
-          <div className="mb-3 p-2 rounded-lg bg-secondary/30 border border-border/50">
+          {/* Sentiment Analysis Section — with labeled legend */}
+          <div className="mb-3 p-2.5 rounded-lg bg-secondary/30 border border-border/50">
             <span className="text-[9px] font-semibold text-muted-foreground uppercase tracking-wide mb-2 block">
               📊 Sentiment Analysis
             </span>
-            <div className="flex items-start gap-3">
+            <div className="flex items-center gap-4">
               <SentimentDonut
                 positive={changePositive ? 55 : 25}
                 neutral={30}
                 negative={changePositive ? 15 : 45}
-                size={64}
+                size={56}
+                showLegend
               />
-              <div className="flex-1 min-w-0">
-                <EmotionBars
-                  emotions={[
-                    { icon: "😊", label: "Positivo", percentage: changePositive ? 55 : 25, color: "hsl(142, 60%, 45%)" },
-                    { icon: "😐", label: "Neutro", percentage: 30, color: "hsl(var(--muted-foreground))" },
-                    { icon: "😠", label: "Negativo", percentage: changePositive ? 15 : 45, color: "hsl(var(--destructive))" },
-                  ]}
-                />
-              </div>
+            </div>
+            <div className="mt-2 pt-2 border-t border-border/30">
+              <EmotionBars
+                emotions={[
+                  { icon: "😊", label: "Positivo", percentage: changePositive ? 55 : 25, color: "hsl(142, 60%, 45%)" },
+                  { icon: "😐", label: "Neutro", percentage: 30, color: "hsl(var(--muted-foreground))" },
+                  { icon: "😠", label: "Negativo", percentage: changePositive ? 15 : 45, color: "hsl(var(--destructive))" },
+                ]}
+              />
             </div>
           </div>
 
@@ -618,14 +603,17 @@ const TimelineCard = ({
             )}
           </div>
 
-          {/* 24h Chart */}
+          {/* 24h Chart — with legend */}
           {historicalData && historicalData.length > 0 && (
             <div className="mb-3">
               <div className="flex items-center justify-between mb-1.5">
                 <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">
                   {t("evolution24h")}
                 </span>
-                <span className="text-[10px] text-muted-foreground">{metricLabel}</span>
+                <span className="text-[9px] text-muted-foreground flex items-center gap-1.5">
+                  <span className="w-2 h-0.5 rounded-full" style={{ background: pf.color }} />
+                  {metricLabel || "Volume"}
+                </span>
               </div>
               <div className="h-24 -mx-1">
                 <ResponsiveContainer width="100%" height="100%">
@@ -638,10 +626,10 @@ const TimelineCard = ({
                     </defs>
                     <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
                     <XAxis dataKey="hour" tick={{ fontSize: 9, fill: "hsl(var(--muted-foreground))" }} tickLine={false} axisLine={false} interval={5} />
-                    <YAxis tick={{ fontSize: 9, fill: "hsl(var(--muted-foreground))" }} tickLine={false} axisLine={false} width={30} tickFormatter={(v) => v >= 1000 ? `${(v / 1000).toFixed(0)}K` : v} />
+                    <YAxis tick={{ fontSize: 9, fill: "hsl(var(--muted-foreground))" }} tickLine={false} axisLine={false} width={30} tickFormatter={(v: number) => v >= 1000 ? `${(v / 1000).toFixed(0)}K` : String(v)} />
                     <RechartsTooltip
                       contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: "8px", fontSize: 11 }}
-                      formatter={(value: number) => [value >= 1000 ? `${(value / 1000).toFixed(1)}K` : value, metricLabel || "valor"]}
+                      formatter={(value: number) => [value >= 1000 ? `${(value / 1000).toFixed(1)}K` : value, metricLabel || "Volume"]}
                     />
                     <Area type="monotone" dataKey="value" stroke={pf.color} strokeWidth={1.5} fill={`url(#${gradientId})`} />
                   </AreaChart>

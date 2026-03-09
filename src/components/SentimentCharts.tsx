@@ -8,9 +8,10 @@ interface DonutProps {
   neutral: number;
   negative: number;
   size?: number;
+  showLegend?: boolean;
 }
 
-export function SentimentDonut({ positive, neutral, negative, size = 80 }: DonutProps) {
+export function SentimentDonut({ positive, neutral, negative, size = 80, showLegend = false }: DonutProps) {
   const total = positive + neutral + negative || 1;
   const pPct = positive / total;
   const nPct = neutral / total;
@@ -19,41 +20,58 @@ export function SentimentDonut({ positive, neutral, negative, size = 80 }: Donut
   const c = 2 * Math.PI * r;
 
   const segments = [
-    { pct: pPct, color: "hsl(var(--accent))", label: "😊" },
-    { pct: nPct, color: "hsl(var(--muted-foreground))", label: "😐" },
-    { pct: negPct, color: "hsl(var(--destructive))", label: "😠" },
+    { pct: pPct, color: "hsl(142, 60%, 45%)", label: "😊", name: "Positivo", value: Math.round(pPct * 100) },
+    { pct: nPct, color: "hsl(var(--muted-foreground))", label: "😐", name: "Neutro", value: Math.round(nPct * 100) },
+    { pct: negPct, color: "hsl(var(--destructive))", label: "😠", name: "Negativo", value: Math.round(negPct * 100) },
   ];
 
   let offset = 0;
 
+  // Find dominant sentiment
+  const dominant = segments.reduce((a, b) => a.value > b.value ? a : b);
+
   return (
-    <div className="relative" style={{ width: size, height: size }}>
-      <svg viewBox="0 0 80 80" className="w-full h-full -rotate-90">
-        {segments.map((seg, i) => {
-          const dash = seg.pct * c;
-          const gap = c - dash;
-          const el = (
-            <motion.circle
-              key={i}
-              cx="40" cy="40" r={r}
-              fill="none"
-              strokeWidth="8"
-              stroke={seg.color}
-              strokeDasharray={`${dash} ${gap}`}
-              strokeDashoffset={-offset}
-              strokeLinecap="round"
-              initial={{ strokeDasharray: `0 ${c}` }}
-              animate={{ strokeDasharray: `${dash} ${gap}` }}
-              transition={{ duration: 0.6, delay: i * 0.15, ease: [0.25, 0.1, 0.25, 1] }}
-            />
-          );
-          offset += dash;
-          return el;
-        })}
-      </svg>
-      <div className="absolute inset-0 flex items-center justify-center">
-        <span className="text-xs font-bold text-foreground">{Math.round(pPct * 100)}%</span>
+    <div className={showLegend ? "flex items-center gap-3" : ""}>
+      <div className="relative flex-shrink-0" style={{ width: size, height: size }}>
+        <svg viewBox="0 0 80 80" className="w-full h-full -rotate-90">
+          {segments.map((seg, i) => {
+            const dash = seg.pct * c;
+            const gap = c - dash;
+            const el = (
+              <motion.circle
+                key={i}
+                cx="40" cy="40" r={r}
+                fill="none"
+                strokeWidth="8"
+                stroke={seg.color}
+                strokeDasharray={`${dash} ${gap}`}
+                strokeDashoffset={-offset}
+                strokeLinecap="round"
+                initial={{ strokeDasharray: `0 ${c}` }}
+                animate={{ strokeDasharray: `${dash} ${gap}` }}
+                transition={{ duration: 0.6, delay: i * 0.15, ease: [0.25, 0.1, 0.25, 1] }}
+              />
+            );
+            offset += dash;
+            return el;
+          })}
+        </svg>
+        <div className="absolute inset-0 flex flex-col items-center justify-center">
+          <span className="text-xs font-bold text-foreground">{dominant.value}%</span>
+          <span className="text-[8px] text-muted-foreground">{dominant.label}</span>
+        </div>
       </div>
+      {showLegend && (
+        <div className="flex flex-col gap-1 min-w-0">
+          {segments.map((seg, i) => (
+            <div key={i} className="flex items-center gap-1.5 text-[10px]">
+              <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: seg.color }} />
+              <span className="text-muted-foreground truncate">{seg.name}</span>
+              <span className="font-semibold text-foreground ml-auto">{seg.value}%</span>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
