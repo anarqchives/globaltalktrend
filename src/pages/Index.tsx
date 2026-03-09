@@ -1,5 +1,5 @@
 import { useState, useRef, useCallback, useEffect, useMemo, lazy, Suspense } from "react";
-import { AnimatePresence, motion, useScroll, useTransform } from "framer-motion";
+import { AnimatePresence, motion } from "framer-motion";
 import { useTimelineColumns } from "@/hooks/use-timeline-columns";
 import TrendHeader from "@/components/TrendHeader";
 import FilterBar, { FilterState, countries } from "@/components/FilterBar";
@@ -21,7 +21,7 @@ import { useGamification } from "@/hooks/use-gamification";
 import { useSavedCards } from "@/hooks/use-saved-cards";
 import { useSavedFilters } from "@/hooks/use-saved-filters";
 import { supabase } from "@/integrations/supabase/client";
-import { ChevronRight, X, Map, Newspaper, LayoutList, LayoutGrid, RefreshCw, Camera, ChevronsUp, ChevronsDown, Radar, PanelLeftClose, PanelLeftOpen, MapPin, FileText } from "lucide-react";
+import { ChevronRight, X, Map, Newspaper, LayoutList, LayoutGrid, RefreshCw, ChevronsUp, ChevronsDown, Radar, MapPin, FileText, Minimize2, Maximize2 } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import TagLegend from "@/components/TagLegend";
 import WatchlistPanel from "@/components/WatchlistPanel";
@@ -44,8 +44,6 @@ const MapFallback = () => (
     </div>
   </div>
 );
-
-// MobileCoffeeButton removed — now in header
 
 const defaultFilters: FilterState = {
   country: "global",
@@ -76,7 +74,7 @@ const Index = () => {
   const [compactMode, setCompactMode] = useState(false);
   const [allExpanded, setAllExpanded] = useState(false);
   const [allCollapsed, setAllCollapsed] = useState(false);
-  // Panel visibility for file-tab collapsible sections
+  // Panel visibility for collapsible sections
   const [panelVisibility, setPanelVisibility] = useState({
     radar: true,
     timeline: true,
@@ -115,31 +113,24 @@ const Index = () => {
   const [heatmapDismissed, setHeatmapDismissed] = useState(false);
   const [showOnboarding, setShowOnboarding] = useState(false);
 
-  // Show onboarding for new logged-in users
   useEffect(() => {
     if (user?.id && !hasCompletedOnboarding(user.id)) {
       setShowOnboarding(true);
     }
   }, [user?.id]);
 
-  // Reset dismissed state when new critical moments appear
   useEffect(() => {
     if (criticalMoments.length > 0) setCriticalDismissed(false);
   }, [criticalMoments.length]);
 
-  // Translate trends content based on selected language
   const { translatedTrends, isTranslating } = useTranslatedTrends(rawFilteredTrends, lang);
 
-  // Filter for multiplatform if selected
   const filteredTrends = useMemo(() => {
-    // Helper: normalize a title key for multiplatform matching
     const normKey = (title: string) => title.toLowerCase().normalize("NFD").replace(/\p{Diacritic}/gu, "").replace(/[^a-z0-9\s]/g, "").trim().slice(0, 50);
 
     if (filters.type === "Multiplataforma") {
-      // Use ORIGINAL titles (before translation) for cross-platform matching
       const getOriginalKey = (t: TranslatedTrendCardProps) => normKey((t as any)._originalTitle || t.title);
 
-      // First try cluster-based detection
       if (multiplatformTitles.size > 0) {
         const result = translatedTrends.filter(t => {
           const key = getOriginalKey(t);
@@ -148,7 +139,6 @@ const Index = () => {
         if (result.length > 0) return result;
       }
 
-      // Fallback: Jaccard similarity on ALL trends using original titles
       const allNormTitles = allTrends.map(t => ({
         norm: normKey(t.title),
         platform: t.platform,
@@ -178,15 +168,11 @@ const Index = () => {
         if (result.length > 0) return result;
       }
 
-      // FALLBACK: If no multiplatform trends found, return all category-filtered trends
-      // instead of showing empty state
-      console.log("⚠️ Nenhuma trend multiplataforma encontrada — mostrando todas as trends filtradas");
       return translatedTrends;
     }
     return translatedTrends;
   }, [translatedTrends, filters.type, multiplatformTitles, allTrends]);
 
-  // Sync filters to URL
   useEffect(() => {
     const params = new URLSearchParams();
     if (filters.country !== defaultFilters.country) params.set("country", filters.country);
@@ -205,7 +191,6 @@ const Index = () => {
   const visibleTrends = filteredTrends.slice(0, visibleCount);
   const hasMore = visibleCount < filteredTrends.length;
 
-  // Group visible trends by recency sections
   const SOURCE_PRIORITY: Record<string, number> = {
     "The Guardian": 1, "NPR": 1, "NewsAPI": 2, "GNews": 2, "Bing News": 2, "NewsData": 2,
     "Reddit": 3, "Bluesky": 3, "Mastodon": 3, "X (Twitter)": 3, "YouTube": 4,
@@ -222,7 +207,6 @@ const Index = () => {
     const getTimestamp = (trend: TrendCardProps) => {
       if (trend.publishedAt) return new Date(trend.publishedAt).getTime();
       if (trend.firstSeenAt) return new Date(trend.firstSeenAt).getTime();
-      // Parse relative time from trend.time
       const m = trend.time?.match?.(/(\d+)\s*(min|h|hora)/i);
       if (m) {
         const val = parseInt(m[1]);
@@ -230,7 +214,7 @@ const Index = () => {
         if (unit === "min") return now - val * 60 * 1000;
         return now - val * ONE_HOUR;
       }
-      return now - 12 * ONE_HOUR; // default to 12h ago
+      return now - 12 * ONE_HOUR;
     };
 
     const sortByPriority = (a: TrendCardProps, b: TrendCardProps) => {
@@ -258,7 +242,6 @@ const Index = () => {
     return { agora, ultimas2h, ultimas24h };
   }, [visibleTrends]);
 
-  // Brief loading flash when filters change
   const [filterTransitioning, setFilterTransitioning] = useState(false);
   const prevFiltersRef = useRef(filters);
   useEffect(() => {
@@ -302,7 +285,6 @@ const Index = () => {
     setUpdatePending(false);
   }, [fetchTrends]);
 
-  // Smart Auto-refresh
   useEffect(() => {
     const interval = setInterval(() => {
       setTimeSinceLastFetch((prev) => prev + 10);
@@ -315,7 +297,6 @@ const Index = () => {
       const hasExpandedCard = expandedTrendId !== null;
       const hasUserScrolled = scrollRef.current && scrollRef.current.scrollTop > 150;
       if (!isActive && !hasExpandedCard && !hasUserScrolled) {
-        console.log("🔄 Usuário inativo, sem cards abertos e sem scroll. Atualizando timeline...");
         fetchTrends().then(() => {
           setTimeSinceLastFetch(0);
           setUpdatePending(false);
@@ -344,14 +325,12 @@ const Index = () => {
     const trendId = `${trend.platform}-${trend.title.slice(0, 20)}`;
     setExpandedTrendId(trendId);
     setHighlightedTrendId(trendId);
-    // Switch to timeline view on mobile
     setViewMode("timeline");
     setTimeout(() => {
       const el = document.getElementById(`trend-card-${trendId}`);
       if (el) {
         el.scrollIntoView({ behavior: "smooth", block: "center" });
       } else {
-        // Card may not be in visible range, scroll to top
         scrollRef.current?.scrollTo({ top: 0, behavior: "smooth" });
       }
       setTimeout(() => setHighlightedTrendId(null), 2500);
@@ -361,13 +340,11 @@ const Index = () => {
   const handleAnomalyClick = useCallback((trendId: string) => {
     setExpandedTrendId(trendId);
     setHighlightedTrendId(trendId);
-    // Scroll to the card after a brief delay to allow render
     setTimeout(() => {
       const el = document.getElementById(`trend-card-${trendId}`);
       if (el) {
         el.scrollIntoView({ behavior: "smooth", block: "center" });
       }
-      // Clear highlight after animation
       setTimeout(() => setHighlightedTrendId(null), 2500);
     }, 100);
   }, []);
@@ -405,7 +382,6 @@ const Index = () => {
     setFilters(f => ({ ...f, [key]: defaultFilters[key] }));
   };
 
-  // Smart masonry: use CSS columns for gap-free layout
   const gridStyle = useMemo(() => ({
     columnCount: gridColumns,
     columnGap: compactMode ? '8px' : '12px',
@@ -417,66 +393,48 @@ const Index = () => {
   }), [compactMode]);
 
   const renderTimeline = () => (
-    <div ref={(el) => { (scrollRef as any).current = el; (gridRef as any).current = el; }} className={`flex flex-col gap-1 p-2 h-full overflow-y-auto overflow-x-hidden scrollbar-thin relative transition-opacity duration-200 w-full max-w-full ${filterTransitioning ? 'opacity-60' : 'opacity-100'}`}>
-      <div className="px-2 py-1.5 flex items-center justify-between sticky top-0 bg-background/90 backdrop-blur-sm z-10">
-        <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-widest">
+    <div ref={(el) => { (scrollRef as any).current = el; (gridRef as any).current = el; }} className={`flex flex-col gap-0.5 p-2 h-full overflow-y-auto overflow-x-hidden scrollbar-thin relative transition-opacity duration-200 w-full max-w-full ${filterTransitioning ? 'opacity-60' : 'opacity-100'}`}>
+      {/* Timeline header with controls */}
+      <div className="px-1.5 py-1 flex items-center justify-between sticky top-0 bg-background/95 backdrop-blur-sm z-10 rounded-md">
+        <span className="text-[9px] font-bold text-muted-foreground uppercase tracking-widest flex items-center gap-1.5">
+          <FileText className="w-3 h-3" />
           {t("timeline")}
         </span>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1">
           {updatePending && (
             <button
               onClick={handleRefresh}
-              className="flex items-center gap-1.5 text-[10px] font-medium bg-primary/10 text-primary px-2 py-1 rounded-full hover:bg-primary/20 transition-colors animate-pulse"
-              title="Atualização pausada por atividade. Clique para atualizar."
+              className="flex items-center gap-1 text-[9px] font-medium bg-primary/10 text-primary px-2 py-0.5 rounded-full hover:bg-primary/20 transition-colors animate-pulse"
             >
-              <RefreshCw className={`w-3 h-3 ${refreshing ? "animate-spin" : ""}`} />
-              Atualizar Agora
+              <RefreshCw className={`w-2.5 h-2.5 ${refreshing ? "animate-spin" : ""}`} />
+              {lang === "pt" ? "Atualizar" : "Update"}
             </button>
           )}
           <TagLegend />
-          {/* Expand/Collapse All toggle */}
-          <div className="flex items-center bg-secondary rounded-full p-0.5 gap-0.5">
+          {/* Single unified view toggle */}
+          <div className="flex items-center bg-muted/50 rounded-md p-0.5 gap-0.5">
             <Tooltip>
               <TooltipTrigger asChild>
                 <button
                   onClick={() => { setAllExpanded(true); setAllCollapsed(false); setCompactMode(false); }}
-                  className={`flex items-center justify-center w-6 h-6 rounded-full transition-all ${allExpanded && !compactMode ? 'bg-card text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}
-                  title={lang === "pt" ? "Todos expandidos" : "All expanded"}
+                  className={`flex items-center justify-center w-5 h-5 rounded transition-all ${allExpanded && !compactMode ? 'bg-card text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}
                 >
                   <ChevronsDown className="w-3 h-3" />
                 </button>
               </TooltipTrigger>
-              <TooltipContent side="bottom" className="text-[10px]">{lang === "pt" ? "Expandir todos os cards" : "Expand all cards"}</TooltipContent>
+              <TooltipContent side="bottom" className="text-[9px]">{lang === "pt" ? "Expandir todos" : "Expand all"}</TooltipContent>
             </Tooltip>
             <Tooltip>
               <TooltipTrigger asChild>
                 <button
                   onClick={() => { setAllCollapsed(true); setAllExpanded(false); setCompactMode(true); }}
-                  className={`flex items-center justify-center w-6 h-6 rounded-full transition-all ${allCollapsed || compactMode ? 'bg-card text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}
-                  title={lang === "pt" ? "Todos retraídos" : "All collapsed"}
+                  className={`flex items-center justify-center w-5 h-5 rounded transition-all ${allCollapsed || compactMode ? 'bg-card text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}
                 >
                   <ChevronsUp className="w-3 h-3" />
                 </button>
               </TooltipTrigger>
-              <TooltipContent side="bottom" className="text-[10px]">{lang === "pt" ? "Retrair todos os cards" : "Collapse all cards"}</TooltipContent>
+              <TooltipContent side="bottom" className="text-[9px]">{lang === "pt" ? "Compactar todos" : "Collapse all"}</TooltipContent>
             </Tooltip>
-          </div>
-          {/* View mode toggle */}
-          <div className="flex items-center bg-secondary rounded-full p-0.5 gap-0.5">
-            <button
-              onClick={() => { setCompactMode(false); setAllCollapsed(false); }}
-              className={`flex items-center justify-center w-6 h-6 rounded-full transition-all ${!compactMode ? 'bg-card text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}
-              title={lang === "pt" ? "Modo expandido" : "Expanded mode"}
-            >
-              <LayoutGrid className="w-3 h-3" />
-            </button>
-            <button
-              onClick={() => { setCompactMode(true); setAllExpanded(false); }}
-              className={`flex items-center justify-center w-6 h-6 rounded-full transition-all ${compactMode ? 'bg-card text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}
-              title={lang === "pt" ? "Modo compacto" : "Compact mode"}
-            >
-              <LayoutList className="w-3 h-3" />
-            </button>
           </div>
         </div>
       </div>
@@ -487,18 +445,15 @@ const Index = () => {
       )}
 
       {breadcrumbs.length > 0 && (
-        <div className="px-2 py-1 flex items-center gap-1 flex-wrap text-[10px]">
-          <span className="text-muted-foreground/60">{t("showing")}:</span>
+        <div className="px-1.5 py-0.5 flex items-center gap-1 flex-wrap text-[9px]">
+          <span className="text-muted-foreground/50">{t("showing")}:</span>
           {breadcrumbs.map((seg, i) => (
             <span key={seg.key} className="inline-flex items-center gap-0.5">
-              {i > 0 && <ChevronRight className="w-2.5 h-2.5 text-muted-foreground/40" />}
-              <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full bg-primary/10 text-primary font-medium">
+              {i > 0 && <ChevronRight className="w-2 h-2 text-muted-foreground/30" />}
+              <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded bg-primary/10 text-primary font-medium">
                 {seg.label}
-                <button
-                  onClick={() => clearBreadcrumb(seg.key)}
-                  className="ml-0.5 hover:text-destructive transition-colors"
-                >
-                  <X className="w-2.5 h-2.5" />
+                <button onClick={() => clearBreadcrumb(seg.key)} className="ml-0.5 hover:text-destructive transition-colors">
+                  <X className="w-2 h-2" />
                 </button>
               </span>
             </span>
@@ -568,16 +523,16 @@ const Index = () => {
                 {agora.length > 0 && (
                   <>
                     <motion.div
-                      className="px-2 py-1.5 mt-1"
-                      initial={{ opacity: 0, x: -8 }}
+                      className="px-1.5 py-1 mt-0.5"
+                      initial={{ opacity: 0, x: -6 }}
                       whileInView={{ opacity: 1, x: 0 }}
                       viewport={{ once: true }}
-                      transition={{ duration: 0.4, ease: "easeOut" }}
+                      transition={{ duration: 0.3 }}
                     >
-                      <span className="text-[11px] font-bold text-destructive uppercase tracking-wide flex items-center gap-1.5">
+                      <span className="text-[10px] font-bold text-destructive uppercase tracking-wide flex items-center gap-1">
                         <span className="w-1.5 h-1.5 rounded-full bg-destructive animate-pulse" />
                         🔥 Agora
-                        <span className="text-[10px] font-normal text-muted-foreground ml-1">({agora.length})</span>
+                        <span className="text-[9px] font-normal text-muted-foreground ml-0.5">({agora.length})</span>
                       </span>
                     </motion.div>
                     <div style={gridStyle}>
@@ -588,15 +543,15 @@ const Index = () => {
                 {ultimas2h.length > 0 && (
                   <>
                     <motion.div
-                      className="px-2 py-1.5 mt-2"
-                      initial={{ opacity: 0, x: -8 }}
+                      className="px-1.5 py-1 mt-1"
+                      initial={{ opacity: 0, x: -6 }}
                       whileInView={{ opacity: 1, x: 0 }}
                       viewport={{ once: true }}
-                      transition={{ duration: 0.4, ease: "easeOut", delay: 0.1 }}
+                      transition={{ duration: 0.3, delay: 0.05 }}
                     >
-                      <span className="text-[11px] font-bold text-amber-600 dark:text-amber-400 uppercase tracking-wide flex items-center gap-1.5">
-                        ⏳ Últimas 2 horas
-                        <span className="text-[10px] font-normal text-muted-foreground ml-1">({ultimas2h.length})</span>
+                      <span className="text-[10px] font-bold text-amber-600 dark:text-amber-400 uppercase tracking-wide flex items-center gap-1">
+                        ⏳ Últimas 2h
+                        <span className="text-[9px] font-normal text-muted-foreground ml-0.5">({ultimas2h.length})</span>
                       </span>
                     </motion.div>
                     <div style={gridStyle}>
@@ -607,15 +562,15 @@ const Index = () => {
                 {ultimas24h.length > 0 && (
                   <>
                     <motion.div
-                      className="px-2 py-1.5 mt-2"
-                      initial={{ opacity: 0, x: -8 }}
+                      className="px-1.5 py-1 mt-1"
+                      initial={{ opacity: 0, x: -6 }}
                       whileInView={{ opacity: 1, x: 0 }}
                       viewport={{ once: true }}
-                      transition={{ duration: 0.4, ease: "easeOut", delay: 0.15 }}
+                      transition={{ duration: 0.3, delay: 0.08 }}
                     >
-                      <span className="text-[11px] font-bold text-muted-foreground uppercase tracking-wide flex items-center gap-1.5">
-                        📅 Últimas 24 horas
-                        <span className="text-[10px] font-normal text-muted-foreground ml-1">({ultimas24h.length})</span>
+                      <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wide flex items-center gap-1">
+                        📅 24h
+                        <span className="text-[9px] font-normal text-muted-foreground ml-0.5">({ultimas24h.length})</span>
                       </span>
                     </motion.div>
                     <div style={gridStyle}>
@@ -630,33 +585,28 @@ const Index = () => {
         <div ref={sentinelRef} className="h-10" />
       )}
       {!hasMore && filteredTrends.length > 0 && (
-        <div className="flex flex-col items-center py-4 gap-2">
-          <span className="text-[11px] text-muted-foreground/50">
-            — {t("noTrends")} —
-          </span>
+        <div className="flex flex-col items-center py-3 gap-1.5">
+          <span className="text-[10px] text-muted-foreground/40">— {t("noTrends")} —</span>
           {lastUpdated && (
-            <div className="flex items-center gap-2 text-[10px] text-muted-foreground">
-             <span className="w-1.5 h-1.5 rounded-full bg-green-500" />
+            <div className="flex items-center gap-1.5 text-[9px] text-muted-foreground">
+             <span className="w-1 h-1 rounded-full bg-green-500" />
               {t("lastUpdate")}: {lastUpdated.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}
             </div>
           )}
-          <button
-            onClick={() => setTransparencyOpen(true)}
-            className="text-[10px] text-primary hover:underline cursor-pointer"
-          >
+          <button onClick={() => setTransparencyOpen(true)} className="text-[9px] text-primary hover:underline cursor-pointer">
             🔍 {t("viewSourceStatus")}
           </button>
         </div>
       )}
       {!loading && !isFirstLoad && filteredTrends.length === 0 && (
-        <div className="flex flex-col items-center justify-center py-16 px-4 text-center gap-3 animate-fade-in">
-          <span className="text-4xl">🔍</span>
-          <p className="text-sm font-medium text-foreground">
+        <div className="flex flex-col items-center justify-center py-12 px-4 text-center gap-2 animate-fade-in">
+          <span className="text-3xl">🔍</span>
+          <p className="text-xs font-medium text-foreground">
             {filters.country !== "global"
               ? `Nenhuma tendência encontrada para ${countries.flatMap(g => g.items).find(c => c.value === filters.country)?.label?.replace(/^.{2}\s?/, '') || filters.country}`
               : t("noTrends")}
           </p>
-          <p className="text-xs text-muted-foreground max-w-[280px]">
+          <p className="text-[10px] text-muted-foreground max-w-[260px]">
             {(() => {
               const cc = filters.country.toUpperCase();
               const limitedCountries: Record<string, string> = {
@@ -666,24 +616,24 @@ const Index = () => {
                 IR: "Cobertura limitada. Mostrando menções em fontes internacionais.",
               };
               if (filters.country !== "global" && limitedCountries[cc]) return limitedCountries[cc];
-              if (filters.country !== "global") return "As fontes disponíveis podem não estar cobrindo este país no momento. Tente ampliar o período, selecionar outra categoria ou escolher outro país.";
+              if (filters.country !== "global") return "As fontes disponíveis podem não estar cobrindo este país no momento. Tente ampliar o período.";
               return t("noTrendsCurrentFilters");
             })()}
           </p>
           <button
             onClick={() => setFilters(defaultFilters)}
-            className="mt-2 px-4 py-1.5 rounded-full bg-primary text-primary-foreground text-xs font-medium hover:bg-primary/90 transition-colors"
+            className="mt-1.5 px-3 py-1 rounded-full bg-primary text-primary-foreground text-[10px] font-medium hover:bg-primary/90 transition-colors"
           >
-            Limpar todos os filtros
+            Limpar filtros
           </button>
         </div>
       )}
 
       {showScrollTop && (
-        <div className="sticky bottom-4 z-20 flex justify-center">
+        <div className="sticky bottom-3 z-20 flex justify-center">
           <button
             onClick={scrollToTop}
-            className="px-3 py-1.5 rounded-full bg-primary text-primary-foreground text-[11px] font-semibold shadow-lg hover:bg-primary/90 transition-all animate-in fade-in slide-in-from-bottom-2"
+            className="px-3 py-1 rounded-full bg-primary text-primary-foreground text-[10px] font-semibold shadow-lg hover:bg-primary/90 transition-all animate-in fade-in slide-in-from-bottom-2"
           >
             ↑ {t("backToTop")}
           </button>
@@ -705,8 +655,12 @@ const Index = () => {
     </Suspense>
   );
 
+  // Count closed panels
+  const closedPanels = [!panelVisibility.radar, !panelVisibility.timeline, !panelVisibility.map].filter(Boolean).length;
+
   return (
     <div className="h-screen flex flex-col bg-background overflow-hidden w-full max-w-[100vw]">
+      {/* Fixed Header */}
       <TrendHeader
         totalTrends={filteredTrends.length}
         countriesCount={countriesCount}
@@ -720,6 +674,8 @@ const Index = () => {
         onOpenTransparency={() => setTransparencyOpen(true)}
         onAnomalyClick={handleAnomalyClick}
       />
+
+      {/* Fixed Filters — visually separated */}
       <FilterBar
         filters={filters}
         onChange={setFilters}
@@ -733,10 +689,11 @@ const Index = () => {
         }}
       />
 
+      {/* Main workspace */}
       <div className="flex-1 overflow-hidden flex flex-col min-h-0">
         {isMobile ? (
           <>
-            <div className="section-gradient-divider" />
+            {/* Trend Radar — collapsed by default */}
             <TrendRadar
               trends={filteredTrends}
               allTrends={allTrends}
@@ -746,7 +703,7 @@ const Index = () => {
               onFilterCountry={(code) => setFilters(f => ({ ...f, country: code }))}
               onAnomalyClick={handleAnomalyClick}
             />
-            <div className="section-gradient-divider" />
+            {/* Timeline/Map — flush against radar */}
             <div className="flex-1 min-h-0 flex flex-col relative">
               <div className="flex-1 min-h-0 overflow-hidden">
                 {viewMode === "timeline" ? renderTimeline() : (
@@ -769,22 +726,21 @@ const Index = () => {
           </>
         ) : (
           <div className="flex-1 min-h-0 flex">
-            {/* File-tab sidebar for closed panels */}
-            {(!panelVisibility.radar || !panelVisibility.timeline || !panelVisibility.map) && (
-              <div className="flex flex-col border-r border-border/40 bg-muted/20 py-2 gap-1 flex-shrink-0">
+            {/* Closed panel tabs — sleek vertical sidebar */}
+            {closedPanels > 0 && (
+              <div className="flex flex-col bg-muted/10 border-r border-border/20 py-1 gap-0.5 flex-shrink-0 w-8">
                 {!panelVisibility.radar && (
                   <Tooltip>
                     <TooltipTrigger asChild>
                       <button
                         onClick={() => togglePanel("radar")}
-                        className="flex items-center gap-1.5 px-2 py-2.5 text-[10px] font-semibold text-primary hover:bg-primary/10 transition-colors writing-mode-vertical"
-                        style={{ writingMode: "vertical-lr", textOrientation: "mixed" }}
+                        className="flex flex-col items-center justify-center py-3 text-primary/60 hover:text-primary hover:bg-primary/5 transition-all rounded-r-md mx-0.5"
                       >
-                        <Radar className="w-3.5 h-3.5 rotate-90" />
-                        <span>Trend Radar</span>
+                        <Radar className="w-3.5 h-3.5" />
+                        <span className="text-[7px] font-bold uppercase tracking-wider mt-1" style={{ writingMode: "vertical-lr" }}>Radar</span>
                       </button>
                     </TooltipTrigger>
-                    <TooltipContent side="right" className="text-[10px]">{lang === "pt" ? "Abrir Trend Radar" : "Open Trend Radar"}</TooltipContent>
+                    <TooltipContent side="right" className="text-[9px]">{lang === "pt" ? "Abrir Radar" : "Open Radar"}</TooltipContent>
                   </Tooltip>
                 )}
                 {!panelVisibility.timeline && (
@@ -792,14 +748,13 @@ const Index = () => {
                     <TooltipTrigger asChild>
                       <button
                         onClick={() => togglePanel("timeline")}
-                        className="flex items-center gap-1.5 px-2 py-2.5 text-[10px] font-semibold text-primary hover:bg-primary/10 transition-colors"
-                        style={{ writingMode: "vertical-lr", textOrientation: "mixed" }}
+                        className="flex flex-col items-center justify-center py-3 text-primary/60 hover:text-primary hover:bg-primary/5 transition-all rounded-r-md mx-0.5"
                       >
-                        <FileText className="w-3.5 h-3.5 rotate-90" />
-                        <span>Timeline</span>
+                        <FileText className="w-3.5 h-3.5" />
+                        <span className="text-[7px] font-bold uppercase tracking-wider mt-1" style={{ writingMode: "vertical-lr" }}>Timeline</span>
                       </button>
                     </TooltipTrigger>
-                    <TooltipContent side="right" className="text-[10px]">{lang === "pt" ? "Abrir Timeline" : "Open Timeline"}</TooltipContent>
+                    <TooltipContent side="right" className="text-[9px]">{lang === "pt" ? "Abrir Timeline" : "Open Timeline"}</TooltipContent>
                   </Tooltip>
                 )}
                 {!panelVisibility.map && (
@@ -807,92 +762,88 @@ const Index = () => {
                     <TooltipTrigger asChild>
                       <button
                         onClick={() => togglePanel("map")}
-                        className="flex items-center gap-1.5 px-2 py-2.5 text-[10px] font-semibold text-primary hover:bg-primary/10 transition-colors"
-                        style={{ writingMode: "vertical-lr", textOrientation: "mixed" }}
+                        className="flex flex-col items-center justify-center py-3 text-primary/60 hover:text-primary hover:bg-primary/5 transition-all rounded-r-md mx-0.5"
                       >
-                        <MapPin className="w-3.5 h-3.5 rotate-90" />
-                        <span>{lang === "pt" ? "Mapa" : "Map"}</span>
+                        <MapPin className="w-3.5 h-3.5" />
+                        <span className="text-[7px] font-bold uppercase tracking-wider mt-1" style={{ writingMode: "vertical-lr" }}>{lang === "pt" ? "Mapa" : "Map"}</span>
                       </button>
                     </TooltipTrigger>
-                    <TooltipContent side="right" className="text-[10px]">{lang === "pt" ? "Abrir Mapa" : "Open Map"}</TooltipContent>
+                    <TooltipContent side="right" className="text-[9px]">{lang === "pt" ? "Abrir Mapa" : "Open Map"}</TooltipContent>
                   </Tooltip>
                 )}
               </div>
             )}
 
-            {/* Main content area */}
+            {/* Main content */}
             <div className="flex-1 min-h-0 flex flex-col">
               {!panelVisibility.radar && !panelVisibility.timeline && !panelVisibility.map ? (
                 <div className="flex-1 flex items-center justify-center text-muted-foreground">
                   <p className="text-sm">{lang === "pt" ? "Clique nas abas laterais para reabrir os painéis." : "Click the side tabs to reopen panels."}</p>
                 </div>
               ) : (
-              <ResizablePanelGroup direction="vertical" className="flex-1 min-h-0" key={`v-${panelVisibility.radar}-${panelVisibility.timeline}-${panelVisibility.map}`}>
-                {/* Trend Radar Panel */}
-                {panelVisibility.radar && (
-                  <>
-                    <ResizablePanel defaultSize={30} minSize={5} maxSize={60} collapsible>
-                      <div className="h-full overflow-hidden relative group/radar">
-                        <button
-                          onClick={() => togglePanel("radar")}
-                          className="absolute top-2 right-10 z-10 opacity-0 group-hover/radar:opacity-100 w-6 h-6 rounded-md flex items-center justify-center bg-muted/80 hover:bg-destructive/10 hover:text-destructive text-muted-foreground transition-all duration-200 border border-border/30"
-                          title={lang === "pt" ? "Fechar Trend Radar" : "Close Trend Radar"}
-                        >
-                          <X className="w-3 h-3" />
-                        </button>
-                        <TrendRadar
-                          trends={filteredTrends}
-                          allTrends={allTrends}
-                          criticalMoments={criticalMoments}
-                          anomalies={anomalies}
-                          onSelectTrend={handleSelectTrend}
-                          onFilterCountry={(code) => setFilters(f => ({ ...f, country: code }))}
-                          onAnomalyClick={handleAnomalyClick}
-                        />
-                      </div>
-                    </ResizablePanel>
-                    {(panelVisibility.timeline || panelVisibility.map) && <ResizableHandle withHandle />}
-                  </>
-                )}
-                {/* Timeline + Map Panel */}
-                {(panelVisibility.timeline || panelVisibility.map) && (
-                  <ResizablePanel defaultSize={panelVisibility.radar ? 70 : 100} minSize={30}>
-                    <ResizablePanelGroup direction="horizontal" className="h-full" key={`h-${panelVisibility.timeline}-${panelVisibility.map}`}>
-                      {panelVisibility.timeline && (
-                        <>
-                          <ResizablePanel defaultSize={panelVisibility.map ? 65 : 100} minSize={25} maxSize={panelVisibility.map ? 85 : 100}>
-                            <div className="h-full min-h-0 overflow-hidden relative group/timeline" ref={timelinePanelRef}>
+                <div className="flex-1 min-h-0 flex flex-col">
+                  {/* Trend Radar — fixed section, flush */}
+                  {panelVisibility.radar && (
+                    <div className="flex-shrink-0 relative group/radar">
+                      {/* Close button — top-right, inside radar header area */}
+                      <button
+                        onClick={() => togglePanel("radar")}
+                        className="absolute top-1.5 right-2 z-10 opacity-0 group-hover/radar:opacity-100 w-5 h-5 rounded flex items-center justify-center text-muted-foreground/50 hover:text-destructive hover:bg-destructive/10 transition-all duration-200"
+                        title={lang === "pt" ? "Fechar Radar" : "Close Radar"}
+                      >
+                        <X className="w-3 h-3" />
+                      </button>
+                      <TrendRadar
+                        trends={filteredTrends}
+                        allTrends={allTrends}
+                        criticalMoments={criticalMoments}
+                        anomalies={anomalies}
+                        onSelectTrend={handleSelectTrend}
+                        onFilterCountry={(code) => setFilters(f => ({ ...f, country: code }))}
+                        onAnomalyClick={handleAnomalyClick}
+                      />
+                    </div>
+                  )}
+
+                  {/* Timeline + Map — takes remaining space */}
+                  {(panelVisibility.timeline || panelVisibility.map) && (
+                    <div className="flex-1 min-h-0">
+                      <ResizablePanelGroup direction="horizontal" className="h-full" key={`h-${panelVisibility.timeline}-${panelVisibility.map}`}>
+                        {panelVisibility.timeline && (
+                          <>
+                            <ResizablePanel defaultSize={panelVisibility.map ? 65 : 100} minSize={25} maxSize={panelVisibility.map ? 85 : 100}>
+                              <div className="h-full min-h-0 overflow-hidden relative group/timeline" ref={timelinePanelRef}>
+                                <button
+                                  onClick={() => togglePanel("timeline")}
+                                  className="absolute top-1.5 right-1.5 z-10 opacity-0 group-hover/timeline:opacity-100 w-5 h-5 rounded flex items-center justify-center text-muted-foreground/50 hover:text-destructive hover:bg-destructive/10 transition-all duration-200"
+                                  title={lang === "pt" ? "Fechar Timeline" : "Close Timeline"}
+                                >
+                                  <X className="w-3 h-3" />
+                                </button>
+                                {renderTimeline()}
+                              </div>
+                            </ResizablePanel>
+                            {panelVisibility.map && <ResizableHandle withHandle />}
+                          </>
+                        )}
+                        {panelVisibility.map && (
+                          <ResizablePanel defaultSize={panelVisibility.timeline ? 35 : 100} minSize={15} maxSize={panelVisibility.timeline ? 60 : 100}>
+                            <div className="h-full relative group/map">
                               <button
-                                onClick={() => togglePanel("timeline")}
-                                className="absolute top-2 right-2 z-10 opacity-0 group-hover/timeline:opacity-100 w-6 h-6 rounded-md flex items-center justify-center bg-muted/80 hover:bg-destructive/10 hover:text-destructive text-muted-foreground transition-all duration-200 border border-border/30"
-                                title={lang === "pt" ? "Fechar Timeline" : "Close Timeline"}
+                                onClick={() => togglePanel("map")}
+                                className="absolute top-1.5 right-1.5 z-10 opacity-0 group-hover/map:opacity-100 w-5 h-5 rounded flex items-center justify-center text-muted-foreground/50 hover:text-destructive hover:bg-destructive/10 transition-all duration-200"
+                                title={lang === "pt" ? "Fechar Mapa" : "Close Map"}
                               >
                                 <X className="w-3 h-3" />
                               </button>
-                              {renderTimeline()}
+                              {renderMap()}
                             </div>
                           </ResizablePanel>
-                          {panelVisibility.map && <ResizableHandle withHandle />}
-                        </>
-                      )}
-                      {panelVisibility.map && (
-                        <ResizablePanel defaultSize={panelVisibility.timeline ? 35 : 100} minSize={15} maxSize={panelVisibility.timeline ? 60 : 100}>
-                          <div className="h-full relative group/map">
-                            <button
-                              onClick={() => togglePanel("map")}
-                              className="absolute top-2 right-2 z-10 opacity-0 group-hover/map:opacity-100 w-6 h-6 rounded-md flex items-center justify-center bg-muted/80 hover:bg-destructive/10 hover:text-destructive text-muted-foreground transition-all duration-200 border border-border/30"
-                              title={lang === "pt" ? "Fechar Mapa" : "Close Map"}
-                            >
-                              <X className="w-3 h-3" />
-                            </button>
-                            {renderMap()}
-                          </div>
-                        </ResizablePanel>
-                      )}
-                    </ResizablePanelGroup>
-                  </ResizablePanel>
-                )}
-              </ResizablePanelGroup>
+                        )}
+                      </ResizablePanelGroup>
+                    </div>
+                  )}
+                </div>
               )}
             </div>
           </div>
