@@ -623,15 +623,16 @@ export default function WeeklyPulseDashboard({ trends }: { trends: TrendCardProp
     }
 
     // Live feed signals (#3)
+    const parseVol = (v: string | number) => typeof v === "string" ? parseInt(v.replace(/[^0-9]/g, "")) || 0 : (v || 0);
     const liveSignals = trends
-      .sort((a, b) => (b.volume || 0) - (a.volume || 0))
+      .sort((a, b) => parseVol(b.volume) - parseVol(a.volume))
       .slice(0, 15)
       .map(t => {
         const changeNum = typeof t.change === "string" ? parseInt(t.change.replace(/[^-\d]/g, "")) || 0 : 0;
         return {
           term: t.title.slice(0, 45),
           category: normCat(t.category || "Geral"),
-          volume: t.volume || 0,
+          volume: parseVol(t.volume),
           momentum: changeNum,
           platform: t.platform || "web",
           time: t.time || "now",
