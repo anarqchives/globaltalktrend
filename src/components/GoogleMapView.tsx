@@ -1255,7 +1255,7 @@ const GoogleMapView = ({
               <span style="font-size:${isMobile ? '28px' : '24px'};line-height:1;">${flag}</span>
               <div>
                 <div style="font-size:${isMobile ? '17px' : '15px'};font-weight:700;color:${text};letter-spacing:-0.02em;">${cp.name}</div>
-                <div style="font-size:${isMobile ? '12px' : '10px'};color:${subtext};margin-top:1px;">${count} trends ${lang === "pt" ? "ativas" : "active"}</div>
+                <div style="font-size:${isMobile ? '12px' : '10px'};color:${subtext};margin-top:1px;">${count} trends ${t("mapTrendsActiveLabel")}</div>
               </div>
             </div>
             <div style="margin:${isMobile ? '12px 0' : '10px 0'};background:${critSectionBg};border-radius:12px;padding:${isMobile ? '12px 14px' : '10px 12px'};border-left:3px solid ${critColor};">
