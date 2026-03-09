@@ -191,7 +191,7 @@ const TrendHeader = ({ totalTrends = 0, countriesCount = 0, onRefresh, refreshin
               <span className="text-muted-foreground hidden md:inline lg:hidden text-[13px]">Monitor em Tempo Real</span>
             </h1>
             {totalTrends > 1 && countriesCount > 0 ?
-            <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-primary/10 text-primary text-[11px] font-bold tabular-nums flex-shrink-0 hidden sm:inline-flex">
+            <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-primary/10 text-accent dark:text-accent text-[11px] font-bold tabular-nums flex-shrink-0 hidden sm:inline-flex">
                 {totalTrends} {t("trends")} · {countriesCount} {countriesCount > 1 ? t("countries") : t("country")}
               </span> :
 
