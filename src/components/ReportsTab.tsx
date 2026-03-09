@@ -372,6 +372,55 @@ export default function ReportsTab({ userId }: ReportsTabProps) {
         headStyles: { fillColor: [59, 130, 246] },
       });
 
+      // Patterns section
+      if (report?.patterns && report.patterns.length > 0) {
+        doc.addPage();
+        doc.setFontSize(13); doc.setTextColor(40, 40, 40);
+        doc.text(t("reportPatterns"), 14, 22);
+        let pY = 32;
+        for (const p of report.patterns) {
+          doc.setFontSize(9); doc.setTextColor(80, 80, 80);
+          const pLines = doc.splitTextToSize(`• [${p.type}] ${p.description}`, 175);
+          doc.text(pLines, 16, pY);
+          pY += pLines.length * 4 + 4;
+          if (pY > 270) { doc.addPage(); pY = 20; }
+        }
+      }
+
+      // Predictions section
+      if (report?.predictions && report.predictions.length > 0) {
+        doc.addPage();
+        doc.setFontSize(13); doc.setTextColor(40, 40, 40);
+        doc.text(t("reportPredictions"), 14, 22);
+        let fY = 32;
+        for (const p of report.predictions) {
+          doc.setFontSize(10); doc.setTextColor(40, 40, 40);
+          doc.text(`🔮 ${p.topic}`, 14, fY);
+          doc.setFontSize(9); doc.setTextColor(80, 80, 80);
+          const predLines = doc.splitTextToSize(p.prediction, 175);
+          doc.text(predLines, 16, fY + 5);
+          doc.text(`Confiança: ${p.confidence} | Janela: ${p.timeframe}`, 16, fY + 5 + predLines.length * 4 + 2);
+          fY += 5 + predLines.length * 4 + 10;
+          if (fY > 270) { doc.addPage(); fY = 20; }
+        }
+      }
+
+      // Critical moments section in PDF
+      if (report?.criticalAnalysis && report.criticalAnalysis.length > 0) {
+        doc.addPage();
+        doc.setFontSize(13); doc.setTextColor(40, 40, 40);
+        doc.text(t("reportCritical"), 14, 22);
+        let cY = 32;
+        for (const c of report.criticalAnalysis) {
+          doc.setFontSize(10); doc.setTextColor(40, 40, 40);
+          doc.text(`🔥 ${c.title.slice(0, 60)}`, 14, cY);
+          doc.setFontSize(9); doc.setTextColor(80, 80, 80);
+          doc.text(`Trigger: ${c.trigger} | Sentiment: ${c.sentiment} | ${c.evolution}`, 16, cY + 5);
+          cY += 14;
+          if (cY > 270) { doc.addPage(); cY = 20; }
+        }
+      }
+
       if (compareMode && compareReport) {
         doc.addPage();
         doc.setFontSize(16); doc.setTextColor(40, 40, 40);
@@ -384,6 +433,32 @@ export default function ReportsTab({ userId }: ReportsTabProps) {
         const diffTrends = (report?.stats.totalTrends || 0) - compareReport.stats.totalTrends;
         const diffPct = compareReport.stats.totalTrends > 0 ? ((diffTrends / compareReport.stats.totalTrends) * 100).toFixed(1) : "N/A";
         doc.text(`${t("trendTableChange")}: ${diffTrends > 0 ? "+" : ""}${diffTrends} (${diffPct}%)`, 14, 36);
+
+        // Comparative insights in PDF
+        if (report && compareReport) {
+          const insights: string[] = [];
+          const growth = compareReport.stats.totalTrends > 0
+            ? (((report.stats.totalTrends - compareReport.stats.totalTrends) / compareReport.stats.totalTrends) * 100).toFixed(1)
+            : "N/A";
+          insights.push(`Volume ${Number(growth) > 0 ? "aumentou" : "diminuiu"} ${Math.abs(Number(growth))}%`);
+
+          const catA = report.stats.catCounts || {};
+          const catB = compareReport.stats.catCounts || {};
+          for (const cat of Object.keys(catA)) {
+            const change = (catA[cat] || 0) - (catB[cat] || 0);
+            if (change > 5) insights.push(`${cat}: +${change} trends vs período anterior`);
+          }
+
+          let iY = 44;
+          doc.setFontSize(10); doc.setTextColor(40, 40, 40);
+          doc.text("Insights comparativos:", 14, iY);
+          iY += 6;
+          for (const ins of insights.slice(0, 5)) {
+            doc.setFontSize(9); doc.setTextColor(80, 80, 80);
+            doc.text(`• ${ins}`, 16, iY);
+            iY += 5;
+          }
+        }
       }
 
       doc.addPage();
