@@ -1377,9 +1377,15 @@ const GoogleMapView = ({
     }
   }, [mapViewType, mapLoaded, isDark]);
 
-  const controlBtnClass = (active: boolean) =>
-    `h-6 min-h-[24px] max-h-[24px] px-2 rounded-full transition-all duration-200 outline-none ring-0 focus:outline-none focus:ring-0 focus-visible:ring-1 focus-visible:ring-primary/30 inline-flex items-center gap-1 text-[9px] font-semibold tracking-wide uppercase ${
-      active ? "bg-primary text-primary-foreground shadow-sm" : "text-muted-foreground hover:text-foreground hover:bg-white/60 dark:hover:bg-white/10"
+  const mapModes: { key: MapMode; icon: typeof Flame; labelKey: string }[] = [
+    { key: "heatmap", icon: Flame, labelKey: "mapHeatmap" },
+    { key: "flow", icon: GitBranch, labelKey: "mapFlowMap" },
+    { key: "sentiment", icon: Heart, labelKey: "mapSentiment" },
+  ];
+
+  const modeBtnClass = (active: boolean) =>
+    `relative z-10 h-6 min-h-[24px] max-h-[24px] px-2 rounded-full transition-colors duration-200 outline-none ring-0 focus:outline-none focus:ring-0 inline-flex items-center gap-1 text-[9px] font-semibold tracking-wide uppercase ${
+      active ? "text-primary-foreground" : "text-muted-foreground hover:text-foreground"
     }`;
 
   // Current max intensity for legend marker position
@@ -1393,23 +1399,30 @@ const GoogleMapView = ({
     <div className="w-full h-full relative" style={{ isolation: "isolate" }}>
       {/* Map controls + Top Trends */}
       <div className="absolute top-3 left-3 z-[5] flex items-start gap-2">
-        <div className="flex items-center gap-0.5 p-0.5 rounded-full bg-white/90 dark:bg-card/90 backdrop-blur-xl border border-border/20 shadow-[0_2px_12px_rgba(0,0,0,0.06)] dark:shadow-[0_2px_12px_rgba(0,0,0,0.2)]">
-          <button onClick={() => setMapMode("heatmap")} className={controlBtnClass(mapMode === "heatmap")} title={t("mapHeatmap")}>
-            <Flame className="w-3 h-3" />
-            <span className="hidden sm:inline">{t("mapHeatmap")}</span>
-          </button>
-          <button onClick={() => setMapMode("flow")} className={controlBtnClass(mapMode === "flow")} title={t("mapFlowMap")}>
-            <GitBranch className="w-3 h-3" />
-            <span className="hidden sm:inline">{t("mapFlowMap")}</span>
-          </button>
-          <button onClick={() => setMapMode("sentiment")} className={controlBtnClass(mapMode === "sentiment")} title={t("mapSentiment")}>
-            <Heart className="w-3 h-3" />
-            <span className="hidden sm:inline">{t("mapSentiment")}</span>
-          </button>
+        <div className="relative flex items-center gap-0 p-0.5 rounded-full bg-white/90 dark:bg-card/90 backdrop-blur-xl border border-border/20 shadow-[0_2px_12px_rgba(0,0,0,0.06)] dark:shadow-[0_2px_12px_rgba(0,0,0,0.2)]">
+          {/* Sliding pill indicator */}
+          <motion.div
+            className="absolute top-0.5 bottom-0.5 rounded-full bg-primary shadow-sm"
+            layout
+            transition={{ type: "spring", stiffness: 400, damping: 30 }}
+            style={{
+              left: `${mapModes.findIndex(m => m.key === mapMode) * (100 / mapModes.length)}%`,
+              width: `${100 / mapModes.length}%`,
+            }}
+            animate={{
+              left: `${mapModes.findIndex(m => m.key === mapMode) * (100 / mapModes.length)}%`,
+            }}
+          />
+          {mapModes.map(({ key, icon: Icon, labelKey }) => (
+            <button key={key} onClick={() => setMapMode(key)} className={modeBtnClass(mapMode === key)} title={t(labelKey as any)}>
+              <Icon className="w-3 h-3" />
+              <span className="hidden sm:inline">{t(labelKey as any)}</span>
+            </button>
+          ))}
           {selectedCountry !== "global" && (
             <button
               onClick={() => { onSelectCountry("global"); googleMapRef.current?.panTo({ lat: 20, lng: 0 }); googleMapRef.current?.setZoom(2.5); }}
-              className={controlBtnClass(false)}
+              className={modeBtnClass(false)}
               title={t("global")}
             >
               <Globe className="w-3 h-3" />

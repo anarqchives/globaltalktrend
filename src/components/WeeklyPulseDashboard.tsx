@@ -1018,17 +1018,44 @@ export default function WeeklyPulseDashboard({ trends }: { trends: TrendCardProp
 
   if (loading) {
     return (
-      <div className="p-3 space-y-2">
-        {[...Array(4)].map((_, i) => <div key={i} className="h-14 rounded-xl bg-muted/30 animate-pulse" />)}
+      <div className="p-4 flex flex-col items-center justify-center py-10 gap-3 text-muted-foreground">
+        <div className="relative">
+          <BarChart3 className="w-6 h-6 text-primary/40" />
+          <motion.div 
+            className="absolute inset-0 rounded-full border-2 border-primary/20 border-t-primary/60"
+            animate={{ rotate: 360 }}
+            transition={{ duration: 1.2, repeat: Infinity, ease: "linear" }}
+          />
+        </div>
+        <p className="text-[11px] font-medium">{t(lang, "Carregando inteligência semanal...", "Loading weekly intelligence...", "Cargando inteligencia semanal...")}</p>
+        <div className="w-full max-w-xs space-y-2 mt-2">
+          {[...Array(3)].map((_, i) => (
+            <motion.div 
+              key={i} 
+              className="h-10 rounded-lg bg-muted/20" 
+              initial={{ opacity: 0.3 }}
+              animate={{ opacity: [0.3, 0.6, 0.3] }}
+              transition={{ duration: 1.5, repeat: Infinity, delay: i * 0.2 }}
+            />
+          ))}
+        </div>
       </div>
     );
   }
 
   if (!hasAnyData) {
     return (
-      <div className="flex flex-col items-center justify-center py-12 text-muted-foreground">
-        <BarChart3 className="w-8 h-8 mb-2 opacity-30" />
-        <p className="text-[11px]">{t(lang, "Nenhum dado semanal disponível ainda.", "No weekly data available yet.", "No hay datos semanales disponibles aún.")}</p>
+      <div className="flex flex-col items-center justify-center py-12 text-muted-foreground gap-3">
+        <BarChart3 className="w-8 h-8 opacity-20" />
+        <p className="text-[11px] font-medium">{t(lang, "Nenhum dado semanal disponível ainda.", "No weekly data available yet.", "No hay datos semanales disponibles aún.")}</p>
+        <p className="text-[9px] text-muted-foreground/60 max-w-[200px] text-center">
+          {t(lang, "Os dados serão coletados automaticamente ao longo da semana.", "Data will be collected automatically throughout the week.", "Los datos se recopilarán automáticamente durante la semana.")}
+        </p>
+        <button onClick={() => { setLoading(true); fetchData(); }}
+          className="mt-2 flex items-center gap-1 text-[9px] text-primary hover:text-primary/80 transition-colors px-3 py-1.5 rounded-full border border-primary/20 hover:bg-primary/5">
+          <RefreshCw className="w-3 h-3" />
+          {t(lang, "Tentar novamente", "Try again", "Intentar de nuevo")}
+        </button>
       </div>
     );
   }
