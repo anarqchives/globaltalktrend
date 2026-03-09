@@ -1605,7 +1605,7 @@ const GoogleMapView = ({
                   <div className="w-2 h-2 rounded-full bg-foreground/20" />
                   <span>→</span>
                   <div className="w-4 h-4 rounded-full bg-foreground/20" />
-                  <span>{lang === "pt" ? "Tamanho = volume" : "Size = volume"}</span>
+                  <span>{t("mapSizeVolume")}</span>
                 </div>
                 <div className="text-[9px] text-muted-foreground italic">
                   {lang === "pt" ? "Pulso rápido = crescimento acelerado" : "Fast pulse = rapid growth"}
