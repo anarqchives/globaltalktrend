@@ -441,6 +441,12 @@ const translations: Record<LangCode, Record<TranslationKey, string>> = {
     mapFlowLegendTitle: "Propagation des Trends", mapFlowOrigin: "Origine", mapFlowDestination: "Destination", mapFlowPropagation: "Propagation", mapFlowTimeDelta: "Temps de propagation", mapFlowClickToFilter: "Cliquer pour filtrer", mapFlowNoData: "Données de propagation insuffisantes",
     mapSentLegendTitle: "Paysage Émotionnel", mapSentPositive: "Positif", mapSentNegative: "Négatif", mapSentMixed: "Polarisé", mapSentNeutral: "Neutre", mapSentBreakdown: "Répartition du sentiment", mapSentTopTrends: "Top tendances", mapSentNoData: "Données de sentiment insuffisantes",
     mapSentVolume: "Volume total", mapSentGrowth: "Croissance moyenne", mapSentActiveTrends: "Trends actives",
+    growth: "Croissance", volumeLabel: "Volume", sourcesLabel: "Sources", narrativeOrigin: "Origine Narrative",
+    confidenceLabel: "Confiance", confidenceHigh: "Élevée", confidenceMedium: "Moyenne", confidenceLow: "Faible",
+    propagationPath: "Chemin de Propagation", sourceLabel: "Source", sentimentAnalysis: "Analyse de Sentiment",
+    tviGrowthLabel: "Croissance (30%)", tviVolumeLabel: "Volume (30%)", tviSourcesLabel: "Sources (20%)", tviGeographyLabel: "Géographie (20%)",
+    tviDescription: "Mesure la vitesse de propagation basée sur :",
+    sourcesSingular: "source", sourcesPlural: "sources",
   },
   de: {
     trends: "Trends", moreTrends: "Mehr Trends", filters: "Filter",
