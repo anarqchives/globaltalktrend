@@ -425,18 +425,46 @@ const Index = () => {
             </button>
           )}
           <TagLegend />
+          {/* Expand/Collapse All toggle */}
+          <div className="flex items-center bg-secondary rounded-full p-0.5 gap-0.5">
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <button
+                  onClick={() => { setAllExpanded(true); setAllCollapsed(false); setCompactMode(false); }}
+                  className={`flex items-center justify-center w-6 h-6 rounded-full transition-all ${allExpanded && !compactMode ? 'bg-card text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}
+                  title={lang === "pt" ? "Todos expandidos" : "All expanded"}
+                >
+                  <ChevronsDown className="w-3 h-3" />
+                </button>
+              </TooltipTrigger>
+              <TooltipContent side="bottom" className="text-[10px]">{lang === "pt" ? "Expandir todos os cards" : "Expand all cards"}</TooltipContent>
+            </Tooltip>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <button
+                  onClick={() => { setAllCollapsed(true); setAllExpanded(false); setCompactMode(true); }}
+                  className={`flex items-center justify-center w-6 h-6 rounded-full transition-all ${allCollapsed || compactMode ? 'bg-card text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}
+                  title={lang === "pt" ? "Todos retraídos" : "All collapsed"}
+                >
+                  <ChevronsUp className="w-3 h-3" />
+                </button>
+              </TooltipTrigger>
+              <TooltipContent side="bottom" className="text-[10px]">{lang === "pt" ? "Retrair todos os cards" : "Collapse all cards"}</TooltipContent>
+            </Tooltip>
+          </div>
+          {/* View mode toggle */}
           <div className="flex items-center bg-secondary rounded-full p-0.5 gap-0.5">
             <button
-              onClick={() => setCompactMode(false)}
+              onClick={() => { setCompactMode(false); setAllCollapsed(false); }}
               className={`flex items-center justify-center w-6 h-6 rounded-full transition-all ${!compactMode ? 'bg-card text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}
-              title="Modo expandido"
+              title={lang === "pt" ? "Modo expandido" : "Expanded mode"}
             >
               <LayoutGrid className="w-3 h-3" />
             </button>
             <button
-              onClick={() => setCompactMode(true)}
+              onClick={() => { setCompactMode(true); setAllExpanded(false); }}
               className={`flex items-center justify-center w-6 h-6 rounded-full transition-all ${compactMode ? 'bg-card text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}
-              title="Modo compacto"
+              title={lang === "pt" ? "Modo compacto" : "Compact mode"}
             >
               <LayoutList className="w-3 h-3" />
             </button>
