@@ -1568,7 +1568,7 @@ const GoogleMapView = ({
                   <span>{t("mapThickHighVol")}</span>
                 </div>
                 <div className="mt-2 pt-2 border-t border-border/30 text-[10px] text-muted-foreground">
-                  {flowArcs.length} {lang === "pt" ? "arcos de propagação" : "propagation arcs"}
+                  {flowArcs.length} {t("mapPropArcs")}
                 </div>
               </>
             )}
