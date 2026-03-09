@@ -420,7 +420,7 @@ function WeeklyPulse({ trends }: { trends: TrendCardProps[] }) {
   );
 }
 
-const TrendRadar = memo(function TrendRadar({ trends, allTrends, criticalMoments, anomalies = [], onSelectTrend, onFilterCountry, onAnomalyClick }: TrendRadarProps) {
+function TrendRadarInner({ trends, allTrends, criticalMoments, anomalies = [], onSelectTrend, onFilterCountry, onAnomalyClick }: TrendRadarProps) {
   const { lang, t } = useLanguage();
   const [tab, setTab] = useState("emerging");
   const [collapsed, setCollapsed] = useState(() => {
@@ -638,6 +638,7 @@ const TrendRadar = memo(function TrendRadar({ trends, allTrends, criticalMoments
       </Tabs>
     </div>
   );
-});
+}
 
+const TrendRadar = memo(TrendRadarInner);
 export default TrendRadar;
