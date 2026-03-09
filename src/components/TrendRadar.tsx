@@ -25,10 +25,6 @@ interface TrendRadarProps {
 }
 
 const RADAR_STORAGE_KEY = "globaltalktrend-radar-collapsed";
-const RADAR_HEIGHT_KEY = "globaltalktrend-radar-height";
-const MIN_HEIGHT = 200;
-const MAX_HEIGHT = 700;
-const DEFAULT_HEIGHT = 350;
 
 const legendText: Record<string, Record<string, string>> = {
   signals: {
