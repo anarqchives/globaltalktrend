@@ -575,9 +575,9 @@ const TimelineCard = ({
             <div className="mt-2 pt-2 border-t border-border/30">
               <EmotionBars
                 emotions={[
-                  { icon: "😊", label: "Positivo", percentage: changePositive ? 55 : 25, color: "hsl(142, 60%, 45%)" },
-                  { icon: "😐", label: "Neutro", percentage: 30, color: "hsl(var(--muted-foreground))" },
-                  { icon: "😠", label: "Negativo", percentage: changePositive ? 15 : 45, color: "hsl(var(--destructive))" },
+                  { icon: "😊", label: t("positive"), percentage: changePositive ? 55 : 25, color: "hsl(142, 60%, 45%)" },
+                  { icon: "😐", label: t("neutral"), percentage: 30, color: "hsl(var(--muted-foreground))" },
+                  { icon: "😠", label: t("negative"), percentage: changePositive ? 15 : 45, color: "hsl(var(--destructive))" },
                 ]}
               />
             </div>
