@@ -447,18 +447,21 @@ export default function ReportsTab({ userId }: ReportsTabProps) {
     const diffPct = b.totalTrends > 0 ? ((diffTrends / b.totalTrends) * 100).toFixed(1) : "0";
 
     const allCats = new Set([...Object.keys(a.catCounts || {}), ...Object.keys(b.catCounts || {})]);
+    const currentKey = t("reportCurrentPeriod");
+    const previousKey = t("reportPreviousPeriod");
+    
     const catComparison = Array.from(allCats).map(cat => ({
       name: cat.length > 14 ? cat.slice(0, 14) + "…" : cat,
-      [t("reportCurrentPeriod")]: (a.catCounts || {})[cat] || 0,
-      [t("reportPreviousPeriod")]: (b.catCounts || {})[cat] || 0,
-    })).sort((x, y) => y[t("reportCurrentPeriod")] - x[t("reportCurrentPeriod")]).slice(0, 8);
+      [currentKey]: (a.catCounts || {})[cat] || 0,
+      [previousKey]: (b.catCounts || {})[cat] || 0,
+    })).sort((x, y) => (y[currentKey] as number) - (x[currentKey] as number)).slice(0, 8);
 
     const allPlats = new Set([...Object.keys(a.platformCounts || {}), ...Object.keys(b.platformCounts || {})]);
     const platComparison = Array.from(allPlats).map(p => ({
       name: p.length > 12 ? p.slice(0, 12) + "…" : p,
-      [t("reportCurrentPeriod")]: (a.platformCounts || {})[p] || 0,
-      [t("reportPreviousPeriod")]: (b.platformCounts || {})[p] || 0,
-    })).sort((x, y) => y[t("reportCurrentPeriod")] - x[t("reportCurrentPeriod")]).slice(0, 8);
+      [currentKey]: (a.platformCounts || {})[p] || 0,
+      [previousKey]: (b.platformCounts || {})[p] || 0,
+    })).sort((x, y) => (y[currentKey] as number) - (x[currentKey] as number)).slice(0, 8);
 
     const sentA = report.sentimentByCategory || {};
     const sentB = compareReport.sentimentByCategory || {};
