@@ -334,6 +334,27 @@ const TimelineCard = ({
               </span>
             )}
 
+            {/* Growth */}
+            <span className={`inline-flex items-center gap-0.5 font-bold ${changePositive ? "text-green-600 dark:text-green-400" : "text-destructive"}`}>
+              <TrendingUp className="w-3 h-3" />
+              {change}
+            </span>
+
+            {/* Volume */}
+            {volume && volume !== "0" && (
+              <span className="text-muted-foreground font-medium">
+                💬 {volume}
+              </span>
+            )}
+
+            {/* Sources */}
+            {sources && sources.length > 0 && (
+              <span className="text-muted-foreground font-medium inline-flex items-center gap-0.5">
+                <Radio className="w-2.5 h-2.5" />
+                {sources.length} {sources.length === 1 ? "fonte" : "fontes"}
+              </span>
+            )}
+
             {/* Micro sparkline */}
             {sparkData && !compact && (
               <div className="ml-auto flex-shrink-0 w-16 h-4">
