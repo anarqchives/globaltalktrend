@@ -10,6 +10,7 @@ import { toast } from "@/hooks/use-toast";
 
 // Eagerly load the main page (critical path)
 import Index from "./pages/Index";
+import PrivacyPopup from "./components/PrivacyPopup";
 
 // Lazy-load secondary pages to reduce initial bundle / FCP
 const Methodology = lazy(() => import("./pages/Methodology"));
