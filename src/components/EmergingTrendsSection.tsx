@@ -157,7 +157,7 @@ export default function EmergingTrendsSection({ trends, onSelectTrend }: Emergin
                   </motion.button>
                 </TooltipTrigger>
                 <TooltipContent side="bottom" className="max-w-[220px] text-[10px]">
-                  <p className="font-semibold">{e.trend.title}</p>
+                  <p className="font-semibold">{decodeEntities(e.trend.title)}</p>
                   <p className="text-muted-foreground mt-0.5">
                     {e.trend.platform} · +{Math.round(e.growthRate)}% · {e.sourceCount} source{e.sourceCount > 1 ? "s" : ""} · {e.ageMinutes}min ago
                   </p>
