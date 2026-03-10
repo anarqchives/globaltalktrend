@@ -293,7 +293,16 @@ const TimelineCard = ({
     } catch { return null; }
   }, [publishedAt, lang]);
 
-  const displayDescription = description || details;
+  // Deduplicate title/description - don't show description if it matches or starts with title
+  const rawDescription = description || details;
+  const displayDescription = useMemo(() => {
+    if (!rawDescription) return null;
+    const normTitle = title.toLowerCase().trim();
+    const normDesc = rawDescription.toLowerCase().trim();
+    if (normDesc === normTitle) return null;
+    if (normDesc.startsWith(normTitle.slice(0, 30))) return null;
+    return rawDescription;
+  }, [rawDescription, title]);
   const localizedCategory = useMemo(() => localizeCategory(category, t), [category, t]);
   const localizedTime = useMemo(() => formattedDate || localizeFallbackTime(time, lang), [formattedDate, time, lang]);
 
