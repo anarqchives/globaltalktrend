@@ -934,7 +934,7 @@ export function useTrends(filters: FilterState, onTrendCountsChange: (counts: Re
       if (combined.length < 3) {
         const predicted = getFromPredictiveCache(filters);
         if (predicted && predicted.length > 0) {
-          console.log("📊 Camada 2 - Cache preditivo (mesmo país):", predicted.length, "itens");
+          if (import.meta.env.DEV) console.log("📊 Camada 2 - Cache preditivo (mesmo país):", predicted.length, "itens");
           addUnique(predicted);
         }
       }
