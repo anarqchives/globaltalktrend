@@ -1432,6 +1432,16 @@ const GoogleMapView = ({
 
       markersRef.current.push(marker);
     });
+
+    return () => {
+      localRafIds.forEach(id => cancelAnimationFrame(id));
+      markersRef.current.forEach(m => m.setMap(null));
+      markersRef.current = [];
+      rippleOverlaysRef.current.forEach(o => o.setMap(null));
+      rippleOverlaysRef.current = [];
+      hoverInfoRef.current?.close();
+      infoWindowRef.current?.close();
+    };
   }, [trendCounts, maxCount, avgCount, selectedCountry, mapLoaded, onSelectCountry, t, trends, isDark, isMobile]);
 
   // Pan to selected/highlighted country
