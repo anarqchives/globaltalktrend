@@ -484,7 +484,7 @@ export default function WeeklyPulseDashboard({ trends }: { trends: TrendCardProp
   const TOP_BAR_COLORS = ["#FF2D2D", "#FF6B00", "#F5A623", "#6366F1", "#6366F1", "#6366F1", "#9CA3AF", "#9CA3AF"];
 
   return (
-    <div className="p-4 space-y-4">
+    <div className="p-3 sm:p-4 space-y-3 sm:space-y-4">
       {/* ═══════ SECTION A: HEADER STRIP ═══════ */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
         <div className="min-w-0">
