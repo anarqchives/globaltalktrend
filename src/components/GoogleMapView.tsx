@@ -595,9 +595,9 @@ const GoogleMapView = ({
           strokeOpacity: opacity,
           scale,
         });
-        requestAnimationFrame(animateOriginPulse);
+        scheduleRaf(animateOriginPulse);
       };
-      requestAnimationFrame(animateOriginPulse);
+      scheduleRaf(animateOriginPulse);
 
       // Hover interactions
       const handleHover = (e: any, isEnter: boolean) => {
