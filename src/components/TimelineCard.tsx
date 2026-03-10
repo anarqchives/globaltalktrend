@@ -548,10 +548,21 @@ const TimelineCard = ({
         )}
       </div>
 
-      {/* === EXPANDED CONTENT — INTELLIGENCE REPORT === */}
+      {/* === EXPANDED CONTENT — INTELLIGENCE REPORT (replaces collapsed card) === */}
       {expanded && (
         <div className="timeline-card-expanded-content">
           
+          {/* Source row + collapse button */}
+          <div className="flex items-center gap-1.5 mb-2 cursor-pointer" onClick={handleToggle}>
+            <div className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: brandColor }} />
+            <span className="text-[11px] font-semibold" style={{ color: brandColor }}>{platform}</span>
+            <span className="text-[10px] text-muted-foreground/50">·</span>
+            <span className="text-[10px] text-muted-foreground">{localizedTime}</span>
+            {flag && <span className="text-[11px]">{flag}</span>}
+            <div className="flex-1" />
+            <ChevronUp className="w-3.5 h-3.5 text-muted-foreground/50" />
+          </div>
+
           {/* ② Title large */}
           <h2 className="text-[17px] font-black text-foreground leading-[1.35] mb-3">{decodeEntities(title)}</h2>
 
