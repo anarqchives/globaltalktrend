@@ -83,24 +83,42 @@ serve(async (req) => {
       });
     }
 
-    // Fetch GDELT DOC 2.0 API — trending articles from last 1 hour
-    // Use a broad query term to get results (empty query not supported)
-    const gdeltUrl = "https://api.gdeltproject.org/api/v2/doc/doc?query=&mode=ArtList&maxrecords=30&format=json&sort=HybridRel&timespan=60min&trans=googtrans";
-
-    const response = await fetch(gdeltUrl, {
-      headers: { "User-Agent": "GlobalTalkTrend/1.0" },
-    });
-
-    if (!response.ok) {
-      const text = await response.text();
-      console.error(`GDELT API error: ${response.status}`, text.slice(0, 200));
-      return new Response(JSON.stringify({ trends: [] }), {
-        headers: { ...cors, "Content-Type": "application/json" },
-      });
+    // GDELT DOC 2.0 requires a query — use broad topic queries for diverse results
+    const queries = [
+      "sourcelang:english",
+      "sourcelang:spanish",
+      "sourcelang:portuguese",
+    ];
+    
+    let allArticles: any[] = [];
+    
+    for (const q of queries) {
+      try {
+        const gdeltUrl = `https://api.gdeltproject.org/api/v2/doc/doc?query=${encodeURIComponent(q)}&mode=ArtList&maxrecords=15&format=json&sort=HybridRel&timespan=60min`;
+        const response = await fetch(gdeltUrl, {
+          headers: { "User-Agent": "GlobalTalkTrend/1.0" },
+        });
+        if (!response.ok) {
+          await response.text(); // consume body
+          continue;
+        }
+        const text = await response.text();
+        // GDELT sometimes returns non-JSON error messages
+        if (!text.startsWith("{") && !text.startsWith("[")) {
+          console.log("GDELT non-JSON response for query:", q, text.slice(0, 100));
+          continue;
+        }
+        const data = JSON.parse(text);
+        const articles = data?.articles || [];
+        if (Array.isArray(articles)) {
+          allArticles = allArticles.concat(articles);
+        }
+      } catch (e) {
+        console.log("GDELT query failed:", q, e);
+      }
     }
-
-    const data = await response.json();
-    const articles = data?.articles || [];
+    
+    const articles = allArticles;
 
     if (!Array.isArray(articles) || articles.length === 0) {
       console.log("GDELT: No articles returned");
