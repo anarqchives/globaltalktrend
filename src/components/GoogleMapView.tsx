@@ -405,7 +405,7 @@ const GoogleMapView = ({
 
   useEffect(() => {
     const map = googleMapRef.current;
-    const activeAnimations = new Map<string, number>();
+    const activeAnimations: Record<string, number> = {};
     const scheduleRaf = (key: string, fn: FrameRequestCallback) => {
       const id = requestAnimationFrame(fn);
       activeAnimations.set(key, id);
