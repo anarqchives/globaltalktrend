@@ -261,36 +261,66 @@ const TrendHeader = ({ totalTrends = 0, countriesCount = 0, onRefresh, refreshin
             <div className="px-6 pt-6 pb-4">
               <DialogHeader className="space-y-1">
                 <DialogTitle className="text-xl font-semibold tracking-tight text-foreground text-center">
-                  Sobre o Global Talk Trending
+                  Sobre o Global Talk Trend
                 </DialogTitle>
                 <DialogDescription className="text-sm text-muted-foreground text-center">
-                  Monitoramento global de trends em tempo real
+                  Terminal de inteligência narrativa global em tempo real
                 </DialogDescription>
               </DialogHeader>
             </div>
             <div className="px-6 pb-6 space-y-5">
+
+              {/* O que é */}
               <section className="space-y-2">
                 <h3 className="text-sm font-semibold text-foreground flex items-center gap-1.5">
                   <span className="w-1.5 h-1.5 rounded-full bg-primary" /> O que é
                 </h3>
                 <p className="text-body text-muted-foreground leading-relaxed">
-                  Plataforma gratuita e transparente que monitora trends em redes sociais, imprensa e buscas em mais de 26 países.
+                  Plataforma gratuita, pública e transparente de monitoramento de tendências globais. Funciona como um "Terminal Bloomberg para narrativas" — fusionando sinais de imprensa, redes sociais, buscas, dados governamentais e publicações científicas para detectar temas emergentes antes que se tornem mainstream.
                 </p>
               </section>
+
+              {/* Números */}
               <section className="space-y-2">
                 <h3 className="text-sm font-semibold text-foreground flex items-center gap-1.5">
-                  <span className="w-1.5 h-1.5 rounded-full bg-primary" /> Nossas fontes
+                  <span className="w-1.5 h-1.5 rounded-full bg-primary" /> Em números
+                </h3>
+                <div className="grid grid-cols-3 gap-2 text-center">
+                  {[
+                    { value: "21+", label: "Fontes de dados" },
+                    { value: "130+", label: "Feeds RSS" },
+                    { value: "50+", label: "Países" },
+                    { value: "12", label: "Categorias" },
+                    { value: "15 min", label: "Atualização" },
+                    { value: "24h", label: "Cache fallback" },
+                  ].map((stat) => (
+                    <div key={stat.label} className="px-2 py-2.5 rounded-xl bg-secondary/50">
+                      <p className="text-sm font-bold text-foreground">{stat.value}</p>
+                      <p className="text-micro text-muted-foreground">{stat.label}</p>
+                    </div>
+                  ))}
+                </div>
+              </section>
+
+              {/* Fontes */}
+              <section className="space-y-2">
+                <h3 className="text-sm font-semibold text-foreground flex items-center gap-1.5">
+                  <span className="w-1.5 h-1.5 rounded-full bg-primary" /> Fontes de dados
                 </h3>
                 <div className="grid grid-cols-2 gap-1.5">
                   {[
-                    { name: "YouTube", detail: "API oficial", icon: "🎬" },
+                    { name: "YouTube", detail: "API v3 oficial", icon: "🎬" },
                     { name: "Reddit", detail: "API pública", icon: "💬" },
-                    { name: "Google Trends", detail: "RSS", icon: "📈" },
-                    { name: "NewsAPI / Guardian", detail: "Notícias", icon: "📰" },
-                    { name: "Twitter/X", detail: "API gratuita", icon: "🐦" },
-                    { name: "TikTok", detail: "via Apify", icon: "🎵" },
-                    { name: "IBGE / ONU", detail: "Gov & dados", icon: "🏛️" },
-                    { name: "OpenAlex", detail: "Científico", icon: "🔬" },
+                    { name: "Google Trends", detail: "RSS feed", icon: "📈" },
+                    { name: "NewsAPI", detail: "150k+ fontes", icon: "📰" },
+                    { name: "The Guardian", detail: "Open Platform", icon: "🏛️" },
+                    { name: "GNews / NewsData", detail: "Agregadores", icon: "🗞️" },
+                    { name: "Bluesky / Mastodon", detail: "Fediverso", icon: "🦋" },
+                    { name: "Hacker News", detail: "Y Combinator", icon: "🔶" },
+                    { name: "RSS Internacional", detail: "130+ feeds", icon: "📡" },
+                    { name: "IBGE / World Bank", detail: "Dados oficiais", icon: "🌐" },
+                    { name: "arXiv / PubMed", detail: "Científico", icon: "🔬" },
+                    { name: "GDELT / Wikipedia", detail: "Eventos & encic.", icon: "⚡" },
                   ].map((src) => (
                     <div key={src.name} className="flex items-center gap-2 px-2.5 py-2 rounded-xl bg-secondary/50 hover:bg-secondary/80 transition-colors">
                       <span className="text-sm shrink-0">{src.icon}</span>
@@ -302,6 +332,40 @@ const TrendHeader = ({ totalTrends = 0, countriesCount = 0, onRefresh, refreshin
                   ))}
                 </div>
               </section>
+
+              {/* Recursos */}
+              <section className="space-y-2">
+                <h3 className="text-sm font-semibold text-foreground flex items-center gap-1.5">
+                  <span className="w-1.5 h-1.5 rounded-full bg-primary" /> Recursos principais
+                </h3>
+                <ul className="space-y-1.5 text-body text-muted-foreground">
+                  <li className="flex items-start gap-2"><span className="text-primary mt-0.5">•</span> Radar de tendências com abas Top, Crítico e Semana</li>
+                  <li className="flex items-start gap-2"><span className="text-primary mt-0.5">•</span> Timeline agrupada por recência (Agora / 2h / 24h)</li>
+                  <li className="flex items-start gap-2"><span className="text-primary mt-0.5">•</span> Mapa interativo com visualização geográfica</li>
+                  <li className="flex items-start gap-2"><span className="text-primary mt-0.5">•</span> Detecção automática de Momentos Críticos (+200%)</li>
+                  <li className="flex items-start gap-2"><span className="text-primary mt-0.5">•</span> Badge Multiplataforma para sinais cross-media</li>
+                  <li className="flex items-start gap-2"><span className="text-primary mt-0.5">•</span> Contexto por IA para análise aprofundada</li>
+                  <li className="flex items-start gap-2"><span className="text-primary mt-0.5">•</span> Filtros por país, categoria, tipo de mídia e período</li>
+                  <li className="flex items-start gap-2"><span className="text-primary mt-0.5">•</span> 4 modos de usuário: Cidadão, Jornalista, Investidor, Marketing</li>
+                  <li className="flex items-start gap-2"><span className="text-primary mt-0.5">•</span> Relatórios PDF exportáveis com snapshots históricos</li>
+                  <li className="flex items-start gap-2"><span className="text-primary mt-0.5">•</span> Sistema de alertas e salvamento de cards</li>
+                </ul>
+              </section>
+
+              {/* Princípios */}
+              <section className="space-y-2">
+                <h3 className="text-sm font-semibold text-foreground flex items-center gap-1.5">
+                  <span className="w-1.5 h-1.5 rounded-full bg-primary" /> Princípios
+                </h3>
+                <ul className="space-y-1.5 text-body text-muted-foreground">
+                  <li className="flex items-start gap-2"><span className="text-primary mt-0.5">•</span> <strong className="text-foreground">Transparência radical:</strong> todas as fontes e métodos são documentados</li>
+                  <li className="flex items-start gap-2"><span className="text-primary mt-0.5">•</span> <strong className="text-foreground">Zero coleta de dados pessoais:</strong> sem rastreamento, sem cookies de terceiros</li>
+                  <li className="flex items-start gap-2"><span className="text-primary mt-0.5">•</span> <strong className="text-foreground">Sem bolhas:</strong> nenhum algoritmo de recomendação — dados brutos e verificáveis</li>
+                  <li className="flex items-start gap-2"><span className="text-primary mt-0.5">•</span> <strong className="text-foreground">100% gratuito:</strong> mantido por doações voluntárias</li>
+                </ul>
+              </section>
+
+              {/* Contato */}
               <section className="space-y-2">
                 <h3 className="text-sm font-semibold text-foreground flex items-center gap-1.5">
                   <span className="w-1.5 h-1.5 rounded-full bg-primary" /> Contato
@@ -315,6 +379,13 @@ const TrendHeader = ({ totalTrends = 0, countriesCount = 0, onRefresh, refreshin
                   </button>
                 </form>
               </section>
+
+              {/* Link para metodologia */}
+              <div className="text-center pt-2">
+                <Link to="/metodologia" onClick={() => setAboutOpen(false)} className="text-body text-primary hover:underline font-medium">
+                  Ver metodologia completa →
+                </Link>
+              </div>
             </div>
           </motion.div>
         </DialogContent>
