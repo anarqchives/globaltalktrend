@@ -14,6 +14,7 @@ import PropagationTimeline from "./PropagationTimeline";
 import FreshnessIndicator from "./FreshnessIndicator";
 import { CrossPlatformCluster } from "@/hooks/use-cross-platform";
 import { getTooltip } from "@/lib/format-utils";
+import AbbrTooltip from "./AbbrTooltip";
 
 // Source brand colors — consistent everywhere per design system
 const platformIcons: Record<string, { emoji: string; color: string }> = {
@@ -341,9 +342,9 @@ const TimelineCard = ({
 
             {/* Region */}
             {countryCode && countryCode !== "GL" && (
-              <span className="text-muted-foreground">
+              <AbbrTooltip text={countryCode.toUpperCase()} className="text-muted-foreground">
                 📍 {countryCode}
-              </span>
+              </AbbrTooltip>
             )}
 
             {/* Multiplatform */}

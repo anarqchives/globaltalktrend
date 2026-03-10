@@ -12,6 +12,7 @@ import { CriticalMoment } from "@/hooks/use-critical-moments";
 import { AnomalyAlert } from "@/hooks/use-anomaly-alerts";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { supabase } from "@/integrations/supabase/client";
+import AbbrTooltip from "./AbbrTooltip";
 
 interface TrendRadarProps {
   trends: TrendCardProps[];
@@ -616,11 +617,11 @@ export default function TrendRadar({ trends, allTrends, criticalMoments, anomali
                 <>
                   {hasAnomalies && (
                     <div className="mb-1">
-                      <div className="px-3 pt-1.5 pb-1">
-                        <span className="text-[9px] font-bold text-destructive uppercase tracking-wider flex items-center gap-1">
-                          <AlertTriangle className="w-3 h-3" />
-                          {lang === "pt" ? "Anomalias" : "Anomalies"}
-                          <span className="px-1 py-px rounded-full bg-destructive/8 text-destructive text-[7px] font-bold ml-0.5">{anomalies.length}</span>
+                      <div className="px-4 py-2" style={{ background: 'hsl(0 100% 97%)', borderBottom: '2px solid #FF4D4F' }}>
+                        <span className="text-xs font-bold uppercase tracking-wider flex items-center gap-1.5" style={{ color: '#CF1322', letterSpacing: '0.5px' }}>
+                          <AbbrTooltip text="ANOMALIAS">
+                            ⚡ {lang === "pt" ? "ANOMALIAS" : "ANOMALIES"} · {anomalies.length}
+                          </AbbrTooltip>
                         </span>
                       </div>
                       <AnomaliesPredictive anomalies={anomalies} lang={lang} onAnomalyClick={onAnomalyClick} />
@@ -628,10 +629,11 @@ export default function TrendRadar({ trends, allTrends, criticalMoments, anomali
                   )}
                   {hasEmerging ? (
                     <div>
-                      <div className="px-3 pt-1.5 pb-1">
-                        <span className="text-[9px] font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider flex items-center gap-1">
-                          <Sprout className="w-3 h-3" />
-                          {lang === "pt" ? "Sinais Emergentes" : "Emerging Signals"}
+                      <div className="px-4 py-2" style={{ background: 'hsl(220 100% 97%)', borderBottom: '2px solid #4096FF' }}>
+                        <span className="text-xs font-bold uppercase tracking-wider flex items-center gap-1.5" style={{ color: '#1D39C4', letterSpacing: '0.5px' }}>
+                          <AbbrTooltip text="SINAIS EMERGENTES">
+                            📡 {lang === "pt" ? "SINAIS EMERGENTES" : "EMERGING SIGNALS"}
+                          </AbbrTooltip>
                         </span>
                       </div>
                       <EmergingTrendsSection trends={trends} onSelectTrend={onSelectTrend} />
@@ -648,9 +650,14 @@ export default function TrendRadar({ trends, allTrends, criticalMoments, anomali
 
             <TabsContent value="critical" className="absolute inset-0 mt-0 overflow-y-auto scrollbar-thin data-[state=inactive]:hidden animate-in fade-in-0 duration-200">
               <Legend tab="critical" lang={lang} />
-              {hasCritical ? (
+              {hasCritical ? (<>
+                <div className="px-4 py-2" style={{ background: 'hsl(0 100% 97%)', borderBottom: '2px solid #FF2D2D' }}>
+                  <span className="text-xs font-bold uppercase tracking-wider flex items-center gap-1.5" style={{ color: '#CF1322', letterSpacing: '0.5px' }}>
+                    🔴 {lang === "pt" ? "CRÍTICO" : "CRITICAL"} · {criticalMoments.length}
+                  </span>
+                </div>
                 <CriticalMomentsSection moments={criticalMoments} onSelectTrend={onSelectTrend} />
-              ) : (
+              </>) : (
                 <div className="flex flex-col items-center justify-center py-6 text-muted-foreground">
                   <Flame className="w-6 h-6 mb-1.5 opacity-20" />
                   <p className="text-[10px] text-center px-4">

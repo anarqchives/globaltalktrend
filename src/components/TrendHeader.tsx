@@ -141,13 +141,14 @@ const TrendHeader = ({ totalTrends = 0, countriesCount = 0, onRefresh, refreshin
           </div>
 
           {/* ─── RIGHT: Utilities ─── */}
-          <div className="flex items-center gap-1.5 justify-end flex-shrink-0">
-            {/* Language selector */}
+          <div className="flex items-center gap-2 justify-end flex-shrink-0">
+            {/* Language selector — compact */}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <button className="flex items-center gap-1 px-2.5 h-8 rounded-full bg-secondary dark:bg-black/5 text-caption font-medium hover:bg-muted transition-colors min-w-[44px] min-h-[44px] justify-center">
-                  🌐 {lang.toUpperCase()}
-                  <ChevronDown className="w-3 h-3 text-muted-foreground" />
+                <button className="inline-flex items-center gap-1 px-2 rounded-lg border border-border/60 hover:border-muted-foreground/40 hover:bg-muted/50 transition-all duration-[120ms]" style={{ height: 28, fontSize: 12, fontWeight: 500 }}>
+                  <span className="text-xs">🌐</span>
+                  <span className="text-muted-foreground">{lang.toUpperCase()}</span>
+                  <ChevronDown className="w-2.5 h-2.5 text-muted-foreground/60" />
                 </button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="min-w-[180px] max-h-[300px] overflow-y-auto">
@@ -163,10 +164,11 @@ const TrendHeader = ({ totalTrends = 0, countriesCount = 0, onRefresh, refreshin
               </DropdownMenuContent>
             </DropdownMenu>
 
-            {/* Dark mode toggle */}
+            {/* Dark mode toggle — 28px */}
             <button
               onClick={() => setDark(!dark)}
-              className="p-2 rounded-full text-muted-foreground hover:bg-secondary transition-colors min-w-[44px] min-h-[44px] flex items-center justify-center"
+              className="flex items-center justify-center rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-all duration-[120ms]"
+              style={{ width: 28, height: 28 }}
               title={dark ? "Modo claro" : "Modo escuro"}>
               {dark ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
             </button>
@@ -176,8 +178,8 @@ const TrendHeader = ({ totalTrends = 0, countriesCount = 0, onRefresh, refreshin
               href="https://buy.stripe.com/fZu7sMgw6cHLeTnbWVdIA00"
               target="_blank"
               rel="noopener noreferrer"
-              className="hidden sm:flex items-center rounded-full text-white text-xs font-semibold hover:brightness-110 transition-all"
-              style={{ background: 'linear-gradient(135deg, #FF6B00, #FF2D2D)', height: '30px', padding: '0 12px', fontSize: '12px' }}
+              className="hidden sm:flex items-center rounded-full text-white font-semibold hover:brightness-110 transition-all"
+              style={{ background: 'linear-gradient(135deg, #FF6B00, #FF2D2D)', height: 30, padding: '0 12px', fontSize: 12 }}
             >
               Apoie
             </a>
@@ -186,10 +188,10 @@ const TrendHeader = ({ totalTrends = 0, countriesCount = 0, onRefresh, refreshin
             {user ? (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <button className="flex items-center gap-1 p-1 rounded-full hover:bg-secondary transition-colors min-w-[44px] min-h-[44px] justify-center">
+                  <button className="flex items-center justify-center rounded-full hover:ring-2 hover:ring-white hover:ring-offset-1 hover:ring-offset-[#6366F1] transition-all duration-[120ms]" style={{ width: 28, height: 28 }}>
                     <Avatar className="w-7 h-7">
                       {userAvatar && <AvatarImage src={userAvatar} alt={userName} />}
-                      <AvatarFallback className="text-micro bg-primary/10 text-primary font-bold">
+                      <AvatarFallback className="text-xs font-bold text-white" style={{ background: 'linear-gradient(135deg, #6366F1, #8B5CF6)' }}>
                         {userInitial}
                       </AvatarFallback>
                     </Avatar>
@@ -230,14 +232,15 @@ const TrendHeader = ({ totalTrends = 0, countriesCount = 0, onRefresh, refreshin
               <>
                 <button
                   onClick={() => setAboutOpen(true)}
-                  className="p-2 rounded-full text-muted-foreground hover:bg-secondary transition-colors min-w-[44px] min-h-[44px] flex items-center justify-center"
+                  className="flex items-center justify-center rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-all duration-[120ms]"
+                  style={{ width: 28, height: 28 }}
                   title={t("about")}>
                   <Info className="w-4 h-4" />
                 </button>
                 <button
                   onClick={() => setLoginOpen(true)}
                   className="flex items-center gap-1 rounded-full font-semibold text-white hover:brightness-110 transition-all"
-                  style={{ background: '#2563EB', height: '30px', padding: '0 12px', fontSize: '12px' }}>
+                  style={{ background: '#2563EB', height: 30, padding: '0 12px', fontSize: 12 }}>
                   <span className="hidden sm:inline">{t("enter")}</span>
                   <span className="text-xs">→</span>
                 </button>

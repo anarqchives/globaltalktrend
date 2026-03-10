@@ -1,128 +1,30 @@
 import { useState } from "react";
-import { motion, AnimatePresence, LayoutGroup } from "framer-motion";
-import { TrendingUp, Globe, Radio, Shield, ExternalLink, Zap, Eye, BarChart3, Newspaper, Clock, ChevronDown, ChevronUp, ArrowRight } from "lucide-react";
-import { AreaChart, Area, ResponsiveContainer, ReferenceDot } from "recharts";
-import { useLanguage, type LangCode } from "@/contexts/LanguageContext";
+import { motion, AnimatePresence } from "framer-motion";
+import { Globe, ExternalLink, Clock, ChevronDown, ChevronUp, ArrowRight, Bookmark } from "lucide-react";
+import { AreaChart, Area, ResponsiveContainer, XAxis } from "recharts";
+import { useLanguage } from "@/contexts/LanguageContext";
 import type { CriticalMoment } from "@/hooks/use-critical-moments";
-import { mediaTypeEmojis } from "@/hooks/use-critical-moments";
-
-const riskColors: Record<string, string> = {
-  extreme: "border-destructive/30 bg-destructive/5 hover:border-destructive/50",
-  high: "border-orange-500/25 bg-orange-500/5 hover:border-orange-500/40",
-  moderate: "border-amber-500/20 bg-amber-500/5 hover:border-amber-500/35",
-};
-
-const riskBadge: Record<string, string> = {
-  extreme: "bg-destructive/15 text-destructive",
-  high: "bg-orange-500/15 text-orange-600 dark:text-orange-400",
-  moderate: "bg-amber-500/15 text-amber-600 dark:text-amber-400",
-};
-
-const riskLabels: Record<string, Record<string, string>> = {
-  extreme: { pt: "EXTREMO", en: "EXTREME" },
-  high: { pt: "ALTO", en: "HIGH" },
-  moderate: { pt: "MODERADO", en: "MODERATE" },
-};
-
-const reasonIcons: Record<string, React.ReactNode> = {
-  volumeSpike: <TrendingUp className="w-2.5 h-2.5" />,
-  acceleration: <Zap className="w-2.5 h-2.5" />,
-  multiSource: <Radio className="w-2.5 h-2.5" />,
-  geographicSpread: <Globe className="w-2.5 h-2.5" />,
-  verifiedSource: <Shield className="w-2.5 h-2.5" />,
-  mediaDiversity: <Newspaper className="w-2.5 h-2.5" />,
-  highVolume: <BarChart3 className="w-2.5 h-2.5" />,
-  richContext: <Eye className="w-2.5 h-2.5" />,
-};
-
-const reasonLabels: Record<string, Record<string, string>> = {
-  pt: {
-    volumeSpike: "Pico de volume", acceleration: "Crescimento rápido", multiSource: "Multiplataforma",
-    geographicSpread: "Vários países", verifiedSource: "Fonte verificada", mediaDiversity: "Mídias diversas",
-    highVolume: "Volume alto", richContext: "Contexto rico",
-  },
-  en: {
-    volumeSpike: "Volume spike", acceleration: "Fast growth", multiSource: "Multi-platform",
-    geographicSpread: "Multiple countries", verifiedSource: "Verified source", mediaDiversity: "Diverse media",
-    highVolume: "High volume", richContext: "Rich context",
-  },
-};
+import AbbrTooltip from "./AbbrTooltip";
 
 const countryCodeToFlag = (code?: string) => {
   if (!code || code.length !== 2) return null;
   return String.fromCodePoint(...[...code.toUpperCase()].map(c => 0x1F1E6 + c.charCodeAt(0) - 65));
 };
 
-const countryNames: Record<string, Record<string, string>> = {
-  pt: { US: "EUA", BR: "Brasil", GB: "Reino Unido", DE: "Alemanha", FR: "França", JP: "Japão", CA: "Canadá", IN: "Índia", AU: "Austrália", IT: "Itália", ES: "Espanha", PT: "Portugal", MX: "México", KR: "Coreia do Sul", AR: "Argentina" },
-  en: { US: "USA", BR: "Brazil", GB: "UK", DE: "Germany", FR: "France", JP: "Japan", CA: "Canada", IN: "India", AU: "Australia", IT: "Italy", ES: "Spain", PT: "Portugal", MX: "Mexico", KR: "South Korea", AR: "Argentina" },
+const platformColors: Record<string, string> = {
+  YouTube: "#FF0000",
+  Reddit: "hsl(16, 100%, 50%)",
+  "Google Trends": "#4285F4",
+  NewsAPI: "hsl(142, 60%, 40%)",
+  Bluesky: "hsl(200, 100%, 50%)",
+  Mastodon: "#6364FF",
+  "Hacker News": "#FF6600",
+  GitHub: "#24292E",
+  "The Guardian": "#0D6EFD",
+  GNews: "hsl(160, 60%, 45%)",
+  PubMed: "#007CBB",
+  "X (Twitter)": "hsl(0, 0%, 15%)",
 };
-
-/** Generate a clear explanation of WHY this is flagged as critical */
-function generateWhyExplanation(m: CriticalMoment, lang: string): string {
-  const change = Math.round(m.changePercent);
-  const parts: string[] = [];
-
-  if (lang === "pt") {
-    if (change > 0) parts.push(`+${change}% de crescimento`);
-    if (m.platformCount > 1) parts.push(`em ${m.platformCount} plataformas`);
-    if (m.countryCount > 1) parts.push(`${m.countryCount} países`);
-    if (m.mediaTypes.length > 1) parts.push(`${m.mediaTypes.length} tipos de mídia`);
-    return `Sinal crítico: ${parts.join(", ")}`;
-  } else {
-    if (change > 0) parts.push(`+${change}% growth`);
-    if (m.platformCount > 1) parts.push(`across ${m.platformCount} platforms`);
-    if (m.countryCount > 1) parts.push(`${m.countryCount} countries`);
-    if (m.mediaTypes.length > 1) parts.push(`${m.mediaTypes.length} media types`);
-    return `Critical signal: ${parts.join(", ")}`;
-  }
-}
-
-/** Generate WHERE description */
-function generateWhereDescription(m: CriticalMoment, lang: string): string {
-  const l = lang === "pt" ? "pt" : "en";
-  const parts: string[] = [];
-
-  // Primary platform
-  parts.push(m.trend.platform);
-
-  // Related platforms from related trends
-  const otherPlatforms = new Set<string>();
-  m.relatedTrends.forEach(rt => {
-    if (rt.platform !== m.trend.platform) otherPlatforms.add(rt.platform);
-  });
-  if (otherPlatforms.size > 0) {
-    parts.push([...otherPlatforms].slice(0, 2).join(", "));
-  }
-
-  // Countries
-  const countryCodes = new Set<string>();
-  if (m.trend.countryCode) countryCodes.add(m.trend.countryCode.toUpperCase());
-  m.relatedTrends.forEach(rt => {
-    if (rt.countryCode) countryCodes.add(rt.countryCode.toUpperCase());
-  });
-  if (countryCodes.size > 0) {
-    const names = [...countryCodes].slice(0, 3).map(c => {
-      const flag = countryCodeToFlag(c);
-      const name = countryNames[l]?.[c] || c;
-      return `${flag || ""} ${name}`;
-    });
-    parts.push(names.join(", "));
-  }
-
-  return parts.join(" · ");
-}
-
-/** Generate context descriptor for the topic */
-function generateContextDescriptor(trend: CriticalMoment["trend"], lang: string): string {
-  const category = trend.category || "Geral";
-  const categoryMap: Record<string, Record<string, string>> = {
-    pt: { Tecnologia: "tópico de tecnologia", Entretenimento: "conteúdo de entretenimento", Notícias: "notícia em destaque", Política: "assunto político", Economia: "tema econômico", Ciência: "pesquisa científica", Esportes: "notícia esportiva", Geral: "tópico em alta" },
-    en: { Tecnologia: "technology topic", Entretenimento: "entertainment", Notícias: "breaking news", Política: "political topic", Economia: "economic topic", Ciência: "scientific research", Esportes: "sports news", Geral: "trending topic" },
-  };
-  const l = lang === "pt" ? "pt" : "en";
-  return categoryMap[l]?.[category] || categoryMap[l]?.Geral || "trending topic";
-}
 
 interface Props {
   moments: CriticalMoment[];
@@ -134,7 +36,6 @@ interface Props {
 export default function CriticalMomentsSection({ moments, onSelectTrend }: Props) {
   const { lang } = useLanguage();
   const [expandedIdx, setExpandedIdx] = useState<number | null>(null);
-  const l = reasonLabels[lang] || reasonLabels.pt;
 
   if (!moments.length) {
     return (
@@ -150,19 +51,22 @@ export default function CriticalMomentsSection({ moments, onSelectTrend }: Props
 
   return (
     <div className="px-3 py-2">
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2 auto-rows-auto">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
         {moments.slice(0, 12).map((m, i) => {
           const isExpanded = expandedIdx === i;
           const trend = m.trend;
           const sparkData = trend.sparkData?.map((v) => ({ value: v })) || [];
-          const riskLabel = riskLabels[m.riskLevel]?.[lang] || riskLabels[m.riskLevel]?.pt || "ALTO";
-          const whyExplanation = generateWhyExplanation(m, lang);
-          const whereDesc = generateWhereDescription(m, lang);
-          const contextDesc = generateContextDescriptor(trend, lang);
+          const pColor = platformColors[trend.platform] || "#666";
+          const flag = countryCodeToFlag(trend.countryCode);
+          const changeNum = Math.round(m.changePercent);
 
-          // Peak detection for chart
-          let peakIdx = 0, peakVal = 0;
-          sparkData.forEach((d, idx) => { if (d.value > peakVal) { peakVal = d.value; peakIdx = idx; } });
+          const tviScore = Math.min(Math.round(changeNum * 0.2 + m.platformCount * 10 + m.countryCount * 5 + m.mediaTypes.length * 8), 100);
+          const tviLabel = tviScore >= 91 ? "Viral" : tviScore >= 61 ? "High" : tviScore >= 31 ? "Medium" : "Low";
+          const tviColor = tviScore >= 91 ? "text-red-500" : tviScore >= 61 ? "text-orange-500" : tviScore >= 31 ? "text-amber-500" : "text-muted-foreground";
+
+          const signalDetail = lang === "pt"
+            ? `Pico anômalo: +${changeNum}% de variação em ${trend.platform}`
+            : `Anomalous spike: +${changeNum}% variation on ${trend.platform}`;
 
           return (
             <motion.div
@@ -170,79 +74,119 @@ export default function CriticalMomentsSection({ moments, onSelectTrend }: Props
               layout
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
-              transition={{ delay: i * 0.03, duration: 0.2, layout: { duration: 0.25, type: "spring", stiffness: 300, damping: 30 } }}
+              transition={{ delay: i * 0.03, duration: 0.2 }}
               onClick={() => setExpandedIdx(isExpanded ? null : i)}
-              className={`group relative overflow-hidden rounded-xl border transition-all duration-200 text-left p-3 cursor-pointer flex flex-col gap-1.5 ${riskColors[m.riskLevel]} ${
-                isExpanded ? "col-span-1 sm:col-span-2 shadow-lg ring-1 ring-destructive/20" : "hover:shadow-sm"
-              }`}
+              className="group relative overflow-hidden rounded-xl border border-border/40 dark:border-border/30 bg-card hover:border-[#CF1322] dark:hover:border-red-500 hover:shadow-[0_4px_16px_rgba(0,0,0,0.08)] hover:-translate-y-px transition-all duration-150 ease-out p-4 flex flex-col cursor-pointer"
+              style={{
+                borderLeftWidth: 3,
+                borderLeftColor: "#FF2D2D",
+                background: "linear-gradient(135deg, hsl(0 100% 97% / 0.5) 0%, hsl(var(--card)) 40%)",
+              }}
             >
-              {/* ─── HEADER: Risk badge ─── */}
-              <div className="flex items-center justify-between">
-                <span className={`inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded text-[8px] font-black uppercase tracking-wider ${riskBadge[m.riskLevel]}`}>
-                  {m.riskLevel === "extreme" ? "🔥" : m.riskLevel === "high" ? "⚠️" : "📊"} {riskLabel}
-                </span>
-                <span className="text-destructive font-black text-[10px] tabular-nums">
-                  +{Math.round(m.changePercent)}%
-                </span>
+              {/* Top-right badge */}
+              <span className="absolute top-2 right-2 text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-full bg-red-500 text-white">
+                {lang === "pt" ? "CRÍTICO" : "CRITICAL"}
+              </span>
+
+              {/* ① SOURCE + TIME ROW */}
+              <div className="flex items-center gap-1.5 h-5">
+                <span className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ backgroundColor: pColor }} />
+                <span className="text-xs font-medium" style={{ color: pColor }}>{trend.platform}</span>
+                <span className="text-muted-foreground/40 text-[11px]">·</span>
+                {flag && <span className="text-[11px]">{flag}</span>}
+                {trend.countryCode && (
+                  <AbbrTooltip text={trend.countryCode.toUpperCase()} className="text-[11px] text-muted-foreground uppercase" />
+                )}
+                <span className="text-muted-foreground/40 text-[11px]">·</span>
+                <span className="text-[11px] text-muted-foreground">{trend.time || (lang === "pt" ? "agora" : "now")}</span>
+                <Bookmark className="w-4 h-4 text-muted-foreground/30 ml-auto flex-shrink-0 hover:text-primary cursor-pointer transition-colors" />
               </div>
 
-              {/* ─── LAYER 1: WHAT — Title + Context ─── */}
-              <div>
-                <p className={`text-[11px] font-bold text-foreground leading-tight ${isExpanded ? "" : "line-clamp-2"}`}>
-                  {trend.title}
-                </p>
-                <p className="text-[9px] text-muted-foreground/70 italic mt-0.5 capitalize">
-                  {contextDesc}
-                </p>
-              </div>
+              {/* ② TITLE */}
+              <h3 className={`text-[15px] font-bold text-foreground leading-[1.4] mt-2 ${isExpanded ? '' : 'line-clamp-2'}`}>
+                {trend.title}
+              </h3>
 
-              {/* ─── LAYER 2: WHY — Explanation ─── */}
-              <div className="rounded-md bg-destructive/8 border border-destructive/15 px-2 py-1">
-                <p className="text-[9px] text-destructive dark:text-red-300 leading-relaxed">
-                  {whyExplanation}
-                </p>
-              </div>
-
-              {/* ─── LAYER 3: WHERE — Platforms + Geography ─── */}
-              <p className="text-[9px] text-muted-foreground flex items-center gap-1 flex-wrap">
-                <Globe className="w-2.5 h-2.5 text-muted-foreground/60 flex-shrink-0" />
-                {whereDesc}
+              {/* ③ CONTEXT LINE */}
+              <p className="text-xs text-muted-foreground leading-relaxed mt-1 line-clamp-2">
+                {m.summary || trend.description || signalDetail}
               </p>
 
-              {/* ─── LAYER 4: SIGNAL CHART ─── */}
+              {/* ④ SIGNAL BADGE */}
+              <div className="mt-2 inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full border text-[11px] font-semibold bg-[#FFF1F0] dark:bg-red-900/20 text-[#CF1322] dark:text-red-400 border-[#FFCCC7] dark:border-red-800">
+                <AbbrTooltip text="Pico anômalo">
+                  <span>📈 {signalDetail}</span>
+                </AbbrTooltip>
+              </div>
+
+              {/* ⑤ SOURCE DETAIL */}
+              <div className="flex items-center gap-1.5 mt-2 text-[11px] text-muted-foreground">
+                <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: pColor }} />
+                <span>{trend.platform}</span>
+                {flag && (
+                  <>
+                    <span className="text-muted-foreground/40">·</span>
+                    <span>{flag}</span>
+                    {trend.countryCode && <AbbrTooltip text={trend.countryCode.toUpperCase()} className="uppercase" />}
+                  </>
+                )}
+                {m.platformCount > 1 && <span className="text-muted-foreground/40">· {m.platformCount} plat.</span>}
+              </div>
+
+              {/* ⑥ SPARKLINE */}
               {sparkData.length > 3 && (
-                <div className={`w-full ${isExpanded ? "h-10" : "h-5"} transition-all`}>
+                <div className={`mt-2 w-full relative ${isExpanded ? 'h-12' : 'h-10'}`}>
                   <ResponsiveContainer width="100%" height="100%">
                     <AreaChart data={sparkData}>
                       <defs>
                         <linearGradient id={`crit-grad-${i}`} x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="0%" stopColor="hsl(var(--destructive))" stopOpacity={0.3} />
-                          <stop offset="100%" stopColor="hsl(var(--destructive))" stopOpacity={0} />
+                          <stop offset="0%" stopColor="#FF2D2D" stopOpacity={0.3} />
+                          <stop offset="100%" stopColor="#FF2D2D" stopOpacity={0} />
                         </linearGradient>
                       </defs>
-                      <Area type="monotone" dataKey="value" stroke="hsl(var(--destructive))" strokeWidth={1.5} fill={`url(#crit-grad-${i})`} dot={false} />
-                      {peakVal > 0 && (
-                        <ReferenceDot x={peakIdx} y={peakVal} r={3} fill="hsl(var(--destructive))" stroke="hsl(var(--background))" strokeWidth={1.5} />
-                      )}
+                      <XAxis dataKey="hour" hide />
+                      <Area type="monotone" dataKey="value" stroke="#FF2D2D" strokeWidth={1.5} fill={`url(#crit-grad-${i})`} dot={false} />
                     </AreaChart>
                   </ResponsiveContainer>
+                  <span className="absolute right-0 top-1/2 -translate-y-1/2 w-1 h-1 rounded-full bg-[#FF2D2D] animate-pulse" />
+                  <div className="flex justify-between text-[9px] text-muted-foreground/40 mt-0.5">
+                    <span>{lang === "pt" ? "início" : "start"}</span>
+                    <span>{lang === "pt" ? "agora" : "now"}</span>
+                  </div>
                 </div>
               )}
 
-              {/* ─── LAYER 5: ACTIONS ─── */}
-              <div className="flex items-center justify-between mt-auto pt-1 border-t border-border/15">
-                <div className="flex flex-wrap gap-1">
-                  {m.reasons.slice(0, 3).map(r => (
-                    <span key={r} className="inline-flex items-center gap-0.5 px-1 py-0.5 rounded text-[7px] font-medium bg-secondary text-secondary-foreground">
-                      {reasonIcons[r]} {l[r] || r}
-                    </span>
-                  ))}
+              {/* ⑦ METRICS FOOTER */}
+              <div className="flex items-center justify-between mt-2 pt-2 border-t border-border/40">
+                <div className="flex items-center gap-3">
+                  <div className="flex flex-col items-center">
+                    <AbbrTooltip text="TVI" className="text-[9px] uppercase text-muted-foreground tracking-wide" />
+                    <span className={`text-lg font-bold leading-none ${tviColor}`}>{tviScore}</span>
+                    <span className={`text-[9px] ${tviColor}`}>{tviLabel}</span>
+                  </div>
+                  <span className="text-[11px] text-muted-foreground flex items-center gap-0.5">
+                    <Clock className="w-2.5 h-2.5" />
+                    {trend.time || (lang === "pt" ? "agora" : "now")}
+                  </span>
                 </div>
-                <div className="flex-shrink-0">
-                  {isExpanded
-                    ? <ChevronUp className="w-3 h-3 text-muted-foreground/50" />
-                    : <ChevronDown className="w-3 h-3 text-muted-foreground/30 group-hover:text-muted-foreground/60 transition-colors" />
-                  }
+                <div className="flex items-center gap-1.5" onClick={ev => ev.stopPropagation()}>
+                  {trend.sourceUrl && (
+                    <a
+                      href={trend.sourceUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-1 h-6 px-2 text-[11px] font-medium border border-border/60 rounded-md text-muted-foreground hover:bg-muted/50 transition-colors"
+                    >
+                      <ExternalLink className="w-2.5 h-2.5" />
+                      {lang === "pt" ? "Fonte" : "Source"}
+                    </a>
+                  )}
+                  <button
+                    onClick={() => onSelectTrend?.(trend)}
+                    className="inline-flex items-center gap-1 h-6 px-2 text-[11px] font-medium border border-border/60 rounded-md text-muted-foreground hover:bg-muted/50 transition-colors"
+                  >
+                    📊 Timeline
+                  </button>
                 </div>
               </div>
 
@@ -256,24 +200,15 @@ export default function CriticalMomentsSection({ moments, onSelectTrend }: Props
                     transition={{ duration: 0.2 }}
                     className="overflow-hidden"
                   >
-                    <div className="space-y-2 border-t border-border/30 pt-2">
-                      {/* Prediction */}
-                      <div className="rounded-md bg-primary/5 border border-primary/10 px-2 py-1.5">
-                        <div className="flex items-start gap-1.5">
-                          <span className="text-sm flex-shrink-0">{m.predictionEmoji}</span>
-                          <div>
-                            <span className="text-[8px] font-bold uppercase tracking-wider text-primary/70 block mb-0.5">
-                              {lang === "pt" ? "Previsão" : "Prediction"}
-                            </span>
-                            <p className="text-[10px] text-foreground/80 leading-relaxed">{m.prediction}</p>
-                          </div>
+                    <div className="space-y-2 border-t border-border/30 pt-2 mt-2">
+                      {m.prediction && (
+                        <div className="rounded-md bg-primary/5 border border-primary/10 px-2 py-1.5">
+                          <span className="text-[8px] font-bold uppercase tracking-wider text-primary/70 block mb-0.5">
+                            <AbbrTooltip text="PREVISÃO">{m.predictionEmoji} {lang === "pt" ? "Previsão" : "Prediction"}</AbbrTooltip>
+                          </span>
+                          <p className="text-[10px] text-foreground/80 leading-relaxed">{m.prediction}</p>
                         </div>
-                      </div>
-
-                      {/* Summary */}
-                      <p className="text-[10px] text-muted-foreground leading-relaxed">{m.summary}</p>
-
-                      {/* Related */}
+                      )}
                       {m.relatedTrends.length > 0 && (
                         <div className="flex flex-wrap gap-1">
                           {m.relatedTrends.slice(0, 4).map((rt, idx) => (
@@ -283,20 +218,6 @@ export default function CriticalMomentsSection({ moments, onSelectTrend }: Props
                           ))}
                         </div>
                       )}
-
-                      {/* Action buttons */}
-                      <div className="flex items-center gap-1.5" onClick={ev => ev.stopPropagation()}>
-                        {trend.sourceUrl && (
-                          <a href={trend.sourceUrl} target="_blank" rel="noopener noreferrer"
-                            className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-secondary text-secondary-foreground text-[9px] font-medium hover:bg-secondary/80 transition-colors">
-                            <ExternalLink className="w-2.5 h-2.5" /> {lang === "pt" ? "Ver fonte" : "Source"}
-                          </a>
-                        )}
-                        <button onClick={() => onSelectTrend?.(trend)}
-                          className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-primary text-primary-foreground text-[9px] font-semibold hover:bg-primary/90 transition-colors">
-                          Timeline <ArrowRight className="w-2.5 h-2.5" />
-                        </button>
-                      </div>
                     </div>
                   </motion.div>
                 )}
