@@ -600,7 +600,7 @@ const Index = () => {
                       📅 24H
                       <span className="text-micro font-normal ml-1">({ultimas24h.length})</span>
                     </div>
-                    <div style={gridStyle}>
+                    <div style={masonryStyle}>
                         {ultimas24h.map((trend) => renderCard(trend, globalIndex++))}
                     </div>
                   </>
