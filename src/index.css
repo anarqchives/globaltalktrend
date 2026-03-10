@@ -224,15 +224,15 @@
     flex-direction: column;
     backface-visibility: hidden;
     overflow: hidden;
-    border-radius: 12px;
-    border: 1px solid hsl(var(--border) / 0.5);
+    border-radius: 10px;
+    border: 1px solid hsl(var(--border) / 0.4);
     background: hsl(var(--card));
-    box-shadow: 0 1px 3px 0 rgba(0,0,0,0.04), 0 1px 2px -1px rgba(0,0,0,0.03);
+    box-shadow: 0 1px 2px 0 rgba(0,0,0,0.03);
     transition: box-shadow 0.2s ease, border-color 0.2s ease, transform 0.2s ease;
   }
   .timeline-card-wrapper:hover {
-    box-shadow: 0 4px 12px -2px rgba(0,0,0,0.08), 0 2px 4px -2px rgba(0,0,0,0.04);
-    border-color: hsl(var(--border));
+    box-shadow: 0 3px 10px -3px rgba(0,0,0,0.07), 0 1px 3px -1px rgba(0,0,0,0.04);
+    border-color: hsl(var(--border) / 0.7);
     transform: translateY(-1px);
   }
 
@@ -254,22 +254,22 @@
     background: transparent;
   }
 
-  /* Card type: article — left accent */
+  /* Card type: article — subtle left accent */
   .timeline-card-article {
-    border-left: 3px solid var(--card-accent-color, hsl(var(--primary)));
+    border-left: 3px solid hsl(var(--muted-foreground) / 0.15);
   }
 
-  /* Card type: viral — subtle gradient bg */
+  /* Card type: viral — subtle warm bg */
   .timeline-card-viral {
-    background: linear-gradient(135deg, hsl(0 100% 50% / 0.03) 0%, hsl(var(--card)) 60%);
+    background: linear-gradient(135deg, hsl(0 100% 50% / 0.02) 0%, hsl(var(--card)) 60%);
   }
 
-  /* Tier styling — top accent strip */
+  /* Tier styling — top accent strip (neutral tones) */
   .timeline-card[data-tier="critical"] {
     border-top: 2px solid hsl(var(--color-critical));
   }
   .timeline-card[data-tier="moderate"] {
-    border-top: 2px solid hsl(var(--color-moderate));
+    border-top: 2px solid hsl(var(--color-moderate) / 0.6);
   }
 
   .timeline-card-expanded {

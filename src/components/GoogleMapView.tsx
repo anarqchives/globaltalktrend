@@ -1459,16 +1459,16 @@ const GoogleMapView = ({
               <Globe className="w-3 h-3" />
             </button>
           )}
+          {onClose && (
+            <button
+              onClick={onClose}
+              className="w-7 h-7 rounded-lg flex items-center justify-center bg-transparent text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-colors pointer-events-auto ml-1"
+              title={t("mapCloseMap")}
+            >
+              <X className="w-3.5 h-3.5" strokeWidth={2.5} />
+            </button>
+          )}
         </div>
-        {onClose && (
-          <button
-            onClick={onClose}
-            className="ml-auto w-7 h-7 rounded-lg flex items-center justify-center bg-transparent text-muted-foreground hover:text-foreground transition-colors pointer-events-auto"
-            title={t("mapCloseMap")}
-          >
-            <X className="w-4 h-4" />
-          </button>
-        )}
       </div>
 
       {/* Update notification */}
