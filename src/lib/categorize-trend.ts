@@ -288,6 +288,12 @@ const sourceCountryMap: Record<string, string> = {
   "El Mercurio": "CL",
   "Google News": "GL",
   "Reddit": "GL",
+  "Semantic Scholar": "GL",
+  "OMS (WHO)": "GL",
+  "FMI (IMF)": "GL",
+  "Lobsters": "US",
+  "ACLED": "GL",
+  "GDELT DOC": "GL",
 };
 
 const countryKeywordsMap: Record<string, string[]> = {
