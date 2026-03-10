@@ -1478,6 +1478,19 @@ const GoogleMapView = ({
       {/* Map container */}
       <div ref={mapRef} className="absolute inset-0 z-0" />
 
+      {/* Mode transition fade overlay */}
+      <AnimatePresence>
+        {modeTransitioning && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.15, ease: "easeInOut" }}
+            className="absolute inset-0 z-[3] bg-background/20 backdrop-blur-[2px] pointer-events-none"
+          />
+        )}
+      </AnimatePresence>
+
       {/* Loading state */}
       {!mapLoaded && !mapError && (
         <div className="absolute inset-0 flex items-center justify-center bg-background/50 backdrop-blur-sm">
