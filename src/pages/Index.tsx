@@ -571,6 +571,7 @@ const Index = () => {
                   isMultiplatform={isMulti}
                   crossPlatformCluster={matchingCluster}
                   onSaveCard={saveCard}
+                  aiContext={trendContexts[trend.title] || trendContexts[(trend as any)._originalTitle]}
                   onClick={() => {
                     trackAction("view", 1, { title: trend.title, platform: trend.platform, countryCode: trend.countryCode, category: trend.category });
                   }}
