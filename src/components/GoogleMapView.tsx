@@ -195,8 +195,19 @@ const GoogleMapView = ({
   const openInfoCountryRef = useRef<string | null>(null);
   const [mapError, setMapError] = useState<string | null>(null);
   const [mapViewType, setMapViewType] = useState<MapViewType>("roadmap");
-  const [mapMode, setMapMode] = useState<MapMode>("heatmap");
+  const [mapMode, setMapModeRaw] = useState<MapMode>("heatmap");
+  const [modeTransitioning, setModeTransitioning] = useState(false);
   const heatmapEnabled = mapMode === "heatmap"; // derived from mapMode
+
+  // Smooth mode transition with brief fade
+  const setMapMode = useCallback((mode: MapMode) => {
+    if (mode === mapMode) return;
+    setModeTransitioning(true);
+    setTimeout(() => {
+      setMapModeRaw(mode);
+      setTimeout(() => setModeTransitioning(false), 200);
+    }, 150);
+  }, [mapMode]);
   const [isDark, setIsDark] = useState(() => document.documentElement.classList.contains("dark"));
   const [updateNotif, setUpdateNotif] = useState<{ countries: number; trends: number } | null>(null);
   const [mapRetry, setMapRetry] = useState(0);
