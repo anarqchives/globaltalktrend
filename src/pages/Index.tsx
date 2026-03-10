@@ -578,7 +578,7 @@ const Index = () => {
                       🔥 {lang === "pt" ? "AGORA" : "NOW"}
                       <span className="text-micro font-normal text-muted-foreground ml-1">({agora.length})</span>
                     </div>
-                    <div style={gridStyle}>
+                    <div style={masonryStyle}>
                         {agora.map((trend) => renderCard(trend, globalIndex++))}
                     </div>
                   </>
