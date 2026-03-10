@@ -1055,47 +1055,43 @@ const GoogleMapView = ({
       const isHighActivity = intensity > 0.5;
       const isMedActivity = intensity > 0.25;
 
-      // Animated ripple rings
+      // Sonar pulse rings — concentric expanding rings like radar pings
       if (count > 0 && (isHighActivity || isMedActivity)) {
-        const rippleScale = scale * 2.8;
-        const ripple = new g.maps.Marker({
-          map, position: { lat: cp.lat, lng: cp.lng },
-          icon: { path: g.maps.SymbolPath.CIRCLE, fillColor: fill, fillOpacity: 0, strokeColor: ring, strokeWeight: 2, strokeOpacity: 0.5, scale: rippleScale },
-          clickable: false, zIndex: 0, optimized: false,
-        });
-        rippleOverlaysRef.current.push(ripple);
-        let startTime = performance.now();
-        const duration = isHighActivity ? 1800 : 2800;
-        const animateRipple = (now: number) => {
-          if (!ripple.getMap()) return;
-          const elapsed = (now - startTime) % duration;
-          const progress = elapsed / duration;
-          const currentScale = scale + (rippleScale - scale) * progress;
-          const opacity = 0.6 * (1 - progress);
-          ripple.setIcon({ path: g.maps.SymbolPath.CIRCLE, fillColor: fill, fillOpacity: 0, strokeColor: ring, strokeWeight: 2 * (1 - progress * 0.5), strokeOpacity: opacity, scale: currentScale });
-          requestAnimationFrame(animateRipple);
-        };
-        requestAnimationFrame(animateRipple);
+        const isCritical = intensity > 0.7;
+        const ringCount = isCritical ? 3 : isHighActivity ? 2 : 1;
+        const baseDuration = isCritical ? 2200 : isHighActivity ? 2800 : 3500;
 
-        // Second ring for high activity
-        if (isHighActivity) {
-          const ripple2 = new g.maps.Marker({
+        for (let ringIdx = 0; ringIdx < ringCount; ringIdx++) {
+          const rippleScale = scale * (2.5 + ringIdx * 0.8);
+          const ripple = new g.maps.Marker({
             map, position: { lat: cp.lat, lng: cp.lng },
-            icon: { path: g.maps.SymbolPath.CIRCLE, fillColor: fill, fillOpacity: 0, strokeColor: ring, strokeWeight: 1.5, strokeOpacity: 0.35, scale: rippleScale },
+            icon: { path: g.maps.SymbolPath.CIRCLE, fillColor: fill, fillOpacity: 0, strokeColor: ring, strokeWeight: 2, strokeOpacity: 0.5, scale: rippleScale },
             clickable: false, zIndex: 0, optimized: false,
           });
-          rippleOverlaysRef.current.push(ripple2);
-          const startTime2 = performance.now() - 600;
-          const animateRipple2 = (now: number) => {
-            if (!ripple2.getMap()) return;
-            const elapsed = (now - startTime2) % duration;
-            const progress = elapsed / duration;
-            const currentScale = scale + (rippleScale * 1.2 - scale) * progress;
-            const opacity = 0.4 * (1 - progress);
-            ripple2.setIcon({ path: g.maps.SymbolPath.CIRCLE, fillColor: fill, fillOpacity: 0, strokeColor: ring, strokeWeight: 1.2 * (1 - progress * 0.5), strokeOpacity: opacity, scale: currentScale });
-            requestAnimationFrame(animateRipple2);
+          rippleOverlaysRef.current.push(ripple);
+          const phaseOffset = (ringIdx * baseDuration) / ringCount;
+          const startTime = performance.now() - phaseOffset;
+          const animateRipple = (now: number) => {
+            if (!ripple.getMap()) return;
+            const elapsed = (now - startTime) % baseDuration;
+            const progress = elapsed / baseDuration;
+            // Ease-out cubic for organic deceleration
+            const eased = 1 - Math.pow(1 - progress, 3);
+            const currentScale = scale + (rippleScale - scale) * eased;
+            const opacity = (isCritical ? 0.7 : 0.5) * (1 - eased);
+            const strokeW = (isCritical ? 2.5 : 1.8) * (1 - eased * 0.6);
+            ripple.setIcon({
+              path: g.maps.SymbolPath.CIRCLE,
+              fillColor: isCritical ? fill : "transparent",
+              fillOpacity: isCritical ? 0.03 * (1 - eased) : 0,
+              strokeColor: ring,
+              strokeWeight: strokeW,
+              strokeOpacity: opacity,
+              scale: currentScale,
+            });
+            requestAnimationFrame(animateRipple);
           };
-          requestAnimationFrame(animateRipple2);
+          requestAnimationFrame(animateRipple);
         }
       }
 
