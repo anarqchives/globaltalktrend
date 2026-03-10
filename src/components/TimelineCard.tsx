@@ -255,6 +255,9 @@ const TimelineCard = ({
 
   const changeNum = parseFloat(change?.replace(/[^0-9.\-]/g, "") || "0");
 
+  // Determine tier
+  const tier = trendScore >= 70 ? "critical" : trendScore >= 40 ? "moderate" : "low";
+
   return (
     <motion.div
       className={`timeline-card-wrapper ${expanded ? 'timeline-card-expanded-wrapper' : ''}`}
@@ -264,7 +267,7 @@ const TimelineCard = ({
       viewport={{ once: true, margin: "-30px" }}
       transition={{ duration: 0.3, ease: [0.25, 0.1, 0.25, 1], delay: Math.min(staggerIndex * 0.04, 0.4) }}
     >
-      <div className={`timeline-card group ${expanded ? 'timeline-card-expanded' : ''}`}>
+      <div className={`timeline-card group ${expanded ? 'timeline-card-expanded' : ''}`} data-tier={tier}>
         
         {/* === MAIN CONTENT: Click to expand === */}
         <div className="cursor-pointer" onClick={handleToggle}>
