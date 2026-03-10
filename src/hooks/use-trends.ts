@@ -731,7 +731,20 @@ export function useTrends(filters: FilterState, onTrendCountsChange: (counts: Re
         firstSeenAt: t.firstSeenAt || new Date().toISOString(),
       }));
 
-      const combinedTrends = [...scoredLive, ...uniqueHistorical];
+      // Quality filter: remove low-quality content
+      const qualityFilter = (trend: TrendCardProps): boolean => {
+        const p = trend.platform.toLowerCase();
+        const vol = parseInt((trend.volume || "0").replace(/[^0-9]/g, "")) || 0;
+        if (p.includes("stack overflow") && vol < 100) return false;
+        if (p.includes("mastodon") && vol < 10) return false;
+        if (p.includes("reddit") && vol < 50) return false;
+        if (p.includes("bluesky") && vol < 20) return false;
+        if (p.includes("github") && vol < 10) return false;
+        if (p.includes("hacker news") && vol < 20) return false;
+        return true;
+      };
+
+      const combinedTrends = [...scoredLive, ...uniqueHistorical].filter(qualityFilter);
 
       // Check press availability
       const pressPlatforms = SOURCE_GROUPS.imprensa;
