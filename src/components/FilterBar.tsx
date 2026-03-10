@@ -262,24 +262,24 @@ const FilterBar = ({ filters, onChange, onForceReset, onSaveFilter, isLoggedIn }
           </Tooltip>
         }
 
-        <div className="flex items-center gap-2 ml-auto flex-shrink-0 whitespace-nowrap pl-2 border-l border-border/30">
+        <div className="flex items-center gap-2 ml-auto flex-shrink-0 whitespace-nowrap pl-2 border-l border-border/30 leading-none">
           <Tooltip>
             <TooltipTrigger asChild>
-              <span className="flex items-center gap-1.5 cursor-help">
-                <span className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ background: "hsl(142, 72%, 45%)" }} />
-                <span className="text-[11px] font-medium text-foreground">{t("live")}</span>
+              <span className="inline-flex items-center gap-1.5 cursor-help leading-none">
+                <span className="w-1.5 h-1.5 rounded-full animate-pulse flex-shrink-0" style={{ background: "hsl(142, 72%, 45%)" }} />
+                <span className="text-[11px] font-medium text-foreground leading-none">{t("live")}</span>
               </span>
             </TooltipTrigger>
             <TooltipContent side="bottom" className="max-w-[240px] text-xs">
               {t("liveTooltip")}
             </TooltipContent>
           </Tooltip>
-          <span className="text-muted-foreground/20">·</span>
+          <span className="text-muted-foreground/20 leading-none">·</span>
           <OnlineUsersCount />
-          <span className="text-muted-foreground/20">·</span>
+          <span className="text-muted-foreground/20 leading-none">·</span>
           <Tooltip>
             <TooltipTrigger asChild>
-              <span className="cursor-help">
+              <span className="inline-flex items-center cursor-help leading-none">
                 <CountdownTimer />
               </span>
             </TooltipTrigger>
