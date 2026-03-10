@@ -589,7 +589,7 @@ const Index = () => {
                       ⏳ {lang === "pt" ? "ÚLTIMAS 2H" : "LAST 2H"}
                       <span className="text-micro font-normal ml-1">({ultimas2h.length})</span>
                     </div>
-                    <div style={gridStyle}>
+                    <div style={masonryStyle}>
                         {ultimas2h.map((trend) => renderCard(trend, globalIndex++))}
                     </div>
                   </>
