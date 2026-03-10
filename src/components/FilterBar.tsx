@@ -129,7 +129,7 @@ function ChipDropdown({ chipLabel, value, options, isActive, icon, onChange, onC
       <button
         ref={btnRef}
         onClick={() => setOpen(!open)}
-        className={`inline-flex items-center transition-all duration-150 h-[32px] px-3 rounded-lg text-xs font-semibold gap-1.5 border-[1.5px] flex-shrink-0 ${
+        className={`inline-flex items-center transition-all duration-150 h-[28px] sm:h-[32px] px-2 sm:px-3 rounded-lg text-[11px] sm:text-xs font-semibold gap-1 sm:gap-1.5 border-[1.5px] ${
           isActive
             ? "border-primary bg-primary text-primary-foreground shadow-sm"
             : "border-border bg-card text-foreground/70 hover:border-primary/40 hover:bg-accent hover:text-foreground"
