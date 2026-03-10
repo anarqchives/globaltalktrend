@@ -394,6 +394,7 @@ const TimelineCard = ({
         className={`timeline-card group ${cardTypeClass} ${expanded ? 'timeline-card-expanded' : ''}`}
         data-tier={tier}
         data-card-type={cardType}
+        style={{ border: "1px solid #F3F4F6", borderRadius: 8, margin: 4, background: "hsl(var(--card))" }}
       >
         {/* When expanded, hide the collapsed card entirely */}
         {!expanded && (
