@@ -298,7 +298,6 @@ const FilterBar = ({ filters, onChange, onForceReset, onSaveFilter, isLoggedIn }
           <TooltipTrigger asChild>
             <button
               onClick={() => onSaveFilter?.()}
-              className="flex items-center justify-center"
               className="flex items-center justify-center w-[30px] h-[30px] flex-shrink-0 rounded-lg border border-border bg-card text-muted-foreground hover:border-muted-foreground/50 hover:bg-muted hover:text-foreground transition-all duration-[120ms]"
               aria-label={lang === "pt" ? "Criar alerta" : "Create alert"}
             >
