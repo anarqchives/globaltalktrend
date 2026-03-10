@@ -1101,6 +1101,12 @@ export default function WeeklyPulseDashboard({ trends }: { trends: TrendCardProp
 
   return (
     <div className="p-2.5 space-y-2.5">
+      {/* Timed out notice */}
+      {timedOut && weeklyData.length === 0 && (
+        <div className="text-center py-1">
+          <span className="text-[10px] text-muted-foreground/50">Dados simulados — atualização em breve</span>
+        </div>
+      )}
       {/* ═══════ HEADER STATUS BAR ═══════ */}
       <div className="flex items-center justify-between px-1">
         <span className="text-[8px] text-muted-foreground flex items-center gap-1">
