@@ -1,6 +1,7 @@
 import { AreaChart, Area, ResponsiveContainer, XAxis, YAxis, Tooltip, CartesianGrid } from "recharts";
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { Share2, MessageCircle, ThumbsUp, MapPin, Newspaper, ExternalLink, Shield, CheckCircle2, FlaskConical, Globe } from "lucide-react";
+import SparklineArea from "./SparklineArea";
 import { toast } from "@/hooks/use-toast";
 
 export interface TrendCardProps {
