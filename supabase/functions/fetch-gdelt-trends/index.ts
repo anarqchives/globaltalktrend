@@ -83,29 +83,30 @@ serve(async (req) => {
       });
     }
 
-    // GDELT DOC 2.0 requires a query — use broad topic queries for diverse results
+    // GDELT DOC 2.0 — fetch trending articles by broad topic queries
     const queries = [
-      "sourcelang:english",
-      "sourcelang:spanish",
-      "sourcelang:portuguese",
+      "world OR global OR crisis OR breaking",
+      "economy OR market OR trade OR finance",
+      "technology OR AI OR climate OR health",
     ];
     
     let allArticles: any[] = [];
     
     for (const q of queries) {
+      if (allArticles.length >= 25) break;
       try {
         const gdeltUrl = `https://api.gdeltproject.org/api/v2/doc/doc?query=${encodeURIComponent(q)}&mode=ArtList&maxrecords=15&format=json&sort=HybridRel&timespan=60min`;
+        console.log("GDELT fetching:", gdeltUrl);
         const response = await fetch(gdeltUrl, {
           headers: { "User-Agent": "GlobalTalkTrend/1.0" },
         });
         if (!response.ok) {
-          await response.text(); // consume body
+          await response.text();
           continue;
         }
         const text = await response.text();
-        // GDELT sometimes returns non-JSON error messages
         if (!text.startsWith("{") && !text.startsWith("[")) {
-          console.log("GDELT non-JSON response for query:", q, text.slice(0, 100));
+          console.log("GDELT non-JSON for query:", q, text.slice(0, 150));
           continue;
         }
         const data = JSON.parse(text);
@@ -114,10 +115,11 @@ serve(async (req) => {
           allArticles = allArticles.concat(articles);
         }
       } catch (e) {
-        console.log("GDELT query failed:", q, e);
+        console.log("GDELT query error:", q, String(e));
       }
     }
-    
+
+    console.log("GDELT total articles:", allArticles.length);
     const articles = allArticles;
 
     if (!Array.isArray(articles) || articles.length === 0) {
