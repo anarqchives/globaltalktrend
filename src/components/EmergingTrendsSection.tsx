@@ -1,13 +1,16 @@
 import { useMemo } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import { Clock, Radio, ExternalLink, ArrowRight, Bookmark } from "lucide-react";
-import { AreaChart, Area, ResponsiveContainer, XAxis } from "recharts";
+import { motion } from "framer-motion";
+import { Clock, ExternalLink, Bookmark, Bell, Share2, Flag } from "lucide-react";
+import { AreaChart, Area, ResponsiveContainer } from "recharts";
 import { TrendCardProps } from "./TrendCard";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { toast } from "@/hooks/use-toast";
 import AbbrTooltip from "./AbbrTooltip";
+import { AnomalyAlert } from "@/hooks/use-anomaly-alerts";
 
 interface EmergingTrendsSectionProps {
   trends: TrendCardProps[];
+  anomalies?: AnomalyAlert[];
   onSelectTrend?: (trend: TrendCardProps) => void;
   onClose?: () => void;
 }
@@ -18,6 +21,7 @@ interface EmergingTrend {
   growthRate: number;
   sourceCount: number;
   score: number;
+  signalType: "spike" | "rapid" | "emerging";
 }
 
 function detectEmergingTrends(trends: TrendCardProps[]): EmergingTrend[] {
@@ -40,12 +44,13 @@ function detectEmergingTrends(trends: TrendCardProps[]): EmergingTrend[] {
 
     const sourceCount = trend.sources?.length || 1;
     const score = growthRate * (1 + 1 / Math.max(age / 60000, 1)) * (1 + sourceCount * 0.3);
+    const signalType: "spike" | "rapid" | "emerging" = growthRate > 300 ? "spike" : growthRate > 150 ? "rapid" : "emerging";
 
-    results.push({ trend, ageMinutes: Math.round(age / 60_000), growthRate, sourceCount, score });
+    results.push({ trend, ageMinutes: Math.round(age / 60_000), growthRate, sourceCount, score, signalType });
   }
 
   results.sort((a, b) => b.score - a.score);
-  return results.slice(0, 12);
+  return results.slice(0, 18);
 }
 
 const countryCodeToFlag = (code?: string) => {
@@ -76,187 +81,293 @@ const platformColors: Record<string, string> = {
   "X (Twitter)": "hsl(0, 0%, 15%)",
 };
 
-function generateSignalBadge(e: EmergingTrend, lang: string) {
+const COLUMNS = [
+  {
+    type: "spike" as const,
+    icon: "📈",
+    title: "Pico Anômalo",
+    titleEn: "Anomalous Spike",
+    subtitle: "Crescimento atípico detectado",
+    subtitleEn: "Atypical growth detected",
+    accent: "#FF4D4F",
+    headerBg: "linear-gradient(180deg, #FFF1F0 0%, white 100%)",
+    badgeBg: "bg-[#FFF1F0] dark:bg-red-900/20",
+    badgeText: "text-[#CF1322] dark:text-red-400",
+    badgeBorder: "border-[#FFCCC7] dark:border-red-800",
+  },
+  {
+    type: "rapid" as const,
+    icon: "⚡",
+    title: "Crescimento Alto",
+    titleEn: "High Growth",
+    subtitle: "Volume acima da média histórica",
+    subtitleEn: "Volume above historical average",
+    accent: "#FA8C16",
+    headerBg: "linear-gradient(180deg, #FFF7E6 0%, white 100%)",
+    badgeBg: "bg-[#FFF7E6] dark:bg-amber-900/20",
+    badgeText: "text-[#D46B08] dark:text-amber-400",
+    badgeBorder: "border-[#FFD591] dark:border-amber-800",
+  },
+  {
+    type: "emerging" as const,
+    icon: "📡",
+    title: "Sinal Emergente",
+    titleEn: "Emerging Signal",
+    subtitle: "Tendência nova em aceleração",
+    subtitleEn: "New trend accelerating",
+    accent: "#1677FF",
+    headerBg: "linear-gradient(180deg, #E6F4FF 0%, white 100%)",
+    badgeBg: "bg-[#E6F4FF] dark:bg-blue-900/20",
+    badgeText: "text-[#0958D9] dark:text-blue-400",
+    badgeBorder: "border-[#91CAFF] dark:border-blue-800",
+  },
+];
+
+function emBrveToast() {
+  toast({ title: "⏳ Em breve", description: "Esta funcionalidade será implementada em breve." });
+}
+
+function SignalCard({
+  e,
+  col,
+  idx,
+  lang,
+}: {
+  e: EmergingTrend;
+  col: typeof COLUMNS[number];
+  idx: number;
+  lang: string;
+}) {
+  const pColor = platformColors[e.trend.platform] || "#666";
+  const flag = countryCodeToFlag(e.trend.countryCode);
   const growth = Math.round(e.growthRate);
   const age = e.ageMinutes;
   const timeLabel = lang === "pt"
     ? (age < 30 ? "nos últimos 30 minutos" : age < 60 ? "na última hora" : `nas últimas ${Math.round(age / 60)}h`)
     : (age < 30 ? "in the last 30 minutes" : age < 60 ? "in the last hour" : `in the last ${Math.round(age / 60)}h`);
 
-  if (growth > 300) {
-    return {
-      icon: "📈",
-      type: lang === "pt" ? "Pico anômalo" : "Anomalous spike",
-      detail: `+${growth}% ${lang === "pt" ? "de variação" : "variation"} ${timeLabel}`,
-      bg: "bg-[#FFF1F0] dark:bg-red-900/20",
-      text: "text-[#CF1322] dark:text-red-400",
-      border: "border-[#FFCCC7] dark:border-red-800",
-    };
-  }
-  if (growth > 150) {
-    return {
-      icon: "⚡",
-      type: lang === "pt" ? "Crescimento rápido" : "Rapid growth",
-      detail: `+${growth}% ${lang === "pt" ? "de variação" : "variation"} ${timeLabel}`,
-      bg: "bg-[#FFF7E6] dark:bg-amber-900/20",
-      text: "text-[#D46B08] dark:text-amber-400",
-      border: "border-[#FFD591] dark:border-amber-800",
-    };
-  }
-  return {
-    icon: "📡",
-    type: lang === "pt" ? "Sinal emergente" : "Emerging signal",
-    detail: `+${growth}% ${lang === "pt" ? "de crescimento" : "growth"} ${timeLabel}`,
-    bg: "bg-[#F0F5FF] dark:bg-blue-900/20",
-    text: "text-[#1D39C4] dark:text-blue-400",
-    border: "border-[#ADC6FF] dark:border-blue-800",
-  };
+  const tviScore = Math.min(Math.round(e.growthRate * 0.3 + e.sourceCount * 10 + (120 - e.ageMinutes) * 0.3), 100);
+  const tviLabel = tviScore >= 91 ? "Viral" : tviScore >= 61 ? "High" : tviScore >= 31 ? "Medium" : "Low";
+  const tviColor = tviScore >= 91 ? "text-red-500" : tviScore >= 61 ? "text-orange-500" : tviScore >= 31 ? "text-amber-500" : "text-muted-foreground";
+
+  const sparkRaw = e.trend.historicalData?.slice(-12) || [];
+  const sparkData = sparkRaw.length > 0 ? sparkRaw : e.trend.sparkData?.map(v => ({ value: v })) || [];
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 6 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay: idx * 0.04, duration: 0.25 }}
+      className="border-b border-border/30 last:border-b-0 hover:bg-muted/30 transition-colors duration-[120ms]"
+      style={{ padding: "14px 16px" }}
+    >
+      {/* ① HEADER ROW */}
+      <div className="flex items-center gap-1.5 h-5">
+        <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: pColor }} />
+        <span className="text-[11px] font-medium" style={{ color: pColor }}>{e.trend.platform}</span>
+        <span className="text-muted-foreground/40 text-[11px]">·</span>
+        {flag && <span className="text-[11px]">{flag}</span>}
+        {e.trend.countryCode && (
+          <AbbrTooltip text={e.trend.countryCode.toUpperCase()} className="text-[11px] text-muted-foreground uppercase" />
+        )}
+        <span className="ml-auto text-[10px] text-muted-foreground">
+          {age < 1 ? (lang === "pt" ? "agora" : "now") : age < 60 ? `há ${age}min` : `há ${Math.round(age / 60)}h`}
+        </span>
+      </div>
+
+      {/* ② TITLE */}
+      <h3 className="text-[14px] font-bold text-foreground leading-[1.35] line-clamp-2 mt-1.5">
+        {decodeEntities(e.trend.title)}
+      </h3>
+
+      {/* ③ DESCRIPTION */}
+      {e.trend.description && (
+        <p className="text-xs text-muted-foreground leading-relaxed mt-0.5 line-clamp-2">
+          {decodeEntities(e.trend.description)}
+        </p>
+      )}
+
+      {/* ④ SIGNAL BADGE */}
+      <div className={`mt-2 inline-flex items-center gap-1 px-2 py-0.5 rounded-full border text-[11px] font-semibold ${col.badgeBg} ${col.badgeText} ${col.badgeBorder}`}>
+        <AbbrTooltip text={col.type === "spike" ? "Pico anômalo" : col.type === "rapid" ? "Crescimento rápido" : "Sinal emergente"}>
+          <span>+{growth}% {timeLabel}</span>
+        </AbbrTooltip>
+      </div>
+
+      {/* ⑤ SPARKLINE */}
+      {sparkData.length > 2 && (
+        <div className="mt-2 h-9 w-full relative">
+          <ResponsiveContainer width="100%" height="100%">
+            <AreaChart data={sparkData}>
+              <defs>
+                <linearGradient id={`emg-col-${idx}-${col.type}`} x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor={col.accent} stopOpacity={0.2} />
+                  <stop offset="100%" stopColor={col.accent} stopOpacity={0} />
+                </linearGradient>
+              </defs>
+              <Area type="monotone" dataKey="value" stroke={col.accent} strokeWidth={1.5} fill={`url(#emg-col-${idx}-${col.type})`} dot={false} />
+            </AreaChart>
+          </ResponsiveContainer>
+          <span className="absolute right-0 top-1/2 -translate-y-1/2 w-1 h-1 rounded-full animate-pulse" style={{ backgroundColor: col.accent }} />
+        </div>
+      )}
+
+      {/* ⑥ METRICS + ACTIONS ROW */}
+      <div className="flex items-center justify-between mt-2">
+        <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1">
+            <AbbrTooltip text="TVI" className="text-[9px] uppercase text-muted-foreground tracking-wide" />
+            <span className={`text-base font-bold leading-none ${tviColor}`}>{tviScore}</span>
+            <span className={`text-[10px] ${tviColor}`}>{tviLabel}</span>
+          </div>
+        </div>
+        <div className="flex items-center gap-0.5">
+          <button onClick={(ev) => { ev.stopPropagation(); emBrveToast(); }} className="w-7 h-7 rounded-lg flex items-center justify-center text-muted-foreground/40 hover:text-foreground transition-colors" title="Salvar tendência">
+            <Bookmark className="w-3.5 h-3.5" />
+          </button>
+          <button onClick={(ev) => { ev.stopPropagation(); emBrveToast(); }} className="w-7 h-7 rounded-lg flex items-center justify-center text-muted-foreground/40 hover:text-foreground transition-colors" title="Criar alerta">
+            <Bell className="w-3.5 h-3.5" />
+          </button>
+          <button onClick={(ev) => {
+            ev.stopPropagation();
+            const url = e.trend.sourceUrl || window.location.href;
+            if (navigator.share) navigator.share({ title: e.trend.title, url }).catch(() => {});
+            else { navigator.clipboard.writeText(`${e.trend.title} — ${url}`); toast({ title: "🔗 Link copiado!" }); }
+          }} className="w-7 h-7 rounded-lg flex items-center justify-center text-muted-foreground/40 hover:text-foreground transition-colors" title="Compartilhar">
+            <Share2 className="w-3.5 h-3.5" />
+          </button>
+          <button onClick={(ev) => {
+            ev.stopPropagation();
+            toast({ title: "⚠️ Denúncia enviada", description: `Obrigado por reportar: ${e.trend.title.slice(0, 40)}` });
+          }} className="w-7 h-7 rounded-lg flex items-center justify-center text-muted-foreground/40 hover:text-destructive transition-colors" title="Denunciar">
+            <Flag className="w-3.5 h-3.5" />
+          </button>
+          {e.trend.sourceUrl && (
+            <a href={e.trend.sourceUrl} target="_blank" rel="noopener noreferrer" onClick={ev => ev.stopPropagation()}
+              className="w-7 h-7 rounded-lg flex items-center justify-center text-muted-foreground/40 hover:text-foreground transition-colors" title="Abrir fonte original">
+              <ExternalLink className="w-3.5 h-3.5" />
+            </a>
+          )}
+        </div>
+      </div>
+    </motion.div>
+  );
 }
 
-export default function EmergingTrendsSection({ trends, onSelectTrend }: EmergingTrendsSectionProps) {
+export default function EmergingTrendsSection({ trends, anomalies = [], onSelectTrend }: EmergingTrendsSectionProps) {
   const { lang } = useLanguage();
   const emerging = useMemo(() => detectEmergingTrends(trends), [trends]);
 
-  if (emerging.length === 0) return null;
+  // Also classify anomalies into columns
+  const anomalyItems: EmergingTrend[] = useMemo(() => {
+    return anomalies.map(a => {
+      const changeStr = a.trend.change?.replace(/[^0-9.\-]/g, "") || "0";
+      const growthRate = Math.abs(parseFloat(changeStr));
+      const signalType: "spike" | "rapid" | "emerging" = a.type === "spike" ? "spike" : a.type === "rapid_growth" ? "rapid" : growthRate > 300 ? "spike" : growthRate > 150 ? "rapid" : "emerging";
+      return {
+        trend: a.trend,
+        ageMinutes: 0,
+        growthRate,
+        sourceCount: a.trend.sources?.length || 1,
+        score: growthRate,
+        signalType,
+      };
+    });
+  }, [anomalies]);
+
+  const allItems = useMemo(() => {
+    const combined = [...anomalyItems, ...emerging];
+    // Dedup by title
+    const seen = new Set<string>();
+    return combined.filter(e => {
+      const key = e.trend.title.slice(0, 30).toLowerCase();
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    });
+  }, [anomalyItems, emerging]);
+
+  const columns = useMemo(() => {
+    return COLUMNS.map(col => ({
+      ...col,
+      items: allItems.filter(e => e.signalType === col.type),
+    }));
+  }, [allItems]);
+
+  if (allItems.length === 0) return null;
+
+  // Build prediction text from anomalies
+  const predictionText = useMemo(() => {
+    if (anomalies.length === 0) return null;
+    const platforms = new Set(anomalies.map(a => a.trend.platform));
+    const avgChange = anomalies.reduce((s, a) => s + Math.abs(parseFloat(a.trend.change?.replace(/[^0-9.\-]/g, "") || "0")), 0) / anomalies.length;
+    if (platforms.size >= 3 && avgChange > 200) {
+      return lang === "pt"
+        ? "Convergência global detectada — múltiplas plataformas em aceleração simultânea."
+        : "Global convergence detected — simultaneous acceleration across platforms.";
+    }
+    if (avgChange > 150) {
+      return lang === "pt"
+        ? "Crescimento acelerado anômalo — possível viralização nas próximas 2-6h."
+        : "Anomalous accelerated growth — possible viralization in the next 2-6h.";
+    }
+    return lang === "pt"
+      ? "Monitorando padrões incomuns — sem convergência detectada ainda."
+      : "Monitoring unusual patterns — no convergence detected yet.";
+  }, [anomalies, lang]);
 
   return (
-    <div className="px-3 py-2">
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-        <AnimatePresence mode="popLayout">
-          {emerging.map((e, i) => {
-            const sparkRaw = e.trend.historicalData?.slice(-12) || [];
-            const sparkData = sparkRaw.length > 0 ? sparkRaw : e.trend.sparkData?.map(v => ({ value: v })) || [];
-            const tviScore = Math.min(Math.round(e.growthRate * 0.3 + e.sourceCount * 10 + (120 - e.ageMinutes) * 0.3), 100);
-            const signal = generateSignalBadge(e, lang);
-            const pColor = platformColors[e.trend.platform] || "#666";
-            const flag = countryCodeToFlag(e.trend.countryCode);
+    <div className="flex flex-col h-full">
+      {/* PREVISÃO banner */}
+      {predictionText && (
+        <div className="px-4 py-3 border-b border-border/30" style={{ background: "linear-gradient(135deg, #FFF1F0, #FFF7E6)", borderLeft: "4px solid #FF4D4F" }}>
+          <div className="flex items-start gap-2">
+            <span className="text-base flex-shrink-0">🔮</span>
+            <div className="min-w-0">
+              <AbbrTooltip text="PREVISÃO" className="text-[10px] font-bold uppercase tracking-wider text-[#CF1322]">
+                {lang === "pt" ? "PREVISÃO" : "PREDICTION"}
+              </AbbrTooltip>
+              <p className="text-[11px] text-foreground/80 leading-relaxed mt-0.5">{predictionText}</p>
+              <div className="flex items-center gap-2 mt-1 text-[9px] text-muted-foreground">
+                <span>{anomalies.length} anomalias</span>
+                <span>·</span>
+                <span>{new Set(anomalies.map(a => a.trend.platform)).size} plat.</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
-            const tviLabel = tviScore >= 91 ? "Viral" : tviScore >= 61 ? "High" : tviScore >= 31 ? "Medium" : "Low";
-            const tviColor = tviScore >= 91 ? "text-red-500" : tviScore >= 61 ? "text-orange-500" : tviScore >= 31 ? "text-amber-500" : "text-muted-foreground";
-
-            return (
-              <motion.div
-                key={`${e.trend.platform}-${e.trend.title.slice(0, 20)}`}
-                layout
-                initial={{ opacity: 0, y: 8, scale: 0.97 }}
-                animate={{ opacity: 1, y: 0, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.95 }}
-                transition={{ delay: i * 0.04, duration: 0.3, ease: [0.25, 0.46, 0.45, 0.94] }}
-                className="group relative overflow-hidden rounded-xl border border-border/40 dark:border-border/30 bg-card hover:shadow-[0_4px_16px_rgba(0,0,0,0.08)] hover:-translate-y-px transition-all duration-150 ease-out p-4 flex flex-col"
-                style={{ borderLeftWidth: 3, borderLeftColor: "#4096FF" }}
-              >
-                {/* Top-right badge */}
-                <span className="absolute top-2 right-2 text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-full bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400">
-                  {lang === "pt" ? "EMERGENTE" : "EMERGING"}
-                </span>
-
-                {/* ① SOURCE + TIME ROW */}
-                <div className="flex items-center gap-1.5 h-5">
-                  <span className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ backgroundColor: pColor }} />
-                  <span className="text-xs font-medium" style={{ color: pColor }}>{e.trend.platform}</span>
-                  <span className="text-muted-foreground/40 text-[11px]">·</span>
-                  {flag && <span className="text-[11px]">{flag}</span>}
-                  {e.trend.countryCode && (
-                    <AbbrTooltip text={e.trend.countryCode.toUpperCase()} className="text-[11px] text-muted-foreground uppercase" />
-                  )}
-                  <span className="text-muted-foreground/40 text-[11px]">·</span>
-                  <span className="text-[11px] text-muted-foreground">
-                    {e.ageMinutes < 1 ? (lang === "pt" ? "agora" : "now") : e.ageMinutes < 60 ? `há ${e.ageMinutes}min` : `há ${Math.round(e.ageMinutes / 60)}h`}
-                  </span>
-                  <Bookmark className="w-4 h-4 text-muted-foreground/30 ml-auto flex-shrink-0 hover:text-primary cursor-pointer transition-colors" />
-                </div>
-
-                {/* ② TITLE */}
-                <h3 className="text-[15px] font-bold text-foreground leading-[1.4] line-clamp-2 mt-2">
-                  {decodeEntities(e.trend.title)}
-                </h3>
-
-                {/* ③ CONTEXT LINE */}
-                <p className="text-xs text-muted-foreground leading-relaxed mt-1 line-clamp-2">
-                  {e.trend.description || (lang === "pt" ? `Tendência detectada em ${e.trend.platform} com crescimento acelerado` : `Trend detected on ${e.trend.platform} with accelerating growth`)}
-                </p>
-
-                {/* ④ SIGNAL BADGE */}
-                <div className={`mt-2 inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full border text-[11px] font-semibold ${signal.bg} ${signal.text} ${signal.border}`}>
-                  <AbbrTooltip text={signal.type}>
-                    <span>{signal.icon} {signal.type}: {signal.detail}</span>
-                  </AbbrTooltip>
-                </div>
-
-                {/* ⑤ SOURCE DETAIL */}
-                <div className="flex items-center gap-1.5 mt-2 text-[11px] text-muted-foreground">
-                  <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: pColor }} />
-                  <span>{e.trend.platform}</span>
-                  {flag && (
-                    <>
-                      <span className="text-muted-foreground/40">·</span>
-                      <span>{flag}</span>
-                      {e.trend.countryCode && <AbbrTooltip text={e.trend.countryCode.toUpperCase()} className="uppercase" />}
-                    </>
-                  )}
-                </div>
-
-                {/* ⑥ SPARKLINE */}
-                {sparkData.length > 2 && (
-                  <div className="mt-2 h-10 w-full relative">
-                    <ResponsiveContainer width="100%" height="100%">
-                      <AreaChart data={sparkData}>
-                        <defs>
-                          <linearGradient id={`emg-grad-${i}`} x1="0" y1="0" x2="0" y2="1">
-                            <stop offset="0%" stopColor="#4096FF" stopOpacity={0.3} />
-                            <stop offset="100%" stopColor="#4096FF" stopOpacity={0} />
-                          </linearGradient>
-                        </defs>
-                        <XAxis dataKey="hour" hide />
-                        <Area type="monotone" dataKey="value" stroke="#4096FF" strokeWidth={1.5} fill={`url(#emg-grad-${i})`} dot={false} />
-                      </AreaChart>
-                    </ResponsiveContainer>
-                    <span className="absolute right-0 top-1/2 -translate-y-1/2 w-1 h-1 rounded-full bg-[#4096FF] animate-pulse" />
-                    <div className="flex justify-between text-[9px] text-muted-foreground/40 mt-0.5">
-                      <span>{lang === "pt" ? "início" : "start"}</span>
-                      <span>{lang === "pt" ? "agora" : "now"}</span>
-                    </div>
-                  </div>
+      {/* 3-column layout */}
+      <div className="flex flex-1 min-h-0 divide-x divide-border/30">
+        {columns.map(col => (
+          <div key={col.type} className="flex-1 min-w-0 flex flex-col">
+            {/* Column header */}
+            <div className="flex-shrink-0 px-3 flex flex-col justify-center" style={{ height: 40, background: col.headerBg, borderBottom: `2px solid ${col.accent}` }}>
+              <div className="flex items-center gap-1">
+                <span className="text-sm">{col.icon}</span>
+                <span className="text-[11px] font-bold text-foreground truncate">{lang === "pt" ? col.title : col.titleEn}</span>
+                {col.items.length > 0 && (
+                  <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full" style={{ backgroundColor: `${col.accent}15`, color: col.accent }}>{col.items.length}</span>
                 )}
+              </div>
+              <span className="text-[10px] text-muted-foreground truncate">{lang === "pt" ? col.subtitle : col.subtitleEn}</span>
+            </div>
 
-                {/* ⑦ METRICS FOOTER */}
-                <div className="flex items-center justify-between mt-2 pt-2 border-t border-border/40">
-                  <div className="flex items-center gap-3">
-                    <div className="flex flex-col items-center">
-                      <AbbrTooltip text="TVI" className="text-[9px] uppercase text-muted-foreground tracking-wide" />
-                      <span className={`text-lg font-bold leading-none ${tviColor}`}>{tviScore}</span>
-                      <span className={`text-[9px] ${tviColor}`}>{tviLabel}</span>
-                    </div>
-                    <span className="text-[11px] text-muted-foreground flex items-center gap-0.5">
-                      <Clock className="w-2.5 h-2.5" />
-                      {e.ageMinutes < 1 ? (lang === "pt" ? "agora" : "now") : `há ${e.ageMinutes}min`}
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-1.5">
-                    {e.trend.sourceUrl && (
-                      <a
-                        href={e.trend.sourceUrl}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        onClick={ev => ev.stopPropagation()}
-                        className="inline-flex items-center gap-1 h-6 px-2 text-[11px] font-medium border border-border/60 rounded-md text-muted-foreground hover:bg-muted/50 transition-colors"
-                      >
-                        <ExternalLink className="w-2.5 h-2.5" />
-                        {lang === "pt" ? "Fonte" : "Source"}
-                      </a>
-                    )}
-                    <button
-                      onClick={() => onSelectTrend?.(e.trend)}
-                      className="inline-flex items-center gap-1 h-6 px-2 text-[11px] font-medium border border-border/60 rounded-md text-muted-foreground hover:bg-muted/50 transition-colors"
-                    >
-                      📊 Timeline
-                    </button>
-                  </div>
+            {/* Scrollable card list */}
+            <div className="flex-1 overflow-y-auto scrollbar-thin">
+              {col.items.length === 0 ? (
+                <div className="flex items-center justify-center py-8 text-[10px] text-muted-foreground/50">
+                  {lang === "pt" ? "Nenhum sinal" : "No signals"}
                 </div>
-              </motion.div>
-            );
-          })}
-        </AnimatePresence>
+              ) : (
+                col.items.map((e, idx) => (
+                  <SignalCard key={`${e.trend.platform}-${e.trend.title.slice(0, 20)}-${idx}`} e={e} col={col} idx={idx} lang={lang} />
+                ))
+              )}
+            </div>
+          </div>
+        ))}
       </div>
     </div>
   );
