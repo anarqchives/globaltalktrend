@@ -89,10 +89,9 @@ const countryCodeToFlag = (code?: string) => {
   return String.fromCodePoint(...[...code.toUpperCase()].map(c => 0x1F1E6 + c.charCodeAt(0) - 65));
 };
 
-// ─── TOP TRENDS ─────────────────────────────────────────────────────────
+// ─── TOP TRENDS LEADERBOARD ─────────────────────────────────────────────
 function TopTrendsGrid({ trends, onSelectTrend }: { trends: TrendCardProps[]; onSelectTrend?: (trend: TrendCardProps) => void }) {
   const { lang } = useLanguage();
-  const [expandedIdx, setExpandedIdx] = useState<number | null>(null);
 
   const ranked = useMemo(() => {
     return [...trends]
@@ -104,153 +103,181 @@ function TopTrendsGrid({ trends, onSelectTrend }: { trends: TrendCardProps[]; on
       .slice(0, 20);
   }, [trends]);
 
+  const shimmerClass = "relative overflow-hidden before:absolute before:inset-0 before:-translate-x-full before:animate-[shimmer_1.5s_infinite] before:bg-gradient-to-r before:from-transparent before:via-foreground/5 before:to-transparent";
+
   if (ranked.length === 0) {
-    return <TabLoadingState lang={lang} />;
+    return (
+      <div className="flex flex-col">
+        <div className="flex items-center justify-between px-4 h-10 border-b border-border/40">
+          <span className="text-[13px] font-bold text-foreground">🏆 Top 20 {lang === "pt" ? "agora" : "now"}</span>
+          <span className="text-[11px] text-muted-foreground italic">{lang === "pt" ? "ordenado por volume total" : "sorted by total volume"}</span>
+        </div>
+        {Array.from({ length: 20 }).map((_, i) => (
+          <div key={i} className="flex items-center gap-3 px-4 border-b border-border/30" style={{ height: i < 3 ? 60 : 52 }}>
+            <div className={`w-5 h-5 rounded bg-muted ${shimmerClass}`} />
+            <div className={`w-1 rounded-sm bg-muted ${shimmerClass}`} style={{ height: 20 }} />
+            <div className="flex-1 min-w-0 space-y-1.5">
+              <div className={`h-3 rounded bg-muted ${shimmerClass}`} style={{ width: "45%" }} />
+              <div className={`h-2.5 rounded bg-muted/60 ${shimmerClass}`} style={{ width: "20%" }} />
+            </div>
+            <div className={`h-2.5 rounded bg-muted/50 ${shimmerClass}`} style={{ width: 80 }} />
+          </div>
+        ))}
+      </div>
+    );
   }
 
-  const handleClick = (trend: TrendCardProps, idx: number, e: React.MouseEvent) => {
-    if (trend.sourceUrl) {
-      e.stopPropagation();
-      window.open(trend.sourceUrl, "_blank", "noopener,noreferrer");
-    } else {
-      setExpandedIdx(expandedIdx === idx ? null : idx);
-    }
+  const getRankColor = (idx: number) => {
+    if (idx === 0) return "#FF2D2D";
+    if (idx === 1) return "#FF6B00";
+    if (idx === 2) return "#F5A623";
+    if (idx < 10) return "#6366F1";
+    return "#D1D5DB";
   };
 
-  const podiumOrder = ranked.length >= 3 ? [ranked[1], ranked[0], ranked[2]] : ranked.slice(0, 3);
-  const podiumOrigIdx = ranked.length >= 3 ? [1, 0, 2] : [0, 1, 2];
+  const getBarHeight = (idx: number) => {
+    if (idx === 0) return 32;
+    if (idx === 1) return 28;
+    if (idx === 2) return 24;
+    if (idx < 10) return Math.round(20 - (idx - 3) * 1.14);
+    return 10;
+  };
+
+  const getGrowthTag = (trend: TrendCardProps) => {
+    const change = trend.change || "";
+    if (change.includes("novo") || change.includes("new")) return { label: "+novo", bg: "bg-green-100 dark:bg-green-900/30", text: "text-green-700 dark:text-green-400" };
+    if (change.includes("trending") || change.includes("alta")) return { label: "+trending", bg: "bg-amber-100 dark:bg-amber-900/30", text: "text-amber-700 dark:text-amber-400" };
+    if (change.includes("boost")) return { label: "+boosts", bg: "bg-blue-100 dark:bg-blue-900/30", text: "text-blue-700 dark:text-blue-400" };
+    const num = parseFloat(change.replace(/[^0-9.\-]/g, "") || "0");
+    if (num > 50) return { label: "+trending", bg: "bg-amber-100 dark:bg-amber-900/30", text: "text-amber-700 dark:text-amber-400" };
+    if (num > 0) return { label: "+novo", bg: "bg-green-100 dark:bg-green-900/30", text: "text-green-700 dark:text-green-400" };
+    return null;
+  };
+
   const medals = ["🥇", "🥈", "🥉"];
-  const podiumHeights = ["h-14", "h-18", "h-12"];
-  const podiumBg = [
-    "from-slate-400/15 to-transparent",
-    "from-amber-500/15 to-transparent",
-    "from-orange-600/10 to-transparent",
-  ];
 
   return (
-    <div className="space-y-2">
-      {/* Podium - Top 3 */}
-      <div className="flex items-end justify-center gap-1.5 pb-1">
-        {podiumOrder.map((trend, vi) => {
-          if (!trend) return null;
-          const realIdx = podiumOrigIdx[vi];
-          const pf = platformIcons[trend.platform] || { emoji: "●", color: "hsl(var(--muted-foreground))" };
-          const changeNum = parseFloat(trend.change?.replace(/[^0-9.\-]/g, "") || "0");
-
-          return (
-            <motion.div
-              key={`podium-${realIdx}`}
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: vi * 0.05 }}
-              className="flex-1 max-w-[150px]"
-            >
-              <button
-                onClick={(e) => handleClick(trend, realIdx, e)}
-                className={`w-full rounded-xl bg-gradient-to-b ${podiumBg[vi]} p-2 text-left transition-all hover:shadow-md ${podiumHeights[vi]} flex flex-col justify-end`}
-              >
-                <span className="text-base leading-none">{medals[realIdx]}</span>
-                <p className="text-[10px] font-semibold text-foreground line-clamp-2 leading-tight mt-0.5">{trend.title}</p>
-                <div className="flex items-center gap-1 mt-0.5">
-                  <span className="text-[8px]" style={{ color: pf.color }}>{pf.emoji}</span>
-                  <span className="text-[8px] text-muted-foreground">{trend.platform}</span>
-                  <span className="text-[8px] text-muted-foreground/40">·</span>
-                  <span className="text-[8px] text-muted-foreground">{trend.volume || "—"}</span>
-                  {changeNum !== 0 && (
-                    <span className={`text-[8px] font-bold ${changeNum > 0 ? "text-emerald-500" : "text-destructive"}`}>
-                      {changeNum > 0 ? "+" : ""}{Math.round(changeNum)}%
-                    </span>
-                  )}
-                </div>
-              </button>
-            </motion.div>
-          );
-        })}
+    <div className="flex flex-col">
+      {/* Section header */}
+      <div className="flex items-center justify-between px-4 h-10 border-b border-border/40">
+        <span className="text-[13px] font-bold text-foreground">🏆 Top 20 {lang === "pt" ? "agora" : "now"}</span>
+        <span className="text-[11px] text-muted-foreground italic">{lang === "pt" ? "ordenado por volume total" : "sorted by total volume"}</span>
       </div>
 
-      {/* Ranking list #4-20 */}
-      <div className="columns-2 sm:columns-3 md:columns-4 lg:columns-5 xl:columns-6 gap-1.5 space-y-0 [&>*]:break-inside-avoid [&>*]:mb-1.5">
-        {ranked.slice(3).map((trend, i) => {
-          const pf = platformIcons[trend.platform] || { emoji: "●", color: "hsl(var(--muted-foreground))" };
-          const flag = countryCodeToFlag(trend.countryCode);
-          const changeNum = parseFloat(trend.change?.replace(/[^0-9.\-]/g, "") || "0");
-          const idx = i + 3;
-          const isExpanded = expandedIdx === idx;
+      {/* Leaderboard rows */}
+      {ranked.map((trend, idx) => {
+        const pf = platformIcons[trend.platform] || { emoji: "●", color: "hsl(var(--muted-foreground))" };
+        const flag = countryCodeToFlag(trend.countryCode);
+        const rankColor = getRankColor(idx);
+        const barH = getBarHeight(idx);
+        const growthTag = getGrowthTag(trend);
+        const isTop3 = idx < 3;
 
-          return (
-            <motion.div
-              key={`top-${trend.platform}-${trend.title.slice(0, 15)}-${i}`}
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: i * 0.015 }}
-              onClick={() => setExpandedIdx(isExpanded ? null : idx)}
-              className={`rounded-xl bg-card p-2 cursor-pointer transition-all hover:shadow-md ${
-                isExpanded ? "shadow-md ring-1 ring-primary/10" : ""
-              }`}
-              style={{ boxShadow: isExpanded ? undefined : 'var(--card-shadow)' }}
-            >
-              <div className="flex items-start gap-1.5">
-                <span className={`text-[10px] font-black w-5 flex-shrink-0 pt-0.5 ${idx < 6 ? "text-amber-500" : idx < 10 ? "text-muted-foreground" : "text-muted-foreground/40"}`}>#{idx + 1}</span>
-                <div className="flex-1 min-w-0">
-                  <p className={`text-[10px] font-semibold text-foreground leading-tight ${isExpanded ? "" : "line-clamp-1"}`}>{trend.title}</p>
-                  <div className="flex items-center gap-1 text-[8px] text-muted-foreground mt-0.5">
-                    <span style={{ color: pf.color }}>{pf.emoji}</span>
-                    <span>{trend.platform}</span>
-                    {flag && <span>{flag}</span>}
-                    <span className="text-muted-foreground/30">·</span>
-                    <span>{trend.volume || "—"}</span>
-                  </div>
-                </div>
-                {changeNum !== 0 && (
-                  <span className={`text-[9px] font-bold flex-shrink-0 ${changeNum > 0 ? "text-emerald-500" : "text-destructive"}`}>
-                    {changeNum > 0 ? "+" : ""}{Math.round(changeNum)}%
-                  </span>
+        const top3Bg = isTop3
+          ? idx === 0 ? "linear-gradient(90deg, #FF2D2D08 0%, transparent 60%)"
+            : idx === 1 ? "linear-gradient(90deg, #FF6B0008 0%, transparent 60%)"
+            : "linear-gradient(90deg, #F5A62308 0%, transparent 60%)"
+          : undefined;
+
+        return (
+          <motion.div
+            key={`top-${trend.platform}-${trend.title.slice(0, 20)}-${idx}`}
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.2, delay: idx * 0.03, ease: [0, 0, 0.2, 1] }}
+            onClick={() => onSelectTrend?.(trend)}
+            className={`group flex items-center gap-0 px-4 cursor-pointer transition-colors duration-[120ms] ease-out
+              hover:bg-muted/50
+              ${idx < ranked.length - 1 ? "border-b border-border/30" : ""}`}
+            style={{
+              height: isTop3 ? 60 : 52,
+              background: top3Bg,
+            }}
+          >
+            {/* Rank */}
+            <div className="w-9 flex-shrink-0 flex items-center justify-end pr-1">
+              {isTop3 ? (
+                <span className="text-lg leading-none">{medals[idx]}</span>
+              ) : (
+                <span className="text-[13px] font-bold" style={{ color: "#D1D5DB" }}>
+                  {idx + 1}
+                </span>
+              )}
+            </div>
+
+            {/* Volume bar */}
+            <div className="flex items-center justify-center mx-3 flex-shrink-0" style={{ width: 4 }}>
+              <motion.div
+                initial={{ height: 0 }}
+                animate={{ height: barH }}
+                transition={{ duration: 0.3, delay: idx * 0.03 + 0.1, ease: "easeOut" }}
+                className="rounded-sm transition-transform duration-[120ms] group-hover:scale-x-150"
+                style={{ width: 4, backgroundColor: rankColor }}
+              />
+            </div>
+
+            {/* Content */}
+            <div className="flex-1 min-w-0 py-1">
+              <p className={`font-semibold text-foreground truncate group-hover:text-[#2563EB] transition-colors duration-[120ms] ${isTop3 ? "text-[15px] font-bold" : "text-[14px]"}`}>
+                {trend.title}
+              </p>
+              <div className="flex items-center gap-1 mt-0.5">
+                <span className="w-1.5 h-1.5 rounded-full flex-shrink-0" style={{ backgroundColor: pf.color }} />
+                <span className="text-[11px] text-muted-foreground">{trend.platform}</span>
+                {flag && (
+                  <>
+                    <span className="text-muted-foreground/30 text-[11px]">·</span>
+                    <span className="text-[11px]">{flag}</span>
+                    {trend.countryCode && <span className="text-[11px] text-muted-foreground uppercase">{trend.countryCode}</span>}
+                  </>
                 )}
               </div>
+            </div>
 
-              <AnimatePresence>
-                {isExpanded && (
-                  <motion.div
-                    initial={{ height: 0, opacity: 0 }}
-                    animate={{ height: "auto", opacity: 1 }}
-                    exit={{ height: 0, opacity: 0 }}
-                    transition={{ duration: 0.15 }}
-                    className="overflow-hidden"
-                  >
-                    <div className="mt-1.5 pt-1.5 border-t border-border/20 space-y-1.5">
-                      {trend.description && <p className="text-[9px] text-muted-foreground leading-relaxed line-clamp-3">{trend.description}</p>}
-                      <div className="flex items-center gap-1">
-                        <span className="px-1.5 py-0.5 rounded-md bg-secondary text-secondary-foreground text-[8px] font-medium">{trend.category || "Geral"}</span>
-                      </div>
-                      {trend.sparkData && trend.sparkData.length > 2 && (
-                        <div className="h-6 w-full">
-                          <ResponsiveContainer width="100%" height="100%">
-                            <AreaChart data={trend.sparkData.map(v => ({ v }))}>
-                              <Area type="monotone" dataKey="v" stroke="hsl(var(--primary))" strokeWidth={1} fill="hsl(var(--primary))" fillOpacity={0.06} dot={false} />
-                            </AreaChart>
-                          </ResponsiveContainer>
-                        </div>
-                      )}
-                      <div className="flex items-center gap-1.5" onClick={e => e.stopPropagation()}>
-                        {trend.sourceUrl && (
-                          <a href={trend.sourceUrl} target="_blank" rel="noopener noreferrer"
-                            className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-primary text-primary-foreground text-[8px] font-semibold hover:bg-primary/90 transition-colors">
-                            <ExternalLink className="w-2.5 h-2.5" /> {lang === "pt" ? "Abrir" : "Open"}
-                          </a>
-                        )}
-                        <button onClick={() => onSelectTrend?.(trend)}
-                          className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-secondary text-secondary-foreground text-[8px] font-medium hover:bg-secondary/80 transition-colors">
-                          Timeline →
-                        </button>
-                      </div>
-                    </div>
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </motion.div>
-          );
-        })}
-      </div>
+            {/* Metadata */}
+            <div className="w-[120px] flex-shrink-0 text-right mr-3">
+              <p className="text-[12px] font-semibold truncate" style={{ color: rankColor }}>
+                {trend.volume || "—"}
+              </p>
+              {growthTag && (
+                <span className={`inline-block text-[10px] px-1.5 py-0.5 rounded-full ${growthTag.bg} ${growthTag.text} mt-0.5`}>
+                  {growthTag.label}
+                </span>
+              )}
+            </div>
+
+            {/* Sparkline */}
+            <div className="w-[72px] h-7 flex-shrink-0 relative">
+              {trend.sparkData && trend.sparkData.length > 2 ? (
+                <>
+                  <ResponsiveContainer width="100%" height="100%">
+                    <AreaChart data={trend.sparkData.map(v => ({ v }))}>
+                      <Area
+                        type="monotone"
+                        dataKey="v"
+                        stroke={rankColor}
+                        strokeWidth={1.5}
+                        fill={rankColor}
+                        fillOpacity={0.08}
+                        dot={false}
+                      />
+                    </AreaChart>
+                  </ResponsiveContainer>
+                  <span
+                    className="absolute right-0 top-1/2 -translate-y-1/2 rounded-full animate-pulse"
+                    style={{ width: 4, height: 4, backgroundColor: rankColor }}
+                  />
+                </>
+              ) : (
+                <div className="w-full h-full rounded bg-muted/30" />
+              )}
+            </div>
+
+            {/* Hover arrow */}
+            <ArrowRight className="w-3.5 h-3.5 text-muted-foreground/0 group-hover:text-muted-foreground transition-all duration-[120ms] ml-2 flex-shrink-0" />
+          </motion.div>
+        );
+      })}
     </div>
   );
 }
