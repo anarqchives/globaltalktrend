@@ -116,7 +116,7 @@ function ChipDropdown({ label, value, options, isActive, icon, onChange, onClear
         }`}
         style={{ height: 28, padding: "0 10px", fontSize: 12, fontWeight: isActive ? 600 : 500 }}
       >
-        <span className="truncate max-w-[100px]">{displayLabel}</span>
+        <span className="truncate max-w-[100px]">{displayLabel.replace(/^[^\w\s]*\s*/, '')}</span>
         {isActive ? (
           <span
             onClick={(e) => { e.stopPropagation(); onClear(); setOpen(false); }}
