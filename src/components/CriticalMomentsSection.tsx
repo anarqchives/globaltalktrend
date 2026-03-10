@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import React, { useMemo } from "react";
 import { motion } from "framer-motion";
 import { ExternalLink, Clock, Bookmark, Bell, Share2, Flag, Globe2 } from "lucide-react";
 import { AreaChart, Area, ResponsiveContainer, Tooltip as RTooltip } from "recharts";
