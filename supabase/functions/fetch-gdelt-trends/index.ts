@@ -83,44 +83,32 @@ serve(async (req) => {
       });
     }
 
-    // GDELT DOC 2.0 — fetch trending articles by broad topic queries
-    const queries = [
-      "world OR global OR crisis OR breaking",
-      "economy OR market OR trade OR finance",
-      "technology OR AI OR climate OR health",
-    ];
-    
-    let allArticles: any[] = [];
-    
-    for (const q of queries) {
-      if (allArticles.length >= 25) break;
+    // GDELT DOC 2.0 — single broad query, fetch in parallel with timeout
+    const fetchGdelt = async (query: string, maxRecords: number): Promise<any[]> => {
       try {
-        const gdeltUrl = `https://api.gdeltproject.org/api/v2/doc/doc?query=${encodeURIComponent(q)}&mode=ArtList&maxrecords=15&format=json&sort=HybridRel&timespan=60min`;
-        console.log("GDELT fetching:", gdeltUrl);
-        const response = await fetch(gdeltUrl, {
+        const url = `https://api.gdeltproject.org/api/v2/doc/doc?query=${encodeURIComponent(query)}&mode=ArtList&maxrecords=${maxRecords}&format=json&sort=HybridRel&timespan=60min`;
+        const controller = new AbortController();
+        const timeout = setTimeout(() => controller.abort(), 8000);
+        const response = await fetch(url, {
           headers: { "User-Agent": "GlobalTalkTrend/1.0" },
+          signal: controller.signal,
         });
-        if (!response.ok) {
-          await response.text();
-          continue;
-        }
+        clearTimeout(timeout);
+        if (!response.ok) { await response.text(); return []; }
         const text = await response.text();
-        if (!text.startsWith("{") && !text.startsWith("[")) {
-          console.log("GDELT non-JSON for query:", q, text.slice(0, 150));
-          continue;
-        }
+        if (!text.startsWith("{") && !text.startsWith("[")) return [];
         const data = JSON.parse(text);
-        const articles = data?.articles || [];
-        if (Array.isArray(articles)) {
-          allArticles = allArticles.concat(articles);
-        }
-      } catch (e) {
-        console.log("GDELT query error:", q, String(e));
-      }
-    }
+        return Array.isArray(data?.articles) ? data.articles : [];
+      } catch { return []; }
+    };
 
-    console.log("GDELT total articles:", allArticles.length);
-    const articles = allArticles;
+    const results = await Promise.all([
+      fetchGdelt("world OR global OR crisis OR breaking OR war OR election", 25),
+      fetchGdelt("economy OR technology OR climate OR health OR science", 15),
+    ]);
+    
+    const articles = [...results[0], ...results[1]];
+    console.log("GDELT total articles:", articles.length);
 
     if (!Array.isArray(articles) || articles.length === 0) {
       console.log("GDELT: No articles returned");
