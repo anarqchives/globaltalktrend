@@ -375,20 +375,25 @@ const TimelineCard = ({
               </span>
             )}
 
-            {/* Micro sparkline */}
+            {/* Sparkline with pulsing endpoint */}
             {sparkData && !compact && (
-              <div className="ml-auto flex-shrink-0 w-14 h-3.5">
+              <div className="ml-auto flex-shrink-0 w-20 h-8 relative">
                 <ResponsiveContainer width="100%" height="100%">
                   <AreaChart data={sparkData}>
                     <defs>
                       <linearGradient id={`spark-${gradientId}`} x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="0%" stopColor={pf.color} stopOpacity={0.25} />
-                        <stop offset="100%" stopColor={pf.color} stopOpacity={0} />
+                        <stop offset="0%" stopColor={changePositive ? 'hsl(162,100%,39%)' : 'hsl(0,100%,59%)'} stopOpacity={0.25} />
+                        <stop offset="100%" stopColor={changePositive ? 'hsl(162,100%,39%)' : 'hsl(0,100%,59%)'} stopOpacity={0} />
                       </linearGradient>
                     </defs>
-                    <Area type="monotone" dataKey="value" stroke={pf.color} strokeWidth={1} fill={`url(#spark-${gradientId})`} dot={false} />
+                    <Area type="monotone" dataKey="value" stroke={changePositive ? 'hsl(162,100%,39%)' : 'hsl(0,100%,59%)'} strokeWidth={1.5} fill={`url(#spark-${gradientId})`} dot={false} />
                   </AreaChart>
                 </ResponsiveContainer>
+                {/* Pulsing endpoint dot */}
+                <span
+                  className="absolute right-0 bottom-1 w-1.5 h-1.5 rounded-full spark-endpoint"
+                  style={{ background: changePositive ? 'hsl(162,100%,39%)' : 'hsl(0,100%,59%)' }}
+                />
               </div>
             )}
           </div>
