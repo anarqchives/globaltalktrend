@@ -1082,7 +1082,17 @@ const GoogleMapView = ({
       infoWindowRef.current?.close();
     };
     document.addEventListener('map-sentiment-filter', handler);
-    return () => document.removeEventListener('map-sentiment-filter', handler);
+    return () => {
+      localRafIds.forEach(id => cancelAnimationFrame(id));
+      sentimentMarkersRef.current.forEach(m => m.setMap(null));
+      sentimentMarkersRef.current = [];
+      sentimentCirclesRef.current.forEach(c => c.setMap(null));
+      sentimentCirclesRef.current = [];
+      sentimentRipplesRef.current.forEach(r => r.setMap(null));
+      sentimentRipplesRef.current = [];
+      infoWindowRef.current?.close();
+      document.removeEventListener('map-sentiment-filter', handler);
+    };
   }, [mapMode, sentimentBubbles, mapLoaded, isDark, isMobile, t, onSelectCountry]);
 
   // Sync heatmap/markers visibility based on mapMode
