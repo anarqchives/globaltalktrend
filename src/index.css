@@ -254,22 +254,22 @@
     background: transparent;
   }
 
-  /* Card type: article — left accent */
+  /* Card type: article — subtle left accent */
   .timeline-card-article {
-    border-left: 3px solid var(--card-accent-color, hsl(var(--primary)));
+    border-left: 3px solid hsl(var(--muted-foreground) / 0.15);
   }
 
-  /* Card type: viral — subtle gradient bg */
+  /* Card type: viral — subtle warm bg */
   .timeline-card-viral {
-    background: linear-gradient(135deg, hsl(0 100% 50% / 0.03) 0%, hsl(var(--card)) 60%);
+    background: linear-gradient(135deg, hsl(0 100% 50% / 0.02) 0%, hsl(var(--card)) 60%);
   }
 
-  /* Tier styling — top accent strip */
+  /* Tier styling — top accent strip (neutral tones) */
   .timeline-card[data-tier="critical"] {
     border-top: 2px solid hsl(var(--color-critical));
   }
   .timeline-card[data-tier="moderate"] {
-    border-top: 2px solid hsl(var(--color-moderate));
+    border-top: 2px solid hsl(var(--color-moderate) / 0.6);
   }
 
   .timeline-card-expanded {
