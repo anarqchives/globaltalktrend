@@ -56,6 +56,13 @@
     --volume-bg: 220 14% 96%;
     --source-bg: 220 70% 50% / 0.08;
     --source-fg: 220 70% 45%;
+
+    /* Tier colors */
+    --tier-critical: 0 72% 51%;
+    --tier-critical-bg: 0 72% 51% / 0.06;
+    --tier-moderate: 38 92% 50%;
+    --tier-moderate-bg: 38 92% 50% / 0.06;
+    --tier-low: 220 14% 96%;
   }
 
   .dark {
@@ -84,6 +91,10 @@
     --volume-bg: 222 14% 14%;
     --source-bg: 217 91% 60% / 0.12;
     --source-fg: 217 91% 70%;
+
+    --tier-critical-bg: 0 62% 55% / 0.1;
+    --tier-moderate-bg: 38 80% 50% / 0.08;
+    --tier-low: 222 14% 14%;
   }
 }
 
@@ -206,7 +217,22 @@
     flex-direction: column;
     border: none;
     box-shadow: var(--card-shadow);
-    transition: box-shadow 0.2s ease, transform 0.2s ease;
+    transition: box-shadow 0.15s ease-out, transform 0.15s ease-out;
+  }
+
+  .timeline-card:hover {
+    box-shadow: var(--card-hover-shadow);
+    transform: translateY(-2px);
+  }
+
+  /* Tier styling */
+  .timeline-card[data-tier="critical"] {
+    border-left: 3px solid hsl(var(--tier-critical));
+    background: linear-gradient(135deg, hsl(var(--tier-critical-bg)), hsl(var(--card)));
+  }
+  .timeline-card[data-tier="moderate"] {
+    border-left: 3px solid hsl(var(--tier-moderate));
+    background: linear-gradient(135deg, hsl(var(--tier-moderate-bg)), hsl(var(--card)));
   }
 
   .timeline-card-expanded {
@@ -242,11 +268,6 @@
     to { opacity: 1; }
   }
 
-  .timeline-card:hover {
-    box-shadow: var(--card-hover-shadow);
-    transform: translateY(-1px);
-  }
-
   /* Mobile: make action buttons always visible (no hover on touch) */
   @media (hover: none), (pointer: coarse) {
     .timeline-card .group-hover\:opacity-100 {
@@ -255,6 +276,20 @@
     .timeline-card:active {
       box-shadow: var(--card-hover-shadow);
     }
+    /* Actions always visible on touch */
+    .timeline-card .card-actions-row {
+      opacity: 1 !important;
+    }
+  }
+
+  /* Actions row: hidden by default, visible on hover */
+  .card-actions-row {
+    opacity: 0;
+    transition: opacity 0.15s ease-out;
+  }
+  .timeline-card:hover .card-actions-row,
+  .timeline-card:focus-within .card-actions-row {
+    opacity: 1;
   }
 
   .trend-card-base {
@@ -307,6 +342,53 @@
   .scrollbar-thin::-webkit-scrollbar-thumb {
     background: hsl(var(--muted));
     border-radius: 4px;
+  }
+
+  /* Live pulse animation */
+  @keyframes livePulse {
+    0%, 100% { transform: scale(1); opacity: 0.6; }
+    50% { transform: scale(1.4); opacity: 1; }
+  }
+  .live-pulse-dot {
+    animation: livePulse 2s ease-in-out infinite;
+  }
+
+  /* Sparkline endpoint pulse */
+  @keyframes sparkEndpointPulse {
+    0%, 100% { opacity: 0.6; r: 2; }
+    50% { opacity: 1; r: 3; }
+  }
+
+  /* Map panel slide */
+  .map-panel-enter {
+    animation: mapSlideIn 0.3s cubic-bezier(0.4, 0, 0.2, 1) both;
+  }
+  @keyframes mapSlideIn {
+    from { opacity: 0; transform: scale(0.97); }
+    to { opacity: 1; transform: scale(1); }
+  }
+
+  /* Floating support pill */
+  .floating-support-pill {
+    position: fixed;
+    bottom: 24px;
+    left: 24px;
+    z-index: 40;
+    transition: opacity 0.3s ease-out, transform 0.3s ease-out;
+  }
+
+  /* Reduced motion */
+  @media (prefers-reduced-motion: reduce) {
+    .live-pulse-dot,
+    .animate-pulse,
+    .map-panel-enter {
+      animation: none !important;
+    }
+    .timeline-card,
+    .timeline-card:hover {
+      transform: none !important;
+      transition: none !important;
+    }
   }
 }
 
@@ -485,4 +567,19 @@
 }
 .dark .glass-header [style*="background: rgba(255, 215, 0"] {
   color: hsl(30, 80%, 30%) !important;
+}
+
+/* Watchlist empty state animation */
+@keyframes slowRotate {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+.watchlist-empty-icon {
+  animation: slowRotate 8s linear infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .watchlist-empty-icon {
+    animation: none;
+  }
 }
