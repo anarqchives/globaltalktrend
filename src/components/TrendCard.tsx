@@ -163,25 +163,9 @@ const TrendCard = ({
         )}
       </div>
 
-      {/* Mini sparkline */}
+      {/* Mini sparkline — lightweight SVG instead of Recharts */}
       <div className="h-10 mt-3">
-        <ResponsiveContainer width="100%" height="100%">
-          <AreaChart data={chartData}>
-            <defs>
-              <linearGradient id={gradientId} x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stopColor={colors.stroke} stopOpacity={0.3} />
-                <stop offset="100%" stopColor={colors.stroke} stopOpacity={0} />
-              </linearGradient>
-            </defs>
-            <Area
-              type="monotone"
-              dataKey="y"
-              stroke={colors.stroke}
-              strokeWidth={1.5}
-              fill={`url(#${gradientId})`}
-            />
-          </AreaChart>
-        </ResponsiveContainer>
+        <SparklineArea data={sparkData} color={colors.stroke} width={200} height={40} className="w-full" />
       </div>
 
       {/* Expanded details with historical chart */}

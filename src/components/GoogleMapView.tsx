@@ -300,7 +300,7 @@ const GoogleMapView = ({
           setMapError("Chave do mapa indisponível para este domínio");
           return;
         }
-        setOptions({ key: data.key, v: "weekly", libraries: ["marker"] });
+        setOptions({ key: apiKey, v: "weekly", libraries: ["marker"] });
         const [mapsLib, markerLib] = await Promise.all([importLibrary("maps"), importLibrary("marker")]);
         let vizLib: any = null;
         try { vizLib = await importLibrary("visualization"); } catch { /* ok */ }
