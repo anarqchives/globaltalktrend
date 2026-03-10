@@ -114,18 +114,11 @@ function ChipDropdown({ chipLabel, value, options, isActive, icon, onChange, onC
     <div ref={ref} className="relative flex-shrink-0">
       <button
         onClick={() => setOpen(!open)}
-        className="inline-flex items-center transition-all duration-[120ms]"
-        style={{
-          height: 30,
-          padding: "0 10px",
-          borderRadius: 8,
-          border: isActive ? "1px solid hsl(var(--foreground))" : "1px solid #E5E7EB",
-          background: isActive ? "hsl(var(--foreground))" : "hsl(var(--card))",
-          color: isActive ? "hsl(var(--background))" : "#374151",
-          fontSize: 12,
-          fontWeight: 500,
-          gap: 5,
-        }}
+        className={`inline-flex items-center transition-all duration-[120ms] h-[30px] px-2.5 rounded-lg text-xs font-medium gap-[5px] border ${
+          isActive
+            ? "border-foreground bg-foreground text-background"
+            : "border-border bg-card text-muted-foreground hover:border-muted-foreground/50 hover:bg-muted"
+        }`}
       >
         <span className="flex-shrink-0" style={{ display: "flex", alignItems: "center" }}>{icon}</span>
         <span className="truncate max-w-[100px]">{displayText}</span>
