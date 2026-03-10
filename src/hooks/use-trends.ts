@@ -1022,10 +1022,12 @@ export function useTrends(filters: FilterState, onTrendCountsChange: (counts: Re
     return [...filtered].sort((a, b) => (b.relevanceScore || 50) - (a.relevanceScore || 50));
   }, [trends, filters]);
 
-  useEffect(() => {
-    console.log("🔎 Filtros aplicados:", filters);
-    console.log("📋 Trends após filtro:", filteredTrends.length);
-  }, [filters, filteredTrends.length]);
+  if (import.meta.env.DEV) {
+    useEffect(() => {
+      console.log("🔎 Filtros aplicados:", filters);
+      console.log("📋 Trends após filtro:", filteredTrends.length);
+    }, [filters, filteredTrends.length]);
+  }
 
   const leftTrends = useMemo(() => filteredTrends.filter((_, i) => i % 2 === 0), [filteredTrends]);
   const rightTrends = useMemo(() => filteredTrends.filter((_, i) => i % 2 === 1), [filteredTrends]);
