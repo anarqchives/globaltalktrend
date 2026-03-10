@@ -868,7 +868,7 @@ export function useTrends(filters: FilterState, onTrendCountsChange: (counts: Re
   useEffect(() => {
     const timer = window.setTimeout(() => {
       if (!loading && trends.length === 0) {
-        console.log("⚠️ Usando fallback - sem dados reais");
+        if (import.meta.env.DEV) console.log("⚠️ Usando fallback - sem dados reais");
         setTrends(fallbackData);
       }
     }, 5000);
