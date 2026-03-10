@@ -613,12 +613,12 @@ export default function WeeklyPulseDashboard({ trends }: { trends: TrendCardProp
               />
               {chartMode === "total" ? (
                 <Area type="monotone" dataKey="total" stroke="#6366F1" strokeWidth={2}
-                  fill="url(#grad_total)" dot={false} activeDot={{ r: 4, strokeWidth: 0 }}
+                  fill="url(#grad_total)" dot={{ r: 3, fill: "#6366F1", strokeWidth: 0 }} activeDot={{ r: 4, strokeWidth: 0 }}
                   connectNulls={false} animationDuration={700} />
               ) : (
                 analysis.topCats.map(cat => (
                   <Area key={cat} type="monotone" dataKey={cat} stroke={getCatColor(cat)} strokeWidth={2}
-                    fill={`url(#grad_${cat.replace(/\s/g, "")})`} dot={false}
+                    fill={`url(#grad_${cat.replace(/\s/g, "")})`} dot={{ r: 3, fill: getCatColor(cat), strokeWidth: 0 }}
                     activeDot={{ r: 4, strokeWidth: 0 }} connectNulls={false} animationDuration={700} />
                 ))
               )}
@@ -639,48 +639,67 @@ export default function WeeklyPulseDashboard({ trends }: { trends: TrendCardProp
 
       {/* ═══════ SECTION D: TWO-COLUMN ROW ═══════ */}
       <div className="grid grid-cols-1 sm:grid-cols-[55%_45%] gap-4">
-        {/* Momentum */}
-        <SectionCard
-          icon="⚡"
-          title={t(lang, "Momentum por Categoria", "Category Momentum")}
-          subtitle={t(lang, "Variação de volume vs. média histórica", "Volume variation vs. historical average")}
-          tooltip={t(lang, "Momentum = crescimento relativo desta semana comparado às 4 semanas anteriores", "Momentum = relative growth this week compared to previous 4 weeks")}
-        >
-          <div className="space-y-2.5">
-            {analysis.categoryMomentum.slice(0, 6).map((cat, i) => {
-              const barWidth = Math.min(Math.max(Math.abs(cat.momentum), 5), 100);
-              const color = getCatColor(cat.name);
-              const momentumColor = cat.momentum > 0 ? "text-emerald-600" : cat.momentum < 0 ? "text-red-500" : "text-muted-foreground";
-              return (
-                <Tooltip key={cat.name}>
-                  <TooltipTrigger asChild>
-                    <motion.div initial={{ opacity: 0, x: -8 }} animate={{ opacity: 1, x: 0 }}
-                      transition={{ delay: i * 0.06 }} className="flex items-center gap-2 cursor-help">
-                      <span className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ backgroundColor: color }} />
-                      <span className="text-[11px] text-foreground w-24 truncate font-medium">{cat.name}</span>
-                      <div className="flex-1 h-2 bg-muted/30 rounded-full overflow-hidden">
-                        <motion.div className="h-full rounded-full"
-                          style={{ background: `linear-gradient(90deg, ${color}, ${color}66)` }}
-                          initial={{ width: 0 }} animate={{ width: `${barWidth}%` }}
-                          transition={{ duration: 0.6, delay: i * 0.08, ease: "easeOut" }} />
-                      </div>
-                      <span className={`text-xs font-semibold w-12 text-right ${momentumColor}`}>
-                        {cat.momentum > 0 ? "+" : ""}{cat.momentum}%
-                      </span>
-                    </motion.div>
-                  </TooltipTrigger>
-                  <TooltipContent side="top" className="text-[10px]">
-                    {cat.momentum > 0
-                      ? t(lang, `Alta de ${cat.momentum}% vs semana anterior`, `Up ${cat.momentum}% vs previous week`)
-                      : cat.momentum < 0
-                      ? t(lang, `Queda de ${Math.abs(cat.momentum)}% vs semana anterior`, `Down ${Math.abs(cat.momentum)}% vs previous week`)
-                      : t(lang, "Estável", "Stable")}
-                  </TooltipContent>
-                </Tooltip>
-              );
-            })}
-          </div>
-        </SectionCard>
+        {/* Momentum — show share % when no historical baseline */}
+        {(() => {
+          const hasHistoricalBaseline = prevWeekVol.current > 0;
+          const totalCatVolume = analysis.categoryMomentum.reduce((s, c) => s + c.total, 0) || 1;
+          const maxShare = Math.max(...analysis.categoryMomentum.map(c => c.total / totalCatVolume * 100), 1);
+          return (
+            <SectionCard
+              icon="⚡"
+              title={t(lang, "Momentum por Categoria", "Category Momentum")}
+              subtitle={hasHistoricalBaseline
+                ? t(lang, "Variação de volume vs. média histórica", "Volume variation vs. historical average")
+                : t(lang, "Participação no volume desta semana", "Share of this week's volume")}
+              tooltip={hasHistoricalBaseline
+                ? t(lang, "Momentum = crescimento relativo desta semana comparado às 4 semanas anteriores", "Momentum = relative growth this week compared to previous 4 weeks")
+                : t(lang, "Proporção de cada categoria no volume total desta semana", "Each category's proportion of total volume this week")}
+            >
+              <div className="space-y-2.5">
+                {analysis.categoryMomentum.slice(0, 6).map((cat, i) => {
+                  const color = getCatColor(cat.name);
+                  const share = Math.round((cat.total / totalCatVolume) * 100);
+                  const barWidth = hasHistoricalBaseline
+                    ? Math.min(Math.max(Math.abs(cat.momentum), 5), 100)
+                    : Math.round((share / maxShare) * 90);
+                  const displayValue = hasHistoricalBaseline ? cat.momentum : share;
+                  const momentumColor = hasHistoricalBaseline
+                    ? (cat.momentum > 0 ? "text-emerald-600" : cat.momentum < 0 ? "text-red-500" : "text-muted-foreground")
+                    : "text-foreground";
+                  return (
+                    <Tooltip key={cat.name}>
+                      <TooltipTrigger asChild>
+                        <motion.div initial={{ opacity: 0, x: -8 }} animate={{ opacity: 1, x: 0 }}
+                          transition={{ delay: i * 0.06 }} className="flex items-center gap-2 cursor-help">
+                          <span className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ backgroundColor: color }} />
+                          <span className="text-[11px] text-foreground w-24 truncate font-medium">{cat.name}</span>
+                          <div className="flex-1 h-2 bg-muted/30 rounded-full overflow-hidden">
+                            <motion.div className="h-full rounded-full"
+                              style={{ background: `linear-gradient(90deg, ${color}, ${color}60)` }}
+                              initial={{ width: 0 }} animate={{ width: `${barWidth}%` }}
+                              transition={{ duration: 0.6, delay: i * 0.08, ease: "easeOut" }} />
+                          </div>
+                          <span className={`text-xs font-semibold w-12 text-right ${momentumColor}`}>
+                            {hasHistoricalBaseline ? `${displayValue > 0 ? "+" : ""}${displayValue}%` : `${displayValue}%`}
+                          </span>
+                        </motion.div>
+                      </TooltipTrigger>
+                      <TooltipContent side="top" className="text-[10px]">
+                        {hasHistoricalBaseline
+                          ? (cat.momentum > 0
+                            ? t(lang, `Alta de ${cat.momentum}% vs semana anterior`, `Up ${cat.momentum}% vs previous week`)
+                            : cat.momentum < 0
+                            ? t(lang, `Queda de ${Math.abs(cat.momentum)}% vs semana anterior`, `Down ${Math.abs(cat.momentum)}% vs previous week`)
+                            : t(lang, "Estável", "Stable"))
+                          : t(lang, `${cat.name} representa ${share}% do volume desta semana`, `${cat.name} represents ${share}% of this week's volume`)}
+                      </TooltipContent>
+                    </Tooltip>
+                  );
+                })}
+              </div>
+            </SectionCard>
+          );
+        })()}
 
         {/* Lifecycle */}
         <SectionCard
@@ -693,7 +712,7 @@ export default function WeeklyPulseDashboard({ trends }: { trends: TrendCardProp
           <div className="flex items-center justify-between gap-1 mb-3">
             {(["emerging", "accelerating", "peak", "declining"] as const).map((stage, i) => (
               <React.Fragment key={stage}>
-                {i > 0 && <ArrowRight className="w-3 h-3 text-muted-foreground/30 flex-shrink-0" />}
+                {i > 0 && <ArrowRight className="w-3 h-3 text-muted-foreground/30 flex-shrink-0 animate-pulse" style={{ animationDuration: '1.5s' }} />}
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <div className="flex flex-col items-center cursor-help">
@@ -747,7 +766,7 @@ export default function WeeklyPulseDashboard({ trends }: { trends: TrendCardProp
           let maxVal = 0;
           for (const cat of analysis.topCats) for (const day of orderedDays) { const v = analysis.catByDay[cat]?.[day] || 0; if (v > maxVal) maxVal = v; }
           const getCellBg = (v: number, cat: string) => {
-            if (maxVal === 0 || v === 0) return "transparent";
+            if (maxVal === 0 || v === 0) return "hsl(var(--muted) / 0.3)";
             const intensity = v / maxVal;
             const base = getCatColor(cat);
             if (intensity > 0.8) return base;
@@ -758,12 +777,12 @@ export default function WeeklyPulseDashboard({ trends }: { trends: TrendCardProp
           };
           return (
             <>
-              <div className="grid gap-[3px]" style={{ gridTemplateColumns: `80px repeat(${days.length}, 1fr)` }}>
+              <div className="grid" style={{ gridTemplateColumns: `80px repeat(${days.length}, 1fr)`, gap: 4 }}>
                 <div />
                 {days.map(d => <div key={d} className="text-[10px] text-muted-foreground text-center font-medium py-1">{d}</div>)}
                 {analysis.topCats.map(cat => (
                   <React.Fragment key={cat}>
-                    <div className="text-[11px] text-muted-foreground font-medium flex items-center gap-1 truncate pr-1">
+                    <div className="text-[11px] text-muted-foreground font-medium flex items-center gap-1 truncate pr-1" style={{ height: 40 }}>
                       <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: getCatColor(cat) }} />
                       {cat}
                     </div>
@@ -776,8 +795,8 @@ export default function WeeklyPulseDashboard({ trends }: { trends: TrendCardProp
                           <TooltipTrigger asChild>
                             <motion.div
                               className="rounded cursor-help flex items-center justify-center"
-                              style={{ backgroundColor: getCellBg(v, cat), aspectRatio: "1", minHeight: 24 }}
-                              whileHover={{ scale: 1.15, zIndex: 10 }}
+                              style={{ backgroundColor: getCellBg(v, cat), height: 40 }}
+                              whileHover={{ scale: 1.08, zIndex: 10 }}
                             >
                               {v > 0 && <span className="text-[8px] font-bold text-foreground/70">{fmtNum(v)}</span>}
                             </motion.div>
@@ -886,45 +905,80 @@ export default function WeeklyPulseDashboard({ trends }: { trends: TrendCardProp
         title={t(lang, "Alcance Global", "Global Reach")}
         subtitle={t(lang, "Países com maior volume de tendências detectadas", "Countries with highest detected trend volume")}
       >
-        <div className="space-y-2">
-          {analysis.countryData.map((country, i) => {
-            const regionColor = REGION_COLORS[country.region] || "#6B7280";
-            const maxCount = analysis.countryData[0]?.count || 1;
-            const barPct = Math.round((country.count / maxCount) * 100);
-            return (
-              <Tooltip key={country.code}>
-                <TooltipTrigger asChild>
-                  <motion.div
-                    initial={{ opacity: 0, x: -8 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: i * 0.04 }}
-                    className="flex items-center gap-2 cursor-help"
-                  >
-                    <span className="text-sm flex-shrink-0">{country.flag}</span>
-                    <AbbrTooltip text={country.code.toUpperCase()} className="text-[11px] font-medium text-foreground w-8" />
-                    <div className="flex-1 h-1.5 bg-muted/30 rounded-full overflow-hidden">
-                      <motion.div className="h-full rounded-full"
-                        style={{ background: `linear-gradient(90deg, ${regionColor}, ${regionColor}80)` }}
-                        initial={{ width: 0 }} animate={{ width: `${barPct}%` }}
-                        transition={{ duration: 0.4, delay: i * 0.04, ease: "easeOut" }} />
-                    </div>
-                    <span className="text-[11px] font-semibold text-foreground w-10 text-right">{country.count}</span>
-                    <span className="text-[10px] text-muted-foreground w-8 text-right">{country.pct}%</span>
-                  </motion.div>
-                </TooltipTrigger>
-                <TooltipContent side="top" className="text-[10px]">
-                  {country.region} · {country.count} {t(lang, "tendências", "trends")} · {country.pct}% {t(lang, "do total", "of total")}
-                </TooltipContent>
-              </Tooltip>
-            );
-          })}
-          {analysis.countryData.length === 0 && (
-            <div className="text-center py-4 text-xs text-muted-foreground">
-              <Globe className="w-5 h-5 mx-auto mb-1 opacity-30" />
-              {t(lang, "Dados geográficos indisponíveis", "Geographic data unavailable")}
+        {(() => {
+          const COUNTRY_NAMES: Record<string, Record<string, string>> = {
+            US: { pt: "Estados Unidos", en: "United States" }, BR: { pt: "Brasil", en: "Brazil" },
+            IN: { pt: "Índia", en: "India" }, GB: { pt: "Reino Unido", en: "United Kingdom" },
+            DE: { pt: "Alemanha", en: "Germany" }, FR: { pt: "França", en: "France" },
+            JP: { pt: "Japão", en: "Japan" }, KR: { pt: "Coreia do Sul", en: "South Korea" },
+            CA: { pt: "Canadá", en: "Canada" }, AU: { pt: "Austrália", en: "Australia" },
+            MX: { pt: "México", en: "Mexico" }, IT: { pt: "Itália", en: "Italy" },
+            ES: { pt: "Espanha", en: "Spain" }, AR: { pt: "Argentina", en: "Argentina" },
+            CN: { pt: "China", en: "China" }, RU: { pt: "Rússia", en: "Russia" },
+            ZA: { pt: "África do Sul", en: "South Africa" }, NG: { pt: "Nigéria", en: "Nigeria" },
+            EG: { pt: "Egito", en: "Egypt" }, KE: { pt: "Quênia", en: "Kenya" },
+            TR: { pt: "Turquia", en: "Turkey" }, SA: { pt: "Arábia Saudita", en: "Saudi Arabia" },
+            AE: { pt: "Emirados Árabes", en: "UAE" }, ID: { pt: "Indonésia", en: "Indonesia" },
+            TH: { pt: "Tailândia", en: "Thailand" }, PL: { pt: "Polônia", en: "Poland" },
+            NL: { pt: "Países Baixos", en: "Netherlands" }, SE: { pt: "Suécia", en: "Sweden" },
+            CO: { pt: "Colômbia", en: "Colombia" }, CL: { pt: "Chile", en: "Chile" },
+            PT: { pt: "Portugal", en: "Portugal" }, UA: { pt: "Ucrânia", en: "Ukraine" },
+          };
+          const REGION_GRADIENTS: Record<string, string> = {
+            Americas: "linear-gradient(90deg, #6366F1, #818CF8)",
+            Europe: "linear-gradient(90deg, #3B82F6, #60A5FA)",
+            Asia: "linear-gradient(90deg, #10B981, #34D399)",
+            "Middle East": "linear-gradient(90deg, #F59E0B, #FBBF24)",
+            Africa: "linear-gradient(90deg, #EF4444, #F87171)",
+            Oceania: "linear-gradient(90deg, #8B5CF6, #A78BFA)",
+            Eurasia: "linear-gradient(90deg, #EC4899, #F472B6)",
+            Global: "linear-gradient(90deg, #9CA3AF, #D1D5DB)",
+          };
+          const getCountryName = (code: string) => COUNTRY_NAMES[code]?.[lang] || COUNTRY_NAMES[code]?.en || code;
+
+          return (
+            <div className="space-y-2">
+              {analysis.countryData.map((country, i) => {
+                const regionColor = REGION_COLORS[country.region] || "#6B7280";
+                const maxCount = analysis.countryData[0]?.count || 1;
+                const barPct = Math.round((country.count / maxCount) * 100);
+                const gradient = REGION_GRADIENTS[country.region] || REGION_GRADIENTS.Global;
+                return (
+                  <Tooltip key={country.code}>
+                    <TooltipTrigger asChild>
+                      <motion.div
+                        initial={{ opacity: 0, x: -8 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ delay: i * 0.04 }}
+                        className="flex items-center gap-2 cursor-help"
+                      >
+                        <span className="text-sm flex-shrink-0">{country.flag}</span>
+                        <span className="text-[11px] font-medium text-foreground truncate" style={{ width: 100 }}>{getCountryName(country.code)}</span>
+                        <div className="flex-1 h-1.5 bg-muted/30 rounded-full overflow-hidden">
+                          <motion.div className="h-full rounded-full"
+                            style={{ background: gradient }}
+                            initial={{ width: 0 }} animate={{ width: `${barPct}%` }}
+                            transition={{ duration: 0.4, delay: i * 0.04, ease: "easeOut" }} />
+                        </div>
+                        <span className="text-[11px] font-semibold text-foreground w-10 text-right">{country.count}</span>
+                        <span className="text-[10px] text-muted-foreground w-8 text-right">{country.pct}%</span>
+                      </motion.div>
+                    </TooltipTrigger>
+                    <TooltipContent side="top" className="text-[10px]">
+                      {country.region} · {country.count} {t(lang, "tendências", "trends")} · {country.pct}% {t(lang, "do total", "of total")}
+                    </TooltipContent>
+                  </Tooltip>
+                );
+              })}
+              {analysis.countryData.length === 0 && (
+                <div className="text-center py-4 text-xs text-muted-foreground">
+                  <Globe className="w-5 h-5 mx-auto mb-1 opacity-30" />
+                  {t(lang, "Dados geográficos indisponíveis", "Geographic data unavailable")}
+                </div>
+              )}
             </div>
-          )}
-        </div>
+          );
+        })()}
       </SectionCard>
 
       {/* ═══════ SECTION H: INSIGHTS ═══════ */}

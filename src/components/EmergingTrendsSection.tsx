@@ -294,8 +294,6 @@ export default function EmergingTrendsSection({ trends, anomalies = [], onSelect
     }));
   }, [allItems]);
 
-  if (allItems.length === 0) return null;
-
   // Build prediction text from anomalies
   const predictionText = useMemo(() => {
     if (anomalies.length === 0) return null;
@@ -316,11 +314,13 @@ export default function EmergingTrendsSection({ trends, anomalies = [], onSelect
       : "Monitoring unusual patterns — no convergence detected yet.";
   }, [anomalies, lang]);
 
+  if (allItems.length === 0) return null;
+
   return (
     <div className="flex flex-col h-full">
       {/* PREVISÃO banner */}
       {predictionText && (
-        <div className="px-4 py-3 border-b border-border/30" style={{ background: "linear-gradient(135deg, #FFF1F0, #FFF7E6)", borderLeft: "4px solid #FF4D4F" }}>
+        <div className="mx-3 mt-3 mb-3 px-4 py-3 rounded-lg border-b border-border/30" style={{ background: "linear-gradient(135deg, #FFF1F0, #FFF7E6)", borderLeft: "4px solid #FF4D4F" }}>
           <div className="flex items-start gap-2">
             <span className="text-base flex-shrink-0">🔮</span>
             <div className="min-w-0">
@@ -338,12 +338,23 @@ export default function EmergingTrendsSection({ trends, anomalies = [], onSelect
         </div>
       )}
 
-      {/* 3-column layout */}
-      <div className="flex flex-1 min-h-0 divide-x divide-border/30">
+      {/* 3-column folder tabs layout */}
+      <div className="flex flex-1 min-h-0 px-3 pb-3 gap-0.5">
         {columns.map(col => (
           <div key={col.type} className="flex-1 min-w-0 flex flex-col">
-            {/* Column header */}
-            <div className="flex-shrink-0 px-3 flex flex-col justify-center" style={{ height: 40, background: col.headerBg, borderBottom: `2px solid ${col.accent}` }}>
+            {/* Folder tab header */}
+            <div className="flex-shrink-0 px-3 flex flex-col justify-center relative"
+              style={{
+                height: 40,
+                background: 'hsl(var(--card))',
+                borderTop: `2px solid ${col.accent}`,
+                borderLeft: `1px solid ${col.accent}30`,
+                borderRight: `1px solid ${col.accent}30`,
+                borderTopLeftRadius: 8,
+                borderTopRightRadius: 8,
+                marginBottom: -1,
+                zIndex: 1,
+              }}>
               <div className="flex items-center gap-1">
                 <span className="text-sm">{col.icon}</span>
                 <span className="text-[11px] font-bold text-foreground truncate">{lang === "pt" ? col.title : col.titleEn}</span>
@@ -354,8 +365,13 @@ export default function EmergingTrendsSection({ trends, anomalies = [], onSelect
               <span className="text-[10px] text-muted-foreground truncate">{lang === "pt" ? col.subtitle : col.subtitleEn}</span>
             </div>
 
-            {/* Scrollable card list */}
-            <div className="flex-1 overflow-y-auto scrollbar-thin">
+            {/* Column body */}
+            <div className="flex-1 overflow-y-auto scrollbar-thin border rounded-b-lg"
+              style={{
+                borderColor: `${col.accent}20`,
+                borderTop: `2px solid ${col.accent}`,
+                background: 'hsl(var(--card))',
+              }}>
               {col.items.length === 0 ? (
                 <div className="flex items-center justify-center py-8 text-[10px] text-muted-foreground/50">
                   {lang === "pt" ? "Nenhum sinal" : "No signals"}
