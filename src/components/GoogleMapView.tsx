@@ -1162,9 +1162,9 @@ const GoogleMapView = ({
               strokeOpacity: opacity,
               scale: currentScale,
             });
-            scheduleRaf(animateRipple);
+            scheduleRaf(`markerRipple-${cp.id}`, animateRipple);
           };
-          scheduleRaf(animateRipple);
+          scheduleRaf(`markerRipple-${cp.id}`, animateRipple);
         }
       }
 
