@@ -307,13 +307,13 @@ const TimelineCard = ({
           </div>
 
           {/* Title */}
-          <h3 className={`font-semibold text-foreground leading-snug mb-1 ${compact ? 'text-xs line-clamp-1' : 'text-[13px] line-clamp-2'}`}>
+          <h3 className={`font-semibold text-foreground leading-snug mb-1 break-words ${compact ? 'text-xs line-clamp-1' : 'text-[13px] line-clamp-3'}`} style={{ overflowWrap: 'anywhere' }}>
             {decodeEntities(title)}
           </h3>
 
           {/* Contextual Description */}
           {displayDescription && !compact && (
-            <p className="text-[11px] text-muted-foreground leading-relaxed line-clamp-2 mb-2">
+            <p className="text-[11px] text-muted-foreground leading-relaxed line-clamp-2 mb-2 break-words" style={{ overflowWrap: 'anywhere' }}>
               {decodeEntities(displayDescription)}
             </p>
           )}
