@@ -26,7 +26,7 @@ import ArchiveDrawer from "@/components/ArchiveDrawer";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import TagLegend from "@/components/TagLegend";
 
-import OnboardingFlow, { hasCompletedOnboarding } from "@/components/OnboardingFlow";
+
 import { useUserActivity } from "@/hooks/use-user-activity";
 import {
   ResizablePanelGroup,
@@ -128,14 +128,9 @@ const Index = () => {
   const [criticalDismissed, setCriticalDismissed] = useState(false);
   const [emergingDismissed, setEmergingDismissed] = useState(false);
   const [heatmapDismissed, setHeatmapDismissed] = useState(false);
-  const [showOnboarding, setShowOnboarding] = useState(false);
+  
   const [trendContexts, setTrendContexts] = useState<Record<string, string>>({});
 
-  useEffect(() => {
-    if (user?.id && !hasCompletedOnboarding(user.id)) {
-      setShowOnboarding(true);
-    }
-  }, [user?.id]);
 
   useEffect(() => {
     if (criticalMoments.length > 0) setCriticalDismissed(false);
@@ -915,10 +910,6 @@ const Index = () => {
         totalTrends={filteredTrends.length}
       />
 
-      {/* Onboarding Flow */}
-      {showOnboarding && user?.id && (
-        <OnboardingFlow userId={user.id} onComplete={() => setShowOnboarding(false)} />
-      )}
     </div>
   );
 };
