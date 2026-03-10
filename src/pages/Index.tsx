@@ -413,14 +413,16 @@ const Index = () => {
   };
 
   const gridStyle = useMemo(() => ({
-    columnCount: gridColumns,
-    columnGap: compactMode ? '8px' : '12px',
-  }), [gridColumns, compactMode]);
+    display: 'grid' as const,
+    gridTemplateColumns: `repeat(auto-fill, minmax(260px, 1fr))`,
+    gap: 0,
+    alignItems: 'start' as const,
+  }), []);
 
   const cardWrapperStyle = useMemo(() => ({
-    breakInside: 'avoid' as const,
-    marginBottom: compactMode ? '8px' : '12px',
-  }), [compactMode]);
+    minWidth: 0,
+    overflow: 'hidden' as const,
+  }), []);
 
   const renderTimeline = () => (
     <div ref={(el) => { (scrollRef as any).current = el; (gridRef as any).current = el; }} className={`flex flex-col gap-0.5 p-2 h-full overflow-y-auto overflow-x-hidden scrollbar-thin relative transition-opacity duration-200 w-full max-w-full ${filterTransitioning ? 'opacity-60' : 'opacity-100'}`}>
@@ -577,7 +579,7 @@ const Index = () => {
               <>
                 {agora.length > 0 && (
                   <>
-                    <div className="feed-section-label flex items-center gap-1.5">
+                    <div className="feed-section-label flex items-center gap-1.5" style={{ gridColumn: '1 / -1' }}>
                       <span className="w-1.5 h-1.5 rounded-full bg-destructive animate-pulse" />
                       🔥 {lang === "pt" ? "AGORA" : "NOW"}
                       <span className="text-micro font-normal text-muted-foreground ml-1">({agora.length})</span>
@@ -589,7 +591,7 @@ const Index = () => {
                 )}
                 {ultimas2h.length > 0 && (
                   <>
-                    <div className="feed-section-label flex items-center gap-1.5 text-muted-foreground">
+                    <div className="feed-section-label flex items-center gap-1.5 text-muted-foreground" style={{ gridColumn: '1 / -1' }}>
                       ⏳ {lang === "pt" ? "ÚLTIMAS 2H" : "LAST 2H"}
                       <span className="text-micro font-normal ml-1">({ultimas2h.length})</span>
                     </div>
@@ -600,7 +602,7 @@ const Index = () => {
                 )}
                 {ultimas24h.length > 0 && (
                   <>
-                    <div className="feed-section-label flex items-center gap-1.5 text-muted-foreground">
+                    <div className="feed-section-label flex items-center gap-1.5 text-muted-foreground" style={{ gridColumn: '1 / -1' }}>
                       📅 24H
                       <span className="text-micro font-normal ml-1">({ultimas24h.length})</span>
                     </div>

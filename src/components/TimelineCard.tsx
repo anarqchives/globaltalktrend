@@ -273,15 +273,15 @@ const TimelineCard = ({
       viewport={{ once: true, margin: "-30px" }}
       transition={{ duration: 0.3, ease: [0.25, 0.1, 0.25, 1], delay: Math.min(staggerIndex * 0.04, 0.4) }}
     >
-      <div className={`timeline-card group ${expanded ? 'timeline-card-expanded' : ''}`} data-tier={tier}>
+      <div className={`timeline-card group ${expanded ? 'timeline-card-expanded' : ''}`} data-tier={tier} style={{ minWidth: 0, overflow: 'hidden', boxSizing: 'border-box' }}>
         
         {/* === MAIN CONTENT: Click to expand === */}
         <div className="cursor-pointer" onClick={handleToggle}>
           
           {/* Image (when available) */}
           {thumbnail && !imgError && !compact && (
-            <div className="relative w-full h-32 mb-2.5 rounded-xl overflow-hidden bg-secondary/50">
-              <img src={thumbnail} alt="" className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-[1.03]" loading="lazy" onError={() => setImgError(true)} />
+            <div className="relative w-full overflow-hidden rounded-md bg-secondary/50 mb-2.5" style={{ height: 120 }}>
+              <img src={thumbnail} alt="" className="w-full h-full object-cover block transition-transform duration-300 group-hover:scale-[1.03]" loading="lazy" onError={() => setImgError(true)} />
             </div>
           )}
 
@@ -307,19 +307,19 @@ const TimelineCard = ({
           </div>
 
           {/* Title */}
-          <h3 className={`font-semibold text-foreground leading-snug mb-1 ${compact ? 'text-xs line-clamp-1' : 'text-[13px] line-clamp-2'}`}>
+          <h3 className={`font-semibold text-foreground leading-snug mb-1 break-words ${compact ? 'text-xs line-clamp-1' : 'text-[13px] line-clamp-3'}`} style={{ overflowWrap: 'anywhere' }}>
             {decodeEntities(title)}
           </h3>
 
           {/* Contextual Description */}
           {displayDescription && !compact && (
-            <p className="text-[11px] text-muted-foreground leading-relaxed line-clamp-2 mb-2">
+            <p className="text-[11px] text-muted-foreground leading-relaxed line-clamp-2 mb-2 break-words" style={{ overflowWrap: 'anywhere' }}>
               {decodeEntities(displayDescription)}
             </p>
           )}
 
           {/* === METRICS BAR === */}
-          <div className="flex items-center gap-1.5 flex-wrap text-[10px] mb-2">
+          <div className="flex items-center gap-1.5 flex-wrap text-[10px] mb-2 w-full min-w-0">
             {/* TVI Badge */}
             <Tooltip>
               <TooltipTrigger asChild>
@@ -378,7 +378,7 @@ const TimelineCard = ({
 
             {/* Sparkline with pulsing endpoint */}
             {sparkData && !compact && (
-              <div className="ml-auto flex-shrink-0 w-20 h-8 relative">
+              <div className="ml-auto flex-shrink-0 overflow-hidden relative" style={{ width: 72, minWidth: 72, height: 28 }}>
                 <ResponsiveContainer width="100%" height="100%">
                   <AreaChart data={sparkData}>
                     <defs>
@@ -400,7 +400,7 @@ const TimelineCard = ({
           </div>
 
           {/* === TAGS ROW — unified semantic types === */}
-          <div className="flex items-center gap-1 flex-wrap mb-1.5">
+          <div className="flex items-center gap-1 flex-wrap mb-1.5 w-full">
             {/* TYPE tag */}
             <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-secondary text-muted-foreground">
               {localizedCategory}
@@ -433,28 +433,28 @@ const TimelineCard = ({
         </button>
 
         {/* === ACTION BAR — hidden by default, visible on hover === */}
-        <div className="card-actions-row flex items-center gap-0.5 bg-secondary/40 rounded-xl p-0.5 mt-1">
+        <div className="card-actions-row flex items-center gap-1.5 flex-wrap bg-secondary/40 rounded-xl p-0.5 mt-1 w-full min-w-0" style={{ borderTop: '1px solid hsl(var(--border) / 0.3)', paddingTop: 8 }}>
           {sourceUrl && (
             <a
               href={sourceUrl}
               target="_blank"
               rel="noopener noreferrer"
               onClick={(e) => e.stopPropagation()}
-              className="inline-flex items-center gap-1 px-2 py-1 min-h-[28px] rounded-lg text-[10px] font-medium text-muted-foreground hover:text-foreground hover:bg-card transition-colors"
+              className="inline-flex items-center gap-1 px-2 py-1 min-h-[28px] rounded-lg text-[10px] font-medium text-muted-foreground hover:text-foreground hover:bg-card transition-colors whitespace-nowrap flex-shrink-0"
             >
-              <ExternalLink className="w-3 h-3" />
+              <ExternalLink className="w-3 h-3 flex-shrink-0" />
               {t("viewSource")}
             </a>
           )}
-          <button onClick={handleShare} className="inline-flex items-center gap-1 px-2 py-1 min-h-[28px] rounded-lg text-[10px] font-medium text-muted-foreground hover:text-foreground hover:bg-card transition-colors">
-            <Share2 className="w-3 h-3" />
+          <button onClick={handleShare} className="inline-flex items-center gap-1 px-2 py-1 min-h-[28px] rounded-lg text-[10px] font-medium text-muted-foreground hover:text-foreground hover:bg-card transition-colors whitespace-nowrap flex-shrink-0">
+            <Share2 className="w-3 h-3 flex-shrink-0" />
             {t("share")}
           </button>
           <div className="flex-1" />
-          <button onClick={handleAlertClick} className="p-1.5 min-h-[28px] min-w-[28px] flex items-center justify-center rounded-lg text-muted-foreground/40 hover:text-primary hover:bg-card transition-colors">
+          <button onClick={handleAlertClick} className="p-1.5 min-h-[28px] min-w-[28px] flex items-center justify-center rounded-lg text-muted-foreground/40 hover:text-primary hover:bg-card transition-colors flex-shrink-0">
             <Bell className="w-3 h-3" />
           </button>
-          <button onClick={(e) => { e.stopPropagation(); toast({ title: "⚠️ Denúncia enviada", description: `Obrigado por reportar: ${title.slice(0, 40)}` }); }} className="p-1.5 min-h-[28px] min-w-[28px] flex items-center justify-center rounded-lg text-muted-foreground/40 hover:text-destructive hover:bg-card transition-colors">
+          <button onClick={(e) => { e.stopPropagation(); toast({ title: "⚠️ Denúncia enviada", description: `Obrigado por reportar: ${title.slice(0, 40)}` }); }} className="p-1.5 min-h-[28px] min-w-[28px] flex items-center justify-center rounded-lg text-muted-foreground/40 hover:text-destructive hover:bg-card transition-colors flex-shrink-0">
             <Flag className="w-3 h-3" />
           </button>
         </div>
