@@ -625,6 +625,7 @@ export default function WeeklyPulseDashboard({ trends }: { trends: TrendCardProp
   const [loading, setLoading] = useState(true);
   const [drillDownDay, setDrillDownDay] = useState<string | null>(null);
   const [lastRefresh, setLastRefresh] = useState<Date>(new Date());
+  const [timedOut, setTimedOut] = useState(false);
   const refreshTimerRef = useRef<NodeJS.Timeout | null>(null);
 
   const fetchData = useCallback(async () => {
@@ -649,7 +650,7 @@ export default function WeeklyPulseDashboard({ trends }: { trends: TrendCardProp
       setWeeklyData(allData);
       setLastRefresh(new Date());
     } catch (e) { console.error(e); }
-    finally { setLoading(false); }
+    finally { setLoading(false); setTimedOut(false); }
   }, []);
 
   // Initial fetch + auto-refresh every 5 minutes
