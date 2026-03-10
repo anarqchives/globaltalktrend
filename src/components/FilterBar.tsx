@@ -258,8 +258,8 @@ const FilterBar = ({ filters, onChange, onForceReset, onSaveFilter, isLoggedIn }
   if (filters.type !== defaultFilters.type) activeFilterLabels.push(filters.type);
 
   return (
-    <div className="sticky top-[52px] z-40 bg-card dark:bg-card border-b-2 border-border shadow-sm" style={{ height: 48 }}>
-      <div className="h-full px-4 flex items-center gap-2 overflow-x-auto scrollbar-hide">
+    <div className="sticky top-[52px] z-40 bg-card dark:bg-card border-b-2 border-border shadow-sm" style={{ minHeight: 44 }}>
+      <div className="h-full px-2 sm:px-4 py-1 flex items-center gap-1 sm:gap-2 flex-wrap">
         <ChipDropdown
           chipLabel="Global"
           value={filters.country}
