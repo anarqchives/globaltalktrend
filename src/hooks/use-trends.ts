@@ -941,7 +941,7 @@ export function useTrends(filters: FilterState, onTrendCountsChange: (counts: Re
 
       // Layer 3: Search ALL trends for keyword matches related to the country
       if (combined.length < 3) {
-        console.log("🔍 Camada 3 - Busca por palavras-chave do país em trends globais");
+        if (import.meta.env.DEV) console.log("🔍 Camada 3 - Busca por palavras-chave do país em trends globais");
         const countryKeywords: Record<string, string[]> = {
           VE: ["venezuela", "maduro", "caracas", "guaidó", "pdvsa", "chavismo"],
           PS: ["gaza", "palestina", "palestine", "hamas", "cisjordânia", "west bank"],
