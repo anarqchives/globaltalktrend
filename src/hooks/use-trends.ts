@@ -614,7 +614,7 @@ export function useTrends(filters: FilterState, onTrendCountsChange: (counts: Re
           { data: { trends: [] } } as Awaited<ReturnType<typeof supabase.functions.invoke>>
         );
         const count = result.data?.trends?.length || 0;
-        console.log(`✅ ${sourceName} retornou:`, count, "itens");
+        if (import.meta.env.DEV) console.log(`✅ ${sourceName} retornou:`, count, "itens");
         
         // Track health per source
         const platforms: string[] = (result.data?.trends || []).map((t: any) => String(t.platform || ""));
