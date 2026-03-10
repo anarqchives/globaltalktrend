@@ -773,7 +773,7 @@ export function useTrends(filters: FilterState, onTrendCountsChange: (counts: Re
         }
         setSourcesStatus(statusMap);
 
-        console.log('🔄 Atualização:', {
+        if (import.meta.env.DEV) console.log('🔄 Atualização:', {
           timestamp: now.toLocaleTimeString(),
           live: allTrends.length,
           historical: uniqueHistorical.length,
