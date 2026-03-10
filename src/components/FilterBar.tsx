@@ -268,9 +268,7 @@ const FilterBar = ({ filters, onChange, onForceReset, onSaveFilter, isLoggedIn }
           onClear={() => update("type", defaultFilters.type)}
         />
 
-        <div className="flex-1" />
-
-        {/* Alert bell */}
+        {/* Alert bell — inline after last chip */}
         {isLoggedIn && onSaveFilter && (
           <Tooltip>
             <TooltipTrigger asChild>
