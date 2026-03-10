@@ -1083,7 +1083,7 @@ const GoogleMapView = ({
     };
     document.addEventListener('map-sentiment-filter', handler);
     return () => {
-      localRafIds.forEach(id => cancelAnimationFrame(id));
+      Object.values(activeAnimations).forEach(id => cancelAnimationFrame(id));
       sentimentMarkersRef.current.forEach(m => m.setMap(null));
       sentimentMarkersRef.current = [];
       sentimentCirclesRef.current.forEach(c => c.setMap(null));
