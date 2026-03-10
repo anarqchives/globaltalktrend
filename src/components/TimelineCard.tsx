@@ -433,28 +433,28 @@ const TimelineCard = ({
         </button>
 
         {/* === ACTION BAR — hidden by default, visible on hover === */}
-        <div className="card-actions-row flex items-center gap-0.5 bg-secondary/40 rounded-xl p-0.5 mt-1">
+        <div className="card-actions-row flex items-center gap-1.5 flex-wrap bg-secondary/40 rounded-xl p-0.5 mt-1 w-full min-w-0" style={{ borderTop: '1px solid hsl(var(--border) / 0.3)', paddingTop: 8 }}>
           {sourceUrl && (
             <a
               href={sourceUrl}
               target="_blank"
               rel="noopener noreferrer"
               onClick={(e) => e.stopPropagation()}
-              className="inline-flex items-center gap-1 px-2 py-1 min-h-[28px] rounded-lg text-[10px] font-medium text-muted-foreground hover:text-foreground hover:bg-card transition-colors"
+              className="inline-flex items-center gap-1 px-2 py-1 min-h-[28px] rounded-lg text-[10px] font-medium text-muted-foreground hover:text-foreground hover:bg-card transition-colors whitespace-nowrap flex-shrink-0"
             >
-              <ExternalLink className="w-3 h-3" />
+              <ExternalLink className="w-3 h-3 flex-shrink-0" />
               {t("viewSource")}
             </a>
           )}
-          <button onClick={handleShare} className="inline-flex items-center gap-1 px-2 py-1 min-h-[28px] rounded-lg text-[10px] font-medium text-muted-foreground hover:text-foreground hover:bg-card transition-colors">
-            <Share2 className="w-3 h-3" />
+          <button onClick={handleShare} className="inline-flex items-center gap-1 px-2 py-1 min-h-[28px] rounded-lg text-[10px] font-medium text-muted-foreground hover:text-foreground hover:bg-card transition-colors whitespace-nowrap flex-shrink-0">
+            <Share2 className="w-3 h-3 flex-shrink-0" />
             {t("share")}
           </button>
           <div className="flex-1" />
-          <button onClick={handleAlertClick} className="p-1.5 min-h-[28px] min-w-[28px] flex items-center justify-center rounded-lg text-muted-foreground/40 hover:text-primary hover:bg-card transition-colors">
+          <button onClick={handleAlertClick} className="p-1.5 min-h-[28px] min-w-[28px] flex items-center justify-center rounded-lg text-muted-foreground/40 hover:text-primary hover:bg-card transition-colors flex-shrink-0">
             <Bell className="w-3 h-3" />
           </button>
-          <button onClick={(e) => { e.stopPropagation(); toast({ title: "⚠️ Denúncia enviada", description: `Obrigado por reportar: ${title.slice(0, 40)}` }); }} className="p-1.5 min-h-[28px] min-w-[28px] flex items-center justify-center rounded-lg text-muted-foreground/40 hover:text-destructive hover:bg-card transition-colors">
+          <button onClick={(e) => { e.stopPropagation(); toast({ title: "⚠️ Denúncia enviada", description: `Obrigado por reportar: ${title.slice(0, 40)}` }); }} className="p-1.5 min-h-[28px] min-w-[28px] flex items-center justify-center rounded-lg text-muted-foreground/40 hover:text-destructive hover:bg-card transition-colors flex-shrink-0">
             <Flag className="w-3 h-3" />
           </button>
         </div>
