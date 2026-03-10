@@ -613,12 +613,12 @@ export default function WeeklyPulseDashboard({ trends }: { trends: TrendCardProp
               />
               {chartMode === "total" ? (
                 <Area type="monotone" dataKey="total" stroke="#6366F1" strokeWidth={2}
-                  fill="url(#grad_total)" dot={false} activeDot={{ r: 4, strokeWidth: 0 }}
+                  fill="url(#grad_total)" dot={{ r: 3, fill: "#6366F1", strokeWidth: 0 }} activeDot={{ r: 4, strokeWidth: 0 }}
                   connectNulls={false} animationDuration={700} />
               ) : (
                 analysis.topCats.map(cat => (
                   <Area key={cat} type="monotone" dataKey={cat} stroke={getCatColor(cat)} strokeWidth={2}
-                    fill={`url(#grad_${cat.replace(/\s/g, "")})`} dot={false}
+                    fill={`url(#grad_${cat.replace(/\s/g, "")})`} dot={{ r: 3, fill: getCatColor(cat), strokeWidth: 0 }}
                     activeDot={{ r: 4, strokeWidth: 0 }} connectNulls={false} animationDuration={700} />
                 ))
               )}
