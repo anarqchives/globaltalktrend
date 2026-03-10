@@ -906,7 +906,7 @@ export function useTrends(filters: FilterState, onTrendCountsChange: (counts: Re
 
     // ── SMART FALLBACK: Hierarchical data recovery ──
     if (filtered.length === 0 && filters.country !== "global" && trends.length > 0) {
-      console.log(`🧠 Zero trends para país ${countryFilter} — iniciando fallback hierárquico`);
+      if (import.meta.env.DEV) console.log(`🧠 Zero trends para país ${countryFilter} — iniciando fallback hierárquico`);
 
       let combined: TrendCardProps[] = [];
       const seenKeys = new Set<string>();
