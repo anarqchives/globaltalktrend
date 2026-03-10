@@ -195,8 +195,19 @@ const GoogleMapView = ({
   const openInfoCountryRef = useRef<string | null>(null);
   const [mapError, setMapError] = useState<string | null>(null);
   const [mapViewType, setMapViewType] = useState<MapViewType>("roadmap");
-  const [mapMode, setMapMode] = useState<MapMode>("heatmap");
+  const [mapMode, setMapModeRaw] = useState<MapMode>("heatmap");
+  const [modeTransitioning, setModeTransitioning] = useState(false);
   const heatmapEnabled = mapMode === "heatmap"; // derived from mapMode
+
+  // Smooth mode transition with brief fade
+  const setMapMode = useCallback((mode: MapMode) => {
+    if (mode === mapMode) return;
+    setModeTransitioning(true);
+    setTimeout(() => {
+      setMapModeRaw(mode);
+      setTimeout(() => setModeTransitioning(false), 200);
+    }, 150);
+  }, [mapMode]);
   const [isDark, setIsDark] = useState(() => document.documentElement.classList.contains("dark"));
   const [updateNotif, setUpdateNotif] = useState<{ countries: number; trends: number } | null>(null);
   const [mapRetry, setMapRetry] = useState(0);
@@ -301,34 +312,55 @@ const GoogleMapView = ({
     return () => window.clearTimeout(timer);
   }, [mapLoaded, mapError]);
 
-  // Heatmap with vibrant gradient
+  // Heatmap with organic mesh-gradient feel
   useEffect(() => {
     const map = googleMapRef.current;
     const viz = googleRef.current?.visualization as any;
     if (!map || !mapLoaded || !viz?.HeatmapLayer) return;
     if (heatmapRef.current) { heatmapRef.current.setMap(null); heatmapRef.current = null; }
-    const heatmapData = countryPoints
+    // Create multiple weighted points per country for organic blob distribution
+    const heatmapData: { location: google.maps.LatLng; weight: number }[] = [];
+    countryPoints
       .filter((cp) => (trendCounts[cp.id] || 0) > 0)
-      .map((cp) => ({ location: new google.maps.LatLng(cp.lat, cp.lng), weight: (trendCounts[cp.id] || 1) * 3 }));
+      .forEach((cp) => {
+        const count = trendCounts[cp.id] || 1;
+        const weight = count * 3;
+        // Main point
+        heatmapData.push({ location: new google.maps.LatLng(cp.lat, cp.lng), weight });
+        // Organic scatter: add softer satellite points for blob-like distribution
+        const scatter = Math.min(count, 6);
+        for (let i = 0; i < scatter; i++) {
+          const angle = (Math.PI * 2 * i) / scatter;
+          const dist = 1.5 + Math.random() * 2.5;
+          heatmapData.push({
+            location: new google.maps.LatLng(cp.lat + Math.sin(angle) * dist, cp.lng + Math.cos(angle) * dist),
+            weight: weight * (0.15 + Math.random() * 0.2),
+          });
+        }
+      });
     if (heatmapData.length > 0) {
       const heatmap = new viz.HeatmapLayer({
         data: heatmapData,
         map: heatmapEnabled ? map : null,
-        radius: 90,
-        opacity: 0.7,
+        radius: 120,
+        opacity: 0.65,
         dissipating: true,
-        maxIntensity: 80,
+        maxIntensity: 60,
         gradient: [
           "rgba(0, 0, 0, 0)",
-          "rgba(70, 130, 200, 0.1)",
-          "rgba(100, 180, 255, 0.25)",
-          "rgba(0, 200, 255, 0.4)",
-          "rgba(0, 255, 200, 0.5)",
-          "rgba(100, 255, 100, 0.55)",
-          "rgba(255, 255, 0, 0.65)",
-          "rgba(255, 150, 0, 0.75)",
-          "rgba(255, 50, 0, 0.85)",
-          "rgba(200, 0, 50, 0.95)",
+          "rgba(40, 80, 160, 0.05)",
+          "rgba(60, 120, 200, 0.1)",
+          "rgba(80, 160, 240, 0.18)",
+          "rgba(60, 200, 255, 0.28)",
+          "rgba(0, 230, 220, 0.36)",
+          "rgba(40, 255, 180, 0.42)",
+          "rgba(120, 255, 100, 0.48)",
+          "rgba(200, 255, 50, 0.54)",
+          "rgba(255, 220, 0, 0.6)",
+          "rgba(255, 160, 0, 0.68)",
+          "rgba(255, 100, 30, 0.76)",
+          "rgba(255, 50, 20, 0.84)",
+          "rgba(220, 20, 60, 0.92)",
         ],
       });
       heatmapRef.current = heatmap;
@@ -1034,47 +1066,43 @@ const GoogleMapView = ({
       const isHighActivity = intensity > 0.5;
       const isMedActivity = intensity > 0.25;
 
-      // Animated ripple rings
+      // Sonar pulse rings — concentric expanding rings like radar pings
       if (count > 0 && (isHighActivity || isMedActivity)) {
-        const rippleScale = scale * 2.8;
-        const ripple = new g.maps.Marker({
-          map, position: { lat: cp.lat, lng: cp.lng },
-          icon: { path: g.maps.SymbolPath.CIRCLE, fillColor: fill, fillOpacity: 0, strokeColor: ring, strokeWeight: 2, strokeOpacity: 0.5, scale: rippleScale },
-          clickable: false, zIndex: 0, optimized: false,
-        });
-        rippleOverlaysRef.current.push(ripple);
-        let startTime = performance.now();
-        const duration = isHighActivity ? 1800 : 2800;
-        const animateRipple = (now: number) => {
-          if (!ripple.getMap()) return;
-          const elapsed = (now - startTime) % duration;
-          const progress = elapsed / duration;
-          const currentScale = scale + (rippleScale - scale) * progress;
-          const opacity = 0.6 * (1 - progress);
-          ripple.setIcon({ path: g.maps.SymbolPath.CIRCLE, fillColor: fill, fillOpacity: 0, strokeColor: ring, strokeWeight: 2 * (1 - progress * 0.5), strokeOpacity: opacity, scale: currentScale });
-          requestAnimationFrame(animateRipple);
-        };
-        requestAnimationFrame(animateRipple);
+        const isCritical = intensity > 0.7;
+        const ringCount = isCritical ? 3 : isHighActivity ? 2 : 1;
+        const baseDuration = isCritical ? 2200 : isHighActivity ? 2800 : 3500;
 
-        // Second ring for high activity
-        if (isHighActivity) {
-          const ripple2 = new g.maps.Marker({
+        for (let ringIdx = 0; ringIdx < ringCount; ringIdx++) {
+          const rippleScale = scale * (2.5 + ringIdx * 0.8);
+          const ripple = new g.maps.Marker({
             map, position: { lat: cp.lat, lng: cp.lng },
-            icon: { path: g.maps.SymbolPath.CIRCLE, fillColor: fill, fillOpacity: 0, strokeColor: ring, strokeWeight: 1.5, strokeOpacity: 0.35, scale: rippleScale },
+            icon: { path: g.maps.SymbolPath.CIRCLE, fillColor: fill, fillOpacity: 0, strokeColor: ring, strokeWeight: 2, strokeOpacity: 0.5, scale: rippleScale },
             clickable: false, zIndex: 0, optimized: false,
           });
-          rippleOverlaysRef.current.push(ripple2);
-          const startTime2 = performance.now() - 600;
-          const animateRipple2 = (now: number) => {
-            if (!ripple2.getMap()) return;
-            const elapsed = (now - startTime2) % duration;
-            const progress = elapsed / duration;
-            const currentScale = scale + (rippleScale * 1.2 - scale) * progress;
-            const opacity = 0.4 * (1 - progress);
-            ripple2.setIcon({ path: g.maps.SymbolPath.CIRCLE, fillColor: fill, fillOpacity: 0, strokeColor: ring, strokeWeight: 1.2 * (1 - progress * 0.5), strokeOpacity: opacity, scale: currentScale });
-            requestAnimationFrame(animateRipple2);
+          rippleOverlaysRef.current.push(ripple);
+          const phaseOffset = (ringIdx * baseDuration) / ringCount;
+          const startTime = performance.now() - phaseOffset;
+          const animateRipple = (now: number) => {
+            if (!ripple.getMap()) return;
+            const elapsed = (now - startTime) % baseDuration;
+            const progress = elapsed / baseDuration;
+            // Ease-out cubic for organic deceleration
+            const eased = 1 - Math.pow(1 - progress, 3);
+            const currentScale = scale + (rippleScale - scale) * eased;
+            const opacity = (isCritical ? 0.7 : 0.5) * (1 - eased);
+            const strokeW = (isCritical ? 2.5 : 1.8) * (1 - eased * 0.6);
+            ripple.setIcon({
+              path: g.maps.SymbolPath.CIRCLE,
+              fillColor: isCritical ? fill : "transparent",
+              fillOpacity: isCritical ? 0.03 * (1 - eased) : 0,
+              strokeColor: ring,
+              strokeWeight: strokeW,
+              strokeOpacity: opacity,
+              scale: currentScale,
+            });
+            requestAnimationFrame(animateRipple);
           };
-          requestAnimationFrame(animateRipple2);
+          requestAnimationFrame(animateRipple);
         }
       }
 
@@ -1449,6 +1477,19 @@ const GoogleMapView = ({
 
       {/* Map container */}
       <div ref={mapRef} className="absolute inset-0 z-0" />
+
+      {/* Mode transition fade overlay */}
+      <AnimatePresence>
+        {modeTransitioning && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.15, ease: "easeInOut" }}
+            className="absolute inset-0 z-[3] bg-background/20 backdrop-blur-[2px] pointer-events-none"
+          />
+        )}
+      </AnimatePresence>
 
       {/* Loading state */}
       {!mapLoaded && !mapError && (
