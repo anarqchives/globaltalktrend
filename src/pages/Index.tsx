@@ -761,16 +761,18 @@ const Index = () => {
       <div className="flex-1 overflow-hidden flex flex-col min-h-0">
         {isMobile ? (
           <>
-            {/* Trend Radar */}
-            <TrendRadar
-              trends={filteredTrends}
-              allTrends={allTrends}
-              criticalMoments={criticalMoments}
-              anomalies={anomalies}
-              onSelectTrend={handleSelectTrend}
-              onFilterCountry={(code) => setFilters(f => ({ ...f, country: code }))}
-              onAnomalyClick={handleAnomalyClick}
-            />
+            {/* Trend Radar — fixed height on mobile */}
+            <div className="max-h-[40vh] overflow-y-auto overflow-x-hidden shrink-0">
+              <TrendRadar
+                trends={filteredTrends}
+                allTrends={allTrends}
+                criticalMoments={criticalMoments}
+                anomalies={anomalies}
+                onSelectTrend={handleSelectTrend}
+                onFilterCountry={(code) => setFilters(f => ({ ...f, country: code }))}
+                onAnomalyClick={handleAnomalyClick}
+              />
+            </div>
             {/* Timeline/Map */}
             <div className="flex-1 min-h-0 flex flex-col relative">
               <div className="flex-1 min-h-0 overflow-hidden">
