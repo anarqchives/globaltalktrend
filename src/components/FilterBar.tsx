@@ -234,7 +234,7 @@ const FilterBar = ({ filters, onChange, onForceReset, onSaveFilter, isLoggedIn }
 
   return (
     <div className="sticky top-[52px] z-40 bg-card/95 dark:bg-card/95 backdrop-blur-sm border-b border-border" style={{ height: 44 }}>
-      <div className="h-full px-4 flex items-center" style={{ gap: 8 }}>
+      <div className="h-full px-4 flex items-center overflow-x-auto scrollbar-thin" style={{ gap: 8 }}>
         <ChipDropdown
           chipLabel="Global"
           value={filters.country}
