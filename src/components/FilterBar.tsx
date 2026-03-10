@@ -284,14 +284,7 @@ const FilterBar = ({ filters, onChange, onForceReset, onSaveFilter, isLoggedIn }
               <button
                 onClick={() => { onChange(defaultFilters); onForceReset?.(); }}
                 className="flex items-center justify-center group"
-                style={{
-                  width: 30, height: 30, flexShrink: 0,
-                  borderRadius: 8,
-                  border: "1px solid #E5E7EB",
-                  background: "hsl(var(--card))",
-                  color: "#6B7280",
-                  transition: "all 120ms ease",
-                }}
+                className="flex items-center justify-center group w-[30px] h-[30px] flex-shrink-0 rounded-lg border border-border bg-card text-muted-foreground hover:border-muted-foreground/50 hover:bg-muted hover:text-foreground transition-all duration-[120ms]"
                 aria-label={lang === "pt" ? "Limpar filtros" : "Clear filters"}
               >
                 <RotateCcw size={13} className="group-hover:animate-[spin_0.3s_ease-in-out]" />
