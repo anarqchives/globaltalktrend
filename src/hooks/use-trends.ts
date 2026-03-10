@@ -978,7 +978,7 @@ export function useTrends(filters: FilterState, onTrendCountsChange: (counts: Re
       }
 
       // Layer 4: Contextual fallback (generated data with clear indicator)
-      console.log(`📋 Camada 4 - Fallback contextualizado para ${countryFilter}`);
+      if (import.meta.env.DEV) console.log(`📋 Camada 4 - Fallback contextualizado para ${countryFilter}`);
       const contextual = generateContextualFallback(filters);
       if (contextual.length > 0) {
         return contextual;
