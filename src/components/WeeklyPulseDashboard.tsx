@@ -639,48 +639,67 @@ export default function WeeklyPulseDashboard({ trends }: { trends: TrendCardProp
 
       {/* ═══════ SECTION D: TWO-COLUMN ROW ═══════ */}
       <div className="grid grid-cols-1 sm:grid-cols-[55%_45%] gap-4">
-        {/* Momentum */}
-        <SectionCard
-          icon="⚡"
-          title={t(lang, "Momentum por Categoria", "Category Momentum")}
-          subtitle={t(lang, "Variação de volume vs. média histórica", "Volume variation vs. historical average")}
-          tooltip={t(lang, "Momentum = crescimento relativo desta semana comparado às 4 semanas anteriores", "Momentum = relative growth this week compared to previous 4 weeks")}
-        >
-          <div className="space-y-2.5">
-            {analysis.categoryMomentum.slice(0, 6).map((cat, i) => {
-              const barWidth = Math.min(Math.max(Math.abs(cat.momentum), 5), 100);
-              const color = getCatColor(cat.name);
-              const momentumColor = cat.momentum > 0 ? "text-emerald-600" : cat.momentum < 0 ? "text-red-500" : "text-muted-foreground";
-              return (
-                <Tooltip key={cat.name}>
-                  <TooltipTrigger asChild>
-                    <motion.div initial={{ opacity: 0, x: -8 }} animate={{ opacity: 1, x: 0 }}
-                      transition={{ delay: i * 0.06 }} className="flex items-center gap-2 cursor-help">
-                      <span className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ backgroundColor: color }} />
-                      <span className="text-[11px] text-foreground w-24 truncate font-medium">{cat.name}</span>
-                      <div className="flex-1 h-2 bg-muted/30 rounded-full overflow-hidden">
-                        <motion.div className="h-full rounded-full"
-                          style={{ background: `linear-gradient(90deg, ${color}, ${color}66)` }}
-                          initial={{ width: 0 }} animate={{ width: `${barWidth}%` }}
-                          transition={{ duration: 0.6, delay: i * 0.08, ease: "easeOut" }} />
-                      </div>
-                      <span className={`text-xs font-semibold w-12 text-right ${momentumColor}`}>
-                        {cat.momentum > 0 ? "+" : ""}{cat.momentum}%
-                      </span>
-                    </motion.div>
-                  </TooltipTrigger>
-                  <TooltipContent side="top" className="text-[10px]">
-                    {cat.momentum > 0
-                      ? t(lang, `Alta de ${cat.momentum}% vs semana anterior`, `Up ${cat.momentum}% vs previous week`)
-                      : cat.momentum < 0
-                      ? t(lang, `Queda de ${Math.abs(cat.momentum)}% vs semana anterior`, `Down ${Math.abs(cat.momentum)}% vs previous week`)
-                      : t(lang, "Estável", "Stable")}
-                  </TooltipContent>
-                </Tooltip>
-              );
-            })}
-          </div>
-        </SectionCard>
+        {/* Momentum — show share % when no historical baseline */}
+        {(() => {
+          const hasHistoricalBaseline = prevWeekVol.current > 0;
+          const totalCatVolume = analysis.categoryMomentum.reduce((s, c) => s + c.total, 0) || 1;
+          const maxShare = Math.max(...analysis.categoryMomentum.map(c => c.total / totalCatVolume * 100), 1);
+          return (
+            <SectionCard
+              icon="⚡"
+              title={t(lang, "Momentum por Categoria", "Category Momentum")}
+              subtitle={hasHistoricalBaseline
+                ? t(lang, "Variação de volume vs. média histórica", "Volume variation vs. historical average")
+                : t(lang, "Participação no volume desta semana", "Share of this week's volume")}
+              tooltip={hasHistoricalBaseline
+                ? t(lang, "Momentum = crescimento relativo desta semana comparado às 4 semanas anteriores", "Momentum = relative growth this week compared to previous 4 weeks")
+                : t(lang, "Proporção de cada categoria no volume total desta semana", "Each category's proportion of total volume this week")}
+            >
+              <div className="space-y-2.5">
+                {analysis.categoryMomentum.slice(0, 6).map((cat, i) => {
+                  const color = getCatColor(cat.name);
+                  const share = Math.round((cat.total / totalCatVolume) * 100);
+                  const barWidth = hasHistoricalBaseline
+                    ? Math.min(Math.max(Math.abs(cat.momentum), 5), 100)
+                    : Math.round((share / maxShare) * 90);
+                  const displayValue = hasHistoricalBaseline ? cat.momentum : share;
+                  const momentumColor = hasHistoricalBaseline
+                    ? (cat.momentum > 0 ? "text-emerald-600" : cat.momentum < 0 ? "text-red-500" : "text-muted-foreground")
+                    : "text-foreground";
+                  return (
+                    <Tooltip key={cat.name}>
+                      <TooltipTrigger asChild>
+                        <motion.div initial={{ opacity: 0, x: -8 }} animate={{ opacity: 1, x: 0 }}
+                          transition={{ delay: i * 0.06 }} className="flex items-center gap-2 cursor-help">
+                          <span className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ backgroundColor: color }} />
+                          <span className="text-[11px] text-foreground w-24 truncate font-medium">{cat.name}</span>
+                          <div className="flex-1 h-2 bg-muted/30 rounded-full overflow-hidden">
+                            <motion.div className="h-full rounded-full"
+                              style={{ background: `linear-gradient(90deg, ${color}, ${color}60)` }}
+                              initial={{ width: 0 }} animate={{ width: `${barWidth}%` }}
+                              transition={{ duration: 0.6, delay: i * 0.08, ease: "easeOut" }} />
+                          </div>
+                          <span className={`text-xs font-semibold w-12 text-right ${momentumColor}`}>
+                            {hasHistoricalBaseline ? `${displayValue > 0 ? "+" : ""}${displayValue}%` : `${displayValue}%`}
+                          </span>
+                        </motion.div>
+                      </TooltipTrigger>
+                      <TooltipContent side="top" className="text-[10px]">
+                        {hasHistoricalBaseline
+                          ? (cat.momentum > 0
+                            ? t(lang, `Alta de ${cat.momentum}% vs semana anterior`, `Up ${cat.momentum}% vs previous week`)
+                            : cat.momentum < 0
+                            ? t(lang, `Queda de ${Math.abs(cat.momentum)}% vs semana anterior`, `Down ${Math.abs(cat.momentum)}% vs previous week`)
+                            : t(lang, "Estável", "Stable"))
+                          : t(lang, `${cat.name} representa ${share}% do volume desta semana`, `${cat.name} represents ${share}% of this week's volume`)}
+                      </TooltipContent>
+                    </Tooltip>
+                  );
+                })}
+              </div>
+            </SectionCard>
+          );
+        })()}
 
         {/* Lifecycle */}
         <SectionCard
