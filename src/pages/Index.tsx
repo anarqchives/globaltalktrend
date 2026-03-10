@@ -413,14 +413,16 @@ const Index = () => {
   };
 
   const gridStyle = useMemo(() => ({
-    columnCount: gridColumns,
-    columnGap: compactMode ? '8px' : '12px',
-  }), [gridColumns, compactMode]);
+    display: 'grid' as const,
+    gridTemplateColumns: `repeat(auto-fill, minmax(260px, 1fr))`,
+    gap: 0,
+    alignItems: 'start' as const,
+  }), []);
 
   const cardWrapperStyle = useMemo(() => ({
-    breakInside: 'avoid' as const,
-    marginBottom: compactMode ? '8px' : '12px',
-  }), [compactMode]);
+    minWidth: 0,
+    overflow: 'hidden' as const,
+  }), []);
 
   const renderTimeline = () => (
     <div ref={(el) => { (scrollRef as any).current = el; (gridRef as any).current = el; }} className={`flex flex-col gap-0.5 p-2 h-full overflow-y-auto overflow-x-hidden scrollbar-thin relative transition-opacity duration-200 w-full max-w-full ${filterTransitioning ? 'opacity-60' : 'opacity-100'}`}>
