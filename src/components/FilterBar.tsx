@@ -305,8 +305,8 @@ const OnlineUsersCount = () => {
     return () => clearInterval(interval);
   }, []);
   return (
-    <span className="inline-flex items-center gap-1 text-[11px] font-medium text-muted-foreground tabular-nums">
-      <span className="py-[2px] my-[2px] text-left text-sm">👥</span> <span>{count}</span>
+    <span className="inline-flex items-center gap-1 text-[11px] font-medium text-muted-foreground tabular-nums leading-none">
+      <span className="text-sm leading-none">👥</span><span className="leading-none">{count}</span>
     </span>);
 
 };
