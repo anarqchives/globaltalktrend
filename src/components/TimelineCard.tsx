@@ -568,23 +568,23 @@ const TimelineCard = ({
             </p>
           </div>
 
-          {/* ④ METRICS GRID 2×2 */}
-          <div className="grid grid-cols-2 gap-2 mb-3">
-            <div className="rounded-lg p-3 text-center bg-secondary/60">
-              <span className="block text-[28px] font-black leading-none" style={{ color: tviTier.pulse ? 'hsl(var(--destructive))' : trendScore >= 50 ? brandColor : undefined }}>{trendScore}</span>
-              <span className="block text-[10px] text-muted-foreground mt-1">{lang === "pt" ? "Velocidade" : "Velocity"}</span>
+          {/* ④ METRICS GRID 2×2 — flat dividers, no bg */}
+          <div className="grid grid-cols-2 mb-3" style={{ border: '1px solid hsl(var(--border) / 0.3)' }}>
+            <div className="p-3 text-center" style={{ borderRight: '1px solid hsl(var(--border) / 0.15)', borderBottom: '1px solid hsl(var(--border) / 0.15)' }}>
+              <span className="block text-[32px] font-black leading-none" style={{ color: tviTier.pulse ? 'hsl(var(--destructive))' : trendScore >= 50 ? brandColor : undefined }}>{trendScore}</span>
+              <span className="block text-[10px] text-muted-foreground mt-1.5 uppercase tracking-[0.5px]">{lang === "pt" ? "Velocidade" : "Velocity"}</span>
             </div>
-            <div className="rounded-lg p-3 text-center bg-secondary/60">
-              <span className={`block text-lg font-bold ${changePositive ? "text-emerald-600 dark:text-emerald-400" : "text-destructive"}`}>{change}</span>
-              <span className="block text-[10px] text-muted-foreground mt-1">{lang === "pt" ? "Crescimento" : "Growth"}</span>
+            <div className="p-3 text-center" style={{ borderBottom: '1px solid hsl(var(--border) / 0.15)' }}>
+              <span className={`block text-[20px] font-bold leading-none ${changePositive ? "text-emerald-600 dark:text-emerald-400" : "text-destructive"}`}>{change}</span>
+              <span className="block text-[10px] text-muted-foreground mt-1.5 uppercase tracking-[0.5px]">{lang === "pt" ? "Crescimento" : "Growth"}</span>
             </div>
-            <div className="rounded-lg p-3 text-center bg-secondary/60">
-              <span className="block text-lg font-bold text-foreground">{volume || "—"}</span>
-              <span className="block text-[10px] text-muted-foreground mt-1">{lang === "pt" ? "Volume" : "Volume"}</span>
+            <div className="p-3 text-center" style={{ borderRight: '1px solid hsl(var(--border) / 0.15)' }}>
+              <span className="block text-[20px] font-bold text-foreground leading-none">{volume || "—"}</span>
+              <span className="block text-[10px] text-muted-foreground mt-1.5 uppercase tracking-[0.5px]">{lang === "pt" ? "Volume" : "Volume"}</span>
             </div>
-            <div className="rounded-lg p-3 text-center bg-secondary/60">
-              <span className="block text-lg font-bold text-foreground">{sources?.length || 1}</span>
-              <span className="block text-[10px] text-muted-foreground mt-1">{lang === "pt" ? "Fontes" : "Sources"}</span>
+            <div className="p-3 text-center">
+              <span className="block text-[20px] font-bold text-foreground leading-none">{sources?.length || 1}</span>
+              <span className="block text-[10px] text-muted-foreground mt-1.5 uppercase tracking-[0.5px]">{lang === "pt" ? "Fontes" : "Sources"}</span>
             </div>
           </div>
 
