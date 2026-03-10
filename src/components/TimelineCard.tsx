@@ -395,164 +395,174 @@ const TimelineCard = ({
         data-tier={tier}
         data-card-type={cardType}
       >
-        {/* TYPE C: Top accent bar for viral */}
-        {cardType === "viral" && (
-          <div className="absolute top-0 left-0 right-0 h-0.5" style={{ background: `linear-gradient(90deg, ${brandColor}, transparent)` }} />
-        )}
-
-        {/* === MAIN CONTENT: Click to expand === */}
-        <div className="cursor-pointer" onClick={handleToggle}>
-
-          {/* TYPE D: Image at top */}
-          {cardType === "image" && thumbnail && !imgError && !compact && (
-            <div className="relative w-full overflow-hidden rounded-md mb-2.5" style={{ height: 120 }}>
-              <img src={thumbnail} alt="" className="w-full h-full object-cover block transition-transform duration-300 group-hover:scale-[1.03]" loading="lazy" onError={() => setImgError(true)} />
-            </div>
-          )}
-
-          {/* ① SOURCE ROW */}
-          <div className="flex items-center gap-1.5 mb-1.5 min-w-0">
-            <button onClick={handlePlatformClick} className="flex items-center gap-1 flex-shrink-0 hover:opacity-80 transition-opacity min-w-0">
-              <div className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: brandColor }} />
-              <span className="text-[11px] font-semibold truncate" style={{ color: brandColor }}>{platform}</span>
-            </button>
-            <span className="text-[10px] text-muted-foreground/50">·</span>
-            <span className="text-[10px] text-muted-foreground flex-shrink-0">{localizedTime}</span>
-            {flag && (
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <span className="text-[11px] flex-shrink-0 cursor-help">{flag}</span>
-                </TooltipTrigger>
-                <TooltipContent side="top" className="text-[10px]">{countryCode?.toUpperCase()}</TooltipContent>
-              </Tooltip>
+        {/* When expanded, hide the collapsed card entirely */}
+        {!expanded && (
+          <>
+            {/* TYPE C: Top accent bar for viral */}
+            {cardType === "viral" && (
+              <div className="absolute top-0 left-0 right-0 h-0.5" style={{ background: `linear-gradient(90deg, ${brandColor}, transparent)` }} />
             )}
-            <div className="flex-1" />
-            {/* Bookmark always visible */}
-            <button
-              onClick={(e) => { e.stopPropagation(); onSaveCard?.({ title, platform, category, country_code: countryCode, source_url: sourceUrl, thumbnail, description: displayDescription, volume, change, changePositive, historicalData, platformColor: brandColor, sources }); }}
-              className="p-1 rounded-md text-muted-foreground/40 hover:text-primary hover:bg-primary/10 transition-colors flex-shrink-0"
-            >
-              <Bookmark className="w-3.5 h-3.5" />
-            </button>
-          </div>
 
-          {/* ② TITLE */}
-          <h3 className={`font-bold text-foreground leading-[1.4] mb-1 break-words ${compact ? 'text-xs line-clamp-1' : 'text-sm line-clamp-3'}`} style={{ overflowWrap: 'anywhere' }}>
-            {decodeEntities(title)}
-          </h3>
+            {/* === MAIN CONTENT: Click to expand === */}
+            <div className="cursor-pointer" onClick={handleToggle}>
 
-          {/* ③ SMART CONTEXT LINE */}
-          <p className="text-[11px] text-muted-foreground italic leading-relaxed mb-1.5 truncate">{smartContext}</p>
-
-          {/* TYPE B: Description for article cards */}
-          {cardType === "article" && displayDescription && !compact && (
-            <p className="text-[11px] text-muted-foreground leading-relaxed line-clamp-2 mb-2 break-words" style={{ overflowWrap: 'anywhere' }}>
-              {decodeEntities(displayDescription)}
-            </p>
-          )}
-
-          {/* ④ METRICS ROW */}
-          <div className="flex items-center gap-1.5 flex-wrap text-[10px] mb-1.5 w-full min-w-0">
-            {/* TVI Badge */}
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <div className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full font-semibold cursor-help ${tviTier.bg} ${tviTier.text}`} style={{ height: 18 }}>
-                  {tviTier.pulse && <span className="w-1 h-1 rounded-full bg-current animate-pulse" />}
-                  <span className="text-[10px]">TVI {trendScore}</span>
+              {/* TYPE D: Image at top */}
+              {cardType === "image" && thumbnail && !imgError && !compact && (
+                <div className="relative w-full overflow-hidden rounded-md mb-2.5" style={{ height: 120 }}>
+                  <img src={thumbnail} alt="" className="w-full h-full object-cover block transition-transform duration-300 group-hover:scale-[1.03]" loading="lazy" onError={() => setImgError(true)} />
                 </div>
-              </TooltipTrigger>
-              <TooltipContent side="top" className="p-3 text-[11px] space-y-1.5 min-w-[200px] z-50 bg-popover/95 backdrop-blur-md">
-                <div className="font-bold text-[12px] mb-1 text-foreground">Trend Velocity Index (TVI)</div>
-                <p className="text-muted-foreground mb-2 leading-tight">{t("tviDescription" as any)}</p>
-                <div className="flex justify-between"><span>📈 {t("tviGrowthLabel" as any)}</span><span className="font-bold text-foreground">{tviBreakdown.velocity}</span></div>
-                <div className="flex justify-between"><span>💬 {t("tviVolumeLabel" as any)}</span><span className="font-bold text-foreground">{tviBreakdown.volume}</span></div>
-                <div className="flex justify-between"><span>📰 {t("tviSourcesLabel" as any)}</span><span className="font-bold text-foreground">{tviBreakdown.sources}</span></div>
-                <div className="flex justify-between"><span>🌍 {t("tviGeographyLabel" as any)}</span><span className="font-bold text-foreground">{tviBreakdown.geography}</span></div>
-                <div className="h-px bg-border my-2" />
-                <div className="text-[11px] font-medium text-center text-foreground">{trendScore}%</div>
-              </TooltipContent>
-            </Tooltip>
+              )}
 
-            {/* Growth pill */}
-            {growthPill && (
-              <span className={`inline-flex items-center px-1.5 py-0.5 rounded-full text-[10px] font-semibold ${growthPill.cls}`}>
-                {growthPill.label}
-              </span>
-            )}
-
-            {/* Growth value */}
-            <span className={`inline-flex items-center gap-0.5 font-bold ${changePositive ? "text-emerald-600 dark:text-emerald-400" : "text-destructive"}`}>
-              <TrendingUp className="w-3 h-3" />
-              {change}
-            </span>
-
-            {/* Volume */}
-            {volume && volume !== "0" && (
-              <span className="text-muted-foreground font-medium">💬 {volume}</span>
-            )}
-
-            {/* Sparkline — inline for standard/image cards */}
-            {sparkData && !compact && !isFullWidthSparkline && (
-              <div className="ml-auto flex-shrink-0" style={{ width: 80, height: 32 }}>
-                <SparklineArea data={sparkData} color={brandColor} width={80} height={32} />
+              {/* ① SOURCE ROW */}
+              <div className="flex items-center gap-1.5 mb-1.5 min-w-0">
+                <button onClick={handlePlatformClick} className="flex items-center gap-1 flex-shrink-0 hover:opacity-80 transition-opacity min-w-0">
+                  <div className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: brandColor }} />
+                  <span className="text-[11px] font-semibold truncate" style={{ color: brandColor }}>{platform}</span>
+                </button>
+                <span className="text-[10px] text-muted-foreground/50">·</span>
+                <span className="text-[10px] text-muted-foreground flex-shrink-0">{localizedTime}</span>
+                {flag && (
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <span className="text-[11px] flex-shrink-0 cursor-help">{flag}</span>
+                    </TooltipTrigger>
+                    <TooltipContent side="top" className="text-[10px]">{countryCode?.toUpperCase()}</TooltipContent>
+                  </Tooltip>
+                )}
+                <div className="flex-1" />
+                <button
+                  onClick={(e) => { e.stopPropagation(); onSaveCard?.({ title, platform, category, country_code: countryCode, source_url: sourceUrl, thumbnail, description: displayDescription, volume, change, changePositive, historicalData, platformColor: brandColor, sources }); }}
+                  className="p-1 rounded-md text-muted-foreground/40 hover:text-primary hover:bg-primary/10 transition-colors flex-shrink-0"
+                >
+                  <Bookmark className="w-3.5 h-3.5" />
+                </button>
               </div>
-            )}
-          </div>
 
-          {/* Full-width sparkline for article/viral cards */}
-          {sparkData && !compact && isFullWidthSparkline && (
-            <div className="w-full mb-1.5" style={{ height: 48 }}>
-              <SparklineArea data={sparkData} color={brandColor} width={300} height={48} className="w-full" />
+              {/* ② TITLE */}
+              <h3 className={`font-bold text-foreground leading-[1.4] mb-1 break-words ${compact ? 'text-xs line-clamp-1' : 'text-sm line-clamp-3'}`} style={{ overflowWrap: 'anywhere' }}>
+                {decodeEntities(title)}
+              </h3>
+
+              {/* ③ SMART CONTEXT LINE */}
+              <p className="text-[11px] text-muted-foreground italic leading-relaxed mb-1.5 truncate">{smartContext}</p>
+
+              {/* TYPE B: Description for article cards */}
+              {cardType === "article" && displayDescription && !compact && (
+                <p className="text-[11px] text-muted-foreground leading-relaxed line-clamp-2 mb-2 break-words" style={{ overflowWrap: 'anywhere' }}>
+                  {decodeEntities(displayDescription)}
+                </p>
+              )}
+
+              {/* ④ METRICS ROW */}
+              <div className="flex items-center gap-1.5 flex-wrap text-[10px] mb-1.5 w-full min-w-0">
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <div className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full font-semibold cursor-help ${tviTier.bg} ${tviTier.text}`} style={{ height: 18 }}>
+                      {tviTier.pulse && <span className="w-1 h-1 rounded-full bg-current animate-pulse" />}
+                      <span className="text-[10px]">TVI {trendScore}</span>
+                    </div>
+                  </TooltipTrigger>
+                  <TooltipContent side="top" className="p-3 text-[11px] space-y-1.5 min-w-[200px] z-50 bg-popover/95 backdrop-blur-md">
+                    <div className="font-bold text-[12px] mb-1 text-foreground">Trend Velocity Index (TVI)</div>
+                    <p className="text-muted-foreground mb-2 leading-tight">{t("tviDescription" as any)}</p>
+                    <div className="flex justify-between"><span>📈 {t("tviGrowthLabel" as any)}</span><span className="font-bold text-foreground">{tviBreakdown.velocity}</span></div>
+                    <div className="flex justify-between"><span>💬 {t("tviVolumeLabel" as any)}</span><span className="font-bold text-foreground">{tviBreakdown.volume}</span></div>
+                    <div className="flex justify-between"><span>📰 {t("tviSourcesLabel" as any)}</span><span className="font-bold text-foreground">{tviBreakdown.sources}</span></div>
+                    <div className="flex justify-between"><span>🌍 {t("tviGeographyLabel" as any)}</span><span className="font-bold text-foreground">{tviBreakdown.geography}</span></div>
+                    <div className="h-px bg-border my-2" />
+                    <div className="text-[11px] font-medium text-center text-foreground">{trendScore}%</div>
+                  </TooltipContent>
+                </Tooltip>
+
+                {growthPill && (
+                  <span className={`inline-flex items-center px-1.5 py-0.5 rounded-full text-[10px] font-semibold ${growthPill.cls}`}>
+                    {growthPill.label}
+                  </span>
+                )}
+
+                <span className={`inline-flex items-center gap-0.5 font-bold ${changePositive ? "text-emerald-600 dark:text-emerald-400" : "text-destructive"}`}>
+                  <TrendingUp className="w-3 h-3" />
+                  {change}
+                </span>
+
+                {volume && volume !== "0" && (
+                  <span className="text-muted-foreground font-medium">💬 {volume}</span>
+                )}
+
+                {sparkData && !compact && !isFullWidthSparkline && (
+                  <div className="ml-auto flex-shrink-0" style={{ width: 80, height: 32 }}>
+                    <SparklineArea data={sparkData} color={brandColor} width={80} height={32} />
+                  </div>
+                )}
+              </div>
+
+              {/* Full-width sparkline for article/viral cards */}
+              {sparkData && !compact && isFullWidthSparkline && (
+                <div className="w-full mb-1.5" style={{ height: 48 }}>
+                  <SparklineArea data={sparkData} color={brandColor} width={300} height={48} className="w-full" />
+                </div>
+              )}
+
+              {/* ⑥ TAGS ROW */}
+              <div className="flex items-center gap-1 flex-wrap mb-1 w-full">
+                {visibleTags.map((tag, i) => (
+                  <span key={i} className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium ${tag.cls}`}>
+                    {tag.label}
+                  </span>
+                ))}
+                {overflowCount > 0 && (
+                  <span className="inline-flex items-center px-1.5 py-0.5 rounded-full text-[10px] font-medium bg-secondary text-muted-foreground">
+                    +{overflowCount}
+                  </span>
+                )}
+              </div>
             </div>
-          )}
 
-          {/* ⑥ TAGS ROW */}
-          <div className="flex items-center gap-1 flex-wrap mb-1 w-full">
-            {visibleTags.map((tag, i) => (
-              <span key={i} className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium ${tag.cls}`}>
-                {tag.label}
-              </span>
-            ))}
-            {overflowCount > 0 && (
-              <span className="inline-flex items-center px-1.5 py-0.5 rounded-full text-[10px] font-medium bg-secondary text-muted-foreground">
-                +{overflowCount}
-              </span>
-            )}
-          </div>
-        </div>
-
-        {/* ⑦ ACTIONS ROW — hidden by default, reveal on hover */}
-        <div className="card-actions-row flex items-center gap-3 w-full min-w-0" style={{ borderTop: '1px solid hsl(var(--border) / 0.15)', paddingTop: 8, marginTop: 4 }}>
-          {sourceUrl && (
-            <a
-              href={sourceUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              onClick={(e) => e.stopPropagation()}
-              className="inline-flex items-center gap-1 text-[11px] text-muted-foreground hover:text-foreground transition-colors whitespace-nowrap"
-            >
-              <ExternalLink className="w-3 h-3 flex-shrink-0" />
-              {t("viewSource")}
-            </a>
-          )}
-          <button onClick={handleShare} className="inline-flex items-center gap-1 text-[11px] text-muted-foreground hover:text-foreground transition-colors whitespace-nowrap">
-            <Share2 className="w-3 h-3 flex-shrink-0" />
-            {t("share")}
-          </button>
-          <div className="flex-1" />
-          <button onClick={handleAlertClick} className="w-6 h-6 flex items-center justify-center rounded-md text-muted-foreground/30 hover:text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-500/10 transition-colors flex-shrink-0">
-            <Bell className="w-3.5 h-3.5" />
-          </button>
-          <button onClick={(e) => { e.stopPropagation(); toast({ title: "⚠️ Denúncia enviada", description: `Obrigado por reportar: ${title.slice(0, 40)}` }); }} className="w-6 h-6 flex items-center justify-center rounded-md text-muted-foreground/30 hover:text-destructive hover:bg-red-50 dark:hover:bg-red-500/10 transition-colors flex-shrink-0">
-            <Flag className="w-3.5 h-3.5" />
-          </button>
-        </div>
+            {/* ⑦ ACTIONS ROW — hidden by default, reveal on hover */}
+            <div className="card-actions-row flex items-center gap-3 w-full min-w-0" style={{ borderTop: '1px solid hsl(var(--border) / 0.15)', paddingTop: 8, marginTop: 4 }}>
+              {sourceUrl && (
+                <a
+                  href={sourceUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  onClick={(e) => e.stopPropagation()}
+                  className="inline-flex items-center gap-1 text-[11px] text-muted-foreground hover:text-foreground transition-colors whitespace-nowrap"
+                >
+                  <ExternalLink className="w-3 h-3 flex-shrink-0" />
+                  {t("viewSource")}
+                </a>
+              )}
+              <button onClick={handleShare} className="inline-flex items-center gap-1 text-[11px] text-muted-foreground hover:text-foreground transition-colors whitespace-nowrap">
+                <Share2 className="w-3 h-3 flex-shrink-0" />
+                {t("share")}
+              </button>
+              <div className="flex-1" />
+              <button onClick={handleAlertClick} className="w-6 h-6 flex items-center justify-center rounded-md text-muted-foreground/30 hover:text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-500/10 transition-colors flex-shrink-0">
+                <Bell className="w-3.5 h-3.5" />
+              </button>
+              <button onClick={(e) => { e.stopPropagation(); toast({ title: "⚠️ Denúncia enviada", description: `Obrigado por reportar: ${title.slice(0, 40)}` }); }} className="w-6 h-6 flex items-center justify-center rounded-md text-muted-foreground/30 hover:text-destructive hover:bg-red-50 dark:hover:bg-red-500/10 transition-colors flex-shrink-0">
+                <Flag className="w-3.5 h-3.5" />
+              </button>
+            </div>
+          </>
+        )}
       </div>
 
-      {/* === EXPANDED CONTENT — INTELLIGENCE REPORT === */}
+      {/* === EXPANDED CONTENT — INTELLIGENCE REPORT (replaces collapsed card) === */}
       {expanded && (
         <div className="timeline-card-expanded-content">
           
+          {/* Source row + collapse button */}
+          <div className="flex items-center gap-1.5 mb-2 cursor-pointer" onClick={handleToggle}>
+            <div className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: brandColor }} />
+            <span className="text-[11px] font-semibold" style={{ color: brandColor }}>{platform}</span>
+            <span className="text-[10px] text-muted-foreground/50">·</span>
+            <span className="text-[10px] text-muted-foreground">{localizedTime}</span>
+            {flag && <span className="text-[11px]">{flag}</span>}
+            <div className="flex-1" />
+            <ChevronUp className="w-3.5 h-3.5 text-muted-foreground/50" />
+          </div>
+
           {/* ② Title large */}
           <h2 className="text-[17px] font-black text-foreground leading-[1.35] mb-3">{decodeEntities(title)}</h2>
 
@@ -568,23 +578,23 @@ const TimelineCard = ({
             </p>
           </div>
 
-          {/* ④ METRICS GRID 2×2 */}
-          <div className="grid grid-cols-2 gap-2 mb-3">
-            <div className="rounded-lg p-3 text-center bg-secondary/60">
-              <span className="block text-[28px] font-black leading-none" style={{ color: tviTier.pulse ? 'hsl(var(--destructive))' : trendScore >= 50 ? brandColor : undefined }}>{trendScore}</span>
-              <span className="block text-[10px] text-muted-foreground mt-1">{lang === "pt" ? "Velocidade" : "Velocity"}</span>
+          {/* ④ METRICS GRID 2×2 — flat dividers, no bg */}
+          <div className="grid grid-cols-2 mb-3" style={{ border: '1px solid hsl(var(--border) / 0.3)' }}>
+            <div className="p-3 text-center" style={{ borderRight: '1px solid hsl(var(--border) / 0.15)', borderBottom: '1px solid hsl(var(--border) / 0.15)' }}>
+              <span className="block text-[32px] font-black leading-none" style={{ color: tviTier.pulse ? 'hsl(var(--destructive))' : trendScore >= 50 ? brandColor : undefined }}>{trendScore}</span>
+              <span className="block text-[10px] text-muted-foreground mt-1.5 uppercase tracking-[0.5px]">{lang === "pt" ? "Velocidade" : "Velocity"}</span>
             </div>
-            <div className="rounded-lg p-3 text-center bg-secondary/60">
-              <span className={`block text-lg font-bold ${changePositive ? "text-emerald-600 dark:text-emerald-400" : "text-destructive"}`}>{change}</span>
-              <span className="block text-[10px] text-muted-foreground mt-1">{lang === "pt" ? "Crescimento" : "Growth"}</span>
+            <div className="p-3 text-center" style={{ borderBottom: '1px solid hsl(var(--border) / 0.15)' }}>
+              <span className={`block text-[20px] font-bold leading-none ${changePositive ? "text-emerald-600 dark:text-emerald-400" : "text-destructive"}`}>{change}</span>
+              <span className="block text-[10px] text-muted-foreground mt-1.5 uppercase tracking-[0.5px]">{lang === "pt" ? "Crescimento" : "Growth"}</span>
             </div>
-            <div className="rounded-lg p-3 text-center bg-secondary/60">
-              <span className="block text-lg font-bold text-foreground">{volume || "—"}</span>
-              <span className="block text-[10px] text-muted-foreground mt-1">{lang === "pt" ? "Volume" : "Volume"}</span>
+            <div className="p-3 text-center" style={{ borderRight: '1px solid hsl(var(--border) / 0.15)' }}>
+              <span className="block text-[20px] font-bold text-foreground leading-none">{volume || "—"}</span>
+              <span className="block text-[10px] text-muted-foreground mt-1.5 uppercase tracking-[0.5px]">{lang === "pt" ? "Volume" : "Volume"}</span>
             </div>
-            <div className="rounded-lg p-3 text-center bg-secondary/60">
-              <span className="block text-lg font-bold text-foreground">{sources?.length || 1}</span>
-              <span className="block text-[10px] text-muted-foreground mt-1">{lang === "pt" ? "Fontes" : "Sources"}</span>
+            <div className="p-3 text-center">
+              <span className="block text-[20px] font-bold text-foreground leading-none">{sources?.length || 1}</span>
+              <span className="block text-[10px] text-muted-foreground mt-1.5 uppercase tracking-[0.5px]">{lang === "pt" ? "Fontes" : "Sources"}</span>
             </div>
           </div>
 
@@ -603,20 +613,32 @@ const TimelineCard = ({
                 </TooltipContent>
               </Tooltip>
             </div>
-            {/* Segmented bar */}
-            <div className="w-full h-1.5 rounded-full overflow-hidden" style={{ background: confidenceTier.barBg }}>
-              <div className="h-full rounded-full transition-all duration-500" style={{ width: `${confidenceScore}%`, background: confidenceTier.fillColor }} />
+            {/* Segmented bar — thinner, gradient fill */}
+            <div className="w-full h-1 rounded-full overflow-hidden bg-secondary">
+              <div
+                className="h-full rounded-full transition-all duration-500"
+                style={{
+                  width: `${confidenceScore}%`,
+                  background: confidenceScore >= 71
+                    ? 'linear-gradient(90deg, #93C5FD, #3B82F6)'
+                    : confidenceScore >= 41
+                    ? 'linear-gradient(90deg, #6EE7B7, #10B981)'
+                    : confidenceScore >= 21
+                    ? 'linear-gradient(90deg, #FCD34D, #F59E0B)'
+                    : 'linear-gradient(90deg, #FCA5A5, #EF4444)',
+                }}
+              />
             </div>
             <div className="flex items-center gap-1.5 mt-1.5 flex-wrap">
               <span className="text-[11px] font-medium" style={{ color: confidenceTier.color }}>{confidenceTier.label} · {confidenceScore}%</span>
               {["The Guardian", "NPR", "PubMed", "IBGE", "World Bank", "OpenAlex"].includes(platform) && (
-                <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-emerald-50 text-emerald-600 dark:bg-emerald-500/10 dark:text-emerald-400">✓ Fonte verificada</span>
+                <span className="text-[10px] px-1.5 py-0.5 rounded-full border border-emerald-400 text-emerald-600 dark:text-emerald-400" style={{ background: 'transparent', height: 18, lineHeight: '14px' }}>✓ Fonte verificada</span>
               )}
               {(sources?.length || 1) === 1 && (
-                <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-amber-50 text-amber-600 dark:bg-amber-500/10 dark:text-amber-400">⚠ Fonte única</span>
+                <span className="text-[10px] px-1.5 py-0.5 rounded-full border border-amber-400 text-amber-600 dark:text-amber-400" style={{ background: 'transparent', height: 18, lineHeight: '14px' }}>⚠ Fonte única</span>
               )}
               {trendScore >= 60 && (
-                <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-blue-50 text-blue-600 dark:bg-blue-500/10 dark:text-blue-400">📈 Alto engajamento</span>
+                <span className="text-[10px] px-1.5 py-0.5 rounded-full border border-blue-400 text-blue-600 dark:text-blue-400" style={{ background: 'transparent', height: 18, lineHeight: '14px' }}>📈 Alto engajamento</span>
               )}
             </div>
           </div>
@@ -638,40 +660,35 @@ const TimelineCard = ({
             </div>
           )}
 
-          {/* ⑥ EVOLUTION 24H CHART */}
+          {/* ⑥ EVOLUTION 24H CHART — SVG sparkline with subtle grid */}
           {historicalData && historicalData.length > 0 && (
             <div className="mb-3">
               <div className="flex items-center justify-between mb-1.5">
                 <span className="text-[10px] font-semibold text-muted-foreground">{t("evolution24h")}</span>
                 <span className="text-[9px] text-muted-foreground flex items-center gap-1.5">
-                  <span className="w-2 h-0.5 rounded-full" style={{ background: brandColor }} />
+                  <span className="w-2 h-0.5 rounded-full" style={{ background: brandColor, opacity: 0.8 }} />
                   {metricLabel || "Volume"}
                 </span>
               </div>
-              <div className="h-20 -mx-1">
-                <ResponsiveContainer width="100%" height="100%">
-                  <AreaChart data={historicalData}>
-                    <defs>
-                      <linearGradient id={`exp-${title.slice(0, 5)}`} x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="0%" stopColor={brandColor} stopOpacity={0.15} />
-                        <stop offset="100%" stopColor={brandColor} stopOpacity={0} />
-                      </linearGradient>
-                    </defs>
-                    <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                    <XAxis dataKey="hour" tick={{ fontSize: 9, fill: "hsl(var(--muted-foreground))" }} tickLine={false} axisLine={false} interval={5} />
-                    <YAxis tick={{ fontSize: 9, fill: "hsl(var(--muted-foreground))" }} tickLine={false} axisLine={false} width={30} tickFormatter={(v: number) => v >= 1000 ? `${(v / 1000).toFixed(0)}K` : String(v)} />
-                    <RechartsTooltip
-                      contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: "8px", fontSize: 11, boxShadow: "0 4px 12px rgba(0,0,0,0.1)" }}
-                      formatter={(value: number) => [value >= 1000 ? `${(value / 1000).toFixed(1)}K` : value, metricLabel || "Volume"]}
-                    />
-                    <Area type="monotone" dataKey="value" stroke={brandColor} strokeWidth={1.5} fill={`url(#exp-${title.slice(0, 5)})`} dot={{ r: 2, fill: brandColor, strokeWidth: 0 }} />
-                  </AreaChart>
-                </ResponsiveContainer>
+              <div className="relative" style={{ height: 80 }}>
+                {/* Subtle horizontal grid lines */}
+                <svg className="absolute inset-0 w-full" style={{ height: 80 }} preserveAspectRatio="none">
+                  {[0.25, 0.5, 0.75].map(r => (
+                    <line key={r} x1="0" x2="100%" y1={r * 80} y2={r * 80} stroke="hsl(var(--border) / 0.15)" strokeWidth="1" />
+                  ))}
+                </svg>
+                <SparklineArea
+                  data={historicalData.map(d => d.value)}
+                  color={brandColor}
+                  width={320}
+                  height={80}
+                  className="w-full"
+                />
               </div>
             </div>
           )}
 
-          {/* ⑦ SENTIMENT — collapsible */}
+          {/* ⑦ SENTIMENT — collapsible, refined bar */}
           <div className="mb-3">
             <button onClick={() => setSentimentOpen(!sentimentOpen)} className="flex items-center gap-1.5 text-[10px] font-semibold text-muted-foreground uppercase tracking-wide hover:text-foreground transition-colors w-full">
               <ChevronDown className={`w-3 h-3 transition-transform duration-150 ${sentimentOpen ? 'rotate-0' : '-rotate-90'}`} />
@@ -679,22 +696,21 @@ const TimelineCard = ({
             </button>
             {sentimentOpen && (
               <div className="mt-2">
-                {/* Horizontal segmented bar */}
                 {(() => {
                   const pos = changePositive ? 55 : 25;
                   const neu = 30;
                   const neg = changePositive ? 15 : 45;
                   return (
                     <>
-                      <div className="w-full h-3 rounded-full overflow-hidden flex">
-                        <div style={{ width: `${pos}%` }} className="bg-emerald-500" />
-                        <div style={{ width: `${neu}%` }} className="bg-muted-foreground/30" />
-                        <div style={{ width: `${neg}%` }} className="bg-destructive" />
+                      <div className="w-full h-1.5 rounded-full overflow-hidden flex">
+                        <div style={{ width: `${pos}%`, background: 'linear-gradient(90deg, #34D399, #10B981)' }} />
+                        <div style={{ width: `${neu}%`, background: '#E5E7EB' }} />
+                        <div style={{ width: `${neg}%`, background: 'linear-gradient(90deg, #F87171, #EF4444)' }} />
                       </div>
-                      <div className="flex items-center gap-3 mt-1.5 text-[11px]">
-                        <span className="text-emerald-600 dark:text-emerald-400">😊 {t("positive")}: {pos}%</span>
-                        <span className="text-muted-foreground">😐 {t("neutral")}: {neu}%</span>
-                        <span className="text-destructive">😞 {t("negative")}: {neg}%</span>
+                      <div className="flex items-center justify-between mt-1.5 text-[11px]">
+                        <span style={{ color: '#059669' }}>😊 {pos}% {t("positive")}</span>
+                        <span style={{ color: '#9CA3AF' }}>{neu}% {t("neutral")}</span>
+                        <span style={{ color: '#DC2626' }}>{neg}% {t("negative")} 😞</span>
                       </div>
                     </>
                   );
