@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Info, Sun, Moon, LogOut, LogIn, BookOpen, Star, ChevronDown, User, FileText, Users, Loader2, Heart } from "lucide-react";
 import { Link } from "react-router-dom";
@@ -402,4 +402,4 @@ const CountdownTimer = () => {
   );
 };
 
-export default TrendHeader;
+export default React.memo(TrendHeader);

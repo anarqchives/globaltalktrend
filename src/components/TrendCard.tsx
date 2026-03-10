@@ -1,8 +1,9 @@
+import React, { useState, useMemo } from "react";
 import { AreaChart, Area, ResponsiveContainer, XAxis, YAxis, Tooltip, CartesianGrid } from "recharts";
-import { useState, useMemo } from "react";
 import { Share2, MessageCircle, ThumbsUp, MapPin, Newspaper, ExternalLink, Shield, CheckCircle2, FlaskConical, Globe } from "lucide-react";
 import SparklineArea from "./SparklineArea";
 import { toast } from "@/hooks/use-toast";
+import { countryCodeToFlag } from "@/lib/shared-utils";
 
 export interface TrendCardProps {
   icon: string;
@@ -45,10 +46,6 @@ const platformColors: Record<string, { stroke: string; fill: string }> = {
   OpenAlex: { stroke: "hsl(270, 60%, 50%)", fill: "hsl(270, 60%, 50%)" },
 };
 
-const countryCodeToFlag = (code?: string) => {
-  if (!code || code.length !== 2) return null;
-  return String.fromCodePoint(...[...code.toUpperCase()].map(c => 0x1F1E6 + c.charCodeAt(0) - 65));
-};
 
 const trustBadgeMap: Record<string, { label: string; icon: React.ReactNode; className: string }> = {
   official: { label: "Fonte Oficial", icon: <Shield className="w-2.5 h-2.5" />, className: "bg-blue-500/10 text-blue-500 border-blue-500/20" },
@@ -259,4 +256,4 @@ const TrendCard = ({
   );
 };
 
-export default TrendCard;
+export default React.memo(TrendCard);

@@ -598,7 +598,7 @@ export function useTrends(filters: FilterState, onTrendCountsChange: (counts: Re
 
   const fetchTrends = useCallback(async () => {
     try {
-      console.log("📥 Iniciando carregamento de trends");
+      if (import.meta.env.DEV) console.log("📥 Iniciando carregamento de trends");
       setLoading(true);
       let health = loadSourceHealth();
 
@@ -607,14 +607,14 @@ export function useTrends(filters: FilterState, onTrendCountsChange: (counts: Re
         functionName: string,
         timeoutMs: number
       ) => {
-        console.log(`🔍 Buscando ${sourceName}...`);
+        if (import.meta.env.DEV) console.log(`🔍 Buscando ${sourceName}...`);
         const result = await withTimeout(
           supabase.functions.invoke(functionName, { body: { lang } }).catch(() => ({ data: { trends: [] } })),
           timeoutMs,
           { data: { trends: [] } } as Awaited<ReturnType<typeof supabase.functions.invoke>>
         );
         const count = result.data?.trends?.length || 0;
-        console.log(`✅ ${sourceName} retornou:`, count, "itens");
+        if (import.meta.env.DEV) console.log(`✅ ${sourceName} retornou:`, count, "itens");
         
         // Track health per source
         const platforms: string[] = (result.data?.trends || []).map((t: any) => String(t.platform || ""));
@@ -637,9 +637,9 @@ export function useTrends(filters: FilterState, onTrendCountsChange: (counts: Re
         fetchPromise: Promise<TrendCardProps[]>,
         timeoutMs = 8000
       ) => {
-        console.log(`🔍 Buscando ${sourceName}...`);
+        if (import.meta.env.DEV) console.log(`🔍 Buscando ${sourceName}...`);
         const result = await withTimeout(fetchPromise, timeoutMs, [] as TrendCardProps[]);
-        console.log(`✅ ${sourceName} retornou:`, result.length, "itens");
+        if (import.meta.env.DEV) console.log(`✅ ${sourceName} retornou:`, result.length, "itens");
         health = updateSourceHealth(health, sourceName, result.length > 0, result.length);
         return result;
       };
@@ -665,13 +665,13 @@ export function useTrends(filters: FilterState, onTrendCountsChange: (counts: Re
       const openDataTrends: TrendCardProps[] = openDataResult.data?.trends || [];
       const rawTrends = [...edgeTrends, ...extraTrends, ...extraSourcesTrends, ...socialTrends, ...openDataTrends, ...redditItems, ...blueskyItems, ...mastodonItems];
       
-      console.log("📦 Total de trends combinadas:", rawTrends.length);
+      if (import.meta.env.DEV) console.log("📦 Total de trends combinadas:", rawTrends.length);
 
       // If all live sources failed, try stale cache before fallback
       if (rawTrends.length === 0) {
         const stale = getStaleCachedTrends();
         if (stale.length > 0) {
-          console.log("♻️ Usando cache expirado como fallback:", stale.length, "itens");
+          if (import.meta.env.DEV) console.log("♻️ Usando cache expirado como fallback:", stale.length, "itens");
           setTrends(stale);
           setLoading(false);
           setIsFirstLoad(false);
@@ -737,7 +737,7 @@ export function useTrends(filters: FilterState, onTrendCountsChange: (counts: Re
       const pressPlatforms = SOURCE_GROUPS.imprensa;
       const imprensaData = combinedTrends.filter((trend) => pressPlatforms.includes(trend.platform));
       if (imprensaData.length === 0) {
-        console.log("📰 Imprensa sem dados - mostrando aviso");
+        if (import.meta.env.DEV) console.log("📰 Imprensa sem dados - mostrando aviso");
         combinedTrends.unshift({
           icon: "📰", platform: "The Guardian",
           title: "Fontes de imprensa temporariamente indisponíveis",
@@ -773,7 +773,7 @@ export function useTrends(filters: FilterState, onTrendCountsChange: (counts: Re
         }
         setSourcesStatus(statusMap);
 
-        console.log('🔄 Atualização:', {
+        if (import.meta.env.DEV) console.log('🔄 Atualização:', {
           timestamp: now.toLocaleTimeString(),
           live: allTrends.length,
           historical: uniqueHistorical.length,
@@ -826,10 +826,10 @@ export function useTrends(filters: FilterState, onTrendCountsChange: (counts: Re
     const smartFetch = () => {
       const idle = Date.now() - lastActivity > IDLE_THRESHOLD;
       if (idle) {
-        console.log("🔄 Usuário inativo, atualizando trends...");
+        if (import.meta.env.DEV) console.log("🔄 Usuário inativo, atualizando trends...");
         fetchTrends();
       } else {
-        console.log("⏳ Usuário ativo, adiando atualização por 30s...");
+        if (import.meta.env.DEV) console.log("⏳ Usuário ativo, adiando atualização por 30s...");
         // Retry in 30s
         window.setTimeout(() => {
           if (Date.now() - lastActivity > IDLE_THRESHOLD) fetchTrends();
@@ -868,7 +868,7 @@ export function useTrends(filters: FilterState, onTrendCountsChange: (counts: Re
   useEffect(() => {
     const timer = window.setTimeout(() => {
       if (!loading && trends.length === 0) {
-        console.log("⚠️ Usando fallback - sem dados reais");
+        if (import.meta.env.DEV) console.log("⚠️ Usando fallback - sem dados reais");
         setTrends(fallbackData);
       }
     }, 5000);
@@ -906,7 +906,7 @@ export function useTrends(filters: FilterState, onTrendCountsChange: (counts: Re
 
     // ── SMART FALLBACK: Hierarchical data recovery ──
     if (filtered.length === 0 && filters.country !== "global" && trends.length > 0) {
-      console.log(`🧠 Zero trends para país ${countryFilter} — iniciando fallback hierárquico`);
+      if (import.meta.env.DEV) console.log(`🧠 Zero trends para país ${countryFilter} — iniciando fallback hierárquico`);
 
       let combined: TrendCardProps[] = [];
       const seenKeys = new Set<string>();
@@ -926,7 +926,7 @@ export function useTrends(filters: FilterState, onTrendCountsChange: (counts: Re
       // Layer 1: localStorage historical collector (same country only)
       const localHistorical = getFromHistoricalCollector(filters.category, filters.country);
       if (localHistorical.length > 0) {
-        console.log("📂 Camada 1 - Cache local (mesmo país):", localHistorical.length, "itens");
+        if (import.meta.env.DEV) console.log("📂 Camada 1 - Cache local (mesmo país):", localHistorical.length, "itens");
         addUnique(localHistorical);
       }
 
@@ -934,14 +934,14 @@ export function useTrends(filters: FilterState, onTrendCountsChange: (counts: Re
       if (combined.length < 3) {
         const predicted = getFromPredictiveCache(filters);
         if (predicted && predicted.length > 0) {
-          console.log("📊 Camada 2 - Cache preditivo (mesmo país):", predicted.length, "itens");
+          if (import.meta.env.DEV) console.log("📊 Camada 2 - Cache preditivo (mesmo país):", predicted.length, "itens");
           addUnique(predicted);
         }
       }
 
       // Layer 3: Search ALL trends for keyword matches related to the country
       if (combined.length < 3) {
-        console.log("🔍 Camada 3 - Busca por palavras-chave do país em trends globais");
+        if (import.meta.env.DEV) console.log("🔍 Camada 3 - Busca por palavras-chave do país em trends globais");
         const countryKeywords: Record<string, string[]> = {
           VE: ["venezuela", "maduro", "caracas", "guaidó", "pdvsa", "chavismo"],
           PS: ["gaza", "palestina", "palestine", "hamas", "cisjordânia", "west bank"],
@@ -967,25 +967,25 @@ export function useTrends(filters: FilterState, onTrendCountsChange: (counts: Re
             }
           }
           if (keywordMatches.length > 0) {
-            console.log("🔍 Camada 3 - Encontradas por palavras-chave:", keywordMatches.length);
+            if (import.meta.env.DEV) console.log("🔍 Camada 3 - Encontradas por palavras-chave:", keywordMatches.length);
           }
         }
       }
 
       if (combined.length > 0) {
-        console.log(`✅ Fallback com ${combined.length} itens do mesmo país`);
+        if (import.meta.env.DEV) console.log(`✅ Fallback com ${combined.length} itens do mesmo país`);
         return combined.sort((a, b) => (b.relevanceScore || 50) - (a.relevanceScore || 50));
       }
 
       // Layer 4: Contextual fallback (generated data with clear indicator)
-      console.log(`📋 Camada 4 - Fallback contextualizado para ${countryFilter}`);
+      if (import.meta.env.DEV) console.log(`📋 Camada 4 - Fallback contextualizado para ${countryFilter}`);
       const contextual = generateContextualFallback(filters);
       if (contextual.length > 0) {
         return contextual;
       }
 
       // No data at all for this country — show empty state
-      console.log(`ℹ️ Nenhuma trend encontrada para ${countryFilter}`);
+      if (import.meta.env.DEV) console.log(`ℹ️ Nenhuma trend encontrada para ${countryFilter}`);
       return [];
     }
 
@@ -993,7 +993,7 @@ export function useTrends(filters: FilterState, onTrendCountsChange: (counts: Re
     if (filtered.length === 0 && trends.length > 0) {
       const hasActiveFilters = filters.category !== "Todas" || filters.type !== "Todas mídias";
       if (hasActiveFilters) {
-        console.log(`🧠 Zero trends para filtros ativos (cat=${filterCategory}, type=${filters.type}) — usando fallback`);
+        if (import.meta.env.DEV) console.log(`🧠 Zero trends para filtros ativos (cat=${filterCategory}, type=${filters.type}) — usando fallback`);
         
         // Try relaxing type filter first (keep category)
         if (filters.type !== "Todas mídias" && filters.category !== "Todas") {
@@ -1003,7 +1003,7 @@ export function useTrends(filters: FilterState, onTrendCountsChange: (counts: Re
             return matchCountry && matchCategory;
           });
           if (categoryOnly.length > 0) {
-            console.log(`✅ Fallback: ${categoryOnly.length} trends da categoria (ignorando tipo)`);
+            if (import.meta.env.DEV) console.log(`✅ Fallback: ${categoryOnly.length} trends da categoria (ignorando tipo)`);
             return categoryOnly.sort((a, b) => (b.relevanceScore || 50) - (a.relevanceScore || 50));
           }
         }
@@ -1023,8 +1023,10 @@ export function useTrends(filters: FilterState, onTrendCountsChange: (counts: Re
   }, [trends, filters]);
 
   useEffect(() => {
-    console.log("🔎 Filtros aplicados:", filters);
-    console.log("📋 Trends após filtro:", filteredTrends.length);
+    if (import.meta.env.DEV) {
+      console.log("🔎 Filtros aplicados:", filters);
+      console.log("📋 Trends após filtro:", filteredTrends.length);
+    }
   }, [filters, filteredTrends.length]);
 
   const leftTrends = useMemo(() => filteredTrends.filter((_, i) => i % 2 === 0), [filteredTrends]);
@@ -1035,7 +1037,7 @@ export function useTrends(filters: FilterState, onTrendCountsChange: (counts: Re
     return codes.size;
   }, [trends]);
 
-  useEffect(() => {
+  const trendCounts = useMemo(() => {
     const counts: Record<string, number> = {};
     if (filters.country !== "global") {
       counts[filters.country] = filteredTrends.length;
@@ -1051,8 +1053,12 @@ export function useTrends(filters: FilterState, onTrendCountsChange: (counts: Re
         if (!counts[cc]) counts[cc] = 1;
       }
     }
-    onTrendCountsChange(counts);
-  }, [filteredTrends, filters.country, onTrendCountsChange]);
+    return counts;
+  }, [filteredTrends, filters.country]);
+
+  useEffect(() => {
+    onTrendCountsChange(trendCounts);
+  }, [trendCounts, onTrendCountsChange]);
 
   return { leftTrends, rightTrends, loading, isFirstLoad, filteredTrends, allTrends: trends, fetchTrends, countriesCount, lastUpdated, sourcesStatus };
 }

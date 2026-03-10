@@ -1,5 +1,5 @@
 /// <reference types="google.maps" />
-import { useEffect, useRef, useState, useMemo, useCallback, useId } from "react";
+import React, { useEffect, useRef, useState, useMemo, useCallback, useId } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { setOptions, importLibrary } from "@googlemaps/js-api-loader";
 import { supabase } from "@/integrations/supabase/client";
@@ -405,10 +405,10 @@ const GoogleMapView = ({
 
   useEffect(() => {
     const map = googleMapRef.current;
-    const localRafIds: number[] = [];
-    const scheduleRaf = (fn: FrameRequestCallback) => {
+    const activeAnimations: Record<string, number> = {};
+    const scheduleRaf = (key: string, fn: FrameRequestCallback) => {
       const id = requestAnimationFrame(fn);
-      localRafIds.push(id);
+      activeAnimations[key] = id;
       return id;
     };
     if (!map || !mapLoaded) return;
@@ -485,9 +485,9 @@ const GoogleMapView = ({
           strokeWeight: baseWeight * throbScale,
           strokeOpacity: throbOpacity,
         });
-        scheduleRaf(animateThrobbing);
+        scheduleRaf(`throb-${arcIndex}`, animateThrobbing);
       };
-      scheduleRaf(animateThrobbing);
+      scheduleRaf(`throb-${arcIndex}`, animateThrobbing);
 
       // Particle flow animation (soft glowing dot traveling along arc)
       const particleSpeed = 0.3 + (1 - arc.timeDelta / 8) * 0.7; // 0.3-1.0 based on propagation speed
@@ -556,9 +556,9 @@ const GoogleMapView = ({
           scale: (4 + (arc.volume / maxVol) * 3) * pulseScale,
         });
 
-        scheduleRaf(animateParticle);
+        scheduleRaf(`particle-${arcIndex}`, animateParticle);
       };
-      scheduleRaf(animateParticle);
+      scheduleRaf(`particle-${arcIndex}`, animateParticle);
 
       // Origin country pulsing ripple
       const originPulse = new g.maps.Marker({
@@ -595,9 +595,9 @@ const GoogleMapView = ({
           strokeOpacity: opacity,
           scale,
         });
-        scheduleRaf(animateOriginPulse);
+        scheduleRaf(`originPulse-${arcIndex}`, animateOriginPulse);
       };
-      scheduleRaf(animateOriginPulse);
+      scheduleRaf(`originPulse-${arcIndex}`, animateOriginPulse);
 
       // Hover interactions
       const handleHover = (e: any, isEnter: boolean) => {
@@ -726,7 +726,7 @@ const GoogleMapView = ({
     };
 
     return () => {
-      localRafIds.forEach(id => cancelAnimationFrame(id));
+      Object.values(activeAnimations).forEach(id => cancelAnimationFrame(id));
       flowPolylinesRef.current.forEach(p => p.setMap(null));
       flowPolylinesRef.current = [];
       flowOriginPulsesRef.current.forEach(p => p.setMap(null));
@@ -744,10 +744,10 @@ const GoogleMapView = ({
 
   useEffect(() => {
     const map = googleMapRef.current;
-    const localRafIds: number[] = [];
-    const scheduleRaf = (fn: FrameRequestCallback) => {
+    const activeAnimations: Record<string, number> = {};
+    const scheduleRaf = (key: string, fn: FrameRequestCallback) => {
       const id = requestAnimationFrame(fn);
-      localRafIds.push(id);
+      activeAnimations[key] = id;
       return id;
     };
     if (!map || !mapLoaded) return;
@@ -829,9 +829,9 @@ const GoogleMapView = ({
           innerGlow.setRadius(baseRadius * 0.6 * pulseScale);
         }
         
-        scheduleRaf(animateBubblePulse);
+        scheduleRaf(`bubble-${bubbleIndex}`, animateBubblePulse);
       };
-      scheduleRaf(animateBubblePulse);
+      scheduleRaf(`bubble-${bubbleIndex}`, animateBubblePulse);
 
       // Outer breathing ring
       const breathingRing = new g.maps.Marker({
@@ -868,9 +868,9 @@ const GoogleMapView = ({
           strokeOpacity: 0.2 + 0.1 * Math.sin(progress * Math.PI * 2),
           scale: breathScale,
         });
-        scheduleRaf(animateBreathing);
+        scheduleRaf(`breath-${bubbleIndex}`, animateBreathing);
       };
-      scheduleRaf(animateBreathing);
+      scheduleRaf(`breath-${bubbleIndex}`, animateBreathing);
 
       // Flag label
       const flag = bubble.countryId.length === 2
@@ -942,9 +942,9 @@ const GoogleMapView = ({
               strokeOpacity: rippleOpacity,
               scale: rippleScale,
             });
-            scheduleRaf(animateRipple);
+            scheduleRaf(`ripple-${bubbleIndex}`, animateRipple);
           };
-          scheduleRaf(animateRipple);
+          scheduleRaf(`ripple-${bubbleIndex}`, animateRipple);
         }
 
         const bg = isDark ? "rgba(19,22,32,0.97)" : "rgba(255,255,255,0.97)";
@@ -1038,10 +1038,10 @@ const GoogleMapView = ({
           circle.setOptions({ fillOpacity: 0.22 + 0.15 * (1 - eased) });
           
           if (progress < 1) {
-            scheduleRaf(animatePop);
+            scheduleRaf(`pop-${bubbleIndex}`, animatePop);
           }
         };
-        scheduleRaf(animatePop);
+        scheduleRaf(`pop-${bubbleIndex}`, animatePop);
         
         showTooltip(labelMarker, false);
       };
@@ -1083,7 +1083,7 @@ const GoogleMapView = ({
     };
     document.addEventListener('map-sentiment-filter', handler);
     return () => {
-      localRafIds.forEach(id => cancelAnimationFrame(id));
+      Object.values(activeAnimations).forEach(id => cancelAnimationFrame(id));
       sentimentMarkersRef.current.forEach(m => m.setMap(null));
       sentimentMarkersRef.current = [];
       sentimentCirclesRef.current.forEach(c => c.setMap(null));
@@ -1105,10 +1105,10 @@ const GoogleMapView = ({
   // Markers with animated ripple + vibrant colors
   useEffect(() => {
     const map = googleMapRef.current;
-    const localRafIds: number[] = [];
-    const scheduleRaf = (fn: FrameRequestCallback) => {
+    const activeAnimations: Record<string, number> = {};
+    const scheduleRaf = (key: string, fn: FrameRequestCallback) => {
       const id = requestAnimationFrame(fn);
-      localRafIds.push(id);
+      activeAnimations[key] = id;
       return id;
     };
     if (!map || !mapLoaded) return;
@@ -1162,9 +1162,9 @@ const GoogleMapView = ({
               strokeOpacity: opacity,
               scale: currentScale,
             });
-            scheduleRaf(animateRipple);
+            scheduleRaf(`markerRipple-${cp.id}`, animateRipple);
           };
-          scheduleRaf(animateRipple);
+          scheduleRaf(`markerRipple-${cp.id}`, animateRipple);
         }
       }
 
@@ -1196,9 +1196,9 @@ const GoogleMapView = ({
           const current = from + (to - from) * eased;
           const icon = marker.getIcon();
           if (icon) marker.setIcon({ ...icon, scale: current });
-          if (progress < 1) scheduleRaf(step);
+          if (progress < 1) scheduleRaf(`markerScale-${cp.id}`, step);
         };
-        scheduleRaf(step);
+        scheduleRaf(`markerScale-${cp.id}`, step);
       };
 
       const hoverScale = scale * 1.4;
@@ -1434,7 +1434,7 @@ const GoogleMapView = ({
     });
 
     return () => {
-      localRafIds.forEach(id => cancelAnimationFrame(id));
+      Object.values(activeAnimations).forEach(id => cancelAnimationFrame(id));
       markersRef.current.forEach(m => m.setMap(null));
       markersRef.current = [];
       rippleOverlaysRef.current.forEach(o => o.setMap(null));
@@ -1728,4 +1728,4 @@ const GoogleMapView = ({
   );
 };
 
-export default GoogleMapView;
+export default React.memo(GoogleMapView);
