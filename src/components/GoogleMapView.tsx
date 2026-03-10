@@ -744,10 +744,10 @@ const GoogleMapView = ({
 
   useEffect(() => {
     const map = googleMapRef.current;
-    const localRafIds: number[] = [];
-    const scheduleRaf = (fn: FrameRequestCallback) => {
+    const activeAnimations: Record<string, number> = {};
+    const scheduleRaf = (key: string, fn: FrameRequestCallback) => {
       const id = requestAnimationFrame(fn);
-      localRafIds.push(id);
+      activeAnimations[key] = id;
       return id;
     };
     if (!map || !mapLoaded) return;
