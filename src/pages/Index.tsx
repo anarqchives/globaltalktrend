@@ -841,10 +841,22 @@ const Index = () => {
                         )}
                         {panelVisibility.map && (
                           <ResizablePanel defaultSize={panelVisibility.timeline ? 35 : 100} minSize={15} maxSize={panelVisibility.timeline ? 60 : 100}>
-                            <div className="h-full relative">
+                            <div className="h-full relative map-panel-enter">
                               {renderMap()}
                             </div>
                           </ResizablePanel>
+                        )}
+                        {/* Slim toggle for collapsed map */}
+                        {!panelVisibility.map && (
+                          <div className="h-full flex items-center">
+                            <button
+                              onClick={() => togglePanel("map")}
+                              className="w-8 h-full flex items-center justify-center bg-secondary/30 hover:bg-secondary/60 border-l border-border/50 transition-colors text-muted-foreground hover:text-foreground"
+                              title="Abrir mapa"
+                            >
+                              <ChevronLeft className="w-4 h-4" />
+                            </button>
+                          </div>
                         )}
                       </ResizablePanelGroup>
                     </ResizablePanel>
