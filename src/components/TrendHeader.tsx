@@ -141,7 +141,7 @@ const TrendHeader = ({ totalTrends = 0, countriesCount = 0, onRefresh, refreshin
           </div>
 
           {/* ─── RIGHT: Utilities ─── */}
-          <div className="flex items-center gap-2 justify-end flex-shrink-0">
+          <div className="flex items-center gap-2 justify-end flex-shrink-0" style={{ gap: 8 }}>
             {/* Language selector — compact */}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
@@ -173,15 +173,15 @@ const TrendHeader = ({ totalTrends = 0, countriesCount = 0, onRefresh, refreshin
               {dark ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
             </button>
 
-            {/* Apoie — compact gradient pill */}
+            {/* Apoie — compact gradient pill, 28px like all others */}
             <a
               href="https://buy.stripe.com/fZu7sMgw6cHLeTnbWVdIA00"
               target="_blank"
               rel="noopener noreferrer"
-              className="hidden sm:flex items-center rounded-full text-white font-semibold hover:brightness-110 transition-all"
-              style={{ background: 'linear-gradient(135deg, #FF6B00, #FF2D2D)', height: 30, padding: '0 12px', fontSize: 12 }}
+              className="hidden sm:flex items-center rounded-full text-white hover:brightness-110 transition-all"
+              style={{ background: 'linear-gradient(135deg, #FF6B00, #FF2D2D)', height: 28, padding: '0 10px', fontSize: 12, fontWeight: 600, borderRadius: 999 }}
             >
-              Apoie
+              {t("support")}
             </a>
 
             {/* Auth + user menu */}
@@ -239,8 +239,8 @@ const TrendHeader = ({ totalTrends = 0, countriesCount = 0, onRefresh, refreshin
                 </button>
                 <button
                   onClick={() => setLoginOpen(true)}
-                  className="flex items-center gap-1 rounded-full font-semibold text-white hover:brightness-110 transition-all"
-                  style={{ background: '#2563EB', height: 30, padding: '0 12px', fontSize: 12 }}>
+                  className="flex items-center gap-1 rounded-full text-white hover:brightness-110 transition-all"
+                  style={{ background: '#2563EB', height: 28, padding: '0 10px', fontSize: 12, fontWeight: 600, borderRadius: 999 }}>
                   <span className="hidden sm:inline">{t("enter")}</span>
                   <span className="text-xs">→</span>
                 </button>

@@ -649,20 +649,20 @@ export default function TrendRadar({ trends, allTrends, criticalMoments, anomali
             })}
           </TabsList>
 
-          {/* Controls */}
-          <div className="ml-auto flex items-center gap-1">
+          {/* Controls — clearly visible */}
+          <div className="ml-auto flex items-center gap-1.5">
             <Tooltip>
               <TooltipTrigger asChild>
                 <button
                   onClick={() => setCollapsed()}
-                  className="w-7 h-7 rounded-lg flex items-center justify-center text-foreground/60 hover:text-primary hover:bg-primary/8 transition-all duration-200"
+                  className="w-7 h-7 rounded-lg flex items-center justify-center bg-secondary text-muted-foreground hover:bg-muted hover:text-foreground transition-all duration-[120ms]"
                   aria-label={collapsed ? labels.expand : labels.collapse}
                 >
                   {collapsed ? <Maximize2 className="w-3.5 h-3.5" /> : <Minimize2 className="w-3.5 h-3.5" />}
                 </button>
               </TooltipTrigger>
               <TooltipContent side="bottom" className="text-[10px]">
-                {collapsed ? labels.expand : labels.collapse}
+                {collapsed ? (lang === "pt" ? "Expandir painel" : "Expand panel") : (lang === "pt" ? "Minimizar painel" : "Minimize panel")}
               </TooltipContent>
             </Tooltip>
             {onClose && (
@@ -670,14 +670,14 @@ export default function TrendRadar({ trends, allTrends, criticalMoments, anomali
                 <TooltipTrigger asChild>
                   <button
                     onClick={onClose}
-                    className="w-6 h-6 rounded-lg flex items-center justify-center bg-secondary/60 hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-all duration-200"
+                    className="w-7 h-7 rounded-lg flex items-center justify-center bg-secondary text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-all duration-[120ms]"
                     aria-label={lang === "pt" ? "Fechar Radar" : "Close Radar"}
                   >
-                    <X className="w-3 h-3" strokeWidth={2.5} />
+                    <X className="w-3.5 h-3.5" strokeWidth={2.5} />
                   </button>
                 </TooltipTrigger>
                 <TooltipContent side="bottom" className="text-[10px]">
-                  {lang === "pt" ? "Fechar" : "Close"}
+                  {lang === "pt" ? "Fechar painel" : "Close panel"}
                 </TooltipContent>
               </Tooltip>
             )}
