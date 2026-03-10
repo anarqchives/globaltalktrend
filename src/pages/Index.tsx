@@ -412,17 +412,11 @@ const Index = () => {
     setFilters(f => ({ ...f, [key]: defaultFilters[key] }));
   };
 
-  const gridStyle = useMemo(() => ({
-    display: 'grid' as const,
-    gridTemplateColumns: `repeat(auto-fill, minmax(260px, 1fr))`,
-    gap: 0,
-    alignItems: 'start' as const,
-  }), []);
-
-  const cardWrapperStyle = useMemo(() => ({
-    minWidth: 0,
-    overflow: 'hidden' as const,
-  }), []);
+  const masonryStyle = useMemo(() => ({
+    columnCount: gridColumns,
+    columnGap: 0,
+    columnFill: 'balance' as const,
+  }), [gridColumns]);
 
   const renderTimeline = () => (
     <div ref={(el) => { (scrollRef as any).current = el; (gridRef as any).current = el; }} className={`flex flex-col gap-0.5 p-2 h-full overflow-y-auto overflow-x-hidden scrollbar-thin relative transition-opacity duration-200 w-full max-w-full ${filterTransitioning ? 'opacity-60' : 'opacity-100'}`}>
@@ -528,7 +522,7 @@ const Index = () => {
               const isMulti = multiplatformTitles.has(normalizedKey);
               const matchingCluster = isMulti ? clusters.find(c => c.trends.some(ct => ct.title.toLowerCase().normalize("NFD").replace(/\p{Diacritic}/gu, "").replace(/[^a-z0-9\s]/g, "").trim().slice(0, 50) === normalizedKey)) || null : null;
               return (
-                <div key={`${trendId}-${i}`} id={`trend-card-${trendId}`} style={cardWrapperStyle} className={highlightedTrendId === trendId ? 'animate-highlight-pulse rounded-xl' : ''}>
+              <div key={`${trendId}-${i}`} id={`trend-card-${trendId}`} className={`timeline-masonry-item ${highlightedTrendId === trendId ? 'animate-highlight-pulse' : ''}`}>
                 <TimelineCard
                   {...trend}
                   compact={compactMode}
@@ -584,7 +578,7 @@ const Index = () => {
                       🔥 {lang === "pt" ? "AGORA" : "NOW"}
                       <span className="text-micro font-normal text-muted-foreground ml-1">({agora.length})</span>
                     </div>
-                    <div style={gridStyle}>
+                    <div style={masonryStyle}>
                         {agora.map((trend) => renderCard(trend, globalIndex++))}
                     </div>
                   </>
@@ -595,7 +589,7 @@ const Index = () => {
                       ⏳ {lang === "pt" ? "ÚLTIMAS 2H" : "LAST 2H"}
                       <span className="text-micro font-normal ml-1">({ultimas2h.length})</span>
                     </div>
-                    <div style={gridStyle}>
+                    <div style={masonryStyle}>
                         {ultimas2h.map((trend) => renderCard(trend, globalIndex++))}
                     </div>
                   </>
@@ -606,7 +600,7 @@ const Index = () => {
                       📅 24H
                       <span className="text-micro font-normal ml-1">({ultimas24h.length})</span>
                     </div>
-                    <div style={gridStyle}>
+                    <div style={masonryStyle}>
                         {ultimas24h.map((trend) => renderCard(trend, globalIndex++))}
                     </div>
                   </>

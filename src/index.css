@@ -208,7 +208,14 @@
     @apply bg-muted;
   }
 
-  /* ─── TIMELINE CARD SYSTEM ─── */
+  /* ─── TIMELINE MASONRY CARD SYSTEM ─── */
+  .timeline-masonry-item {
+    break-inside: avoid;
+    display: inline-block;
+    width: 100%;
+    box-sizing: border-box;
+  }
+
   .timeline-card-wrapper {
     width: 100%;
     min-width: 0;
@@ -216,12 +223,8 @@
     flex-direction: column;
     backface-visibility: hidden;
     overflow: hidden;
-    border-right: 1px solid hsl(var(--border) / 0.4);
-    border-bottom: 1px solid hsl(var(--border) / 0.4);
-    transition: opacity 200ms ease-out;
-  }
-  .timeline-card-expanded-wrapper {
-    z-index: 10;
+    border-right: 1px solid hsl(var(--border) / 0.3);
+    border-bottom: 1px solid hsl(var(--border) / 0.3);
   }
 
   .timeline-card {
@@ -234,14 +237,22 @@
     display: flex;
     flex-direction: column;
     border: none;
-    border-bottom: 1px solid hsl(var(--border));
     border-radius: 0;
     box-shadow: none;
-    transition: background-color 0.15s cubic-bezier(0,0,0.2,1), transform 0.15s cubic-bezier(0,0,0.2,1);
+    transition: background-color 0.15s cubic-bezier(0,0,0.2,1);
   }
   .timeline-card:hover {
     background: hsl(var(--secondary));
-    transform: translateY(-1px);
+  }
+
+  /* Card type: article — left accent */
+  .timeline-card-article {
+    border-left: 3px solid var(--card-accent-color, hsl(var(--primary)));
+  }
+
+  /* Card type: viral — subtle gradient bg */
+  .timeline-card-viral {
+    background: linear-gradient(135deg, hsl(0 100% 50% / 0.03) 0%, hsl(var(--card)) 60%);
   }
 
   /* Tier styling — left border + gradient bg */
@@ -255,7 +266,6 @@
   }
   .timeline-card[data-tier="critical"]:hover,
   .timeline-card[data-tier="moderate"]:hover {
-    transform: translateY(-1px);
     filter: brightness(1.02);
   }
 
@@ -263,7 +273,7 @@
     border-bottom: none;
   }
   .timeline-card-expanded-content {
-    @apply bg-card backdrop-blur-sm px-3.5 pb-3.5 mb-0;
+    @apply bg-card px-3.5 pb-3.5 mb-0;
     position: relative;
     border: none;
     border-bottom: 1px solid hsl(var(--border));
@@ -298,11 +308,13 @@
   /* Actions row: hidden by default, visible on hover */
   .card-actions-row {
     opacity: 0;
-    transition: opacity 0.15s cubic-bezier(0,0,0.2,1);
+    transition: opacity 0.15s cubic-bezier(0,0,0.2,1), transform 0.15s ease-out;
+    transform: translateY(4px);
   }
   .timeline-card:hover .card-actions-row,
   .timeline-card:focus-within .card-actions-row {
     opacity: 1;
+    transform: translateY(0);
   }
 
   .trend-card-base {
