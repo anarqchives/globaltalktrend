@@ -348,9 +348,9 @@ const CountdownTimer = () => {
 
   return (
     <span
-      className={`text-[11px] font-mono text-muted-foreground tabular-nums transition-opacity duration-300 ${fading ? 'opacity-0' : 'opacity-100'}`}>
-      
-      ⏱️ {String(mins).padStart(2, '0')}:{String(secs).padStart(2, '0')}
+      className={`inline-flex items-center gap-0.5 text-[11px] font-mono text-muted-foreground tabular-nums leading-none transition-opacity duration-300 ${fading ? 'opacity-0' : 'opacity-100'}`}>
+      <span className="leading-none">⏱️</span>
+      <span className="leading-none">{String(mins).padStart(2, '0')}:{String(secs).padStart(2, '0')}</span>
     </span>);
 
 };
