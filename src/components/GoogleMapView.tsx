@@ -301,34 +301,55 @@ const GoogleMapView = ({
     return () => window.clearTimeout(timer);
   }, [mapLoaded, mapError]);
 
-  // Heatmap with vibrant gradient
+  // Heatmap with organic mesh-gradient feel
   useEffect(() => {
     const map = googleMapRef.current;
     const viz = googleRef.current?.visualization as any;
     if (!map || !mapLoaded || !viz?.HeatmapLayer) return;
     if (heatmapRef.current) { heatmapRef.current.setMap(null); heatmapRef.current = null; }
-    const heatmapData = countryPoints
+    // Create multiple weighted points per country for organic blob distribution
+    const heatmapData: { location: google.maps.LatLng; weight: number }[] = [];
+    countryPoints
       .filter((cp) => (trendCounts[cp.id] || 0) > 0)
-      .map((cp) => ({ location: new google.maps.LatLng(cp.lat, cp.lng), weight: (trendCounts[cp.id] || 1) * 3 }));
+      .forEach((cp) => {
+        const count = trendCounts[cp.id] || 1;
+        const weight = count * 3;
+        // Main point
+        heatmapData.push({ location: new google.maps.LatLng(cp.lat, cp.lng), weight });
+        // Organic scatter: add softer satellite points for blob-like distribution
+        const scatter = Math.min(count, 6);
+        for (let i = 0; i < scatter; i++) {
+          const angle = (Math.PI * 2 * i) / scatter;
+          const dist = 1.5 + Math.random() * 2.5;
+          heatmapData.push({
+            location: new google.maps.LatLng(cp.lat + Math.sin(angle) * dist, cp.lng + Math.cos(angle) * dist),
+            weight: weight * (0.15 + Math.random() * 0.2),
+          });
+        }
+      });
     if (heatmapData.length > 0) {
       const heatmap = new viz.HeatmapLayer({
         data: heatmapData,
         map: heatmapEnabled ? map : null,
-        radius: 90,
-        opacity: 0.7,
+        radius: 120,
+        opacity: 0.65,
         dissipating: true,
-        maxIntensity: 80,
+        maxIntensity: 60,
         gradient: [
           "rgba(0, 0, 0, 0)",
-          "rgba(70, 130, 200, 0.1)",
-          "rgba(100, 180, 255, 0.25)",
-          "rgba(0, 200, 255, 0.4)",
-          "rgba(0, 255, 200, 0.5)",
-          "rgba(100, 255, 100, 0.55)",
-          "rgba(255, 255, 0, 0.65)",
-          "rgba(255, 150, 0, 0.75)",
-          "rgba(255, 50, 0, 0.85)",
-          "rgba(200, 0, 50, 0.95)",
+          "rgba(40, 80, 160, 0.05)",
+          "rgba(60, 120, 200, 0.1)",
+          "rgba(80, 160, 240, 0.18)",
+          "rgba(60, 200, 255, 0.28)",
+          "rgba(0, 230, 220, 0.36)",
+          "rgba(40, 255, 180, 0.42)",
+          "rgba(120, 255, 100, 0.48)",
+          "rgba(200, 255, 50, 0.54)",
+          "rgba(255, 220, 0, 0.6)",
+          "rgba(255, 160, 0, 0.68)",
+          "rgba(255, 100, 30, 0.76)",
+          "rgba(255, 50, 20, 0.84)",
+          "rgba(220, 20, 60, 0.92)",
         ],
       });
       heatmapRef.current = heatmap;
