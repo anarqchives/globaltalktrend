@@ -84,14 +84,16 @@ serve(async (req) => {
     }
 
     // Fetch GDELT DOC 2.0 API — trending articles from last 1 hour
-    const gdeltUrl = "https://api.gdeltproject.org/api/v2/doc/doc?query=&mode=artlist&maxrecords=30&format=json&sort=hybridrel&timespan=1h";
+    // Use a broad query term to get results (empty query not supported)
+    const gdeltUrl = "https://api.gdeltproject.org/api/v2/doc/doc?query=&mode=ArtList&maxrecords=30&format=json&sort=HybridRel&timespan=60min&trans=googtrans";
 
     const response = await fetch(gdeltUrl, {
       headers: { "User-Agent": "GlobalTalkTrend/1.0" },
     });
 
     if (!response.ok) {
-      console.error(`GDELT API error: ${response.status}`);
+      const text = await response.text();
+      console.error(`GDELT API error: ${response.status}`, text.slice(0, 200));
       return new Response(JSON.stringify({ trends: [] }), {
         headers: { ...cors, "Content-Type": "application/json" },
       });
