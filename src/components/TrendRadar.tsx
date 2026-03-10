@@ -146,12 +146,12 @@ function TopTrendsGrid({ trends, onSelectTrend }: { trends: TrendCardProps[]; on
 
   const getGrowthTag = (trend: TrendCardProps) => {
     const change = trend.change || "";
-    if (change.includes("novo") || change.includes("new")) return { label: "+novo", bg: "bg-green-100 dark:bg-green-900/30", text: "text-green-700 dark:text-green-400" };
-    if (change.includes("trending") || change.includes("alta")) return { label: "+trending", bg: "bg-amber-100 dark:bg-amber-900/30", text: "text-amber-700 dark:text-amber-400" };
-    if (change.includes("boost")) return { label: "+boosts", bg: "bg-blue-100 dark:bg-blue-900/30", text: "text-blue-700 dark:text-blue-400" };
+    if (change.includes("novo") || change.includes("new")) return { label: "+novo", bg: "bg-green-100 dark:bg-green-900/30", text: "text-green-700 dark:text-green-400", tooltip: "Entrou no ranking nas últimas 2 horas" };
+    if (change.includes("trending") || change.includes("alta")) return { label: "+trending", bg: "bg-amber-100 dark:bg-amber-900/30", text: "text-amber-700 dark:text-amber-400", tooltip: "Volume em aceleração constante" };
+    if (change.includes("boost")) return { label: "+boosts", bg: "bg-blue-100 dark:bg-blue-900/30", text: "text-blue-700 dark:text-blue-400", tooltip: "Engajamento acima do padrão normal" };
     const num = parseFloat(change.replace(/[^0-9.\-]/g, "") || "0");
-    if (num > 50) return { label: "+trending", bg: "bg-amber-100 dark:bg-amber-900/30", text: "text-amber-700 dark:text-amber-400" };
-    if (num > 0) return { label: "+novo", bg: "bg-green-100 dark:bg-green-900/30", text: "text-green-700 dark:text-green-400" };
+    if (num > 50) return { label: "+trending", bg: "bg-amber-100 dark:bg-amber-900/30", text: "text-amber-700 dark:text-amber-400", tooltip: "Volume em aceleração constante" };
+    if (num > 0) return { label: "+novo", bg: "bg-green-100 dark:bg-green-900/30", text: "text-green-700 dark:text-green-400", tooltip: "Entrou no ranking nas últimas 2 horas" };
     return null;
   };
 
