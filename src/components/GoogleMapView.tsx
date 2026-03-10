@@ -1434,7 +1434,7 @@ const GoogleMapView = ({
     });
 
     return () => {
-      localRafIds.forEach(id => cancelAnimationFrame(id));
+      Object.values(activeAnimations).forEach(id => cancelAnimationFrame(id));
       markersRef.current.forEach(m => m.setMap(null));
       markersRef.current = [];
       rippleOverlaysRef.current.forEach(o => o.setMap(null));
