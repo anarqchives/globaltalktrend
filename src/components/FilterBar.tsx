@@ -126,18 +126,6 @@ function ChipDropdown({ chipLabel, value, options, isActive, icon, onChange, onC
           fontWeight: 500,
           gap: 5,
         }}
-        onMouseEnter={(e) => {
-          if (!isActive) {
-            e.currentTarget.style.borderColor = "#9CA3AF";
-            e.currentTarget.style.background = "#F9FAFB";
-          }
-        }}
-        onMouseLeave={(e) => {
-          if (!isActive) {
-            e.currentTarget.style.borderColor = "#E5E7EB";
-            e.currentTarget.style.background = "hsl(var(--card))";
-          }
-        }}
       >
         <span className="flex-shrink-0" style={{ display: "flex", alignItems: "center" }}>{icon}</span>
         <span className="truncate max-w-[100px]">{displayText}</span>
