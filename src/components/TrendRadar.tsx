@@ -227,18 +227,18 @@ function TopTrendsGrid({ trends, onSelectTrend }: { trends: TrendCardProps[]; on
             }}
           >
             {/* Rank */}
-            <div className="w-9 flex-shrink-0 flex items-center justify-end pr-1">
+            <div className="w-7 sm:w-9 flex-shrink-0 flex items-center justify-end pr-0.5 sm:pr-1">
               {isTop3 ? (
-                <span className="text-lg leading-none">{medals[idx]}</span>
+                <span className="text-base sm:text-lg leading-none">{medals[idx]}</span>
               ) : (
-                <span className="text-[13px] font-bold" style={{ color: "#D1D5DB" }}>
+                <span className="text-[12px] sm:text-[13px] font-bold" style={{ color: "#D1D5DB" }}>
                   {idx + 1}
                 </span>
               )}
             </div>
 
             {/* Volume bar */}
-            <div className="flex items-center justify-center mx-3 flex-shrink-0" style={{ width: 4 }}>
+            <div className="flex items-center justify-center mx-1.5 sm:mx-3 flex-shrink-0" style={{ width: 4 }}>
               <motion.div
                 initial={{ height: 0 }}
                 animate={{ height: barH }}
@@ -250,50 +250,37 @@ function TopTrendsGrid({ trends, onSelectTrend }: { trends: TrendCardProps[]; on
 
             {/* Content */}
             <div className="flex-1 min-w-0 py-1">
-              <p className={`font-semibold text-foreground truncate transition-colors duration-[120ms] ${hasUrl || onSelectTrend ? "group-hover:text-[#2563EB]" : ""} ${isTop3 ? "text-[15px] font-bold" : "text-[14px]"}`}>
+              <p className={`font-semibold text-foreground truncate transition-colors duration-[120ms] ${hasUrl || onSelectTrend ? "group-hover:text-[#2563EB]" : ""} ${isTop3 ? "text-[13px] sm:text-[15px] font-bold" : "text-[12px] sm:text-[14px]"}`}>
                 {trend.title}
               </p>
-              <div className="flex items-center gap-1 mt-0.5">
+              <div className="flex items-center gap-1 mt-0.5 flex-wrap">
                 <span className="w-1.5 h-1.5 rounded-full flex-shrink-0" style={{ backgroundColor: pf.color }} />
                 {isPubMed ? (
-                  <AbbrTooltip text="PubMed" className="text-[11px] font-medium text-[#007CBB]">
+                  <AbbrTooltip text="PubMed" className="text-[10px] sm:text-[11px] font-medium text-[#007CBB]">
                     PubMed
                   </AbbrTooltip>
                 ) : (
-                  <span className="text-[11px] text-muted-foreground">{trend.platform}</span>
+                  <span className="text-[10px] sm:text-[11px] text-muted-foreground">{trend.platform}</span>
                 )}
                 {flag && (
                   <>
-                    <span className="text-muted-foreground/30 text-[11px]">·</span>
-                    <span className="text-[11px]">{flag}</span>
-                    {trend.countryCode && <AbbrTooltip text={trend.countryCode.toUpperCase()} className="text-[11px] text-muted-foreground uppercase" />}
+                    <span className="text-[10px] sm:text-[11px]">{flag}</span>
+                    {trend.countryCode && <span className="text-[10px] sm:text-[11px] text-muted-foreground uppercase hidden sm:inline">{trend.countryCode}</span>}
                   </>
                 )}
-                {isPubMed && pmid && (
-                  <>
-                    <span className="text-muted-foreground/30 text-[11px]">·</span>
-                    <a
-                      href={`https://pubmed.ncbi.nlm.nih.gov/${pmid}/`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      onClick={ev => ev.stopPropagation()}
-                      className="text-[11px] text-blue-600 hover:underline"
-                    >
-                      📄 ID: {pmid}
-                    </a>
-                  </>
+                {growthTag && (
+                  <span className={`text-[9px] sm:text-[10px] px-1 sm:px-1.5 py-0 sm:py-0.5 rounded-full ${growthTag.bg} ${growthTag.text} leading-tight`}>
+                    {growthTag.label}
+                  </span>
                 )}
               </div>
-              {subtitle && (
-                <p className="text-[11px] text-muted-foreground/60 truncate mt-0.5">{subtitle}</p>
-              )}
             </div>
 
-            {/* Metadata */}
-            <div className="w-[120px] flex-shrink-0 text-right mr-3">
+            {/* Metadata — hidden on very small screens */}
+            <div className="hidden sm:block w-[100px] flex-shrink-0 text-right mr-2">
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <p className="text-[12px] font-semibold truncate cursor-help" style={{ color: rankColor }}>
+                  <p className="text-[11px] font-semibold truncate cursor-help" style={{ color: rankColor }}>
                     {volumeContext}
                   </p>
                 </TooltipTrigger>
@@ -305,17 +292,10 @@ function TopTrendsGrid({ trends, onSelectTrend }: { trends: TrendCardProps[]; on
                     : "Volume total detectado"}
                 </TooltipContent>
               </Tooltip>
-              {growthTag && (
-                <AbbrTooltip text={growthTag.label} className="inline-block">
-                  <span className={`inline-block text-[10px] px-1.5 py-0.5 rounded-full ${growthTag.bg} ${growthTag.text} mt-0.5`}>
-                    {growthTag.label}
-                  </span>
-                </AbbrTooltip>
-              )}
             </div>
 
             {/* Sparkline */}
-            <div className="w-[72px] h-7 flex-shrink-0 relative">
+            <div className="w-[48px] sm:w-[72px] h-6 sm:h-7 flex-shrink-0 relative">
               {trend.sparkData && trend.sparkData.length > 2 ? (
                 <>
                   <ResponsiveContainer width="100%" height="100%">
@@ -343,7 +323,7 @@ function TopTrendsGrid({ trends, onSelectTrend }: { trends: TrendCardProps[]; on
 
             {/* Hover arrow — only when actionable */}
             {(hasUrl || onSelectTrend) && (
-              <ArrowRight className="w-3.5 h-3.5 text-muted-foreground/0 group-hover:text-muted-foreground transition-all duration-[120ms] ml-2 flex-shrink-0" />
+              <ArrowRight className="w-3.5 h-3.5 text-muted-foreground/0 group-hover:text-muted-foreground transition-all duration-[120ms] ml-1 sm:ml-2 flex-shrink-0" />
             )}
           </motion.div>
         );
