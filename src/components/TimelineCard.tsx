@@ -342,9 +342,9 @@ const TimelineCard = ({
 
             {/* Region */}
             {countryCode && countryCode !== "GL" && (
-              <span className="text-muted-foreground">
+              <AbbrTooltip text={countryCode.toUpperCase()} className="text-muted-foreground">
                 📍 {countryCode}
-              </span>
+              </AbbrTooltip>
             )}
 
             {/* Multiplatform */}
