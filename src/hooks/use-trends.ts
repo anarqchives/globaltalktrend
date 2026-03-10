@@ -665,7 +665,7 @@ export function useTrends(filters: FilterState, onTrendCountsChange: (counts: Re
       const openDataTrends: TrendCardProps[] = openDataResult.data?.trends || [];
       const rawTrends = [...edgeTrends, ...extraTrends, ...extraSourcesTrends, ...socialTrends, ...openDataTrends, ...redditItems, ...blueskyItems, ...mastodonItems];
       
-      console.log("📦 Total de trends combinadas:", rawTrends.length);
+      if (import.meta.env.DEV) console.log("📦 Total de trends combinadas:", rawTrends.length);
 
       // If all live sources failed, try stale cache before fallback
       if (rawTrends.length === 0) {
