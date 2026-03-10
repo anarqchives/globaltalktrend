@@ -1,9 +1,10 @@
 import { useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { TrendingUp, Clock, Radio, ExternalLink, ArrowRight } from "lucide-react";
-import { AreaChart, Area, ResponsiveContainer, ReferenceDot } from "recharts";
+import { Clock, Radio, ExternalLink, ArrowRight, Bookmark } from "lucide-react";
+import { AreaChart, Area, ResponsiveContainer, XAxis } from "recharts";
 import { TrendCardProps } from "./TrendCard";
 import { useLanguage } from "@/contexts/LanguageContext";
+import AbbrTooltip from "./AbbrTooltip";
 
 interface EmergingTrendsSectionProps {
   trends: TrendCardProps[];
@@ -60,113 +61,56 @@ const decodeEntities = (text: string): string => {
   return el.value;
 };
 
-/** Generate a plain-language context descriptor for the topic */
-function generateContextDescriptor(trend: TrendCardProps, lang: string): string {
-  const platform = trend.platform;
-  const category = trend.category || "Geral";
+const platformColors: Record<string, string> = {
+  YouTube: "#FF0000",
+  Reddit: "hsl(16, 100%, 50%)",
+  "Google Trends": "#4285F4",
+  NewsAPI: "hsl(142, 60%, 40%)",
+  Bluesky: "hsl(200, 100%, 50%)",
+  Mastodon: "#6364FF",
+  "Hacker News": "#FF6600",
+  GitHub: "#24292E",
+  "The Guardian": "#0D6EFD",
+  GNews: "hsl(160, 60%, 45%)",
+  PubMed: "#007CBB",
+  "X (Twitter)": "hsl(0, 0%, 15%)",
+};
 
-  const categoryContexts: Record<string, Record<string, string>> = {
-    pt: {
-      Tecnologia: "tópico de tecnologia", Technology: "tópico de tecnologia",
-      Entretenimento: "conteúdo de entretenimento", Entertainment: "conteúdo de entretenimento",
-      Notícias: "notícia em destaque", News: "notícia em destaque",
-      Política: "assunto político", Politics: "assunto político",
-      Economia: "tema econômico", Economy: "tema econômico",
-      Ciência: "pesquisa científica", Science: "pesquisa científica",
-      Esportes: "notícia esportiva", Sports: "notícia esportiva",
-      Geral: "tópico em alta", General: "tópico em alta",
-    },
-    en: {
-      Tecnologia: "technology topic", Technology: "technology topic",
-      Entretenimento: "entertainment content", Entertainment: "entertainment content",
-      Notícias: "breaking news", News: "breaking news",
-      Política: "political topic", Politics: "political topic",
-      Economia: "economic topic", Economy: "economic topic",
-      Ciência: "scientific research", Science: "scientific research",
-      Esportes: "sports news", Sports: "sports news",
-      Geral: "trending topic", General: "trending topic",
-    },
-  };
-
-  const platformContexts: Record<string, Record<string, string>> = {
-    pt: {
-      Reddit: "ganhando tração em comunidades",
-      "Google Trends": "em alta nas buscas",
-      "Hacker News": "em destaque entre desenvolvedores",
-      GitHub: "crescendo entre desenvolvedores",
-      YouTube: "em alta em vídeos",
-      Bluesky: "viral em redes descentralizadas",
-      Mastodon: "em alta no fediverso",
-      NewsAPI: "coberto pela imprensa",
-      GNews: "coberto pela mídia",
-      "The Guardian": "reportado pela imprensa internacional",
-    },
-    en: {
-      Reddit: "gaining traction in communities",
-      "Google Trends": "trending in search",
-      "Hacker News": "highlighted among developers",
-      GitHub: "growing among developers",
-      YouTube: "trending in video",
-      Bluesky: "viral on decentralized networks",
-      Mastodon: "trending on the fediverse",
-      NewsAPI: "covered by the press",
-      GNews: "covered by media",
-      "The Guardian": "reported by international press",
-    },
-  };
-
-  const l = lang === "pt" ? "pt" : "en";
-  const catCtx = categoryContexts[l]?.[category] || categoryContexts[l]?.Geral || "trending topic";
-  const platCtx = platformContexts[l]?.[platform] || "";
-
-  return platCtx ? `${catCtx} ${platCtx}` : catCtx;
-}
-
-/** Generate a plain-language explanation of why this signal is emerging */
-function generateWhyExplanation(e: EmergingTrend, lang: string): string {
-  const parts: string[] = [];
+function generateSignalBadge(e: EmergingTrend, lang: string) {
   const growth = Math.round(e.growthRate);
   const age = e.ageMinutes;
+  const timeLabel = lang === "pt"
+    ? (age < 30 ? "nos últimos 30 minutos" : age < 60 ? "na última hora" : `nas últimas ${Math.round(age / 60)}h`)
+    : (age < 30 ? "in the last 30 minutes" : age < 60 ? "in the last hour" : `in the last ${Math.round(age / 60)}h`);
 
-  if (lang === "pt") {
-    parts.push(`+${growth}% de crescimento`);
-    if (age < 30) parts.push("nos últimos 30 minutos");
-    else if (age < 60) parts.push("na última hora");
-    else parts.push(`nas últimas ${Math.round(age / 60)}h`);
-    if (e.sourceCount > 1) parts.push(`em ${e.sourceCount} fontes`);
-    return `Sinal emergente: ${parts.join(" ")}`;
-  } else {
-    parts.push(`+${growth}% growth`);
-    if (age < 30) parts.push("in the last 30 minutes");
-    else if (age < 60) parts.push("in the last hour");
-    else parts.push(`in the last ${Math.round(age / 60)}h`);
-    if (e.sourceCount > 1) parts.push(`across ${e.sourceCount} sources`);
-    return `Emerging signal: ${parts.join(" ")}`;
-  }
-}
-
-/** Generate a plain-language where description */
-function generateWhereDescription(e: EmergingTrend, lang: string): string {
-  const parts: string[] = [];
-  parts.push(e.trend.platform);
-  if (e.trend.countryCode) {
-    const flag = countryCodeToFlag(e.trend.countryCode);
-    const countryNames: Record<string, string> = {
-      US: lang === "pt" ? "EUA" : "USA", BR: lang === "pt" ? "Brasil" : "Brazil",
-      GB: lang === "pt" ? "Reino Unido" : "UK", DE: lang === "pt" ? "Alemanha" : "Germany",
-      FR: lang === "pt" ? "França" : "France", JP: lang === "pt" ? "Japão" : "Japan",
-      CA: lang === "pt" ? "Canadá" : "Canada", IN: lang === "pt" ? "Índia" : "India",
-      AU: lang === "pt" ? "Austrália" : "Australia", IT: lang === "pt" ? "Itália" : "Italy",
-      ES: lang === "pt" ? "Espanha" : "Spain", PT: "Portugal", MX: lang === "pt" ? "México" : "Mexico",
-      AR: "Argentina", KR: lang === "pt" ? "Coreia do Sul" : "South Korea",
+  if (growth > 300) {
+    return {
+      icon: "📈",
+      type: lang === "pt" ? "Pico anômalo" : "Anomalous spike",
+      detail: `+${growth}% ${lang === "pt" ? "de variação" : "variation"} ${timeLabel}`,
+      bg: "bg-[#FFF1F0] dark:bg-red-900/20",
+      text: "text-[#CF1322] dark:text-red-400",
+      border: "border-[#FFCCC7] dark:border-red-800",
     };
-    const name = countryNames[e.trend.countryCode.toUpperCase()] || e.trend.countryCode;
-    parts.push(`${flag || ""} ${name}`);
   }
-  if (e.sourceCount > 1) {
-    parts.push(lang === "pt" ? `${e.sourceCount} fontes` : `${e.sourceCount} sources`);
+  if (growth > 150) {
+    return {
+      icon: "⚡",
+      type: lang === "pt" ? "Crescimento rápido" : "Rapid growth",
+      detail: `+${growth}% ${lang === "pt" ? "de variação" : "variation"} ${timeLabel}`,
+      bg: "bg-[#FFF7E6] dark:bg-amber-900/20",
+      text: "text-[#D46B08] dark:text-amber-400",
+      border: "border-[#FFD591] dark:border-amber-800",
+    };
   }
-  return parts.join(" · ");
+  return {
+    icon: "📡",
+    type: lang === "pt" ? "Sinal emergente" : "Emerging signal",
+    detail: `+${growth}% ${lang === "pt" ? "de crescimento" : "growth"} ${timeLabel}`,
+    bg: "bg-[#F0F5FF] dark:bg-blue-900/20",
+    text: "text-[#1D39C4] dark:text-blue-400",
+    border: "border-[#ADC6FF] dark:border-blue-800",
+  };
 }
 
 export default function EmergingTrendsSection({ trends, onSelectTrend }: EmergingTrendsSectionProps) {
@@ -177,23 +121,18 @@ export default function EmergingTrendsSection({ trends, onSelectTrend }: Emergin
 
   return (
     <div className="px-3 py-2">
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
         <AnimatePresence mode="popLayout">
           {emerging.map((e, i) => {
             const sparkRaw = e.trend.historicalData?.slice(-12) || [];
             const sparkData = sparkRaw.length > 0 ? sparkRaw : e.trend.sparkData?.map(v => ({ value: v })) || [];
             const tviScore = Math.min(Math.round(e.growthRate * 0.3 + e.sourceCount * 10 + (120 - e.ageMinutes) * 0.3), 100);
-            const contextDesc = generateContextDescriptor(e.trend, lang);
-            const whyExplanation = generateWhyExplanation(e, lang);
-            const whereDesc = generateWhereDescription(e, lang);
+            const signal = generateSignalBadge(e, lang);
+            const pColor = platformColors[e.trend.platform] || "#666";
+            const flag = countryCodeToFlag(e.trend.countryCode);
 
-            // Find peak index for chart marker
-            let peakIdx = 0;
-            let peakVal = 0;
-            sparkData.forEach((d: any, idx: number) => {
-              const v = d.value || d.v || 0;
-              if (v > peakVal) { peakVal = v; peakIdx = idx; }
-            });
+            const tviLabel = tviScore >= 91 ? "Viral" : tviScore >= 61 ? "High" : tviScore >= 31 ? "Medium" : "Low";
+            const tviColor = tviScore >= 91 ? "text-red-500" : tviScore >= 61 ? "text-orange-500" : tviScore >= 31 ? "text-amber-500" : "text-muted-foreground";
 
             return (
               <motion.div
@@ -203,100 +142,117 @@ export default function EmergingTrendsSection({ trends, onSelectTrend }: Emergin
                 animate={{ opacity: 1, y: 0, scale: 1 }}
                 exit={{ opacity: 0, scale: 0.95 }}
                 transition={{ delay: i * 0.04, duration: 0.3, ease: [0.25, 0.46, 0.45, 0.94] }}
-                className="group relative overflow-hidden rounded-xl border border-border/30 bg-card hover:border-emerald-500/30 transition-colors duration-200 text-left p-3 flex flex-col gap-1.5"
+                className="group relative overflow-hidden rounded-xl border border-border/40 dark:border-border/30 bg-card hover:shadow-[0_4px_16px_rgba(0,0,0,0.08)] hover:-translate-y-px transition-all duration-150 ease-out p-4 flex flex-col"
+                style={{ borderLeftWidth: 3, borderLeftColor: "#4096FF" }}
               >
-                {/* ─── LAYER 1: WHAT — Title + Context ─── */}
-                <div>
-                  <p className="text-[11px] font-bold text-foreground line-clamp-2 leading-snug">
-                    {decodeEntities(e.trend.title)}
-                  </p>
-                  <p className="text-[9px] text-muted-foreground/70 italic mt-0.5 capitalize">
-                    {contextDesc}
-                  </p>
+                {/* Top-right badge */}
+                <span className="absolute top-2 right-2 text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-full bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400">
+                  {lang === "pt" ? "EMERGENTE" : "EMERGING"}
+                </span>
+
+                {/* ① SOURCE + TIME ROW */}
+                <div className="flex items-center gap-1.5 h-5">
+                  <span className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ backgroundColor: pColor }} />
+                  <span className="text-xs font-medium" style={{ color: pColor }}>{e.trend.platform}</span>
+                  <span className="text-muted-foreground/40 text-[11px]">·</span>
+                  {flag && <span className="text-[11px]">{flag}</span>}
+                  {e.trend.countryCode && (
+                    <AbbrTooltip text={e.trend.countryCode.toUpperCase()} className="text-[11px] text-muted-foreground uppercase" />
+                  )}
+                  <span className="text-muted-foreground/40 text-[11px]">·</span>
+                  <span className="text-[11px] text-muted-foreground">
+                    {e.ageMinutes < 1 ? (lang === "pt" ? "agora" : "now") : e.ageMinutes < 60 ? `há ${e.ageMinutes}min` : `há ${Math.round(e.ageMinutes / 60)}h`}
+                  </span>
+                  <Bookmark className="w-4 h-4 text-muted-foreground/30 ml-auto flex-shrink-0 hover:text-primary cursor-pointer transition-colors" />
                 </div>
 
-                {/* ─── LAYER 2: WHY — Explanation ─── */}
-                <div className="rounded-md bg-emerald-500/8 border border-emerald-500/15 px-2 py-1">
-                  <p className="text-[9px] text-emerald-700 dark:text-emerald-300 leading-relaxed">
-                    {whyExplanation}
-                  </p>
-                </div>
+                {/* ② TITLE */}
+                <h3 className="text-[15px] font-bold text-foreground leading-[1.4] line-clamp-2 mt-2">
+                  {decodeEntities(e.trend.title)}
+                </h3>
 
-                {/* ─── LAYER 3: WHERE — Platform + Geography ─── */}
-                <p className="text-[9px] text-muted-foreground flex items-center gap-1 flex-wrap">
-                  <Radio className="w-2.5 h-2.5 text-emerald-500/70 flex-shrink-0" />
-                  {whereDesc}
+                {/* ③ CONTEXT LINE */}
+                <p className="text-xs text-muted-foreground leading-relaxed mt-1 line-clamp-2">
+                  {e.trend.description || (lang === "pt" ? `Tendência detectada em ${e.trend.platform} com crescimento acelerado` : `Trend detected on ${e.trend.platform} with accelerating growth`)}
                 </p>
 
-                {/* ─── LAYER 4: SIGNAL STRENGTH — Chart ─── */}
+                {/* ④ SIGNAL BADGE */}
+                <div className={`mt-2 inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full border text-[11px] font-semibold ${signal.bg} ${signal.text} ${signal.border}`}>
+                  <AbbrTooltip text={signal.type}>
+                    <span>{signal.icon} {signal.type}: {signal.detail}</span>
+                  </AbbrTooltip>
+                </div>
+
+                {/* ⑤ SOURCE DETAIL */}
+                <div className="flex items-center gap-1.5 mt-2 text-[11px] text-muted-foreground">
+                  <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: pColor }} />
+                  <span>{e.trend.platform}</span>
+                  {flag && (
+                    <>
+                      <span className="text-muted-foreground/40">·</span>
+                      <span>{flag}</span>
+                      {e.trend.countryCode && <AbbrTooltip text={e.trend.countryCode.toUpperCase()} className="uppercase" />}
+                    </>
+                  )}
+                </div>
+
+                {/* ⑥ SPARKLINE */}
                 {sparkData.length > 2 && (
-                  <div className="h-8 w-full mt-0.5">
+                  <div className="mt-2 h-10 w-full relative">
                     <ResponsiveContainer width="100%" height="100%">
                       <AreaChart data={sparkData}>
                         <defs>
                           <linearGradient id={`emg-grad-${i}`} x1="0" y1="0" x2="0" y2="1">
-                            <stop offset="0%" stopColor="hsl(var(--primary))" stopOpacity={0.25} />
-                            <stop offset="100%" stopColor="hsl(var(--primary))" stopOpacity={0.02} />
+                            <stop offset="0%" stopColor="#4096FF" stopOpacity={0.3} />
+                            <stop offset="100%" stopColor="#4096FF" stopOpacity={0} />
                           </linearGradient>
                         </defs>
-                        <Area
-                          type="monotone"
-                          dataKey="value"
-                          stroke="hsl(var(--primary))"
-                          strokeWidth={1.5}
-                          fill={`url(#emg-grad-${i})`}
-                          dot={false}
-                        />
-                        {peakVal > 0 && (
-                          <ReferenceDot
-                            x={peakIdx}
-                            y={peakVal}
-                            r={3}
-                            fill="hsl(var(--primary))"
-                            stroke="hsl(var(--background))"
-                            strokeWidth={1.5}
-                          />
-                        )}
+                        <XAxis dataKey="hour" hide />
+                        <Area type="monotone" dataKey="value" stroke="#4096FF" strokeWidth={1.5} fill={`url(#emg-grad-${i})`} dot={false} />
                       </AreaChart>
                     </ResponsiveContainer>
+                    <span className="absolute right-0 top-1/2 -translate-y-1/2 w-1 h-1 rounded-full bg-[#4096FF] animate-pulse" />
+                    <div className="flex justify-between text-[9px] text-muted-foreground/40 mt-0.5">
+                      <span>{lang === "pt" ? "início" : "start"}</span>
+                      <span>{lang === "pt" ? "agora" : "now"}</span>
+                    </div>
                   </div>
                 )}
 
-                {/* ─── LAYER 5: SCORE + ACTIONS ─── */}
-                <div className="flex items-center justify-between mt-auto pt-1 border-t border-border/15">
-                  <div className="flex items-center gap-2">
-                    <span className={`text-[10px] font-black tabular-nums ${tviScore >= 70 ? 'text-emerald-600 dark:text-emerald-400' : 'text-muted-foreground'}`}>
-                      TVI {tviScore}
-                    </span>
-                    <span className="text-[8px] text-muted-foreground/60 inline-flex items-center gap-0.5">
-                      <Clock className="w-2 h-2" />
-                      {e.ageMinutes < 1 ? "agora" : e.ageMinutes < 60 ? `${e.ageMinutes}min` : `${Math.round(e.ageMinutes / 60)}h`}
+                {/* ⑦ METRICS FOOTER */}
+                <div className="flex items-center justify-between mt-2 pt-2 border-t border-border/40">
+                  <div className="flex items-center gap-3">
+                    <div className="flex flex-col items-center">
+                      <AbbrTooltip text="TVI" className="text-[9px] uppercase text-muted-foreground tracking-wide" />
+                      <span className={`text-lg font-bold leading-none ${tviColor}`}>{tviScore}</span>
+                      <span className={`text-[9px] ${tviColor}`}>{tviLabel}</span>
+                    </div>
+                    <span className="text-[11px] text-muted-foreground flex items-center gap-0.5">
+                      <Clock className="w-2.5 h-2.5" />
+                      {e.ageMinutes < 1 ? (lang === "pt" ? "agora" : "now") : `há ${e.ageMinutes}min`}
                     </span>
                   </div>
-                  <div className="flex items-center gap-1">
+                  <div className="flex items-center gap-1.5">
                     {e.trend.sourceUrl && (
                       <a
                         href={e.trend.sourceUrl}
                         target="_blank"
                         rel="noopener noreferrer"
                         onClick={ev => ev.stopPropagation()}
-                        className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded bg-secondary text-secondary-foreground text-[8px] font-medium hover:bg-secondary/80 transition-colors"
+                        className="inline-flex items-center gap-1 h-6 px-2 text-[11px] font-medium border border-border/60 rounded-md text-muted-foreground hover:bg-muted/50 transition-colors"
                       >
-                        <ExternalLink className="w-2 h-2" />
+                        <ExternalLink className="w-2.5 h-2.5" />
                         {lang === "pt" ? "Fonte" : "Source"}
                       </a>
                     )}
                     <button
                       onClick={() => onSelectTrend?.(e.trend)}
-                      className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded bg-primary text-primary-foreground text-[8px] font-semibold hover:bg-primary/90 transition-colors"
+                      className="inline-flex items-center gap-1 h-6 px-2 text-[11px] font-medium border border-border/60 rounded-md text-muted-foreground hover:bg-muted/50 transition-colors"
                     >
-                      Timeline <ArrowRight className="w-2 h-2" />
+                      📊 Timeline
                     </button>
                   </div>
                 </div>
-
-                {/* Bottom accent */}
-                <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-emerald-500/40 via-emerald-500/20 to-transparent scale-x-0 group-hover:scale-x-100 transition-transform duration-300 origin-left" />
               </motion.div>
             );
           })}
