@@ -292,18 +292,24 @@ const Index = () => {
   const [timeSinceLastFetch, setTimeSinceLastFetch] = useState(0);
   const [updatePending, setUpdatePending] = useState(false);
   const isActive = useUserActivity(30000);
+  const timeSinceLastFetchRef = useRef(0);
 
   const handleRefresh = useCallback(async () => {
     setRefreshing(true);
     await fetchTrends();
     setRefreshing(false);
+    timeSinceLastFetchRef.current = 0;
     setTimeSinceLastFetch(0);
     setUpdatePending(false);
   }, [fetchTrends]);
 
   useEffect(() => {
     const interval = setInterval(() => {
-      setTimeSinceLastFetch((prev) => prev + 10);
+      timeSinceLastFetchRef.current += 10;
+      // Only trigger state update when reaching the refresh threshold
+      if (timeSinceLastFetchRef.current >= 90) {
+        setTimeSinceLastFetch(timeSinceLastFetchRef.current);
+      }
     }, 10000);
     return () => clearInterval(interval);
   }, []);
