@@ -262,24 +262,24 @@ const FilterBar = ({ filters, onChange, onForceReset, onSaveFilter, isLoggedIn }
           </Tooltip>
         }
 
-        <div className="flex items-center gap-2 ml-auto flex-shrink-0 whitespace-nowrap pl-2 border-l border-border/30">
+        <div className="flex items-center gap-2 ml-auto flex-shrink-0 whitespace-nowrap pl-2 border-l border-border/30 leading-none">
           <Tooltip>
             <TooltipTrigger asChild>
-              <span className="flex items-center gap-1.5 cursor-help">
-                <span className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ background: "hsl(142, 72%, 45%)" }} />
-                <span className="text-[11px] font-medium text-foreground">{t("live")}</span>
+              <span className="inline-flex items-center gap-1.5 cursor-help leading-none">
+                <span className="w-1.5 h-1.5 rounded-full animate-pulse flex-shrink-0" style={{ background: "hsl(142, 72%, 45%)" }} />
+                <span className="text-[11px] font-medium text-foreground leading-none">{t("live")}</span>
               </span>
             </TooltipTrigger>
             <TooltipContent side="bottom" className="max-w-[240px] text-xs">
               {t("liveTooltip")}
             </TooltipContent>
           </Tooltip>
-          <span className="text-muted-foreground/20">·</span>
+          <span className="text-muted-foreground/20 leading-none">·</span>
           <OnlineUsersCount />
-          <span className="text-muted-foreground/20">·</span>
+          <span className="text-muted-foreground/20 leading-none">·</span>
           <Tooltip>
             <TooltipTrigger asChild>
-              <span className="cursor-help">
+              <span className="inline-flex items-center cursor-help leading-none">
                 <CountdownTimer />
               </span>
             </TooltipTrigger>
@@ -305,8 +305,8 @@ const OnlineUsersCount = () => {
     return () => clearInterval(interval);
   }, []);
   return (
-    <span className="inline-flex items-center gap-1 text-[11px] font-medium text-muted-foreground tabular-nums">
-      <span className="py-[2px] my-[2px] text-left text-sm">👥</span> <span>{count}</span>
+    <span className="inline-flex items-center gap-1 text-[11px] font-medium text-muted-foreground tabular-nums leading-none">
+      <span className="text-sm leading-none">👥</span><span className="leading-none">{count}</span>
     </span>);
 
 };
@@ -348,9 +348,9 @@ const CountdownTimer = () => {
 
   return (
     <span
-      className={`text-[11px] font-mono text-muted-foreground tabular-nums transition-opacity duration-300 ${fading ? 'opacity-0' : 'opacity-100'}`}>
-      
-      ⏱️ {String(mins).padStart(2, '0')}:{String(secs).padStart(2, '0')}
+      className={`inline-flex items-center gap-0.5 text-[11px] font-mono text-muted-foreground tabular-nums leading-none transition-opacity duration-300 ${fading ? 'opacity-0' : 'opacity-100'}`}>
+      <span className="leading-none">⏱️</span>
+      <span className="leading-none">{String(mins).padStart(2, '0')}:{String(secs).padStart(2, '0')}</span>
     </span>);
 
 };
