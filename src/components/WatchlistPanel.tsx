@@ -1,6 +1,6 @@
 import { useState, useMemo, useCallback, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Eye, Plus, X, Bell, TrendingUp, Search } from "lucide-react";
+import { Eye, Plus, X, Bell, TrendingUp, Search, Radar } from "lucide-react";
 import { TrendCardProps } from "./TrendCard";
 import { toast } from "@/hooks/use-toast";
 
@@ -56,10 +56,8 @@ export default function WatchlistPanel({ trends, onSelectTrend }: WatchlistPanel
     setWatchlist(prev => prev.filter(w => w.keyword !== kw));
   }, []);
 
-  // Match watchlist keywords against live trends
   const matches = useMemo(() => {
     if (watchlist.length === 0) return new Map<string, TrendCardProps[]>();
-    
     const result = new Map<string, TrendCardProps[]>();
     for (const item of watchlist) {
       const kw = item.keyword.toLowerCase();
@@ -109,34 +107,11 @@ export default function WatchlistPanel({ trends, onSelectTrend }: WatchlistPanel
             className="overflow-hidden"
           >
             <div className="px-3 pb-3 space-y-2">
-              {/* Add input */}
-              <div className="flex gap-1.5">
-                <div className="relative flex-1">
-                  <Search className="absolute left-2 top-1/2 -translate-y-1/2 w-3 h-3 text-muted-foreground" />
-                  <input
-                    type="text"
-                    value={inputValue}
-                    onChange={e => setInputValue(e.target.value)}
-                    onKeyDown={e => e.key === "Enter" && addItem()}
-                    placeholder="Monitorar keyword..."
-                    className="w-full pl-7 pr-2 py-1.5 rounded-lg border border-border bg-background text-[11px] focus:outline-none focus:ring-1 focus:ring-primary"
-                    maxLength={40}
-                  />
-                </div>
-                <button
-                  onClick={addItem}
-                  className="px-2 py-1.5 rounded-lg bg-primary text-primary-foreground text-[11px] font-medium hover:bg-primary/90 transition-colors"
-                >
-                  <Plus className="w-3 h-3" />
-                </button>
-              </div>
-
               {/* Watchlist items */}
               <div className="space-y-1.5 max-h-[200px] overflow-y-auto scrollbar-thin">
                 {watchlist.map(item => {
                   const itemMatches = matches.get(item.keyword) || [];
                   const hasMatches = itemMatches.length > 0;
-
                   return (
                     <div key={item.keyword} className="rounded-lg border border-border/50 bg-secondary/20 overflow-hidden">
                       <div className="flex items-center gap-2 px-2.5 py-1.5">
@@ -151,8 +126,6 @@ export default function WatchlistPanel({ trends, onSelectTrend }: WatchlistPanel
                           <X className="w-3 h-3" />
                         </button>
                       </div>
-
-                      {/* Matched trends */}
                       {hasMatches && (
                         <div className="px-2.5 pb-2 space-y-1">
                           {itemMatches.slice(0, 3).map((trend, i) => (
@@ -172,11 +145,40 @@ export default function WatchlistPanel({ trends, onSelectTrend }: WatchlistPanel
                   );
                 })}
 
+                {/* Empty state — centered, inviting */}
                 {watchlist.length === 0 && (
-                  <p className="text-[10px] text-muted-foreground text-center py-3 italic">
-                    Adicione keywords para monitorar tendências automaticamente
-                  </p>
+                  <div className="flex flex-col items-center justify-center py-8 px-4 text-center">
+                    <Radar className="w-8 h-8 text-muted-foreground/30 mb-3 watchlist-empty-icon" />
+                    <p className="text-[12px] font-medium text-foreground mb-1">
+                      Monitore tendências
+                    </p>
+                    <p className="text-[10px] text-muted-foreground mb-4 max-w-[200px]">
+                      Adicione keywords para rastrear automaticamente o que importa para você
+                    </p>
+                  </div>
                 )}
+              </div>
+
+              {/* Add input — always visible, centered focus */}
+              <div className="flex gap-1.5">
+                <div className="relative flex-1">
+                  <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
+                  <input
+                    type="text"
+                    value={inputValue}
+                    onChange={e => setInputValue(e.target.value)}
+                    onKeyDown={e => e.key === "Enter" && addItem()}
+                    placeholder="Monitorar keyword..."
+                    className="w-full pl-8 pr-3 py-2 rounded-xl border border-border bg-background text-[12px] focus:outline-none focus:ring-2 focus:ring-primary/30 placeholder:text-muted-foreground/50"
+                    maxLength={40}
+                  />
+                </div>
+                <button
+                  onClick={addItem}
+                  className="px-3 py-2 rounded-xl bg-primary text-primary-foreground text-[12px] font-medium hover:bg-primary/90 transition-colors"
+                >
+                  <Plus className="w-3.5 h-3.5" />
+                </button>
               </div>
             </div>
           </motion.div>

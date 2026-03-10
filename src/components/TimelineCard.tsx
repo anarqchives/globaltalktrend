@@ -413,8 +413,16 @@ const TimelineCard = ({
           </div>
         </div>
 
-        {/* === ACTION BAR — unified, no borders === */}
-        <div className="flex items-center gap-0.5 bg-secondary/40 rounded-xl p-0.5 mt-1">
+        {/* Bookmark — always visible, top-right */}
+        <button
+          onClick={(e) => { e.stopPropagation(); onSaveCard?.({ title, platform, category, country_code: countryCode, source_url: sourceUrl, thumbnail, description: displayDescription, volume, change, changePositive, historicalData, platformColor: pf.color, sources }); }}
+          className="absolute top-3 right-3 p-1.5 rounded-lg text-muted-foreground/60 hover:text-primary hover:bg-primary/10 transition-colors z-10"
+        >
+          <Bookmark className="w-3.5 h-3.5" />
+        </button>
+
+        {/* === ACTION BAR — hidden by default, visible on hover === */}
+        <div className="card-actions-row flex items-center gap-0.5 bg-secondary/40 rounded-xl p-0.5 mt-1">
           {sourceUrl && (
             <a
               href={sourceUrl}
@@ -431,12 +439,7 @@ const TimelineCard = ({
             <Share2 className="w-3 h-3" />
             {t("share")}
           </button>
-          <button onClick={(e) => { e.stopPropagation(); onSaveCard?.({ title, platform, category, country_code: countryCode, source_url: sourceUrl, thumbnail, description: displayDescription, volume, change, changePositive, historicalData, platformColor: pf.color, sources }); }} className="inline-flex items-center gap-1 px-2 py-1 min-h-[28px] rounded-lg text-[10px] font-medium text-muted-foreground hover:text-foreground hover:bg-card transition-colors">
-            <Bookmark className="w-3 h-3" />
-          </button>
-
           <div className="flex-1" />
-
           <button onClick={handleAlertClick} className="p-1.5 min-h-[28px] min-w-[28px] flex items-center justify-center rounded-lg text-muted-foreground/40 hover:text-primary hover:bg-card transition-colors">
             <Bell className="w-3 h-3" />
           </button>
