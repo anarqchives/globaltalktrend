@@ -829,9 +829,9 @@ const GoogleMapView = ({
           innerGlow.setRadius(baseRadius * 0.6 * pulseScale);
         }
         
-        scheduleRaf(animateBubblePulse);
+        scheduleRaf(`bubble-${bubbleIndex}`, animateBubblePulse);
       };
-      scheduleRaf(animateBubblePulse);
+      scheduleRaf(`bubble-${bubbleIndex}`, animateBubblePulse);
 
       // Outer breathing ring
       const breathingRing = new g.maps.Marker({
