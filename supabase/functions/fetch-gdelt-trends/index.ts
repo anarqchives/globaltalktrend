@@ -103,8 +103,8 @@ serve(async (req) => {
     };
 
     const results = await Promise.all([
-      fetchGdelt("world OR global OR crisis OR breaking OR war OR election", 25),
-      fetchGdelt("economy OR technology OR climate OR health OR science", 15),
+      fetchGdelt("(world OR global OR crisis OR breaking OR war OR election)", 25),
+      fetchGdelt("(economy OR technology OR climate OR health OR science)", 15),
     ]);
     
     const articles = [...results[0], ...results[1]];
