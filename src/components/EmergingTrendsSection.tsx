@@ -294,8 +294,6 @@ export default function EmergingTrendsSection({ trends, anomalies = [], onSelect
     }));
   }, [allItems]);
 
-  if (allItems.length === 0) return null;
-
   // Build prediction text from anomalies
   const predictionText = useMemo(() => {
     if (anomalies.length === 0) return null;
@@ -315,6 +313,8 @@ export default function EmergingTrendsSection({ trends, anomalies = [], onSelect
       ? "Monitorando padrões incomuns — sem convergência detectada ainda."
       : "Monitoring unusual patterns — no convergence detected yet.";
   }, [anomalies, lang]);
+
+  if (allItems.length === 0) return null;
 
   return (
     <div className="flex flex-col h-full">
