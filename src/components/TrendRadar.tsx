@@ -218,7 +218,7 @@ function TopTrendsGrid({ trends, onSelectTrend }: { trends: TrendCardProps[]; on
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.2, delay: idx * 0.03, ease: [0, 0, 0.2, 1] }}
             onClick={hasUrl || onSelectTrend ? handleClick : undefined}
-            className={`group flex items-center gap-0 px-4 transition-colors duration-[120ms] ease-out
+            className={`group flex items-center gap-0 px-2 sm:px-4 transition-colors duration-[120ms] ease-out
               ${hasUrl || onSelectTrend ? "cursor-pointer hover:bg-muted/50" : ""}
               ${idx < ranked.length - 1 ? "border-b border-border/30" : ""}`}
             style={{
