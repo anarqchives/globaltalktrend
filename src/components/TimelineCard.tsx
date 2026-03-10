@@ -650,35 +650,30 @@ const TimelineCard = ({
             </div>
           )}
 
-          {/* ⑥ EVOLUTION 24H CHART */}
+          {/* ⑥ EVOLUTION 24H CHART — SVG sparkline with subtle grid */}
           {historicalData && historicalData.length > 0 && (
             <div className="mb-3">
               <div className="flex items-center justify-between mb-1.5">
                 <span className="text-[10px] font-semibold text-muted-foreground">{t("evolution24h")}</span>
                 <span className="text-[9px] text-muted-foreground flex items-center gap-1.5">
-                  <span className="w-2 h-0.5 rounded-full" style={{ background: brandColor }} />
+                  <span className="w-2 h-0.5 rounded-full" style={{ background: brandColor, opacity: 0.8 }} />
                   {metricLabel || "Volume"}
                 </span>
               </div>
-              <div className="h-20 -mx-1">
-                <ResponsiveContainer width="100%" height="100%">
-                  <AreaChart data={historicalData}>
-                    <defs>
-                      <linearGradient id={`exp-${title.slice(0, 5)}`} x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="0%" stopColor={brandColor} stopOpacity={0.15} />
-                        <stop offset="100%" stopColor={brandColor} stopOpacity={0} />
-                      </linearGradient>
-                    </defs>
-                    <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                    <XAxis dataKey="hour" tick={{ fontSize: 9, fill: "hsl(var(--muted-foreground))" }} tickLine={false} axisLine={false} interval={5} />
-                    <YAxis tick={{ fontSize: 9, fill: "hsl(var(--muted-foreground))" }} tickLine={false} axisLine={false} width={30} tickFormatter={(v: number) => v >= 1000 ? `${(v / 1000).toFixed(0)}K` : String(v)} />
-                    <RechartsTooltip
-                      contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: "8px", fontSize: 11, boxShadow: "0 4px 12px rgba(0,0,0,0.1)" }}
-                      formatter={(value: number) => [value >= 1000 ? `${(value / 1000).toFixed(1)}K` : value, metricLabel || "Volume"]}
-                    />
-                    <Area type="monotone" dataKey="value" stroke={brandColor} strokeWidth={1.5} fill={`url(#exp-${title.slice(0, 5)})`} dot={{ r: 2, fill: brandColor, strokeWidth: 0 }} />
-                  </AreaChart>
-                </ResponsiveContainer>
+              <div className="relative" style={{ height: 80 }}>
+                {/* Subtle horizontal grid lines */}
+                <svg className="absolute inset-0 w-full" style={{ height: 80 }} preserveAspectRatio="none">
+                  {[0.25, 0.5, 0.75].map(r => (
+                    <line key={r} x1="0" x2="100%" y1={r * 80} y2={r * 80} stroke="hsl(var(--border) / 0.15)" strokeWidth="1" />
+                  ))}
+                </svg>
+                <SparklineArea
+                  data={historicalData.map(d => d.value)}
+                  color={brandColor}
+                  width={320}
+                  height={80}
+                  className="w-full"
+                />
               </div>
             </div>
           )}
