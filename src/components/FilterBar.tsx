@@ -326,7 +326,7 @@ const FilterBar = ({ filters, onChange, onForceReset, onSaveFilter, isLoggedIn }
           <span className="hidden sm:inline text-[10px] text-muted-foreground flex-shrink-0 whitespace-nowrap ml-1">
             {lang === "pt" ? "Filtrando" : "Filtering"}: <span className="font-medium text-foreground/70">{activeFilterLabels.join(" · ")}</span>
           </span>
-        )
+        )}
       </div>
     </div>
   );
