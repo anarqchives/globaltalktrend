@@ -393,7 +393,7 @@ const CountdownTimer = () => {
   const secs = seconds % 60;
 
   return (
-    <span className={`text-caption font-mono tabular-nums text-muted-foreground transition-opacity duration-300 ${fading ? 'opacity-0' : 'opacity-100'}`}>
+    <span className={`text-xs font-mono tabular-nums text-muted-foreground transition-opacity duration-300 ${fading ? 'opacity-0' : 'opacity-100'}`}>
       {String(mins).padStart(2, '0')}:{String(secs).padStart(2, '0')}
     </span>
   );

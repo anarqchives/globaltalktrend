@@ -1428,8 +1428,9 @@ const GoogleMapView = ({
   return (
     <div className="w-full h-full relative" style={{ isolation: "isolate" }}>
       {/* Map controls + Top Trends */}
-      <div className="absolute top-3 left-3 right-3 z-[5] flex items-center justify-between pointer-events-none">
-        <div className="relative flex items-center gap-0 p-0.5 rounded-full bg-white/90 dark:bg-card/90 backdrop-blur-xl border border-border/20 shadow-[0_2px_12px_rgba(0,0,0,0.06)] dark:shadow-[0_2px_12px_rgba(0,0,0,0.2)] pointer-events-auto">
+      {/* Map toolbar: tabs + close — full-width bar at top */}
+      <div className="absolute top-0 left-0 right-0 z-[5] h-9 flex items-center justify-between px-2 bg-white/90 dark:bg-card/90 backdrop-blur-lg border-b border-border/20 pointer-events-auto">
+        <div className="relative flex items-center gap-0 p-0.5 rounded-lg pointer-events-auto">
           {/* Sliding pill indicator */}
           <motion.div
             className="absolute top-0.5 bottom-0.5 rounded-full bg-primary shadow-sm"

@@ -75,7 +75,7 @@ export const countries = [
   }
 ];
 
-const selectClass = "appearance-none bg-card text-foreground text-body font-medium pl-3 pr-7 h-8 rounded-lg cursor-pointer min-w-0 hover:bg-secondary transition-colors focus:outline-none focus:ring-2 focus:ring-primary/20 box-border touch-manipulation border border-border min-h-[44px]";
+const selectClass = "appearance-none bg-card text-foreground font-medium pl-2.5 pr-7 rounded-lg cursor-pointer min-w-0 hover:bg-secondary transition-colors focus:outline-none focus:ring-2 focus:ring-primary/20 box-border touch-manipulation border border-border" + " " + "h-8 text-xs";
 
 const FilterBar = ({ filters, onChange, onForceReset, onSaveFilter, isLoggedIn }: FilterBarProps) => {
   const { t, lang } = useLanguage();
