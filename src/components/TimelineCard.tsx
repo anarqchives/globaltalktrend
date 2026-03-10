@@ -603,20 +603,32 @@ const TimelineCard = ({
                 </TooltipContent>
               </Tooltip>
             </div>
-            {/* Segmented bar */}
-            <div className="w-full h-1.5 rounded-full overflow-hidden" style={{ background: confidenceTier.barBg }}>
-              <div className="h-full rounded-full transition-all duration-500" style={{ width: `${confidenceScore}%`, background: confidenceTier.fillColor }} />
+            {/* Segmented bar — thinner, gradient fill */}
+            <div className="w-full h-1 rounded-full overflow-hidden bg-secondary">
+              <div
+                className="h-full rounded-full transition-all duration-500"
+                style={{
+                  width: `${confidenceScore}%`,
+                  background: confidenceScore >= 71
+                    ? 'linear-gradient(90deg, #93C5FD, #3B82F6)'
+                    : confidenceScore >= 41
+                    ? 'linear-gradient(90deg, #6EE7B7, #10B981)'
+                    : confidenceScore >= 21
+                    ? 'linear-gradient(90deg, #FCD34D, #F59E0B)'
+                    : 'linear-gradient(90deg, #FCA5A5, #EF4444)',
+                }}
+              />
             </div>
             <div className="flex items-center gap-1.5 mt-1.5 flex-wrap">
               <span className="text-[11px] font-medium" style={{ color: confidenceTier.color }}>{confidenceTier.label} · {confidenceScore}%</span>
               {["The Guardian", "NPR", "PubMed", "IBGE", "World Bank", "OpenAlex"].includes(platform) && (
-                <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-emerald-50 text-emerald-600 dark:bg-emerald-500/10 dark:text-emerald-400">✓ Fonte verificada</span>
+                <span className="text-[10px] px-1.5 py-0.5 rounded-full border border-emerald-400 text-emerald-600 dark:text-emerald-400" style={{ background: 'transparent', height: 18, lineHeight: '14px' }}>✓ Fonte verificada</span>
               )}
               {(sources?.length || 1) === 1 && (
-                <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-amber-50 text-amber-600 dark:bg-amber-500/10 dark:text-amber-400">⚠ Fonte única</span>
+                <span className="text-[10px] px-1.5 py-0.5 rounded-full border border-amber-400 text-amber-600 dark:text-amber-400" style={{ background: 'transparent', height: 18, lineHeight: '14px' }}>⚠ Fonte única</span>
               )}
               {trendScore >= 60 && (
-                <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-blue-50 text-blue-600 dark:bg-blue-500/10 dark:text-blue-400">📈 Alto engajamento</span>
+                <span className="text-[10px] px-1.5 py-0.5 rounded-full border border-blue-400 text-blue-600 dark:text-blue-400" style={{ background: 'transparent', height: 18, lineHeight: '14px' }}>📈 Alto engajamento</span>
               )}
             </div>
           </div>
