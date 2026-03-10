@@ -22,12 +22,12 @@ const STANDARD_CATEGORIES = new Set([
 const SOURCE_GROUPS: Record<string, string[]> = {
   imprensa: ["The Guardian", "NewsAPI", "NewsData", "GNews", "Bing News"],
   social: ["Reddit", "Bluesky", "Mastodon", "X (Twitter)"],
-  dados: ["World Bank", "IBGE", "IMF", "FRED", "NOAA"],
-  ciencia: ["OpenAlex", "arXiv", "PubMed", "Crossref"],
-  tech: ["Hacker News", "GitHub", "Stack Overflow"],
+  dados: ["World Bank", "IBGE", "IMF", "FRED", "NOAA", "FMI (IMF)", "OMS (WHO)"],
+  ciencia: ["OpenAlex", "arXiv", "PubMed", "Crossref", "Semantic Scholar"],
+  tech: ["Hacker News", "GitHub", "Stack Overflow", "Lobsters"],
   busca: ["Google Trends"],
   enciclopedia: ["Wikipedia"],
-  conflitos: ["GDELT", "GDELT DOC"],
+  conflitos: ["GDELT", "GDELT DOC", "ACLED"],
 };
 
 // ─── Source Health Tracker ──────────────────────────────────────────

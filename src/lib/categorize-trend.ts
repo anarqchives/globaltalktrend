@@ -192,12 +192,13 @@ export function categorizeTrend(
   }
 
   // Priority 6: Platform-based defaults
-  if (["World Bank", "IBGE", "IMF", "FRED"].includes(platform)) return "Negócios/Finanças";
-  if (["OpenAlex", "arXiv", "Crossref"].includes(platform)) return "Ciência";
-  if (platform === "PubMed") return "Saúde";
+  if (["World Bank", "IBGE", "IMF", "FRED", "FMI (IMF)"].includes(platform)) return "Negócios/Finanças";
+  if (["OpenAlex", "arXiv", "Crossref", "Semantic Scholar"].includes(platform)) return "Ciência";
+  if (["PubMed", "OMS (WHO)"].includes(platform)) return "Saúde";
   if (platform === "NOAA") return "Clima/Meio Ambiente";
-  if (platform === "GDELT") return "Conflitos/Crises";
+  if (["GDELT", "ACLED"].includes(platform)) return "Conflitos/Crises";
   if (platform === "Wikipedia") return "Conhecimento";
+  if (platform === "Lobsters") return "Tecnologia";
 
   return existingCategory || "Geral";
 }
