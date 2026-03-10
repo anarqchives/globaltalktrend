@@ -278,14 +278,25 @@ const GoogleMapView = ({
     setMapRetry((r) => r + 1);
   }, []);
 
-  // Load Google Maps
+  // Load Google Maps (with sessionStorage cache for API key)
   useEffect(() => {
     let cancelled = false;
     const loadMap = async () => {
       try {
-        const { data, error: fnError } = await supabase.functions.invoke("get-maps-key");
+        const CACHE_KEY = "gtt_maps_api_key";
+        let apiKey = sessionStorage.getItem(CACHE_KEY);
+        if (!apiKey) {
+          const { data, error: fnError } = await supabase.functions.invoke("get-maps-key");
+          if (cancelled) return;
+          if (fnError || !data?.key) {
+            setMapError("Chave do mapa indisponível para este domínio");
+            return;
+          }
+          apiKey = data.key;
+          sessionStorage.setItem(CACHE_KEY, apiKey!);
+        }
         if (cancelled) return;
-        if (fnError || !data?.key) {
+        if (!apiKey) {
           setMapError("Chave do mapa indisponível para este domínio");
           return;
         }
