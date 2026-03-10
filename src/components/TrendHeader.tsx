@@ -171,14 +171,14 @@ const TrendHeader = ({ totalTrends = 0, countriesCount = 0, onRefresh, refreshin
               {dark ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
             </button>
 
-            {/* Apoie — gradient pill, always in header */}
+            {/* Apoie — compact gradient pill */}
             <a
               href="https://buy.stripe.com/fZu7sMgw6cHLeTnbWVdIA00"
               target="_blank"
               rel="noopener noreferrer"
-              className="apoie-pill hidden sm:flex items-center gap-1"
+              className="hidden sm:flex items-center rounded-full text-white text-xs font-semibold hover:brightness-110 transition-all"
+              style={{ background: 'linear-gradient(135deg, #FF6B00, #FF2D2D)', height: '30px', padding: '0 12px', fontSize: '12px' }}
             >
-              <Heart className="w-3 h-3" />
               Apoie
             </a>
 
