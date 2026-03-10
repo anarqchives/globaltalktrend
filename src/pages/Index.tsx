@@ -457,27 +457,21 @@ const Index = () => {
             </TooltipTrigger>
           </Tooltip>
           {/* View toggle: Expandido / Compacto */}
-          <div className="flex items-center overflow-hidden" style={{ border: "1px solid #E5E7EB", borderRadius: 8 }}>
+          <div className="flex items-center overflow-hidden rounded-lg border border-border">
             <button
               onClick={() => setCompactMode(false)}
-              className="flex items-center justify-center transition-all duration-[120ms]"
-              style={{
-                width: 28, height: 26,
-                background: !compactMode ? "#111827" : "hsl(var(--card))",
-                color: !compactMode ? "white" : "#9CA3AF",
-              }}
+              className={`flex items-center justify-center transition-all duration-150 w-7 h-[26px] ${
+                !compactMode ? "bg-foreground text-background" : "bg-card text-muted-foreground hover:bg-muted"
+              }`}
               title={lang === "pt" ? "Expandido" : "Expanded"}
             >
               <LayoutGrid size={13} />
             </button>
             <button
               onClick={() => setCompactMode(true)}
-              className="flex items-center justify-center transition-all duration-[120ms]"
-              style={{
-                width: 28, height: 26,
-                background: compactMode ? "#111827" : "hsl(var(--card))",
-                color: compactMode ? "white" : "#9CA3AF",
-              }}
+              className={`flex items-center justify-center transition-all duration-150 w-7 h-[26px] ${
+                compactMode ? "bg-foreground text-background" : "bg-card text-muted-foreground hover:bg-muted"
+              }`}
               title={lang === "pt" ? "Compacto" : "Compact"}
             >
               <List size={13} />
