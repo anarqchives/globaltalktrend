@@ -280,8 +280,8 @@ const TimelineCard = ({
           
           {/* Image (when available) */}
           {thumbnail && !imgError && !compact && (
-            <div className="relative w-full h-32 mb-2.5 rounded-xl overflow-hidden bg-secondary/50">
-              <img src={thumbnail} alt="" className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-[1.03]" loading="lazy" onError={() => setImgError(true)} />
+            <div className="relative w-full overflow-hidden rounded-md bg-secondary/50 mb-2.5" style={{ height: 120 }}>
+              <img src={thumbnail} alt="" className="w-full h-full object-cover block transition-transform duration-300 group-hover:scale-[1.03]" loading="lazy" onError={() => setImgError(true)} />
             </div>
           )}
 
