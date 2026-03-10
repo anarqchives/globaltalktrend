@@ -1,7 +1,8 @@
-import { useState, useEffect, useCallback } from "react";
-import { RotateCcw, ChevronDown, Bell, X } from "lucide-react";
+import { useState, useRef, useEffect } from "react";
+import { Globe, Calendar, LayoutGrid, Layers, ChevronDown, X, Bell, RotateCcw } from "lucide-react";
 import { useLanguage, LangCode } from "@/contexts/LanguageContext";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { AnimatePresence, motion } from "framer-motion";
 
 const defaultFilters: FilterState = {
   country: "global",
@@ -75,7 +76,116 @@ export const countries = [
   }
 ];
 
-const selectClass = "appearance-none bg-card text-foreground font-medium pl-2.5 pr-7 rounded-lg cursor-pointer min-w-0 hover:bg-secondary transition-colors focus:outline-none focus:ring-2 focus:ring-primary/20 box-border touch-manipulation border border-border" + " " + "h-8 text-xs";
+interface ChipDropdownProps {
+  label: string;
+  value: string;
+  options: { value: string; label: string }[];
+  isActive: boolean;
+  icon: React.ReactNode;
+  onChange: (value: string) => void;
+  onClear: () => void;
+  isGrouped?: boolean;
+  groups?: typeof countries;
+}
+
+function ChipDropdown({ label, value, options, isActive, icon, onChange, onClear, isGrouped, groups }: ChipDropdownProps) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!open) return;
+    const handleClick = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+    };
+    document.addEventListener("mousedown", handleClick);
+    return () => document.removeEventListener("mousedown", handleClick);
+  }, [open]);
+
+  const displayLabel = isGrouped && groups
+    ? groups.flatMap(g => g.items).find(c => c.value === value)?.label || label
+    : options.find(o => o.value === value)?.label || label;
+
+  return (
+    <div ref={ref} className="relative flex-shrink-0">
+      <button
+        onClick={() => setOpen(!open)}
+        className={`inline-flex items-center gap-1.5 rounded-full transition-all duration-[120ms] ${
+          isActive
+            ? "bg-foreground text-background"
+            : "bg-secondary hover:bg-muted text-muted-foreground"
+        }`}
+        style={{ height: 28, padding: "0 10px", fontSize: 12, fontWeight: isActive ? 600 : 500 }}
+      >
+        <span className={`flex-shrink-0 ${isActive ? "text-background/70" : "text-muted-foreground/60"}`} style={{ width: 12, height: 12 }}>
+          {icon}
+        </span>
+        <span className="truncate max-w-[100px]">{displayLabel}</span>
+        {isActive ? (
+          <span
+            onClick={(e) => { e.stopPropagation(); onClear(); setOpen(false); }}
+            className="flex-shrink-0 cursor-pointer hover:opacity-70"
+          >
+            <X className="w-2.5 h-2.5" />
+          </span>
+        ) : (
+          <ChevronDown className="w-2.5 h-2.5 flex-shrink-0 opacity-60" />
+        )}
+      </button>
+
+      <AnimatePresence>
+        {open && (
+          <motion.div
+            initial={{ opacity: 0, y: -4 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -4 }}
+            transition={{ duration: 0.15, ease: "easeOut" }}
+            className="absolute left-0 top-full mt-1 z-50 bg-popover border border-border rounded-xl p-1"
+            style={{ boxShadow: "0 8px 24px rgba(0,0,0,0.08)", minWidth: 180, maxHeight: 320, overflowY: "auto" }}
+          >
+            {isGrouped && groups ? (
+              groups.map(group => (
+                <div key={group.group}>
+                  <div className="px-2 py-1 text-[10px] font-bold text-muted-foreground/50 uppercase tracking-wider">{group.group}</div>
+                  {group.items.map(item => (
+                    <button
+                      key={item.value}
+                      onClick={() => { onChange(item.value); setOpen(false); }}
+                      className={`w-full text-left px-2.5 flex items-center justify-between rounded-lg transition-colors ${
+                        value === item.value
+                          ? "bg-primary/10 text-primary font-semibold"
+                          : "hover:bg-muted text-foreground"
+                      }`}
+                      style={{ height: 32, fontSize: 12 }}
+                    >
+                      <span>{item.label}</span>
+                      {value === item.value && <span className="text-primary">✓</span>}
+                    </button>
+                  ))}
+                </div>
+              ))
+            ) : (
+              options.map(opt => (
+                <button
+                  key={opt.value}
+                  onClick={() => { onChange(opt.value); setOpen(false); }}
+                  className={`w-full text-left px-2.5 flex items-center justify-between rounded-lg transition-colors ${
+                    value === opt.value
+                      ? "bg-primary/10 text-primary font-semibold"
+                      : "hover:bg-muted text-foreground"
+                  }`}
+                  style={{ height: 32, fontSize: 12 }}
+                >
+                  <span>{opt.label}</span>
+                  {value === opt.value && <span className="text-primary">✓</span>}
+                </button>
+              ))
+            )}
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+}
 
 const FilterBar = ({ filters, onChange, onForceReset, onSaveFilter, isLoggedIn }: FilterBarProps) => {
   const { t, lang } = useLanguage();
@@ -89,10 +199,7 @@ const FilterBar = ({ filters, onChange, onForceReset, onSaveFilter, isLoggedIn }
     filters.category !== defaultFilters.category ||
     filters.type !== defaultFilters.type;
 
-  const isCountryFiltered = filters.country !== defaultFilters.country;
-  const isPeriodFiltered = filters.period !== defaultFilters.period;
-  const isCategoryFiltered = filters.category !== defaultFilters.category;
-  const isTypeFiltered = filters.type !== defaultFilters.type;
+  const healthLabel: Record<string, string> = { pt: "Saúde", en: "Health", es: "Salud", fr: "Santé", de: "Gesundheit", it: "Salute", zh: "健康", ja: "健康", ko: "건강", ar: "صحة", hi: "स्वास्थ्य", ru: "Здоровье" };
 
   const periodOptions = [
     { value: "Última hora", label: t("lastHour") },
@@ -100,8 +207,6 @@ const FilterBar = ({ filters, onChange, onForceReset, onSaveFilter, isLoggedIn }
     { value: "Esta semana", label: t("thisWeek") },
     { value: "Este mês", label: t("thisMonth") }
   ];
-
-  const healthLabel: Record<string, string> = { pt: "Saúde", en: "Health", es: "Salud", fr: "Santé", de: "Gesundheit", it: "Salute", zh: "健康", ja: "健康", ko: "건강", ar: "صحة", hi: "स्वास्थ्य", ru: "Здоровье" };
 
   const categoryOptions = [
     { value: "Todas", label: t("all") },
@@ -124,60 +229,47 @@ const FilterBar = ({ filters, onChange, onForceReset, onSaveFilter, isLoggedIn }
     { value: "Dados oficiais", label: "Dados Oficiais" }
   ];
 
-  const renderFilterChip = (
-    value: string,
-    options: { value: string; label: string }[],
-    key: keyof FilterState,
-    isActive: boolean,
-    label: string,
-    isGrouped?: boolean,
-    groups?: typeof countries,
-  ) => (
-    <div className="relative flex-shrink-0">
-      {isGrouped && groups ? (
-        <select
-          className={`${selectClass} ${isActive ? 'bg-primary/10 border-primary/30 text-primary font-semibold' : ''}`}
-          value={value}
-          onChange={(e) => update(key, e.target.value)}
-          aria-label={label}
-        >
-          {groups.map((group) => (
-            <optgroup key={group.group} label={group.group}>
-              {group.items.map((c) => <option key={c.value} value={c.value}>{c.label}</option>)}
-            </optgroup>
-          ))}
-        </select>
-      ) : (
-        <select
-          className={`${selectClass} ${isActive ? 'bg-primary/10 border-primary/30 text-primary font-semibold' : ''}`}
-          value={value}
-          onChange={(e) => update(key, e.target.value)}
-          aria-label={label}
-        >
-          {options.map((p) => <option key={p.value} value={p.value}>{p.label}</option>)}
-        </select>
-      )}
-      {isActive ? (
-        <button
-          onClick={() => update(key, defaultFilters[key])}
-          className="absolute right-1.5 top-1/2 -translate-y-1/2 w-5 h-5 flex items-center justify-center rounded-full bg-primary/15 text-primary hover:bg-primary/25 transition-colors"
-        >
-          <X className="w-3 h-3" />
-        </button>
-      ) : (
-        <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 w-3 h-3 text-muted-foreground pointer-events-none" />
-      )}
-    </div>
-  );
-
   return (
-    <div className="sticky top-[52px] z-40 bg-card/95 backdrop-blur-sm border-b border-border">
-      {/* ROW 1: Filters — 40px */}
-      <div className="h-10 px-3 md:px-6 flex items-center gap-sp-2 overflow-x-auto scrollbar-thin flex-nowrap" style={{ WebkitOverflowScrolling: 'touch' }}>
-        {renderFilterChip(filters.country, [], "country", isCountryFiltered, t("country"), true, countries)}
-        {renderFilterChip(filters.period, periodOptions, "period", isPeriodFiltered, t("period"))}
-        {renderFilterChip(filters.category, categoryOptions, "category", isCategoryFiltered, t("category"))}
-        {renderFilterChip(filters.type, typeOptions, "type", isTypeFiltered, t("type"))}
+    <div className="sticky top-[52px] z-40 bg-card/95 dark:bg-card/95 backdrop-blur-sm border-b border-border" style={{ height: 44 }}>
+      <div className="h-full px-3 md:px-4 flex items-center" style={{ gap: 6 }}>
+        <ChipDropdown
+          label={t("global")}
+          value={filters.country}
+          options={[]}
+          isActive={filters.country !== defaultFilters.country}
+          icon={<Globe className="w-3 h-3" />}
+          onChange={(v) => update("country", v)}
+          onClear={() => update("country", defaultFilters.country)}
+          isGrouped
+          groups={countries}
+        />
+        <ChipDropdown
+          label={t("today")}
+          value={filters.period}
+          options={periodOptions}
+          isActive={filters.period !== defaultFilters.period}
+          icon={<Calendar className="w-3 h-3" />}
+          onChange={(v) => update("period", v)}
+          onClear={() => update("period", defaultFilters.period)}
+        />
+        <ChipDropdown
+          label={t("all")}
+          value={filters.category}
+          options={categoryOptions}
+          isActive={filters.category !== defaultFilters.category}
+          icon={<LayoutGrid className="w-3 h-3" />}
+          onChange={(v) => update("category", v)}
+          onClear={() => update("category", defaultFilters.category)}
+        />
+        <ChipDropdown
+          label={t("allMedia")}
+          value={filters.type}
+          options={typeOptions}
+          isActive={filters.type !== defaultFilters.type}
+          icon={<Layers className="w-3 h-3" />}
+          onChange={(v) => update("type", v)}
+          onClear={() => update("type", defaultFilters.type)}
+        />
 
         <div className="flex-1" />
 
@@ -187,24 +279,26 @@ const FilterBar = ({ filters, onChange, onForceReset, onSaveFilter, isLoggedIn }
             <TooltipTrigger asChild>
               <button
                 onClick={onSaveFilter}
-                className="flex items-center justify-center w-9 h-9 rounded-lg text-primary bg-primary/6 hover:bg-primary hover:text-primary-foreground transition-all flex-shrink-0 min-w-[44px] min-h-[44px]"
+                className="flex items-center justify-center rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted transition-all"
+                style={{ width: 28, height: 28 }}
                 aria-label={t("createAlert")}
               >
-                <Bell className="w-4 h-4" />
+                <Bell className="w-3.5 h-3.5" />
               </button>
             </TooltipTrigger>
-            <TooltipContent side="bottom" className="text-caption">{t("createAlert")}</TooltipContent>
+            <TooltipContent side="bottom" className="text-[10px]">{t("createAlert")}</TooltipContent>
           </Tooltip>
         )}
 
-        {/* Clear filters — text link style */}
+        {/* Clear all */}
         {isFiltered && (
           <button
             onClick={() => { onChange(defaultFilters); onForceReset?.(); }}
-            className="flex items-center gap-1 px-2 text-caption font-medium text-muted-foreground hover:text-foreground transition-colors flex-shrink-0 whitespace-nowrap min-h-[44px]"
+            className="flex items-center gap-1 text-muted-foreground hover:text-foreground transition-colors whitespace-nowrap"
+            style={{ fontSize: 11 }}
           >
             <RotateCcw className="w-3 h-3" />
-            {lang === "pt" ? "Limpar filtros" : "Clear filters"}
+            <span className="hidden sm:inline">{lang === "pt" ? "Limpar" : lang === "es" ? "Limpiar" : "Clear"}</span>
           </button>
         )}
       </div>

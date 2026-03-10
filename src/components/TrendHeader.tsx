@@ -141,7 +141,7 @@ const TrendHeader = ({ totalTrends = 0, countriesCount = 0, onRefresh, refreshin
           </div>
 
           {/* ─── RIGHT: Utilities ─── */}
-          <div className="flex items-center gap-2 justify-end flex-shrink-0">
+          <div className="flex items-center gap-2 justify-end flex-shrink-0" style={{ gap: 8 }}>
             {/* Language selector — compact */}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
