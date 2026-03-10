@@ -26,7 +26,7 @@ import ArchiveDrawer from "@/components/ArchiveDrawer";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import TagLegend from "@/components/TagLegend";
 
-import OnboardingFlow, { hasCompletedOnboarding } from "@/components/OnboardingFlow";
+
 import { useUserActivity } from "@/hooks/use-user-activity";
 import {
   ResizablePanelGroup,
