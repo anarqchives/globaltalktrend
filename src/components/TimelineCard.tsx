@@ -319,7 +319,7 @@ const TimelineCard = ({
           )}
 
           {/* === METRICS BAR === */}
-          <div className="flex items-center gap-1.5 flex-wrap text-[10px] mb-2">
+          <div className="flex items-center gap-1.5 flex-wrap text-[10px] mb-2 w-full min-w-0">
             {/* TVI Badge */}
             <Tooltip>
               <TooltipTrigger asChild>
