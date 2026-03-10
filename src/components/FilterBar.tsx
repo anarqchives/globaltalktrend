@@ -307,10 +307,11 @@ const OnlineUsersCount = () => {
     return () => clearInterval(interval);
   }, []);
   return (
-    <span className="inline-flex items-center gap-1 text-[11px] font-medium text-muted-foreground tabular-nums leading-none">
-      <span className="text-sm leading-none">👥</span><span className="leading-none">{count}</span>
-    </span>);
-
+    <span className="flex items-center gap-1.5 text-[13px] tabular-nums">
+      <span className="text-[13px]">👥</span>
+      <span className="font-semibold text-foreground">{count}</span>
+    </span>
+  );
 };
 
 const REFRESH_INTERVAL_SECONDS = 10 * 60;
