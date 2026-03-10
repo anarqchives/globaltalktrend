@@ -262,31 +262,33 @@ const FilterBar = ({ filters, onChange, onForceReset, onSaveFilter, isLoggedIn }
           </Tooltip>
         }
 
-        <div className="flex items-center gap-2 ml-auto flex-shrink-0 whitespace-nowrap pl-2 border-l border-border/30 leading-none">
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <span className="inline-flex items-center gap-1.5 cursor-help leading-none">
-                <span className="w-1.5 h-1.5 rounded-full animate-pulse flex-shrink-0" style={{ background: "hsl(142, 72%, 45%)" }} />
-                <span className="text-[11px] font-medium text-foreground leading-none">{t("live")}</span>
-              </span>
-            </TooltipTrigger>
-            <TooltipContent side="bottom" className="max-w-[240px] text-xs">
-              {t("liveTooltip")}
-            </TooltipContent>
-          </Tooltip>
-          <span className="text-muted-foreground/20 leading-none">·</span>
-          <OnlineUsersCount />
-          <span className="text-muted-foreground/20 leading-none">·</span>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <span className="inline-flex items-center cursor-help leading-none">
-                <CountdownTimer />
-              </span>
-            </TooltipTrigger>
-            <TooltipContent side="bottom" className="max-w-[240px] text-xs">
-              {t("countdownTooltip")}
-            </TooltipContent>
-          </Tooltip>
+        <div className="flex items-center justify-center gap-2 ml-auto flex-shrink-0 whitespace-nowrap pl-2 border-l border-border/30">
+          <div className="flex items-center justify-center gap-[10px] text-[13px]">
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <span className="flex items-center gap-1.5 cursor-help">
+                  <span className="w-2 h-2 rounded-full animate-pulse flex-shrink-0" style={{ background: "hsl(142, 72%, 45%)" }} />
+                  <span className="font-medium text-foreground">{t("live")}</span>
+                </span>
+              </TooltipTrigger>
+              <TooltipContent side="bottom" className="max-w-[240px] text-xs">
+                {t("liveTooltip")}
+              </TooltipContent>
+            </Tooltip>
+            <span className="text-muted-foreground/30">·</span>
+            <OnlineUsersCount />
+            <span className="text-muted-foreground/30">·</span>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <span className="flex items-center cursor-help">
+                  <CountdownTimer />
+                </span>
+              </TooltipTrigger>
+              <TooltipContent side="bottom" className="max-w-[240px] text-xs">
+                {t("countdownTooltip")}
+              </TooltipContent>
+            </Tooltip>
+          </div>
         </div>
       </div>
     </div>);
@@ -305,10 +307,11 @@ const OnlineUsersCount = () => {
     return () => clearInterval(interval);
   }, []);
   return (
-    <span className="inline-flex items-center gap-1 text-[11px] font-medium text-muted-foreground tabular-nums leading-none">
-      <span className="text-sm leading-none">👥</span><span className="leading-none">{count}</span>
-    </span>);
-
+    <span className="flex items-center gap-1.5 text-[13px] tabular-nums">
+      <span className="text-[13px]">👥</span>
+      <span className="font-semibold text-foreground">{count}</span>
+    </span>
+  );
 };
 
 const REFRESH_INTERVAL_SECONDS = 10 * 60;
@@ -348,10 +351,11 @@ const CountdownTimer = () => {
 
   return (
     <span
-      className={`inline-flex items-center gap-0.5 text-[11px] font-mono text-muted-foreground tabular-nums leading-none transition-opacity duration-300 ${fading ? 'opacity-0' : 'opacity-100'}`}>
-      <span className="leading-none">⏱️</span>
-      <span className="leading-none">{String(mins).padStart(2, '0')}:{String(secs).padStart(2, '0')}</span>
-    </span>);
+      className={`flex items-center gap-1.5 text-[13px] font-mono tabular-nums transition-opacity duration-300 ${fading ? 'opacity-0' : 'opacity-100'}`}>
+      <span>⏱️</span>
+      <span className="font-semibold text-foreground">{String(mins).padStart(2, '0')}:{String(secs).padStart(2, '0')}</span>
+    </span>
+  );
 
 };
 
