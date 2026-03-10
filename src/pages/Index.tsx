@@ -76,13 +76,24 @@ const Index = () => {
   const [allExpanded, setAllExpanded] = useState(false);
   const [allCollapsed, setAllCollapsed] = useState(false);
   // Panel visibility for collapsible sections
-  const [panelVisibility, setPanelVisibility] = useState({
-    radar: true,
-    timeline: true,
-    map: true,
+  const [panelVisibility, setPanelVisibility] = useState(() => {
+    // Map starts collapsed by default
+    try {
+      const saved = localStorage.getItem("map-panel-open");
+      return { radar: true, timeline: true, map: saved === "true" };
+    } catch {
+      return { radar: true, timeline: true, map: false };
+    }
   });
-  const togglePanel = (panel: "radar" | "timeline" | "map") =>
-    setPanelVisibility(prev => ({ ...prev, [panel]: !prev[panel] }));
+  const togglePanel = (panel: "radar" | "timeline" | "map") => {
+    setPanelVisibility(prev => {
+      const next = { ...prev, [panel]: !prev[panel] };
+      if (panel === "map") {
+        try { localStorage.setItem("map-panel-open", String(next.map)); } catch {}
+      }
+      return next;
+    });
+  };
   const timelinePanelRef = useRef<HTMLDivElement>(null);
   const radarPanelRef = useRef<ElementRef<typeof ResizablePanel>>(null);
   const [radarCollapsed, setRadarCollapsed] = useState(() => {
