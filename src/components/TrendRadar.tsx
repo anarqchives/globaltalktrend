@@ -609,42 +609,14 @@ export default function TrendRadar({ trends, allTrends, criticalMoments, anomali
           style={{ flexGrow: collapsed ? 0 : 1 }}
         >
           <div className="h-full relative">
-            <TabsContent value="signals" className="absolute inset-0 mt-0 overflow-y-auto scrollbar-thin data-[state=inactive]:hidden animate-in fade-in-0 duration-200">
+            <TabsContent value="signals" className="absolute inset-0 mt-0 overflow-hidden data-[state=inactive]:hidden animate-in fade-in-0 duration-200 flex flex-col">
               <Legend tab="signals" lang={lang} />
               {!hasSignals && !hasEmerging ? (
                 <TabLoadingState lang={lang} />
               ) : (
-                <>
-                  {hasAnomalies && (
-                    <div className="mb-1">
-                      <div className="px-4 py-2" style={{ background: 'hsl(0 100% 97%)', borderBottom: '2px solid #FF4D4F' }}>
-                        <span className="text-xs font-bold uppercase tracking-wider flex items-center gap-1.5" style={{ color: '#CF1322', letterSpacing: '0.5px' }}>
-                          <AbbrTooltip text="ANOMALIAS">
-                            ⚡ {lang === "pt" ? "ANOMALIAS" : "ANOMALIES"} · {anomalies.length}
-                          </AbbrTooltip>
-                        </span>
-                      </div>
-                      <AnomaliesPredictive anomalies={anomalies} lang={lang} onAnomalyClick={onAnomalyClick} />
-                    </div>
-                  )}
-                  {hasEmerging ? (
-                    <div>
-                      <div className="px-4 py-2" style={{ background: 'hsl(220 100% 97%)', borderBottom: '2px solid #4096FF' }}>
-                        <span className="text-xs font-bold uppercase tracking-wider flex items-center gap-1.5" style={{ color: '#1D39C4', letterSpacing: '0.5px' }}>
-                          <AbbrTooltip text="SINAIS EMERGENTES">
-                            📡 {lang === "pt" ? "SINAIS EMERGENTES" : "EMERGING SIGNALS"}
-                          </AbbrTooltip>
-                        </span>
-                      </div>
-                      <EmergingTrendsSection trends={trends} onSelectTrend={onSelectTrend} />
-                    </div>
-                  ) : !hasAnomalies && (
-                    <div className="flex flex-col items-center justify-center py-6 text-muted-foreground">
-                      <Sprout className="w-6 h-6 mb-1.5 opacity-20" />
-                      <p className="text-[10px]">{lang === "pt" ? "Nenhum sinal detectado." : "No signals detected."}</p>
-                    </div>
-                  )}
-                </>
+                <div className="flex-1 min-h-0">
+                  <EmergingTrendsSection trends={trends} anomalies={anomalies} onSelectTrend={onSelectTrend} />
+                </div>
               )}
             </TabsContent>
 
