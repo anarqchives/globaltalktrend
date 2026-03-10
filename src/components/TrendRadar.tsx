@@ -650,7 +650,12 @@ export default function TrendRadar({ trends, allTrends, criticalMoments, anomali
 
             <TabsContent value="critical" className="absolute inset-0 mt-0 overflow-y-auto scrollbar-thin data-[state=inactive]:hidden animate-in fade-in-0 duration-200">
               <Legend tab="critical" lang={lang} />
-              {hasCritical ? (
+              {hasCritical ? (<>
+                <div className="px-4 py-2" style={{ background: 'hsl(0 100% 97%)', borderBottom: '2px solid #FF2D2D' }}>
+                  <span className="text-xs font-bold uppercase tracking-wider flex items-center gap-1.5" style={{ color: '#CF1322', letterSpacing: '0.5px' }}>
+                    🔴 {lang === "pt" ? "CRÍTICO" : "CRITICAL"} · {criticalMoments.length}
+                  </span>
+                </div>
                 <CriticalMomentsSection moments={criticalMoments} onSelectTrend={onSelectTrend} />
               ) : (
                 <div className="flex flex-col items-center justify-center py-6 text-muted-foreground">
