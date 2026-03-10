@@ -378,7 +378,7 @@ const TimelineCard = ({
 
             {/* Sparkline with pulsing endpoint */}
             {sparkData && !compact && (
-              <div className="ml-auto flex-shrink-0 w-20 h-8 relative">
+              <div className="ml-auto flex-shrink-0 overflow-hidden relative" style={{ width: 72, minWidth: 72, height: 28 }}>
                 <ResponsiveContainer width="100%" height="100%">
                   <AreaChart data={sparkData}>
                     <defs>
