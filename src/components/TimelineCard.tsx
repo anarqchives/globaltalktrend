@@ -462,56 +462,26 @@ const TimelineCard = ({
             <p className="text-xs text-muted-foreground mb-3">{details}</p>
           )}
 
-          {/* Intelligence Metrics Grid */}
-          <div className="grid grid-cols-4 gap-1.5 mb-3">
-            <div className="text-center p-2 rounded-xl bg-secondary/50">
-              <span className="block text-[8px] text-muted-foreground uppercase tracking-wide mb-0.5">{t("growth" as any)}</span>
-              <span className={`block text-xs font-bold ${changePositive ? "text-emerald-600 dark:text-emerald-400" : "text-destructive"}`}>{change}</span>
+          {/* TVI Hero + supporting metrics */}
+          <div className="flex items-center gap-4 mb-4">
+            <div className="text-center">
+              <span className="block text-[9px] text-muted-foreground uppercase tracking-wide mb-1">TVI</span>
+              <span className="block text-4xl font-bold text-foreground leading-none">{trendScore}</span>
+              <span className={`block text-[10px] font-semibold mt-0.5 ${trendScoreLabel.cls}`}>{trendScoreLabel.text}</span>
             </div>
-            <div className="text-center p-2 rounded-xl bg-secondary/50">
-              <span className="block text-[8px] text-muted-foreground uppercase tracking-wide mb-0.5">{t("volumeLabel" as any)}</span>
-              <span className="block text-xs font-bold text-foreground">{volume || "—"}</span>
-            </div>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <div className="text-center p-2 rounded-xl bg-secondary/50 cursor-help">
-                  <span className="block text-[8px] text-muted-foreground uppercase tracking-wide mb-0.5">TVI</span>
-                  <span className="block text-xs font-bold text-foreground">{trendScore}/100</span>
-                </div>
-              </TooltipTrigger>
-              <TooltipContent side="top" className="text-[10px] space-y-0.5">
-                <div className="font-bold mb-1">Trend Velocity Index</div>
-                <div className="flex justify-between gap-3"><span>⚡ {t("tviGrowthLabel" as any)}</span><span className="font-bold">{tviBreakdown.velocity}</span></div>
-                <div className="flex justify-between gap-3"><span>💬 {t("tviVolumeLabel" as any)}</span><span className="font-bold">{tviBreakdown.volume}</span></div>
-                <div className="flex justify-between gap-3"><span>📰 {t("tviSourcesLabel" as any)}</span><span className="font-bold">{tviBreakdown.sources}</span></div>
-                <div className="flex justify-between gap-3"><span>🌍 {t("tviGeographyLabel" as any)}</span><span className="font-bold">{tviBreakdown.geography}</span></div>
-              </TooltipContent>
-            </Tooltip>
-            <div className="text-center p-2 rounded-xl bg-secondary/50">
-              <span className="block text-[8px] text-muted-foreground uppercase tracking-wide mb-0.5">{t("sourcesLabel" as any)}</span>
-              <span className="block text-xs font-bold text-foreground">{sources?.length || 1}</span>
-            </div>
-          </div>
-
-          {/* Narrative Origin & Signal Confidence */}
-          <div className="flex items-start gap-2 mb-3 p-2.5 rounded-xl bg-secondary/30">
-            <div className="flex-1 min-w-0">
-              <div className="text-[9px] font-semibold text-muted-foreground uppercase tracking-wide mb-0.5">
-                🗺️ {t("narrativeOrigin" as any)}
+            <div className="flex-1 grid grid-cols-3 gap-2">
+              <div className="text-center p-2 rounded-xl bg-secondary/50">
+                <span className="block text-[8px] text-muted-foreground uppercase tracking-wide mb-0.5">{t("growth" as any)}</span>
+                <span className={`block text-sm font-bold ${changePositive ? "text-emerald-600 dark:text-emerald-400" : "text-destructive"}`}>{change}</span>
               </div>
-              <div className="text-[11px] text-foreground font-medium">{platform}</div>
-              {countryCode && countryCode !== "GL" && (
-                <div className="text-[9px] text-muted-foreground">{flag} {countryCode}</div>
-              )}
-            </div>
-            <div className="text-right flex-shrink-0">
-              <div className="text-[9px] font-semibold text-muted-foreground uppercase tracking-wide mb-0.5">
-                {t("confidenceLabel" as any)}
+              <div className="text-center p-2 rounded-xl bg-secondary/50">
+                <span className="block text-[8px] text-muted-foreground uppercase tracking-wide mb-0.5">{t("volumeLabel" as any)}</span>
+                <span className="block text-sm font-bold text-foreground">{volume || "—"}</span>
               </div>
-              <div className={`text-[11px] font-bold ${trendScore >= 70 ? "text-emerald-600 dark:text-emerald-400" : trendScore >= 40 ? "text-amber-600 dark:text-amber-400" : "text-muted-foreground"}`}>
-                {trendScore >= 70 ? t("confidenceHigh" as any) : trendScore >= 40 ? t("confidenceMedium" as any) : t("confidenceLow" as any)}
+              <div className="text-center p-2 rounded-xl bg-secondary/50">
+                <span className="block text-[8px] text-muted-foreground uppercase tracking-wide mb-0.5">{t("sourcesLabel" as any)}</span>
+                <span className="block text-sm font-bold text-foreground">{sources?.length || 1}</span>
               </div>
-              <div className="text-[9px] text-muted-foreground">{trendScore}%</div>
             </div>
           </div>
 
