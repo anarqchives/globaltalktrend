@@ -942,9 +942,9 @@ const GoogleMapView = ({
               strokeOpacity: rippleOpacity,
               scale: rippleScale,
             });
-            scheduleRaf(animateRipple);
+            scheduleRaf(`ripple-${bubbleIndex}`, animateRipple);
           };
-          scheduleRaf(animateRipple);
+          scheduleRaf(`ripple-${bubbleIndex}`, animateRipple);
         }
 
         const bg = isDark ? "rgba(19,22,32,0.97)" : "rgba(255,255,255,0.97)";
