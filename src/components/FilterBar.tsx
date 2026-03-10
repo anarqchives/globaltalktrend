@@ -285,6 +285,8 @@ const FilterBar = ({ filters, onChange, onForceReset, onSaveFilter, isLoggedIn }
           </Tooltip>
         )}
 
+        <div className="flex-1" />
+
         {/* Clear all */}
         {isFiltered && (
           <button
