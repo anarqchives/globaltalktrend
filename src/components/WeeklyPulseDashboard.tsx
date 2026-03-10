@@ -656,8 +656,16 @@ export default function WeeklyPulseDashboard({ trends }: { trends: TrendCardProp
   // Initial fetch + auto-refresh every 5 minutes
   useEffect(() => {
     fetchData();
+    // Force render with available data after 3 seconds
+    const timeout = setTimeout(() => {
+      setLoading(false);
+      setTimedOut(true);
+    }, 3000);
     refreshTimerRef.current = setInterval(fetchData, 5 * 60 * 1000);
-    return () => { if (refreshTimerRef.current) clearInterval(refreshTimerRef.current); };
+    return () => { 
+      clearTimeout(timeout);
+      if (refreshTimerRef.current) clearInterval(refreshTimerRef.current); 
+    };
   }, [fetchData]);
 
   const dayLabels = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
