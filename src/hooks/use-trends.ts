@@ -598,7 +598,7 @@ export function useTrends(filters: FilterState, onTrendCountsChange: (counts: Re
 
   const fetchTrends = useCallback(async () => {
     try {
-      console.log("📥 Iniciando carregamento de trends");
+      if (import.meta.env.DEV) console.log("📥 Iniciando carregamento de trends");
       setLoading(true);
       let health = loadSourceHealth();
 
