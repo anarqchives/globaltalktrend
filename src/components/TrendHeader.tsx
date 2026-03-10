@@ -124,18 +124,18 @@ const TrendHeader = ({ totalTrends = 0, countriesCount = 0, onRefresh, refreshin
 
           {/* ─── CENTER: Live status badge (emotional hero) ─── */}
           <div className="flex items-center justify-center">
-            <div className="flex items-center gap-sp-2 px-4 py-1 rounded-full bg-secondary/50 dark:bg-black/5">
-              {/* Pulsing green dot */}
-              <span className="relative flex items-center justify-center w-2 h-2 flex-shrink-0">
+            <div className="flex items-center gap-1.5 text-xs">
+              {/* Pulsing green dot — 6px */}
+              <span className="relative flex items-center justify-center w-1.5 h-1.5 flex-shrink-0">
                 <span className="absolute w-full h-full rounded-full live-pulse-dot bg-positive" />
                 <span className="relative w-1.5 h-1.5 rounded-full bg-positive" />
               </span>
-              <span className="text-caption font-medium whitespace-nowrap" style={{ color: 'hsl(162, 100%, 39%)' }}>
+              <span className="font-medium whitespace-nowrap" style={{ color: 'hsl(162, 100%, 39%)' }}>
                 {t("live")}
               </span>
-              <span className="w-px h-3 bg-border" />
+              <span className="text-muted-foreground/40">·</span>
               <OnlineUsersCount />
-              <span className="w-px h-3 bg-border" />
+              <span className="text-muted-foreground/40">·</span>
               <CountdownTimer />
             </div>
           </div>
