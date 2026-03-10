@@ -22,12 +22,12 @@ const STANDARD_CATEGORIES = new Set([
 const SOURCE_GROUPS: Record<string, string[]> = {
   imprensa: ["The Guardian", "NewsAPI", "NewsData", "GNews", "Bing News"],
   social: ["Reddit", "Bluesky", "Mastodon", "X (Twitter)"],
-  dados: ["World Bank", "IBGE", "IMF", "FRED", "NOAA"],
-  ciencia: ["OpenAlex", "arXiv", "PubMed", "Crossref"],
-  tech: ["Hacker News", "GitHub", "Stack Overflow"],
+  dados: ["World Bank", "IBGE", "IMF", "FRED", "NOAA", "FMI (IMF)", "OMS (WHO)"],
+  ciencia: ["OpenAlex", "arXiv", "PubMed", "Crossref", "Semantic Scholar"],
+  tech: ["Hacker News", "GitHub", "Stack Overflow", "Lobsters"],
   busca: ["Google Trends"],
   enciclopedia: ["Wikipedia"],
-  conflitos: ["GDELT", "GDELT DOC"],
+  conflitos: ["GDELT", "GDELT DOC", "ACLED"],
 };
 
 // ─── Source Health Tracker ──────────────────────────────────────────
@@ -644,7 +644,12 @@ export function useTrends(filters: FilterState, onTrendCountsChange: (counts: Re
         return result;
       };
 
-      const [edgeResult, extraResult, extraSourcesResult, socialTrendsResult, openDataResult, redditItems, blueskyItems, mastodonItems, gdeltDocResult] = await Promise.all([
+      const [
+        edgeResult, extraResult, extraSourcesResult, socialTrendsResult, openDataResult,
+        redditItems, blueskyItems, mastodonItems, gdeltDocResult,
+        // ONDA 2:
+        crossrefResult, semanticResult, whoResult, imfResult, techScienceResult,
+      ] = await Promise.all([
         invokeFunctionWithLogs("Google Trends", "fetch-trends", 12000),
         invokeFunctionWithLogs("The Guardian/News Extra", "fetch-news-extra", 10000),
         invokeFunctionWithLogs("Fontes Oficiais Extras", "fetch-extra-sources", 10000),
@@ -654,6 +659,12 @@ export function useTrends(filters: FilterState, onTrendCountsChange: (counts: Re
         fetchClientSourceWithLogs("Bluesky", fetchBlueskyClientSide()),
         fetchClientSourceWithLogs("Mastodon", fetchMastodonClientSide()),
         invokeFunctionWithLogs("GDELT DOC", "fetch-gdelt-trends", 10000),
+        // ONDA 2:
+        invokeFunctionWithLogs("Crossref", "fetch-crossref", 10000),
+        invokeFunctionWithLogs("Semantic Scholar", "fetch-semantic-scholar", 10000),
+        invokeFunctionWithLogs("OMS Saúde", "fetch-who-data", 8000),
+        invokeFunctionWithLogs("FMI Economia", "fetch-imf-data", 8000),
+        invokeFunctionWithLogs("Tech/Science Extra", "fetch-tech-science-extra", 8000),
       ]);
 
       // Save health state
@@ -665,7 +676,18 @@ export function useTrends(filters: FilterState, onTrendCountsChange: (counts: Re
       const socialTrends: TrendCardProps[] = socialTrendsResult.data?.trends || [];
       const openDataTrends: TrendCardProps[] = openDataResult.data?.trends || [];
       const gdeltDocTrends: TrendCardProps[] = gdeltDocResult.data?.trends || [];
-      const rawTrends = [...edgeTrends, ...extraTrends, ...extraSourcesTrends, ...socialTrends, ...openDataTrends, ...redditItems, ...blueskyItems, ...mastodonItems, ...gdeltDocTrends];
+      // ONDA 2:
+      const crossrefTrends: TrendCardProps[] = crossrefResult.data?.trends || [];
+      const semanticTrends: TrendCardProps[] = semanticResult.data?.trends || [];
+      const whoTrends: TrendCardProps[] = whoResult.data?.trends || [];
+      const imfTrends: TrendCardProps[] = imfResult.data?.trends || [];
+      const techScienceTrends: TrendCardProps[] = techScienceResult.data?.trends || [];
+
+      const rawTrends = [
+        ...edgeTrends, ...extraTrends, ...extraSourcesTrends, ...socialTrends, ...openDataTrends,
+        ...redditItems, ...blueskyItems, ...mastodonItems, ...gdeltDocTrends,
+        ...crossrefTrends, ...semanticTrends, ...whoTrends, ...imfTrends, ...techScienceTrends,
+      ];
       
       if (import.meta.env.DEV) console.log("📦 Total de trends combinadas:", rawTrends.length);
 
