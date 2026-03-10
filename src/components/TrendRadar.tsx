@@ -657,7 +657,7 @@ export default function TrendRadar({ trends, allTrends, criticalMoments, anomali
                   </span>
                 </div>
                 <CriticalMomentsSection moments={criticalMoments} onSelectTrend={onSelectTrend} />
-              ) : (
+              </>) : (
                 <div className="flex flex-col items-center justify-center py-6 text-muted-foreground">
                   <Flame className="w-6 h-6 mb-1.5 opacity-20" />
                   <p className="text-[10px] text-center px-4">
