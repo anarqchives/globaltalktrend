@@ -142,6 +142,42 @@ const Index = () => {
 
   const { translatedTrends, isTranslating } = useTranslatedTrends(rawFilteredTrends, lang);
 
+  // Lazy context fetching for trends without real descriptions
+  const contextFetchedRef = useRef<Set<string>>(new Set());
+  useEffect(() => {
+    const trendsNeedingContext = translatedTrends
+      .filter(t => {
+        const desc = (t.details || t.description || "").toLowerCase().trim();
+        const ttl = t.title.toLowerCase().trim();
+        const needsCtx = !desc || desc === ttl || desc.startsWith(ttl.slice(0, 30));
+        return needsCtx && !contextFetchedRef.current.has(t.title) && !trendContexts[t.title];
+      })
+      .slice(0, 15);
+
+    if (trendsNeedingContext.length === 0) return;
+    trendsNeedingContext.forEach(t => contextFetchedRef.current.add(t.title));
+
+    supabase.functions.invoke("analyze-trend-context", {
+      body: {
+        trends: trendsNeedingContext.map(t => ({
+          title: t.title, platform: t.platform, category: t.category,
+          volume: t.volume, countryCode: t.countryCode,
+        })),
+        lang,
+      }
+    }).then(({ data }) => {
+      if (data?.contexts) {
+        const newContexts: Record<string, string> = {};
+        for (const ctx of data.contexts) {
+          if (ctx.title && ctx.context) newContexts[ctx.title] = ctx.context;
+        }
+        if (Object.keys(newContexts).length > 0) {
+          setTrendContexts(prev => ({ ...prev, ...newContexts }));
+        }
+      }
+    }).catch(() => {});
+  }, [translatedTrends, lang]);
+
   const filteredTrends = useMemo(() => {
     const normKey = (title: string) => title.toLowerCase().normalize("NFD").replace(/\p{Diacritic}/gu, "").replace(/[^a-z0-9\s]/g, "").trim().slice(0, 50);
 
