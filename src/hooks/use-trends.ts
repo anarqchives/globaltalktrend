@@ -644,7 +644,12 @@ export function useTrends(filters: FilterState, onTrendCountsChange: (counts: Re
         return result;
       };
 
-      const [edgeResult, extraResult, extraSourcesResult, socialTrendsResult, openDataResult, redditItems, blueskyItems, mastodonItems, gdeltDocResult] = await Promise.all([
+      const [
+        edgeResult, extraResult, extraSourcesResult, socialTrendsResult, openDataResult,
+        redditItems, blueskyItems, mastodonItems, gdeltDocResult,
+        // ONDA 2:
+        crossrefResult, semanticResult, whoResult, imfResult, techScienceResult,
+      ] = await Promise.all([
         invokeFunctionWithLogs("Google Trends", "fetch-trends", 12000),
         invokeFunctionWithLogs("The Guardian/News Extra", "fetch-news-extra", 10000),
         invokeFunctionWithLogs("Fontes Oficiais Extras", "fetch-extra-sources", 10000),
@@ -654,6 +659,12 @@ export function useTrends(filters: FilterState, onTrendCountsChange: (counts: Re
         fetchClientSourceWithLogs("Bluesky", fetchBlueskyClientSide()),
         fetchClientSourceWithLogs("Mastodon", fetchMastodonClientSide()),
         invokeFunctionWithLogs("GDELT DOC", "fetch-gdelt-trends", 10000),
+        // ONDA 2:
+        invokeFunctionWithLogs("Crossref", "fetch-crossref", 10000),
+        invokeFunctionWithLogs("Semantic Scholar", "fetch-semantic-scholar", 10000),
+        invokeFunctionWithLogs("OMS Saúde", "fetch-who-data", 8000),
+        invokeFunctionWithLogs("FMI Economia", "fetch-imf-data", 8000),
+        invokeFunctionWithLogs("Tech/Science Extra", "fetch-tech-science-extra", 8000),
       ]);
 
       // Save health state
