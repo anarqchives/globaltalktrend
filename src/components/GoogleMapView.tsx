@@ -1462,10 +1462,10 @@ const GoogleMapView = ({
         {onClose && (
           <button
             onClick={onClose}
-            className="w-6 h-6 rounded-full flex items-center justify-center bg-background/80 hover:bg-destructive/15 text-muted-foreground hover:text-destructive border border-border/40 hover:border-destructive/30 shadow-sm backdrop-blur-sm transition-all duration-200 pointer-events-auto mr-8"
+            className="w-7 h-7 rounded-lg flex items-center justify-center bg-transparent text-muted-foreground hover:text-foreground transition-colors pointer-events-auto"
             title={t("mapCloseMap")}
           >
-            <X className="w-3 h-3" strokeWidth={2.5} />
+            <X className="w-4 h-4" />
           </button>
         )}
       </div>
