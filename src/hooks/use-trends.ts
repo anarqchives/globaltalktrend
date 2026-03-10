@@ -973,7 +973,7 @@ export function useTrends(filters: FilterState, onTrendCountsChange: (counts: Re
       }
 
       if (combined.length > 0) {
-        console.log(`✅ Fallback com ${combined.length} itens do mesmo país`);
+        if (import.meta.env.DEV) console.log(`✅ Fallback com ${combined.length} itens do mesmo país`);
         return combined.sort((a, b) => (b.relevanceScore || 50) - (a.relevanceScore || 50));
       }
 
