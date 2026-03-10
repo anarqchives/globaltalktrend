@@ -1038,10 +1038,10 @@ const GoogleMapView = ({
           circle.setOptions({ fillOpacity: 0.22 + 0.15 * (1 - eased) });
           
           if (progress < 1) {
-            scheduleRaf(animatePop);
+            scheduleRaf(`pop-${bubbleIndex}`, animatePop);
           }
         };
-        scheduleRaf(animatePop);
+        scheduleRaf(`pop-${bubbleIndex}`, animatePop);
         
         showTooltip(labelMarker, false);
       };
