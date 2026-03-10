@@ -146,12 +146,12 @@ function TopTrendsGrid({ trends, onSelectTrend }: { trends: TrendCardProps[]; on
 
   const getGrowthTag = (trend: TrendCardProps) => {
     const change = trend.change || "";
-    if (change.includes("novo") || change.includes("new")) return { label: "+novo", bg: "bg-green-100 dark:bg-green-900/30", text: "text-green-700 dark:text-green-400" };
-    if (change.includes("trending") || change.includes("alta")) return { label: "+trending", bg: "bg-amber-100 dark:bg-amber-900/30", text: "text-amber-700 dark:text-amber-400" };
-    if (change.includes("boost")) return { label: "+boosts", bg: "bg-blue-100 dark:bg-blue-900/30", text: "text-blue-700 dark:text-blue-400" };
+    if (change.includes("novo") || change.includes("new")) return { label: "+novo", bg: "bg-green-100 dark:bg-green-900/30", text: "text-green-700 dark:text-green-400", tooltip: "Entrou no ranking nas últimas 2 horas" };
+    if (change.includes("trending") || change.includes("alta")) return { label: "+trending", bg: "bg-amber-100 dark:bg-amber-900/30", text: "text-amber-700 dark:text-amber-400", tooltip: "Volume em aceleração constante" };
+    if (change.includes("boost")) return { label: "+boosts", bg: "bg-blue-100 dark:bg-blue-900/30", text: "text-blue-700 dark:text-blue-400", tooltip: "Engajamento acima do padrão normal" };
     const num = parseFloat(change.replace(/[^0-9.\-]/g, "") || "0");
-    if (num > 50) return { label: "+trending", bg: "bg-amber-100 dark:bg-amber-900/30", text: "text-amber-700 dark:text-amber-400" };
-    if (num > 0) return { label: "+novo", bg: "bg-green-100 dark:bg-green-900/30", text: "text-green-700 dark:text-green-400" };
+    if (num > 50) return { label: "+trending", bg: "bg-amber-100 dark:bg-amber-900/30", text: "text-amber-700 dark:text-amber-400", tooltip: "Volume em aceleração constante" };
+    if (num > 0) return { label: "+novo", bg: "bg-green-100 dark:bg-green-900/30", text: "text-green-700 dark:text-green-400", tooltip: "Entrou no ranking nas últimas 2 horas" };
     return null;
   };
 
@@ -173,6 +173,12 @@ function TopTrendsGrid({ trends, onSelectTrend }: { trends: TrendCardProps[]; on
         const barH = getBarHeight(idx);
         const growthTag = getGrowthTag(trend);
         const isTop3 = idx < 3;
+        const hasUrl = !!trend.sourceUrl;
+        const isPubMed = trend.platform === "PubMed";
+
+        // Extract PMID from sourceUrl
+        const pmidMatch = trend.sourceUrl?.match(/\/(\d{6,})/) || null;
+        const pmid = pmidMatch?.[1] || null;
 
         const top3Bg = isTop3
           ? idx === 0 ? "linear-gradient(90deg, #FF2D2D08 0%, transparent 60%)"
@@ -180,15 +186,40 @@ function TopTrendsGrid({ trends, onSelectTrend }: { trends: TrendCardProps[]; on
             : "linear-gradient(90deg, #F5A62308 0%, transparent 60%)"
           : undefined;
 
+        // Click handler: open URL or select trend
+        const handleClick = () => {
+          if (hasUrl) {
+            window.open(trend.sourceUrl, "_blank", "noopener,noreferrer");
+          } else if (onSelectTrend) {
+            onSelectTrend(trend);
+          }
+        };
+
+        // Subtitle: contextual description
+        const subtitle = isPubMed && pmid
+          ? (trend.description?.slice(0, 80) || "Artigo científico indexado no PubMed")
+          : trend.platform === "Google Trends"
+          ? `${flag || "🌐"} ${trend.countryCode || "Global"} · ${trend.category || "Geral"}`
+          : trend.platform === "GitHub"
+          ? (trend.description?.slice(0, 80) || "Repositório")
+          : (trend.description?.slice(0, 60) || null);
+
+        // Volume context text
+        const volumeContext = isPubMed
+          ? "Artigo científico"
+          : trend.platform === "Google Trends"
+          ? (trend.volume ? `${trend.volume} ${lang === "pt" ? "buscas hoje" : "searches today"}` : "—")
+          : (trend.volume || "—");
+
         return (
           <motion.div
             key={`top-${trend.platform}-${trend.title.slice(0, 20)}-${idx}`}
             initial={{ opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.2, delay: idx * 0.03, ease: [0, 0, 0.2, 1] }}
-            onClick={() => onSelectTrend?.(trend)}
-            className={`group flex items-center gap-0 px-4 cursor-pointer transition-colors duration-[120ms] ease-out
-              hover:bg-muted/50
+            onClick={hasUrl || onSelectTrend ? handleClick : undefined}
+            className={`group flex items-center gap-0 px-4 transition-colors duration-[120ms] ease-out
+              ${hasUrl || onSelectTrend ? "cursor-pointer hover:bg-muted/50" : ""}
               ${idx < ranked.length - 1 ? "border-b border-border/30" : ""}`}
             style={{
               height: isTop3 ? 60 : 52,
@@ -219,31 +250,67 @@ function TopTrendsGrid({ trends, onSelectTrend }: { trends: TrendCardProps[]; on
 
             {/* Content */}
             <div className="flex-1 min-w-0 py-1">
-              <p className={`font-semibold text-foreground truncate group-hover:text-[#2563EB] transition-colors duration-[120ms] ${isTop3 ? "text-[15px] font-bold" : "text-[14px]"}`}>
+              <p className={`font-semibold text-foreground truncate transition-colors duration-[120ms] ${hasUrl || onSelectTrend ? "group-hover:text-[#2563EB]" : ""} ${isTop3 ? "text-[15px] font-bold" : "text-[14px]"}`}>
                 {trend.title}
               </p>
               <div className="flex items-center gap-1 mt-0.5">
                 <span className="w-1.5 h-1.5 rounded-full flex-shrink-0" style={{ backgroundColor: pf.color }} />
-                <span className="text-[11px] text-muted-foreground">{trend.platform}</span>
+                {isPubMed ? (
+                  <AbbrTooltip text="PubMed" className="text-[11px] font-medium text-[#007CBB]">
+                    PubMed
+                  </AbbrTooltip>
+                ) : (
+                  <span className="text-[11px] text-muted-foreground">{trend.platform}</span>
+                )}
                 {flag && (
                   <>
                     <span className="text-muted-foreground/30 text-[11px]">·</span>
                     <span className="text-[11px]">{flag}</span>
-                    {trend.countryCode && <span className="text-[11px] text-muted-foreground uppercase">{trend.countryCode}</span>}
+                    {trend.countryCode && <AbbrTooltip text={trend.countryCode.toUpperCase()} className="text-[11px] text-muted-foreground uppercase" />}
+                  </>
+                )}
+                {isPubMed && pmid && (
+                  <>
+                    <span className="text-muted-foreground/30 text-[11px]">·</span>
+                    <a
+                      href={`https://pubmed.ncbi.nlm.nih.gov/${pmid}/`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      onClick={ev => ev.stopPropagation()}
+                      className="text-[11px] text-blue-600 hover:underline"
+                    >
+                      📄 ID: {pmid}
+                    </a>
                   </>
                 )}
               </div>
+              {subtitle && (
+                <p className="text-[11px] text-muted-foreground/60 truncate mt-0.5">{subtitle}</p>
+              )}
             </div>
 
             {/* Metadata */}
             <div className="w-[120px] flex-shrink-0 text-right mr-3">
-              <p className="text-[12px] font-semibold truncate" style={{ color: rankColor }}>
-                {trend.volume || "—"}
-              </p>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <p className="text-[12px] font-semibold truncate cursor-help" style={{ color: rankColor }}>
+                    {volumeContext}
+                  </p>
+                </TooltipTrigger>
+                <TooltipContent side="top" className="text-[10px] max-w-[200px]">
+                  {isPubMed
+                    ? "Publicação indexada no PubMed"
+                    : trend.platform === "Google Trends"
+                    ? "Volume de buscas no Google nas últimas 24h"
+                    : "Volume total detectado"}
+                </TooltipContent>
+              </Tooltip>
               {growthTag && (
-                <span className={`inline-block text-[10px] px-1.5 py-0.5 rounded-full ${growthTag.bg} ${growthTag.text} mt-0.5`}>
-                  {growthTag.label}
-                </span>
+                <AbbrTooltip text={growthTag.label} className="inline-block">
+                  <span className={`inline-block text-[10px] px-1.5 py-0.5 rounded-full ${growthTag.bg} ${growthTag.text} mt-0.5`}>
+                    {growthTag.label}
+                  </span>
+                </AbbrTooltip>
               )}
             </div>
 
@@ -274,8 +341,10 @@ function TopTrendsGrid({ trends, onSelectTrend }: { trends: TrendCardProps[]; on
               )}
             </div>
 
-            {/* Hover arrow */}
-            <ArrowRight className="w-3.5 h-3.5 text-muted-foreground/0 group-hover:text-muted-foreground transition-all duration-[120ms] ml-2 flex-shrink-0" />
+            {/* Hover arrow — only when actionable */}
+            {(hasUrl || onSelectTrend) && (
+              <ArrowRight className="w-3.5 h-3.5 text-muted-foreground/0 group-hover:text-muted-foreground transition-all duration-[120ms] ml-2 flex-shrink-0" />
+            )}
           </motion.div>
         );
       })}
@@ -413,12 +482,24 @@ function AnomaliesPredictive({ anomalies, lang, onAnomalyClick }: {
               {/* Actions */}
               <div className="flex items-center justify-between mt-auto pt-1 border-t border-border/10">
                 <span className={`text-[8px] font-bold ${info.color}`}>{info.emoji} {info.label}</span>
-                <button
-                  onClick={(ev) => { ev.stopPropagation(); onAnomalyClick?.(`${anomaly.trend.platform}-${anomaly.trend.title.slice(0, 20)}`); }}
-                  className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-md bg-primary text-primary-foreground text-[8px] font-semibold hover:bg-primary/90 transition-colors"
-                >
-                  <Eye className="w-2 h-2" /> Timeline
-                </button>
+                {anomaly.trend.sourceUrl ? (
+                  <a
+                    href={anomaly.trend.sourceUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    onClick={(ev) => ev.stopPropagation()}
+                    className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-md bg-primary text-primary-foreground text-[8px] font-semibold hover:bg-primary/90 transition-colors"
+                  >
+                    <ExternalLink className="w-2 h-2" /> {lang === "pt" ? "Fonte" : "Source"}
+                  </a>
+                ) : (
+                  <button
+                    onClick={(ev) => { ev.stopPropagation(); onAnomalyClick?.(`${anomaly.trend.platform}-${anomaly.trend.title.slice(0, 20)}`); }}
+                    className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-md bg-primary text-primary-foreground text-[8px] font-semibold hover:bg-primary/90 transition-colors"
+                  >
+                    <Eye className="w-2 h-2" /> {lang === "pt" ? "Detalhes" : "Details"}
+                  </button>
+                )}
               </div>
 
               <AnimatePresence>
@@ -609,42 +690,14 @@ export default function TrendRadar({ trends, allTrends, criticalMoments, anomali
           style={{ flexGrow: collapsed ? 0 : 1 }}
         >
           <div className="h-full relative">
-            <TabsContent value="signals" className="absolute inset-0 mt-0 overflow-y-auto scrollbar-thin data-[state=inactive]:hidden animate-in fade-in-0 duration-200">
+            <TabsContent value="signals" className="absolute inset-0 mt-0 overflow-hidden data-[state=inactive]:hidden animate-in fade-in-0 duration-200 flex flex-col">
               <Legend tab="signals" lang={lang} />
               {!hasSignals && !hasEmerging ? (
                 <TabLoadingState lang={lang} />
               ) : (
-                <>
-                  {hasAnomalies && (
-                    <div className="mb-1">
-                      <div className="px-4 py-2" style={{ background: 'hsl(0 100% 97%)', borderBottom: '2px solid #FF4D4F' }}>
-                        <span className="text-xs font-bold uppercase tracking-wider flex items-center gap-1.5" style={{ color: '#CF1322', letterSpacing: '0.5px' }}>
-                          <AbbrTooltip text="ANOMALIAS">
-                            ⚡ {lang === "pt" ? "ANOMALIAS" : "ANOMALIES"} · {anomalies.length}
-                          </AbbrTooltip>
-                        </span>
-                      </div>
-                      <AnomaliesPredictive anomalies={anomalies} lang={lang} onAnomalyClick={onAnomalyClick} />
-                    </div>
-                  )}
-                  {hasEmerging ? (
-                    <div>
-                      <div className="px-4 py-2" style={{ background: 'hsl(220 100% 97%)', borderBottom: '2px solid #4096FF' }}>
-                        <span className="text-xs font-bold uppercase tracking-wider flex items-center gap-1.5" style={{ color: '#1D39C4', letterSpacing: '0.5px' }}>
-                          <AbbrTooltip text="SINAIS EMERGENTES">
-                            📡 {lang === "pt" ? "SINAIS EMERGENTES" : "EMERGING SIGNALS"}
-                          </AbbrTooltip>
-                        </span>
-                      </div>
-                      <EmergingTrendsSection trends={trends} onSelectTrend={onSelectTrend} />
-                    </div>
-                  ) : !hasAnomalies && (
-                    <div className="flex flex-col items-center justify-center py-6 text-muted-foreground">
-                      <Sprout className="w-6 h-6 mb-1.5 opacity-20" />
-                      <p className="text-[10px]">{lang === "pt" ? "Nenhum sinal detectado." : "No signals detected."}</p>
-                    </div>
-                  )}
-                </>
+                <div className="flex-1 min-h-0">
+                  <EmergingTrendsSection trends={trends} anomalies={anomalies} onSelectTrend={onSelectTrend} />
+                </div>
               )}
             </TabsContent>
 

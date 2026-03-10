@@ -625,6 +625,7 @@ export default function WeeklyPulseDashboard({ trends }: { trends: TrendCardProp
   const [loading, setLoading] = useState(true);
   const [drillDownDay, setDrillDownDay] = useState<string | null>(null);
   const [lastRefresh, setLastRefresh] = useState<Date>(new Date());
+  const [timedOut, setTimedOut] = useState(false);
   const refreshTimerRef = useRef<NodeJS.Timeout | null>(null);
 
   const fetchData = useCallback(async () => {
@@ -649,14 +650,22 @@ export default function WeeklyPulseDashboard({ trends }: { trends: TrendCardProp
       setWeeklyData(allData);
       setLastRefresh(new Date());
     } catch (e) { console.error(e); }
-    finally { setLoading(false); }
+    finally { setLoading(false); setTimedOut(false); }
   }, []);
 
   // Initial fetch + auto-refresh every 5 minutes
   useEffect(() => {
     fetchData();
+    // Force render with available data after 3 seconds
+    const timeout = setTimeout(() => {
+      setLoading(false);
+      setTimedOut(true);
+    }, 3000);
     refreshTimerRef.current = setInterval(fetchData, 5 * 60 * 1000);
-    return () => { if (refreshTimerRef.current) clearInterval(refreshTimerRef.current); };
+    return () => { 
+      clearTimeout(timeout);
+      if (refreshTimerRef.current) clearInterval(refreshTimerRef.current); 
+    };
   }, [fetchData]);
 
   const dayLabels = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
@@ -1017,7 +1026,7 @@ export default function WeeklyPulseDashboard({ trends }: { trends: TrendCardProp
   }, [weeklyData, trends, lang]);
 
   // If no weekly data and no trends, show empty state
-  const hasAnyData = weeklyData.length > 0 || trends.length > 0;
+  const hasAnyData = weeklyData.length > 0 || trends.length > 0 || timedOut;
 
   if (loading) {
     const shimmer = "relative overflow-hidden before:absolute before:inset-0 before:-translate-x-full before:animate-[shimmer_1.5s_infinite] before:bg-gradient-to-r before:from-transparent before:via-foreground/5 before:to-transparent";
@@ -1092,6 +1101,12 @@ export default function WeeklyPulseDashboard({ trends }: { trends: TrendCardProp
 
   return (
     <div className="p-2.5 space-y-2.5">
+      {/* Timed out notice */}
+      {timedOut && weeklyData.length === 0 && (
+        <div className="text-center py-1">
+          <span className="text-[10px] text-muted-foreground/50">Dados simulados — atualização em breve</span>
+        </div>
+      )}
       {/* ═══════ HEADER STATUS BAR ═══════ */}
       <div className="flex items-center justify-between px-1">
         <span className="text-[8px] text-muted-foreground flex items-center gap-1">

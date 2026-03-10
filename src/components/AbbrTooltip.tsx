@@ -49,6 +49,7 @@ const abbreviationMap: Record<string, string> = {
   "GL": "Global",
   // IDs
   "PMID": "PubMed ID — identificador único de artigo científico",
+  "PubMed": "PubMed — base de dados científica do NIH (EUA). Artigos revisados por pares em medicina e ciências da vida.",
   // Tags
   "+novo": "Tendência nova — surgiu nas últimas horas",
   "+trending": "Em aceleração — volume crescendo rapidamente",
