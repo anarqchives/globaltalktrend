@@ -526,19 +526,19 @@ const TimelineCard = ({
               </p>
             </div>
 
-            {/* ── METRICS GRID — responsive ── */}
-            <div className="grid gap-1.5 mb-3" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(60px, 1fr))' }}>
+            {/* ── METRICS GRID — responsive 2×2 on mobile, 4×1 on wider ── */}
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5 mb-3">
               {[
                 { value: String(trendScore), label: "TVI", highlight: trendScore >= 60 },
                 { value: change, label: lang === "pt" ? "Crescimento" : "Growth" },
                 { value: volume || "—", label: "Volume" },
                 { value: String(sources?.length || 1), label: lang === "pt" ? "Fontes" : "Sources" },
               ].map((m, i) => (
-                <div key={i} className="text-center rounded-lg px-1.5 py-2 bg-secondary/50 min-w-0">
-                  <span className={`block text-sm font-bold leading-tight truncate ${m.highlight ? 'text-destructive' : changePositive && i === 1 ? 'text-emerald-600 dark:text-emerald-400' : 'text-foreground'}`}>
+                <div key={i} className="text-center rounded-lg px-1 py-2 bg-secondary/50 min-w-0 overflow-hidden">
+                  <span className={`block text-sm font-bold leading-tight ${m.highlight ? 'text-destructive' : changePositive && i === 1 ? 'text-emerald-600 dark:text-emerald-400' : 'text-foreground'}`} style={{ overflowWrap: 'anywhere', wordBreak: 'break-word' }}>
                     {m.value}
                   </span>
-                  <span className="block text-[8px] text-muted-foreground mt-0.5 uppercase tracking-wider truncate">{m.label}</span>
+                  <span className="block text-[8px] text-muted-foreground mt-0.5 uppercase tracking-wider">{m.label}</span>
                 </div>
               ))}
             </div>
