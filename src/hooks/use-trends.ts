@@ -926,7 +926,7 @@ export function useTrends(filters: FilterState, onTrendCountsChange: (counts: Re
       // Layer 1: localStorage historical collector (same country only)
       const localHistorical = getFromHistoricalCollector(filters.category, filters.country);
       if (localHistorical.length > 0) {
-        console.log("📂 Camada 1 - Cache local (mesmo país):", localHistorical.length, "itens");
+        if (import.meta.env.DEV) console.log("📂 Camada 1 - Cache local (mesmo país):", localHistorical.length, "itens");
         addUnique(localHistorical);
       }
 
