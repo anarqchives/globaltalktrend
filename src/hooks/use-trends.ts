@@ -1037,7 +1037,7 @@ export function useTrends(filters: FilterState, onTrendCountsChange: (counts: Re
     return codes.size;
   }, [trends]);
 
-  useEffect(() => {
+  const trendCounts = useMemo(() => {
     const counts: Record<string, number> = {};
     if (filters.country !== "global") {
       counts[filters.country] = filteredTrends.length;
@@ -1053,8 +1053,12 @@ export function useTrends(filters: FilterState, onTrendCountsChange: (counts: Re
         if (!counts[cc]) counts[cc] = 1;
       }
     }
-    onTrendCountsChange(counts);
-  }, [filteredTrends, filters.country, onTrendCountsChange]);
+    return counts;
+  }, [filteredTrends, filters.country]);
+
+  useEffect(() => {
+    onTrendCountsChange(trendCounts);
+  }, [trendCounts, onTrendCountsChange]);
 
   return { leftTrends, rightTrends, loading, isFirstLoad, filteredTrends, allTrends: trends, fetchTrends, countriesCount, lastUpdated, sourcesStatus };
 }
