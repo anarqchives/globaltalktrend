@@ -637,9 +637,9 @@ export function useTrends(filters: FilterState, onTrendCountsChange: (counts: Re
         fetchPromise: Promise<TrendCardProps[]>,
         timeoutMs = 8000
       ) => {
-        console.log(`🔍 Buscando ${sourceName}...`);
+        if (import.meta.env.DEV) console.log(`🔍 Buscando ${sourceName}...`);
         const result = await withTimeout(fetchPromise, timeoutMs, [] as TrendCardProps[]);
-        console.log(`✅ ${sourceName} retornou:`, result.length, "itens");
+        if (import.meta.env.DEV) console.log(`✅ ${sourceName} retornou:`, result.length, "itens");
         health = updateSourceHealth(health, sourceName, result.length > 0, result.length);
         return result;
       };
