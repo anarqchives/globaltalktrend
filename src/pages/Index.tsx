@@ -21,7 +21,7 @@ import { useGamification } from "@/hooks/use-gamification";
 import { useSavedCards } from "@/hooks/use-saved-cards";
 import { useSavedFilters } from "@/hooks/use-saved-filters";
 import { supabase } from "@/integrations/supabase/client";
-import { ChevronRight, X, Map, Newspaper, RefreshCw, ChevronsUp, ChevronsDown, Radar, MapPin, FileText } from "lucide-react";
+import { ChevronRight, ChevronLeft, X, Map, Newspaper, RefreshCw, ChevronsUp, ChevronsDown, Radar, MapPin, FileText } from "lucide-react";
 import ArchiveDrawer from "@/components/ArchiveDrawer";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import TagLegend from "@/components/TagLegend";
@@ -76,13 +76,24 @@ const Index = () => {
   const [allExpanded, setAllExpanded] = useState(false);
   const [allCollapsed, setAllCollapsed] = useState(false);
   // Panel visibility for collapsible sections
-  const [panelVisibility, setPanelVisibility] = useState({
-    radar: true,
-    timeline: true,
-    map: true,
+  const [panelVisibility, setPanelVisibility] = useState(() => {
+    // Map starts collapsed by default
+    try {
+      const saved = localStorage.getItem("map-panel-open");
+      return { radar: true, timeline: true, map: saved === "true" };
+    } catch {
+      return { radar: true, timeline: true, map: false };
+    }
   });
-  const togglePanel = (panel: "radar" | "timeline" | "map") =>
-    setPanelVisibility(prev => ({ ...prev, [panel]: !prev[panel] }));
+  const togglePanel = (panel: "radar" | "timeline" | "map") => {
+    setPanelVisibility(prev => {
+      const next = { ...prev, [panel]: !prev[panel] };
+      if (panel === "map") {
+        try { localStorage.setItem("map-panel-open", String(next.map)); } catch {}
+      }
+      return next;
+    });
+  };
   const timelinePanelRef = useRef<HTMLDivElement>(null);
   const radarPanelRef = useRef<ElementRef<typeof ResizablePanel>>(null);
   const [radarCollapsed, setRadarCollapsed] = useState(() => {
@@ -830,10 +841,22 @@ const Index = () => {
                         )}
                         {panelVisibility.map && (
                           <ResizablePanel defaultSize={panelVisibility.timeline ? 35 : 100} minSize={15} maxSize={panelVisibility.timeline ? 60 : 100}>
-                            <div className="h-full relative">
+                            <div className="h-full relative map-panel-enter">
                               {renderMap()}
                             </div>
                           </ResizablePanel>
+                        )}
+                        {/* Slim toggle for collapsed map */}
+                        {!panelVisibility.map && (
+                          <div className="h-full flex items-center">
+                            <button
+                              onClick={() => togglePanel("map")}
+                              className="w-8 h-full flex items-center justify-center bg-secondary/30 hover:bg-secondary/60 border-l border-border/50 transition-colors text-muted-foreground hover:text-foreground"
+                              title="Abrir mapa"
+                            >
+                              <ChevronLeft className="w-4 h-4" />
+                            </button>
+                          </div>
                         )}
                       </ResizablePanelGroup>
                     </ResizablePanel>

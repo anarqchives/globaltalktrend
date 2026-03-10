@@ -255,6 +255,9 @@ const TimelineCard = ({
 
   const changeNum = parseFloat(change?.replace(/[^0-9.\-]/g, "") || "0");
 
+  // Determine tier
+  const tier = trendScore >= 70 ? "critical" : trendScore >= 40 ? "moderate" : "low";
+
   return (
     <motion.div
       className={`timeline-card-wrapper ${expanded ? 'timeline-card-expanded-wrapper' : ''}`}
@@ -264,7 +267,7 @@ const TimelineCard = ({
       viewport={{ once: true, margin: "-30px" }}
       transition={{ duration: 0.3, ease: [0.25, 0.1, 0.25, 1], delay: Math.min(staggerIndex * 0.04, 0.4) }}
     >
-      <div className={`timeline-card group ${expanded ? 'timeline-card-expanded' : ''}`}>
+      <div className={`timeline-card group ${expanded ? 'timeline-card-expanded' : ''}`} data-tier={tier}>
         
         {/* === MAIN CONTENT: Click to expand === */}
         <div className="cursor-pointer" onClick={handleToggle}>
@@ -385,60 +388,41 @@ const TimelineCard = ({
             )}
           </div>
 
-          {/* === TAGS ROW — WCAG contrast === */}
+          {/* === TAGS ROW — unified semantic types === */}
           <div className="flex items-center gap-1 flex-wrap mb-1.5">
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <span className="inline-flex items-center px-1.5 py-0.5 rounded-md text-[9px] font-semibold bg-primary/8 text-primary cursor-help">
-                  {localizedCategory}
-                </span>
-              </TooltipTrigger>
-              <TooltipContent side="top" className="text-[10px]">{getTooltip("category", lang)}</TooltipContent>
-            </Tooltip>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <span className="inline-flex items-center px-1.5 py-0.5 rounded-md text-[9px] font-semibold bg-secondary text-secondary-foreground cursor-help">
-                  {signalType}
-                </span>
-              </TooltipTrigger>
-              <TooltipContent side="top" className="text-[10px]">{getTooltip("signalType", lang)}</TooltipContent>
-            </Tooltip>
-            {trustBadge && trustBadgeKeys[trustBadge] && (
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <span className={`inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-md text-[9px] font-semibold cursor-help ${trustBadgeKeys[trustBadge].className}`}>
-                    {trustBadgeKeys[trustBadge].icon}
-                    {t(trustBadgeKeys[trustBadge].labelKey as any)}
-                  </span>
-                </TooltipTrigger>
-                <TooltipContent side="top" className="text-[10px]">
-                  {getTooltip(trustBadge === "verified" ? "trustVerified" : trustBadge === "official" ? "trustOfficial" : trustBadge === "scientific" ? "trustScientific" : trustBadge === "press" ? "trustPress" : "trustInternational", lang)}
-                </TooltipContent>
-              </Tooltip>
+            {/* TYPE tag */}
+            <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-secondary text-muted-foreground">
+              {localizedCategory}
+            </span>
+            {/* VERIFICATION tag */}
+            {trustBadge && (trustBadge === "verified" || trustBadge === "press") && (
+              <span className="inline-flex items-center gap-0.5 px-2 py-0.5 rounded-full text-xs font-medium bg-blue-50 text-blue-600 dark:bg-blue-500/10 dark:text-blue-400">
+                <CheckCircle2 className="w-2.5 h-2.5" />
+                {t(trustBadgeKeys[trustBadge]?.labelKey as any)}
+              </span>
             )}
+            {/* ALERT tags */}
             {trigger && (
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <span className="inline-flex items-center px-1.5 py-0.5 rounded-md text-[9px] font-semibold bg-destructive/8 text-destructive cursor-help">
-                    {trigger.emoji} {t(trigger.labelKey as any)}
-                  </span>
-                </TooltipTrigger>
-                <TooltipContent side="top" className="text-[10px]">{getTooltip("trigger", lang)}</TooltipContent>
-              </Tooltip>
+              <span className="inline-flex items-center gap-0.5 px-2 py-0.5 rounded-full text-xs font-medium bg-amber-50 text-amber-700 dark:bg-amber-500/10 dark:text-amber-400">
+                ⚡ {t(trigger.labelKey as any)}
+              </span>
             )}
             {translated && (
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <span className="text-[9px] font-semibold text-primary bg-primary/6 px-1.5 py-0.5 rounded-md cursor-help">🌐 {t("autoTranslated")}</span>
-                </TooltipTrigger>
-                <TooltipContent side="top" className="text-[10px]">{t("autoTranslated")}</TooltipContent>
-              </Tooltip>
+              <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-secondary text-muted-foreground">🌐 {t("autoTranslated")}</span>
             )}
           </div>
         </div>
 
-        {/* === ACTION BAR — unified, no borders === */}
-        <div className="flex items-center gap-0.5 bg-secondary/40 rounded-xl p-0.5 mt-1">
+        {/* Bookmark — always visible, top-right */}
+        <button
+          onClick={(e) => { e.stopPropagation(); onSaveCard?.({ title, platform, category, country_code: countryCode, source_url: sourceUrl, thumbnail, description: displayDescription, volume, change, changePositive, historicalData, platformColor: pf.color, sources }); }}
+          className="absolute top-3 right-3 p-1.5 rounded-lg text-muted-foreground/60 hover:text-primary hover:bg-primary/10 transition-colors z-10"
+        >
+          <Bookmark className="w-3.5 h-3.5" />
+        </button>
+
+        {/* === ACTION BAR — hidden by default, visible on hover === */}
+        <div className="card-actions-row flex items-center gap-0.5 bg-secondary/40 rounded-xl p-0.5 mt-1">
           {sourceUrl && (
             <a
               href={sourceUrl}
@@ -455,12 +439,7 @@ const TimelineCard = ({
             <Share2 className="w-3 h-3" />
             {t("share")}
           </button>
-          <button onClick={(e) => { e.stopPropagation(); onSaveCard?.({ title, platform, category, country_code: countryCode, source_url: sourceUrl, thumbnail, description: displayDescription, volume, change, changePositive, historicalData, platformColor: pf.color, sources }); }} className="inline-flex items-center gap-1 px-2 py-1 min-h-[28px] rounded-lg text-[10px] font-medium text-muted-foreground hover:text-foreground hover:bg-card transition-colors">
-            <Bookmark className="w-3 h-3" />
-          </button>
-
           <div className="flex-1" />
-
           <button onClick={handleAlertClick} className="p-1.5 min-h-[28px] min-w-[28px] flex items-center justify-center rounded-lg text-muted-foreground/40 hover:text-primary hover:bg-card transition-colors">
             <Bell className="w-3 h-3" />
           </button>
@@ -483,56 +462,26 @@ const TimelineCard = ({
             <p className="text-xs text-muted-foreground mb-3">{details}</p>
           )}
 
-          {/* Intelligence Metrics Grid */}
-          <div className="grid grid-cols-4 gap-1.5 mb-3">
-            <div className="text-center p-2 rounded-xl bg-secondary/50">
-              <span className="block text-[8px] text-muted-foreground uppercase tracking-wide mb-0.5">{t("growth" as any)}</span>
-              <span className={`block text-xs font-bold ${changePositive ? "text-emerald-600 dark:text-emerald-400" : "text-destructive"}`}>{change}</span>
+          {/* TVI Hero + supporting metrics */}
+          <div className="flex items-center gap-4 mb-4">
+            <div className="text-center">
+              <span className="block text-[9px] text-muted-foreground uppercase tracking-wide mb-1">TVI</span>
+              <span className="block text-4xl font-bold text-foreground leading-none">{trendScore}</span>
+              <span className={`block text-[10px] font-semibold mt-0.5 ${trendScoreLabel.cls}`}>{trendScoreLabel.text}</span>
             </div>
-            <div className="text-center p-2 rounded-xl bg-secondary/50">
-              <span className="block text-[8px] text-muted-foreground uppercase tracking-wide mb-0.5">{t("volumeLabel" as any)}</span>
-              <span className="block text-xs font-bold text-foreground">{volume || "—"}</span>
-            </div>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <div className="text-center p-2 rounded-xl bg-secondary/50 cursor-help">
-                  <span className="block text-[8px] text-muted-foreground uppercase tracking-wide mb-0.5">TVI</span>
-                  <span className="block text-xs font-bold text-foreground">{trendScore}/100</span>
-                </div>
-              </TooltipTrigger>
-              <TooltipContent side="top" className="text-[10px] space-y-0.5">
-                <div className="font-bold mb-1">Trend Velocity Index</div>
-                <div className="flex justify-between gap-3"><span>⚡ {t("tviGrowthLabel" as any)}</span><span className="font-bold">{tviBreakdown.velocity}</span></div>
-                <div className="flex justify-between gap-3"><span>💬 {t("tviVolumeLabel" as any)}</span><span className="font-bold">{tviBreakdown.volume}</span></div>
-                <div className="flex justify-between gap-3"><span>📰 {t("tviSourcesLabel" as any)}</span><span className="font-bold">{tviBreakdown.sources}</span></div>
-                <div className="flex justify-between gap-3"><span>🌍 {t("tviGeographyLabel" as any)}</span><span className="font-bold">{tviBreakdown.geography}</span></div>
-              </TooltipContent>
-            </Tooltip>
-            <div className="text-center p-2 rounded-xl bg-secondary/50">
-              <span className="block text-[8px] text-muted-foreground uppercase tracking-wide mb-0.5">{t("sourcesLabel" as any)}</span>
-              <span className="block text-xs font-bold text-foreground">{sources?.length || 1}</span>
-            </div>
-          </div>
-
-          {/* Narrative Origin & Signal Confidence */}
-          <div className="flex items-start gap-2 mb-3 p-2.5 rounded-xl bg-secondary/30">
-            <div className="flex-1 min-w-0">
-              <div className="text-[9px] font-semibold text-muted-foreground uppercase tracking-wide mb-0.5">
-                🗺️ {t("narrativeOrigin" as any)}
+            <div className="flex-1 grid grid-cols-3 gap-2">
+              <div className="text-center p-2 rounded-xl bg-secondary/50">
+                <span className="block text-[8px] text-muted-foreground uppercase tracking-wide mb-0.5">{t("growth" as any)}</span>
+                <span className={`block text-sm font-bold ${changePositive ? "text-emerald-600 dark:text-emerald-400" : "text-destructive"}`}>{change}</span>
               </div>
-              <div className="text-[11px] text-foreground font-medium">{platform}</div>
-              {countryCode && countryCode !== "GL" && (
-                <div className="text-[9px] text-muted-foreground">{flag} {countryCode}</div>
-              )}
-            </div>
-            <div className="text-right flex-shrink-0">
-              <div className="text-[9px] font-semibold text-muted-foreground uppercase tracking-wide mb-0.5">
-                {t("confidenceLabel" as any)}
+              <div className="text-center p-2 rounded-xl bg-secondary/50">
+                <span className="block text-[8px] text-muted-foreground uppercase tracking-wide mb-0.5">{t("volumeLabel" as any)}</span>
+                <span className="block text-sm font-bold text-foreground">{volume || "—"}</span>
               </div>
-              <div className={`text-[11px] font-bold ${trendScore >= 70 ? "text-emerald-600 dark:text-emerald-400" : trendScore >= 40 ? "text-amber-600 dark:text-amber-400" : "text-muted-foreground"}`}>
-                {trendScore >= 70 ? t("confidenceHigh" as any) : trendScore >= 40 ? t("confidenceMedium" as any) : t("confidenceLow" as any)}
+              <div className="text-center p-2 rounded-xl bg-secondary/50">
+                <span className="block text-[8px] text-muted-foreground uppercase tracking-wide mb-0.5">{t("sourcesLabel" as any)}</span>
+                <span className="block text-sm font-bold text-foreground">{sources?.length || 1}</span>
               </div>
-              <div className="text-[9px] text-muted-foreground">{trendScore}%</div>
             </div>
           </div>
 
@@ -553,30 +502,32 @@ const TimelineCard = ({
             </div>
           )}
 
-          {/* Sentiment Analysis */}
-          <div className="mb-3 p-2.5 rounded-xl bg-secondary/30">
-            <span className="text-[9px] font-semibold text-muted-foreground uppercase tracking-wide mb-2 block">
+          {/* Sentiment Analysis — collapsible */}
+          <details className="mb-3 rounded-xl bg-secondary/30 overflow-hidden">
+            <summary className="px-2.5 py-2 text-[9px] font-semibold text-muted-foreground uppercase tracking-wide cursor-pointer hover:bg-secondary/50 transition-colors select-none">
               📊 {t("sentimentAnalysis" as any)}
-            </span>
-            <div className="flex items-center gap-4">
-              <SentimentDonut
-                positive={changePositive ? 55 : 25}
-                neutral={30}
-                negative={changePositive ? 15 : 45}
-                size={56}
-                showLegend
-              />
+            </summary>
+            <div className="px-2.5 pb-2.5">
+              <div className="flex items-center gap-4">
+                <SentimentDonut
+                  positive={changePositive ? 55 : 25}
+                  neutral={30}
+                  negative={changePositive ? 15 : 45}
+                  size={56}
+                  showLegend
+                />
+              </div>
+              <div className="mt-2 pt-2 border-t border-border/30">
+                <EmotionBars
+                  emotions={[
+                    { icon: "😊", label: t("positive"), percentage: changePositive ? 55 : 25, color: "hsl(142, 60%, 45%)" },
+                    { icon: "😐", label: t("neutral"), percentage: 30, color: "hsl(var(--muted-foreground))" },
+                    { icon: "😠", label: t("negative"), percentage: changePositive ? 15 : 45, color: "hsl(var(--destructive))" },
+                  ]}
+                />
+              </div>
             </div>
-            <div className="mt-2 pt-2 border-t border-border/30">
-              <EmotionBars
-                emotions={[
-                  { icon: "😊", label: t("positive"), percentage: changePositive ? 55 : 25, color: "hsl(142, 60%, 45%)" },
-                  { icon: "😐", label: t("neutral"), percentage: 30, color: "hsl(var(--muted-foreground))" },
-                  { icon: "😠", label: t("negative"), percentage: changePositive ? 15 : 45, color: "hsl(var(--destructive))" },
-                ]}
-              />
-            </div>
-          </div>
+          </details>
 
           {/* Platform-specific metrics */}
           <div className="flex flex-wrap gap-2 mb-3 text-[11px]">
@@ -632,6 +583,12 @@ const TimelineCard = ({
               <PropagationTimeline cluster={crossPlatformCluster} compact />
             </div>
           )}
+
+          {/* Narrative origin + confidence — subtle footnote */}
+          <div className="flex items-center justify-between text-[9px] text-muted-foreground/70 pt-2 mt-2 border-t border-border/20">
+            <span>🗺️ {platform} {countryCode && countryCode !== "GL" ? `· ${flag} ${countryCode}` : ""}</span>
+            <span>{t("confidenceLabel" as any)}: {trendScore}%</span>
+          </div>
 
           <TrendFeedback title={title} platform={platform} userId={userId} />
         </div>

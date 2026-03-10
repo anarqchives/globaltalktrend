@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
-import { RotateCcw, ChevronDown, Bell, Info } from "lucide-react";
+import { RotateCcw, ChevronDown, Bell, X } from "lucide-react";
 import { useLanguage, LangCode } from "@/contexts/LanguageContext";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 
@@ -23,6 +23,10 @@ interface FilterBarProps {
   onForceReset?: () => void;
   onSaveFilter?: () => void;
   isLoggedIn?: boolean;
+  /* View mode tabs */
+  activeView?: string;
+  onViewChange?: (view: string) => void;
+  viewCounts?: Record<string, number>;
 }
 
 export const countries = [
@@ -102,7 +106,6 @@ export const countries = [
   { value: "NZ", label: "🇳🇿 Nova Zelândia" }]
 }];
 
-
 const selectClass = "appearance-none bg-secondary/50 text-foreground text-[12px] font-medium pl-3 pr-7 h-8 min-h-[32px] max-h-[32px] rounded-full cursor-pointer min-w-0 hover:bg-secondary/80 dark:bg-secondary/50 dark:hover:bg-secondary/70 transition-colors focus:outline-none focus:ring-2 focus:ring-primary/20 box-border touch-manipulation border-none";
 
 const FilterBar = ({ filters, onChange, onForceReset, onSaveFilter, isLoggedIn }: FilterBarProps) => {
@@ -117,12 +120,16 @@ const FilterBar = ({ filters, onChange, onForceReset, onSaveFilter, isLoggedIn }
   filters.category !== defaultFilters.category ||
   filters.type !== defaultFilters.type;
 
+  const isCountryFiltered = filters.country !== defaultFilters.country;
+  const isPeriodFiltered = filters.period !== defaultFilters.period;
+  const isCategoryFiltered = filters.category !== defaultFilters.category;
+  const isTypeFiltered = filters.type !== defaultFilters.type;
+
   const periodOptions = [
   { value: "Última hora", label: t("lastHour") },
   { value: "Hoje", label: t("today") },
   { value: "Esta semana", label: t("thisWeek") },
   { value: "Este mês", label: t("thisMonth") }];
-
 
   const healthLabel: Record<string, string> = { pt: "Saúde", en: "Health", es: "Salud", fr: "Santé", de: "Gesundheit", it: "Salute", zh: "健康", ja: "健康", ko: "건강", ar: "صحة", hi: "स्वास्थ्य", ru: "Здоровье" };
   const { lang: currentLang } = useLanguage();
@@ -138,7 +145,6 @@ const FilterBar = ({ filters, onChange, onForceReset, onSaveFilter, isLoggedIn }
   { value: "Entretenimento", label: t("entertainment") },
   { value: "Cultura", label: t("culture") }];
 
-
   const typeOptions = [
   { value: "Todas mídias", label: t("allMedia") },
   { value: "Multiplataforma", label: "Multiplataforma" },
@@ -147,17 +153,12 @@ const FilterBar = ({ filters, onChange, onForceReset, onSaveFilter, isLoggedIn }
   { value: "Buscas (Google)", label: t("searches") },
   { value: "Dados oficiais", label: "Dados Oficiais" }];
 
-
   return (
     <div className="px-3 md:px-6 py-1.5 sticky top-12 z-40 bg-secondary/20 backdrop-blur-sm border-b border-border/50">
       <div className="flex items-center gap-1.5 md:gap-2 overflow-x-auto scrollbar-thin flex-nowrap pb-1 md:pb-0" style={{ WebkitOverflowScrolling: 'touch' }}>
+        {/* Filter chips with inline reset × */}
         <div className="relative flex-shrink-0">
-          <select
-            className={selectClass}
-            value={filters.country}
-            onChange={(e) => update("country", e.target.value)}
-            aria-label={t("country")}>
-            
+          <select className={selectClass} value={filters.country} onChange={(e) => update("country", e.target.value)} aria-label={t("country")}>
             {countries.map((group) =>
             <optgroup key={group.group} label={group.group}>
                 {group.items.map((c) =>
@@ -166,197 +167,97 @@ const FilterBar = ({ filters, onChange, onForceReset, onSaveFilter, isLoggedIn }
               </optgroup>
             )}
           </select>
-          <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 w-3 h-3 text-muted-foreground pointer-events-none" />
+          {isCountryFiltered ? (
+            <button onClick={() => update("country", defaultFilters.country)} className="absolute right-1.5 top-1/2 -translate-y-1/2 w-4 h-4 flex items-center justify-center rounded-full bg-primary/10 text-primary hover:bg-primary/20 transition-colors">
+              <X className="w-2.5 h-2.5" />
+            </button>
+          ) : (
+            <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 w-3 h-3 text-muted-foreground pointer-events-none" />
+          )}
         </div>
 
         <div className="relative flex-shrink-0">
-          <select
-            className={selectClass}
-            value={filters.period}
-            onChange={(e) => update("period", e.target.value)}
-            aria-label={t("period")}>
-            
+          <select className={selectClass} value={filters.period} onChange={(e) => update("period", e.target.value)} aria-label={t("period")}>
             {periodOptions.map((p) =>
             <option key={p.value} value={p.value}>{p.label}</option>
             )}
           </select>
-          <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 w-3 h-3 text-muted-foreground pointer-events-none" />
+          {isPeriodFiltered ? (
+            <button onClick={() => update("period", defaultFilters.period)} className="absolute right-1.5 top-1/2 -translate-y-1/2 w-4 h-4 flex items-center justify-center rounded-full bg-primary/10 text-primary hover:bg-primary/20 transition-colors">
+              <X className="w-2.5 h-2.5" />
+            </button>
+          ) : (
+            <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 w-3 h-3 text-muted-foreground pointer-events-none" />
+          )}
         </div>
 
         <div className="relative flex-shrink-0">
-          <select
-            className={selectClass}
-            value={filters.category}
-            onChange={(e) => update("category", e.target.value)}
-            aria-label={t("category")}>
-            
+          <select className={selectClass} value={filters.category} onChange={(e) => update("category", e.target.value)} aria-label={t("category")}>
             {categoryOptions.map((c) =>
             <option key={c.value} value={c.value}>{c.label}</option>
             )}
           </select>
-          <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 w-3 h-3 text-muted-foreground pointer-events-none" />
+          {isCategoryFiltered ? (
+            <button onClick={() => update("category", defaultFilters.category)} className="absolute right-1.5 top-1/2 -translate-y-1/2 w-4 h-4 flex items-center justify-center rounded-full bg-primary/10 text-primary hover:bg-primary/20 transition-colors">
+              <X className="w-2.5 h-2.5" />
+            </button>
+          ) : (
+            <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 w-3 h-3 text-muted-foreground pointer-events-none" />
+          )}
         </div>
 
         <div className="relative flex-shrink-0">
-          <select
-            className={selectClass}
-            value={filters.type}
-            onChange={(e) => update("type", e.target.value)}
-            aria-label={t("type")}>
-            
+          <select className={selectClass} value={filters.type} onChange={(e) => update("type", e.target.value)} aria-label={t("type")}>
             {typeOptions.map((opt) =>
             <option key={opt.value} value={opt.value}>{opt.label}</option>
             )}
           </select>
-          <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 w-3 h-3 text-muted-foreground pointer-events-none" />
+          {isTypeFiltered ? (
+            <button onClick={() => update("type", defaultFilters.type)} className="absolute right-1.5 top-1/2 -translate-y-1/2 w-4 h-4 flex items-center justify-center rounded-full bg-primary/10 text-primary hover:bg-primary/20 transition-colors">
+              <X className="w-2.5 h-2.5" />
+            </button>
+          ) : (
+            <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 w-3 h-3 text-muted-foreground pointer-events-none" />
+          )}
         </div>
 
-        {isFiltered &&
-        <Tooltip>
-            <TooltipTrigger asChild>
-              <button
-              onClick={() => onChange(defaultFilters)}
-              className="flex items-center gap-1 px-3 h-8 min-h-[32px] max-h-[32px] rounded-full text-[12px] font-medium text-primary hover:bg-primary/8 transition-colors flex-shrink-0 focus:outline-none"
-              aria-label={t("all")}>
-              
-                <RotateCcw className="w-3 h-3" />
-                Reset
-              </button>
-            </TooltipTrigger>
-            <TooltipContent side="bottom" className="max-w-[200px] text-xs">
-              Limpar todos os filtros e voltar ao padrão (Global · Hoje · Todas categorias)
-            </TooltipContent>
-          </Tooltip>
-        }
-
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <button
-              onClick={() => onForceReset?.()}
-              className="flex items-center gap-1 px-3 h-8 min-h-[32px] max-h-[32px] rounded-full text-[12px] font-medium text-muted-foreground hover:bg-secondary/50 transition-colors flex-shrink-0 focus:outline-none"
-              aria-label="Reset forçado">
-              
-              <RotateCcw className="w-3 h-3" />
-            </button>
-          </TooltipTrigger>
-          <TooltipContent side="bottom" className="max-w-[240px] text-xs">
-            {t("forceResetTooltip")}
-          </TooltipContent>
-        </Tooltip>
-
+        {/* Create alert — icon only with tooltip */}
         {isLoggedIn && onSaveFilter &&
         <Tooltip>
             <TooltipTrigger asChild>
               <button
               onClick={onSaveFilter}
-              className="flex items-center gap-1.5 px-3.5 h-8 min-h-[32px] max-h-[32px] rounded-full text-[12px] font-medium text-primary bg-primary/6 hover:bg-primary hover:text-primary-foreground transition-all flex-shrink-0 focus:outline-none"
+              className="flex items-center justify-center w-8 h-8 rounded-full text-primary bg-primary/6 hover:bg-primary hover:text-primary-foreground transition-all flex-shrink-0 focus:outline-none"
               aria-label={t("createAlert")}>
-              
-                <Bell className="w-3 h-3" />
-                {t("createAlert")}
+                <Bell className="w-3.5 h-3.5" />
               </button>
             </TooltipTrigger>
             <TooltipContent side="bottom" className="max-w-[220px] text-xs">
-              Salvar filtros atuais e criar um alerta para receber notificações quando estes critérios forem atingidos.
+              {t("createAlert")}
             </TooltipContent>
           </Tooltip>
         }
 
-        <div className="flex items-center justify-center gap-2 ml-auto flex-shrink-0 whitespace-nowrap pl-2 border-l border-border/30">
-          <div className="flex items-center justify-center gap-[10px] text-[13px]">
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <span className="flex items-center gap-1.5 cursor-help">
-                  <span className="w-2 h-2 rounded-full animate-pulse flex-shrink-0" style={{ background: "hsl(142, 72%, 45%)" }} />
-                  <span className="font-medium text-foreground">{t("live")}</span>
-                </span>
-              </TooltipTrigger>
-              <TooltipContent side="bottom" className="max-w-[240px] text-xs">
-                {t("liveTooltip")}
-              </TooltipContent>
-            </Tooltip>
-            <span className="text-muted-foreground/30">·</span>
-            <OnlineUsersCount />
-            <span className="text-muted-foreground/30">·</span>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <span className="flex items-center cursor-help">
-                  <CountdownTimer />
-                </span>
-              </TooltipTrigger>
-              <TooltipContent side="bottom" className="max-w-[240px] text-xs">
-                {t("countdownTooltip")}
-              </TooltipContent>
-            </Tooltip>
-          </div>
-        </div>
+        <div className="flex-1" />
+
+        {/* Force reset — only visible when filtered */}
+        {isFiltered && (
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <button
+                onClick={() => { onChange(defaultFilters); onForceReset?.(); }}
+                className="flex items-center gap-1 px-2.5 h-7 rounded-full text-[11px] font-medium text-muted-foreground hover:bg-secondary/50 transition-colors flex-shrink-0 focus:outline-none"
+                aria-label="Reset">
+                <RotateCcw className="w-3 h-3" />
+              </button>
+            </TooltipTrigger>
+            <TooltipContent side="bottom" className="text-xs">
+              {t("forceResetTooltip")}
+            </TooltipContent>
+          </Tooltip>
+        )}
       </div>
     </div>);
-
-};
-
-const OnlineUsersCount = () => {
-  const [count, setCount] = useState(() => Math.floor(80 + Math.random() * 60));
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setCount((prev) => {
-        const delta = Math.floor(Math.random() * 7) - 3;
-        return Math.max(20, prev + delta);
-      });
-    }, 30000);
-    return () => clearInterval(interval);
-  }, []);
-  return (
-    <span className="flex items-center gap-1.5 text-[13px] tabular-nums">
-      <span className="text-[13px]">👥</span>
-      <span className="font-semibold text-foreground">{count}</span>
-    </span>
-  );
-};
-
-const REFRESH_INTERVAL_SECONDS = 10 * 60;
-
-const CountdownTimer = () => {
-  const [seconds, setSeconds] = useState(() => {
-    const now = Date.now();
-    const interval = REFRESH_INTERVAL_SECONDS * 1000;
-    const remaining = interval - now % interval;
-    return Math.floor(remaining / 1000);
-  });
-  const [fading, setFading] = useState(false);
-
-  const onRefresh = useCallback(() => {
-    window.dispatchEvent(new Event("trend-refresh"));
-  }, []);
-
-  useEffect(() => {
-    const timer = setInterval(() => {
-      setSeconds((prev) => {
-        if (prev <= 1) {
-          setFading(true);
-          setTimeout(() => {
-            setFading(false);
-            onRefresh();
-          }, 300);
-          return REFRESH_INTERVAL_SECONDS;
-        }
-        return prev - 1;
-      });
-    }, 1000);
-    return () => clearInterval(timer);
-  }, [onRefresh]);
-
-  const mins = Math.floor(seconds / 60);
-  const secs = seconds % 60;
-
-  return (
-    <span
-      className={`flex items-center gap-1.5 text-[13px] font-mono tabular-nums transition-opacity duration-300 ${fading ? 'opacity-0' : 'opacity-100'}`}>
-      <span>⏱️</span>
-      <span className="font-semibold text-foreground">{String(mins).padStart(2, '0')}:{String(secs).padStart(2, '0')}</span>
-    </span>
-  );
-
 };
 
 export default FilterBar;
