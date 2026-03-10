@@ -116,9 +116,6 @@ function ChipDropdown({ label, value, options, isActive, icon, onChange, onClear
         }`}
         style={{ height: 28, padding: "0 10px", fontSize: 12, fontWeight: isActive ? 600 : 500 }}
       >
-        <span className={`flex-shrink-0 ${isActive ? "text-background/70" : "text-muted-foreground/60"}`} style={{ width: 12, height: 12 }}>
-          {icon}
-        </span>
         <span className="truncate max-w-[100px]">{displayLabel}</span>
         {isActive ? (
           <span
@@ -231,7 +228,7 @@ const FilterBar = ({ filters, onChange, onForceReset, onSaveFilter, isLoggedIn }
 
   return (
     <div className="sticky top-[52px] z-40 bg-card/95 dark:bg-card/95 backdrop-blur-sm border-b border-border" style={{ height: 44 }}>
-      <div className="h-full px-3 md:px-4 flex items-center" style={{ gap: 6 }}>
+      <div className="h-full px-4 flex items-center" style={{ gap: 8 }}>
         <ChipDropdown
           label={t("global")}
           value={filters.country}
@@ -271,9 +268,7 @@ const FilterBar = ({ filters, onChange, onForceReset, onSaveFilter, isLoggedIn }
           onClear={() => update("type", defaultFilters.type)}
         />
 
-        <div className="flex-1" />
-
-        {/* Alert bell */}
+        {/* Alert bell — inline after last chip */}
         {isLoggedIn && onSaveFilter && (
           <Tooltip>
             <TooltipTrigger asChild>
@@ -289,6 +284,8 @@ const FilterBar = ({ filters, onChange, onForceReset, onSaveFilter, isLoggedIn }
             <TooltipContent side="bottom" className="text-[10px]">{t("createAlert")}</TooltipContent>
           </Tooltip>
         )}
+
+        <div className="flex-1" />
 
         {/* Clear all */}
         {isFiltered && (
