@@ -99,6 +99,7 @@ const Index = () => {
   const [radarCollapsed, setRadarCollapsed] = useState(() => {
     try { return localStorage.getItem("radar-collapsed") === "true"; } catch { return false; }
   });
+  const [mobileRadarCollapsed, setMobileRadarCollapsed] = useState(false);
   const { timelineRef: gridRef, columns: gridColumns } = useTimelineColumns();
 
   useEffect(() => {
