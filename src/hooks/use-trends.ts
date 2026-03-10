@@ -671,7 +671,7 @@ export function useTrends(filters: FilterState, onTrendCountsChange: (counts: Re
       if (rawTrends.length === 0) {
         const stale = getStaleCachedTrends();
         if (stale.length > 0) {
-          console.log("♻️ Usando cache expirado como fallback:", stale.length, "itens");
+          if (import.meta.env.DEV) console.log("♻️ Usando cache expirado como fallback:", stale.length, "itens");
           setTrends(stale);
           setLoading(false);
           setIsFirstLoad(false);
