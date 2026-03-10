@@ -502,30 +502,32 @@ const TimelineCard = ({
             </div>
           )}
 
-          {/* Sentiment Analysis */}
-          <div className="mb-3 p-2.5 rounded-xl bg-secondary/30">
-            <span className="text-[9px] font-semibold text-muted-foreground uppercase tracking-wide mb-2 block">
+          {/* Sentiment Analysis — collapsible */}
+          <details className="mb-3 rounded-xl bg-secondary/30 overflow-hidden">
+            <summary className="px-2.5 py-2 text-[9px] font-semibold text-muted-foreground uppercase tracking-wide cursor-pointer hover:bg-secondary/50 transition-colors select-none">
               📊 {t("sentimentAnalysis" as any)}
-            </span>
-            <div className="flex items-center gap-4">
-              <SentimentDonut
-                positive={changePositive ? 55 : 25}
-                neutral={30}
-                negative={changePositive ? 15 : 45}
-                size={56}
-                showLegend
-              />
+            </summary>
+            <div className="px-2.5 pb-2.5">
+              <div className="flex items-center gap-4">
+                <SentimentDonut
+                  positive={changePositive ? 55 : 25}
+                  neutral={30}
+                  negative={changePositive ? 15 : 45}
+                  size={56}
+                  showLegend
+                />
+              </div>
+              <div className="mt-2 pt-2 border-t border-border/30">
+                <EmotionBars
+                  emotions={[
+                    { icon: "😊", label: t("positive"), percentage: changePositive ? 55 : 25, color: "hsl(142, 60%, 45%)" },
+                    { icon: "😐", label: t("neutral"), percentage: 30, color: "hsl(var(--muted-foreground))" },
+                    { icon: "😠", label: t("negative"), percentage: changePositive ? 15 : 45, color: "hsl(var(--destructive))" },
+                  ]}
+                />
+              </div>
             </div>
-            <div className="mt-2 pt-2 border-t border-border/30">
-              <EmotionBars
-                emotions={[
-                  { icon: "😊", label: t("positive"), percentage: changePositive ? 55 : 25, color: "hsl(142, 60%, 45%)" },
-                  { icon: "😐", label: t("neutral"), percentage: 30, color: "hsl(var(--muted-foreground))" },
-                  { icon: "😠", label: t("negative"), percentage: changePositive ? 15 : 45, color: "hsl(var(--destructive))" },
-                ]}
-              />
-            </div>
-          </div>
+          </details>
 
           {/* Platform-specific metrics */}
           <div className="flex flex-wrap gap-2 mb-3 text-[11px]">
