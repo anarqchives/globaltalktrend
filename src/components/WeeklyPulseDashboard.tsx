@@ -1020,26 +1020,49 @@ export default function WeeklyPulseDashboard({ trends }: { trends: TrendCardProp
   const hasAnyData = weeklyData.length > 0 || trends.length > 0;
 
   if (loading) {
+    const shimmer = "relative overflow-hidden before:absolute before:inset-0 before:-translate-x-full before:animate-[shimmer_1.5s_infinite] before:bg-gradient-to-r before:from-transparent before:via-foreground/5 before:to-transparent";
     return (
-      <div className="p-4 flex flex-col items-center justify-center py-10 gap-3 text-muted-foreground">
-        <div className="relative">
-          <BarChart3 className="w-6 h-6 text-primary/40" />
-          <motion.div 
-            className="absolute inset-0 rounded-full border-2 border-primary/20 border-t-primary/60"
-            animate={{ rotate: 360 }}
-            transition={{ duration: 1.2, repeat: Infinity, ease: "linear" }}
-          />
+      <div className="p-2.5 space-y-2.5">
+        {/* KPI skeleton row */}
+        <div className="grid grid-cols-3 sm:grid-cols-5 gap-1.5">
+          {Array.from({ length: 5 }).map((_, i) => (
+            <div key={i} className="rounded-xl border border-border/50 bg-card p-2.5">
+              <div className={`h-3 w-8 rounded bg-muted mb-2 ${shimmer}`} />
+              <div className={`h-5 w-12 rounded bg-muted mb-1 ${shimmer}`} />
+              <div className={`h-2 w-16 rounded bg-muted/60 ${shimmer}`} />
+            </div>
+          ))}
         </div>
-        <p className="text-[11px] font-medium">{t(lang, "Carregando inteligência semanal...", "Loading weekly intelligence...", "Cargando inteligencia semanal...")}</p>
-        <div className="w-full max-w-xs space-y-2 mt-2">
-          {[...Array(3)].map((_, i) => (
-            <motion.div 
-              key={i} 
-              className="h-10 rounded-lg bg-muted/20" 
-              initial={{ opacity: 0.3 }}
-              animate={{ opacity: [0.3, 0.6, 0.3] }}
-              transition={{ duration: 1.5, repeat: Infinity, delay: i * 0.2 }}
-            />
+        {/* Lifecycle skeleton */}
+        <div className="rounded-xl border border-border/50 bg-card p-2.5">
+          <div className={`h-3 w-32 rounded bg-muted mb-2 ${shimmer}`} />
+          <div className={`h-3 w-full rounded-full bg-muted ${shimmer}`} />
+        </div>
+        {/* Chart skeleton */}
+        <div className="rounded-xl border border-border/50 bg-card p-2.5">
+          <div className={`h-3 w-28 rounded bg-muted mb-2 ${shimmer}`} />
+          <div className={`h-[100px] w-full rounded-lg bg-muted/40 ${shimmer}`} />
+        </div>
+        {/* Two column skeleton */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5">
+          <div className="rounded-xl border border-border/50 bg-card p-2.5">
+            <div className={`h-3 w-24 rounded bg-muted mb-2 ${shimmer}`} />
+            {Array.from({ length: 4 }).map((_, i) => (
+              <div key={i} className={`h-2.5 w-full rounded bg-muted/30 mb-1.5 ${shimmer}`} />
+            ))}
+          </div>
+          <div className="rounded-xl border border-border/50 bg-card p-2.5">
+            <div className={`h-3 w-24 rounded bg-muted mb-2 ${shimmer}`} />
+            {Array.from({ length: 4 }).map((_, i) => (
+              <div key={i} className={`h-8 w-full rounded-lg bg-muted/20 mb-1.5 ${shimmer}`} />
+            ))}
+          </div>
+        </div>
+        {/* Signal detection skeleton */}
+        <div className="rounded-xl border border-border/50 bg-card p-2.5">
+          <div className={`h-3 w-28 rounded bg-muted mb-2 ${shimmer}`} />
+          {Array.from({ length: 3 }).map((_, i) => (
+            <div key={i} className={`h-12 w-full rounded-lg bg-muted/20 mb-1.5 ${shimmer}`} />
           ))}
         </div>
       </div>
