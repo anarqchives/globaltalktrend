@@ -136,7 +136,7 @@ function ChipDropdown({ chipLabel, value, options, isActive, icon, onChange, onC
         }`}
       >
         <span className="flex-shrink-0 flex items-center">{icon}</span>
-        <span className="truncate max-w-[100px]">{displayText}</span>
+        <span className="truncate max-w-[72px] sm:max-w-[100px]">{displayText}</span>
         {isActive ? (
           <span
             onClick={(e) => { e.stopPropagation(); onClear(); setOpen(false); }}
