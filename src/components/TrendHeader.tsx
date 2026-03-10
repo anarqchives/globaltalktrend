@@ -123,8 +123,8 @@ const TrendHeader = ({ totalTrends = 0, countriesCount = 0, onRefresh, refreshin
           </div>
 
           {/* ─── CENTER: Live status badge (emotional hero) ─── */}
-          <div className="flex items-center justify-center">
-            <div className="flex items-center gap-1.5 text-xs">
+          <div className="flex items-center justify-center min-w-0">
+            <div className="flex items-center gap-1 sm:gap-1.5 text-[10px] sm:text-xs min-w-0">
               {/* Pulsing green dot — 6px */}
               <span className="relative flex items-center justify-center w-1.5 h-1.5 flex-shrink-0">
                 <span className="absolute w-full h-full rounded-full live-pulse-dot bg-positive" />
@@ -135,19 +135,19 @@ const TrendHeader = ({ totalTrends = 0, countriesCount = 0, onRefresh, refreshin
               </span>
               <span className="text-muted-foreground/40">·</span>
               <OnlineUsersCount />
-              <span className="text-muted-foreground/40">·</span>
-              <CountdownTimer />
+              <span className="hidden sm:inline text-muted-foreground/40">·</span>
+              <span className="hidden sm:inline"><CountdownTimer /></span>
             </div>
           </div>
 
           {/* ─── RIGHT: Utilities ─── */}
-          <div className="flex items-center gap-2 justify-end flex-shrink-0" style={{ gap: 8 }}>
+          <div className="flex items-center justify-end flex-shrink-0 gap-1 sm:gap-2">
             {/* Language selector — compact */}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <button className="inline-flex items-center gap-1 px-2 rounded-lg border border-border/60 hover:border-muted-foreground/40 hover:bg-muted/50 transition-all duration-[120ms]" style={{ height: 28, fontSize: 12, fontWeight: 500 }}>
-                  <span className="text-xs">🌐</span>
-                  <span className="text-muted-foreground">{lang.toUpperCase()}</span>
+                <button className="inline-flex items-center gap-0.5 sm:gap-1 px-1.5 sm:px-2 rounded-lg border border-border/60 hover:border-muted-foreground/40 hover:bg-muted/50 transition-all duration-[120ms]" style={{ height: 28, fontSize: 11, fontWeight: 500 }}>
+                  <span className="hidden sm:inline text-xs">🌐</span>
+                  <span className="text-muted-foreground text-[11px]">{lang.toUpperCase()}</span>
                   <ChevronDown className="w-2.5 h-2.5 text-muted-foreground/60" />
                 </button>
               </DropdownMenuTrigger>

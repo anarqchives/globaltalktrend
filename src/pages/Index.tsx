@@ -464,7 +464,7 @@ const Index = () => {
   }), [gridColumns, isMobile]);
 
   const renderTimeline = () => (
-    <div ref={(el) => { (scrollRef as any).current = el; (gridRef as any).current = el; }} className={`flex flex-col gap-0.5 p-2 h-full overflow-y-auto overflow-x-hidden scrollbar-thin relative transition-opacity duration-200 w-full max-w-full ${filterTransitioning ? 'opacity-60' : 'opacity-100'}`}>
+    <div ref={(el) => { (scrollRef as any).current = el; (gridRef as any).current = el; }} className={`flex flex-col gap-0.5 p-1 sm:p-2 h-full overflow-y-auto overflow-x-hidden scrollbar-thin relative transition-opacity duration-200 w-full max-w-full box-border ${filterTransitioning ? 'opacity-60' : 'opacity-100'}`} style={{ maxWidth: '100vw' }}>
       {/* Timeline header bar — clear separator */}
       <div className="px-2 flex items-center justify-between sticky top-0 z-10 bg-muted/50 dark:bg-muted/30 backdrop-blur-sm rounded-md border-y border-border/50" style={{ height: 36 }}>
         <div className="flex items-center gap-1.5">
