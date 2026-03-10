@@ -484,26 +484,26 @@ export default function WeeklyPulseDashboard({ trends }: { trends: TrendCardProp
   const TOP_BAR_COLORS = ["#FF2D2D", "#FF6B00", "#F5A623", "#6366F1", "#6366F1", "#6366F1", "#9CA3AF", "#9CA3AF"];
 
   return (
-    <div className="p-4 space-y-4">
+    <div className="p-3 sm:p-4 space-y-3 sm:space-y-4">
       {/* ═══════ SECTION A: HEADER STRIP ═══════ */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-base font-bold text-foreground flex items-center gap-1.5">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+        <div className="min-w-0">
+          <h2 className="text-sm sm:text-base font-bold text-foreground flex items-center gap-1.5 whitespace-nowrap">
             📅 {t(lang, "Inteligência Semanal", "Weekly Intelligence")}
           </h2>
-          <p className="text-[11px] text-muted-foreground">
+          <p className="text-[10px] sm:text-[11px] text-muted-foreground whitespace-nowrap">
             {t(lang, "Últimos 7 dias", "Last 7 days")} · {dateRange}
           </p>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-shrink-0">
           <button onClick={() => { setLoading(true); fetchData(); }}
-            className="flex items-center gap-1 text-[11px] text-primary hover:text-primary/80 transition-colors px-2.5 py-1.5 rounded-lg border border-primary/20 hover:bg-primary/5">
+            className="flex items-center gap-1 text-[10px] sm:text-[11px] text-primary hover:text-primary/80 transition-colors px-2 py-1 sm:px-2.5 sm:py-1.5 rounded-lg border border-primary/20 hover:bg-primary/5 whitespace-nowrap">
             <RefreshCw className="w-3 h-3" />
             {t(lang, "Atualizar", "Refresh")}
           </button>
-          <div className="text-right">
-            <p className="text-[10px] text-muted-foreground">{t(lang, "Atualização automática a cada 5 min", "Auto-refresh every 5 min")}</p>
-            {refreshAgo > 0 && <p className="text-[10px] text-muted-foreground/60">{refreshAgo}m {t(lang, "atrás", "ago")}</p>}
+          <div className="text-right flex-shrink-0">
+            <p className="text-[9px] sm:text-[10px] text-muted-foreground whitespace-nowrap">{t(lang, "Auto 5 min", "Auto 5 min")}</p>
+            {refreshAgo > 0 && <p className="text-[9px] sm:text-[10px] text-muted-foreground/60 whitespace-nowrap">{refreshAgo}m {t(lang, "atrás", "ago")}</p>}
           </div>
         </div>
       </div>
