@@ -726,8 +726,7 @@ const GoogleMapView = ({
     };
 
     return () => {
-      activeAnimations.forEach(id => cancelAnimationFrame(id));
-      activeAnimations.clear();
+      Object.values(activeAnimations).forEach(id => cancelAnimationFrame(id));
       flowPolylinesRef.current.forEach(p => p.setMap(null));
       flowPolylinesRef.current = [];
       flowOriginPulsesRef.current.forEach(p => p.setMap(null));
