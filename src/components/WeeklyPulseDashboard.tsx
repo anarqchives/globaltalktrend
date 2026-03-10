@@ -712,7 +712,7 @@ export default function WeeklyPulseDashboard({ trends }: { trends: TrendCardProp
           <div className="flex items-center justify-between gap-1 mb-3">
             {(["emerging", "accelerating", "peak", "declining"] as const).map((stage, i) => (
               <React.Fragment key={stage}>
-                {i > 0 && <ArrowRight className="w-3 h-3 text-muted-foreground/30 flex-shrink-0" />}
+                {i > 0 && <ArrowRight className="w-3 h-3 text-muted-foreground/30 flex-shrink-0 animate-pulse" style={{ animationDuration: '1.5s' }} />}
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <div className="flex flex-col items-center cursor-help">
