@@ -644,7 +644,7 @@ export function useTrends(filters: FilterState, onTrendCountsChange: (counts: Re
         return result;
       };
 
-      const [edgeResult, extraResult, extraSourcesResult, socialTrendsResult, openDataResult, redditItems, blueskyItems, mastodonItems] = await Promise.all([
+      const [edgeResult, extraResult, extraSourcesResult, socialTrendsResult, openDataResult, redditItems, blueskyItems, mastodonItems, gdeltDocResult] = await Promise.all([
         invokeFunctionWithLogs("Google Trends", "fetch-trends", 12000),
         invokeFunctionWithLogs("The Guardian/News Extra", "fetch-news-extra", 10000),
         invokeFunctionWithLogs("Fontes Oficiais Extras", "fetch-extra-sources", 10000),
@@ -653,6 +653,7 @@ export function useTrends(filters: FilterState, onTrendCountsChange: (counts: Re
         fetchClientSourceWithLogs("Reddit", fetchRedditClientSide()),
         fetchClientSourceWithLogs("Bluesky", fetchBlueskyClientSide()),
         fetchClientSourceWithLogs("Mastodon", fetchMastodonClientSide()),
+        invokeFunctionWithLogs("GDELT DOC", "fetch-gdelt-trends", 10000),
       ]);
 
       // Save health state
