@@ -424,30 +424,43 @@ const Index = () => {
 
   const renderTimeline = () => (
     <div ref={(el) => { (scrollRef as any).current = el; (gridRef as any).current = el; }} className={`flex flex-col gap-0.5 p-2 h-full overflow-y-auto overflow-x-hidden scrollbar-thin relative transition-opacity duration-200 w-full max-w-full ${filterTransitioning ? 'opacity-60' : 'opacity-100'}`}>
-      {/* Timeline header with controls */}
-      <div className="px-1.5 h-8 flex items-center justify-between sticky top-0 bg-background/95 backdrop-blur-sm z-10 rounded-md">
-        <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest flex items-center gap-1.5">
-          <FileText className="w-3.5 h-3.5" />
-          {t("timeline")}
-        </span>
-        <div className="flex items-center gap-1">
+      {/* Timeline header bar — clear separator */}
+      <div className="px-2 flex items-center justify-between sticky top-0 z-10 bg-muted/50 dark:bg-muted/30 backdrop-blur-sm rounded-md border-y border-border/50" style={{ height: 36 }}>
+        <div className="flex items-center gap-1.5">
+          <FileText className="w-3.5 h-3.5 text-muted-foreground" />
+          <span className="text-[11px] font-bold text-muted-foreground uppercase tracking-widest">
+            {t("timeline")}
+          </span>
+          <span className="text-[10px] text-muted-foreground/50 font-normal">
+            ({filteredTrends.length})
+          </span>
+        </div>
+        <div className="flex items-center gap-1.5">
           {updatePending && (
             <button
               onClick={handleRefresh}
-              className="flex items-center gap-1 text-[10px] font-medium bg-primary/10 text-primary px-2 py-0.5 rounded-full hover:bg-primary/20 transition-colors animate-pulse"
+              className="flex items-center gap-1 px-2 rounded-md border border-border text-muted-foreground hover:bg-muted hover:border-muted-foreground/30 transition-all"
+              style={{ height: 26, fontSize: 11 }}
             >
               <RefreshCw className={`w-3 h-3 ${refreshing ? "animate-spin" : ""}`} />
-              {lang === "pt" ? "Atualizar" : "Update"}
+              <span>{t("updated") === "Atualizado" ? "Atualizar" : "Update"}</span>
             </button>
           )}
-          <TagLegend />
-          {/* Single unified view toggle — segmented control */}
-          <div className="flex items-center bg-muted/40 rounded-md p-0.5 gap-0.5">
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <span className="inline-block">
+                <TagLegend />
+              </span>
+            </TooltipTrigger>
+          </Tooltip>
+          {/* Expand/Collapse segmented control */}
+          <div className="flex items-center bg-secondary rounded-lg p-0.5 gap-0.5">
             <Tooltip>
               <TooltipTrigger asChild>
                 <button
                   onClick={() => { setAllExpanded(true); setAllCollapsed(false); setCompactMode(false); }}
-                  className={`flex items-center justify-center w-6 h-6 rounded transition-all ${allExpanded && !compactMode ? 'bg-card text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}
+                  className={`flex items-center justify-center rounded-md transition-all duration-[120ms] ${allExpanded && !compactMode ? 'bg-card text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}
+                  style={{ width: 28, height: 28 }}
                 >
                   <ChevronsDown className="w-3.5 h-3.5" />
                 </button>
@@ -458,7 +471,8 @@ const Index = () => {
               <TooltipTrigger asChild>
                 <button
                   onClick={() => { setAllCollapsed(true); setAllExpanded(false); setCompactMode(true); }}
-                  className={`flex items-center justify-center w-6 h-6 rounded transition-all ${allCollapsed || compactMode ? 'bg-card text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}
+                  className={`flex items-center justify-center rounded-md transition-all duration-[120ms] ${allCollapsed || compactMode ? 'bg-card text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}
+                  style={{ width: 28, height: 28 }}
                 >
                   <ChevronsUp className="w-3.5 h-3.5" />
                 </button>
@@ -466,15 +480,16 @@ const Index = () => {
               <TooltipContent side="bottom" className="text-[10px]">{lang === "pt" ? "Compactar todos" : "Collapse all"}</TooltipContent>
             </Tooltip>
           </div>
-          {/* Close timeline button — inline in header */}
+          {/* Close timeline button */}
           {!isMobile && (
             <Tooltip>
               <TooltipTrigger asChild>
                 <button
                   onClick={() => togglePanel("timeline")}
-                  className="w-6 h-6 rounded-full flex items-center justify-center text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-all duration-200"
+                  className="flex items-center justify-center rounded-lg bg-secondary text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-all duration-[120ms]"
+                  style={{ width: 28, height: 28 }}
                 >
-                  <X className="w-3 h-3" strokeWidth={2.5} />
+                  <X className="w-3.5 h-3.5" strokeWidth={2.5} />
                 </button>
               </TooltipTrigger>
               <TooltipContent side="bottom" className="text-[10px]">{lang === "pt" ? "Fechar Timeline" : "Close Timeline"}</TooltipContent>
