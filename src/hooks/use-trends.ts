@@ -27,7 +27,7 @@ const SOURCE_GROUPS: Record<string, string[]> = {
   tech: ["Hacker News", "GitHub", "Stack Overflow"],
   busca: ["Google Trends"],
   enciclopedia: ["Wikipedia"],
-  conflitos: ["GDELT"],
+  conflitos: ["GDELT", "GDELT DOC"],
 };
 
 // ─── Source Health Tracker ──────────────────────────────────────────
@@ -644,7 +644,7 @@ export function useTrends(filters: FilterState, onTrendCountsChange: (counts: Re
         return result;
       };
 
-      const [edgeResult, extraResult, extraSourcesResult, socialTrendsResult, openDataResult, redditItems, blueskyItems, mastodonItems] = await Promise.all([
+      const [edgeResult, extraResult, extraSourcesResult, socialTrendsResult, openDataResult, redditItems, blueskyItems, mastodonItems, gdeltDocResult] = await Promise.all([
         invokeFunctionWithLogs("Google Trends", "fetch-trends", 12000),
         invokeFunctionWithLogs("The Guardian/News Extra", "fetch-news-extra", 10000),
         invokeFunctionWithLogs("Fontes Oficiais Extras", "fetch-extra-sources", 10000),
@@ -653,6 +653,7 @@ export function useTrends(filters: FilterState, onTrendCountsChange: (counts: Re
         fetchClientSourceWithLogs("Reddit", fetchRedditClientSide()),
         fetchClientSourceWithLogs("Bluesky", fetchBlueskyClientSide()),
         fetchClientSourceWithLogs("Mastodon", fetchMastodonClientSide()),
+        invokeFunctionWithLogs("GDELT DOC", "fetch-gdelt-trends", 10000),
       ]);
 
       // Save health state
@@ -663,7 +664,8 @@ export function useTrends(filters: FilterState, onTrendCountsChange: (counts: Re
       const extraSourcesTrends: TrendCardProps[] = extraSourcesResult.data?.trends || [];
       const socialTrends: TrendCardProps[] = socialTrendsResult.data?.trends || [];
       const openDataTrends: TrendCardProps[] = openDataResult.data?.trends || [];
-      const rawTrends = [...edgeTrends, ...extraTrends, ...extraSourcesTrends, ...socialTrends, ...openDataTrends, ...redditItems, ...blueskyItems, ...mastodonItems];
+      const gdeltDocTrends: TrendCardProps[] = gdeltDocResult.data?.trends || [];
+      const rawTrends = [...edgeTrends, ...extraTrends, ...extraSourcesTrends, ...socialTrends, ...openDataTrends, ...redditItems, ...blueskyItems, ...mastodonItems, ...gdeltDocTrends];
       
       if (import.meta.env.DEV) console.log("📦 Total de trends combinadas:", rawTrends.length);
 
