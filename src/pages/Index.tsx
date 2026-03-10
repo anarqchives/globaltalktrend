@@ -762,10 +762,13 @@ const Index = () => {
       <div className="flex-1 overflow-hidden flex flex-col min-h-0">
         {isMobile ? (
           <>
-            {/* Trend Radar — fixed height on mobile */}
+            {/* Trend Radar — expands to fill most of screen when open */}
             <div 
-              className="overflow-y-auto overflow-x-hidden shrink-0 transition-[max-height] duration-300 ease-in-out"
-              style={{ maxHeight: mobileRadarCollapsed ? 42 : '40vh' }}
+              className="overflow-y-auto overflow-x-hidden shrink-0 transition-[max-height,flex] duration-300 ease-in-out border-b border-border/30"
+              style={{ 
+                maxHeight: mobileRadarCollapsed ? 42 : 'calc(100vh - 52px - 44px - 56px)',
+                flex: mobileRadarCollapsed ? '0 0 42px' : '1 1 auto',
+              }}
             >
               <TrendRadar
                 trends={filteredTrends}
@@ -779,8 +782,8 @@ const Index = () => {
                 onToggleCollapse={() => setMobileRadarCollapsed(c => !c)}
               />
             </div>
-            {/* Timeline/Map */}
-            <div className="flex-1 min-h-0 flex flex-col relative">
+            {/* Timeline/Map — takes remaining space, or full space when radar collapsed */}
+            <div className={`flex flex-col relative ${mobileRadarCollapsed ? 'flex-1 min-h-0' : 'shrink-0'}`} style={{ minHeight: mobileRadarCollapsed ? 0 : 120, maxHeight: mobileRadarCollapsed ? undefined : '40vh' }}>
               <div className="flex-1 min-h-0 overflow-hidden">
                 {viewMode === "timeline" ? renderTimeline() : (
                   <div className="h-full">{renderMap()}</div>
