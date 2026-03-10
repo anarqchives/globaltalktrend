@@ -1728,4 +1728,4 @@ const GoogleMapView = ({
   );
 };
 
-export default GoogleMapView;
+export default React.memo(GoogleMapView);
