@@ -384,17 +384,16 @@ const TimelineCard = ({
   return (
     <motion.div
       className="timeline-card-wrapper"
-      initial={{ opacity: 0, y: -8, scale: 0.99 }}
+      initial={{ opacity: 0, y: 12, scale: 0.97 }}
       whileInView={{ opacity: 1, y: 0, scale: 1 }}
-      exit={{ opacity: 0, y: -8 }}
-      viewport={{ once: true, margin: "-30px" }}
-      transition={{ duration: 0.25, ease: [0, 0, 0.2, 1], delay: Math.min(staggerIndex * 0.035, 0.21) }}
+      exit={{ opacity: 0, y: -8, scale: 0.97 }}
+      viewport={{ once: true, margin: "-40px" }}
+      transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1], delay: Math.min(staggerIndex * 0.04, 0.24) }}
     >
       <div
         className={`timeline-card group ${cardTypeClass} ${expanded ? 'timeline-card-expanded' : ''}`}
         data-tier={tier}
         data-card-type={cardType}
-        style={{ border: "1px solid #F3F4F6", borderRadius: 8, margin: 4, background: "hsl(var(--card))" }}
       >
         {/* When expanded, hide the collapsed card entirely */}
         {!expanded && (
