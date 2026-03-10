@@ -1162,9 +1162,9 @@ const GoogleMapView = ({
               strokeOpacity: opacity,
               scale: currentScale,
             });
-            requestAnimationFrame(animateRipple);
+            scheduleRaf(animateRipple);
           };
-          requestAnimationFrame(animateRipple);
+          scheduleRaf(animateRipple);
         }
       }
 
