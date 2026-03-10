@@ -1026,7 +1026,7 @@ export default function WeeklyPulseDashboard({ trends }: { trends: TrendCardProp
   }, [weeklyData, trends, lang]);
 
   // If no weekly data and no trends, show empty state
-  const hasAnyData = weeklyData.length > 0 || trends.length > 0;
+  const hasAnyData = weeklyData.length > 0 || trends.length > 0 || timedOut;
 
   if (loading) {
     const shimmer = "relative overflow-hidden before:absolute before:inset-0 before:-translate-x-full before:animate-[shimmer_1.5s_infinite] before:bg-gradient-to-r before:from-transparent before:via-foreground/5 before:to-transparent";
