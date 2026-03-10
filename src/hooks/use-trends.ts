@@ -993,7 +993,7 @@ export function useTrends(filters: FilterState, onTrendCountsChange: (counts: Re
     if (filtered.length === 0 && trends.length > 0) {
       const hasActiveFilters = filters.category !== "Todas" || filters.type !== "Todas mídias";
       if (hasActiveFilters) {
-        console.log(`🧠 Zero trends para filtros ativos (cat=${filterCategory}, type=${filters.type}) — usando fallback`);
+        if (import.meta.env.DEV) console.log(`🧠 Zero trends para filtros ativos (cat=${filterCategory}, type=${filters.type}) — usando fallback`);
         
         // Try relaxing type filter first (keep category)
         if (filters.type !== "Todas mídias" && filters.category !== "Todas") {
