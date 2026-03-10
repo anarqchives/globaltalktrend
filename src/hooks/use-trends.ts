@@ -676,7 +676,18 @@ export function useTrends(filters: FilterState, onTrendCountsChange: (counts: Re
       const socialTrends: TrendCardProps[] = socialTrendsResult.data?.trends || [];
       const openDataTrends: TrendCardProps[] = openDataResult.data?.trends || [];
       const gdeltDocTrends: TrendCardProps[] = gdeltDocResult.data?.trends || [];
-      const rawTrends = [...edgeTrends, ...extraTrends, ...extraSourcesTrends, ...socialTrends, ...openDataTrends, ...redditItems, ...blueskyItems, ...mastodonItems, ...gdeltDocTrends];
+      // ONDA 2:
+      const crossrefTrends: TrendCardProps[] = crossrefResult.data?.trends || [];
+      const semanticTrends: TrendCardProps[] = semanticResult.data?.trends || [];
+      const whoTrends: TrendCardProps[] = whoResult.data?.trends || [];
+      const imfTrends: TrendCardProps[] = imfResult.data?.trends || [];
+      const techScienceTrends: TrendCardProps[] = techScienceResult.data?.trends || [];
+
+      const rawTrends = [
+        ...edgeTrends, ...extraTrends, ...extraSourcesTrends, ...socialTrends, ...openDataTrends,
+        ...redditItems, ...blueskyItems, ...mastodonItems, ...gdeltDocTrends,
+        ...crossrefTrends, ...semanticTrends, ...whoTrends, ...imfTrends, ...techScienceTrends,
+      ];
       
       if (import.meta.env.DEV) console.log("📦 Total de trends combinadas:", rawTrends.length);
 
