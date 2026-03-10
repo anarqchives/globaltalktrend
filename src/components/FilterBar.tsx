@@ -1,4 +1,5 @@
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useRef, useEffect, useCallback } from "react";
+import { createPortal } from "react-dom";
 import { Globe, Calendar, LayoutGrid, Layers, ChevronDown, X, Bell, RotateCcw } from "lucide-react";
 import { useLanguage, LangCode } from "@/contexts/LanguageContext";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
@@ -90,18 +91,31 @@ interface ChipDropdownProps {
 
 function ChipDropdown({ chipLabel, value, options, isActive, icon, onChange, onClear, isGrouped, groups }: ChipDropdownProps) {
   const [open, setOpen] = useState(false);
-  const ref = useRef<HTMLDivElement>(null);
+  const btnRef = useRef<HTMLButtonElement>(null);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+  const [pos, setPos] = useState<{ top: number; left: number } | null>(null);
 
+  // Calculate position when opening
+  useEffect(() => {
+    if (!open || !btnRef.current) return;
+    const rect = btnRef.current.getBoundingClientRect();
+    setPos({ top: rect.bottom + 4, left: rect.left });
+  }, [open]);
+
+  // Close on outside click
   useEffect(() => {
     if (!open) return;
     const handleClick = (e: MouseEvent) => {
-      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+      if (
+        btnRef.current?.contains(e.target as Node) ||
+        dropdownRef.current?.contains(e.target as Node)
+      ) return;
+      setOpen(false);
     };
     document.addEventListener("mousedown", handleClick);
     return () => document.removeEventListener("mousedown", handleClick);
   }, [open]);
 
-  // For active state, show the selected value label; otherwise show chipLabel
   const selectedLabel = isGrouped && groups
     ? groups.flatMap(g => g.items).find(c => c.value === value)?.label
     : options.find(o => o.value === value)?.label;
@@ -111,57 +125,58 @@ function ChipDropdown({ chipLabel, value, options, isActive, icon, onChange, onC
     : chipLabel;
 
   return (
-    <div ref={ref} className="relative flex-shrink-0">
+    <>
       <button
+        ref={btnRef}
         onClick={() => setOpen(!open)}
-        className={`inline-flex items-center transition-all duration-[120ms] h-[30px] px-2.5 rounded-lg text-xs font-medium gap-[5px] border ${
+        className={`inline-flex items-center transition-all duration-150 h-[32px] px-3 rounded-lg text-xs font-semibold gap-1.5 border-[1.5px] flex-shrink-0 ${
           isActive
-            ? "border-foreground bg-foreground text-background"
-            : "border-border bg-card text-muted-foreground hover:border-muted-foreground/50 hover:bg-muted"
+            ? "border-primary bg-primary text-primary-foreground shadow-sm"
+            : "border-border bg-card text-foreground/70 hover:border-primary/40 hover:bg-accent hover:text-foreground"
         }`}
       >
-        <span className="flex-shrink-0" style={{ display: "flex", alignItems: "center" }}>{icon}</span>
+        <span className="flex-shrink-0 flex items-center">{icon}</span>
         <span className="truncate max-w-[100px]">{displayText}</span>
         {isActive ? (
           <span
             onClick={(e) => { e.stopPropagation(); onClear(); setOpen(false); }}
-            className="flex-shrink-0 cursor-pointer hover:opacity-70"
-            style={{ marginLeft: 4, display: "flex", alignItems: "center" }}
+            className="flex-shrink-0 cursor-pointer hover:opacity-70 ml-0.5 flex items-center"
           >
             <X size={10} />
           </span>
         ) : (
-          <ChevronDown size={10} className="flex-shrink-0 opacity-60" style={{ marginLeft: 4 }} />
+          <ChevronDown size={10} className="flex-shrink-0 opacity-50 ml-0.5" />
         )}
       </button>
 
-      <AnimatePresence>
-        {open && (
+      {/* Portal-rendered dropdown */}
+      {open && pos && createPortal(
+        <AnimatePresence>
           <motion.div
+            ref={dropdownRef}
             initial={{ opacity: 0, y: -4 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -4 }}
-            transition={{ duration: 0.15, ease: "easeOut" }}
-            className="absolute left-0 top-full mt-1 z-50 bg-popover border border-border rounded-xl p-1"
-            style={{ boxShadow: "0 8px 24px rgba(0,0,0,0.08)", minWidth: 180, maxHeight: 320, overflowY: "auto" }}
+            transition={{ duration: 0.12, ease: "easeOut" }}
+            className="fixed z-[9999] bg-popover border border-border rounded-xl p-1 shadow-xl"
+            style={{ top: pos.top, left: pos.left, minWidth: 200, maxHeight: 360, overflowY: "auto" }}
           >
             {isGrouped && groups ? (
               groups.map(group => (
                 <div key={group.group}>
-                  <div className="px-2 py-1 text-[10px] font-bold text-muted-foreground/50 uppercase tracking-wider">{group.group}</div>
+                  <div className="px-2.5 py-1.5 text-[10px] font-bold text-muted-foreground/50 uppercase tracking-wider">{group.group}</div>
                   {group.items.map(item => (
                     <button
                       key={item.value}
                       onClick={() => { onChange(item.value); setOpen(false); }}
-                      className={`w-full text-left px-2.5 flex items-center justify-between rounded-lg transition-colors ${
+                      className={`w-full text-left px-3 py-1.5 flex items-center justify-between rounded-lg transition-colors text-[12px] ${
                         value === item.value
                           ? "bg-primary/10 text-primary font-semibold"
                           : "hover:bg-muted text-foreground"
                       }`}
-                      style={{ height: 32, fontSize: 12 }}
                     >
                       <span>{item.label}</span>
-                      {value === item.value && <span className="text-primary">✓</span>}
+                      {value === item.value && <span className="text-primary text-xs">✓</span>}
                     </button>
                   ))}
                 </div>
@@ -171,22 +186,22 @@ function ChipDropdown({ chipLabel, value, options, isActive, icon, onChange, onC
                 <button
                   key={opt.value}
                   onClick={() => { onChange(opt.value); setOpen(false); }}
-                  className={`w-full text-left px-2.5 flex items-center justify-between rounded-lg transition-colors ${
+                  className={`w-full text-left px-3 py-1.5 flex items-center justify-between rounded-lg transition-colors text-[12px] ${
                     value === opt.value
                       ? "bg-primary/10 text-primary font-semibold"
                       : "hover:bg-muted text-foreground"
                   }`}
-                  style={{ height: 32, fontSize: 12 }}
                 >
                   <span>{opt.label}</span>
-                  {value === opt.value && <span className="text-primary">✓</span>}
+                  {value === opt.value && <span className="text-primary text-xs">✓</span>}
                 </button>
               ))
             )}
           </motion.div>
-        )}
-      </AnimatePresence>
-    </div>
+        </AnimatePresence>,
+        document.body
+      )}
+    </>
   );
 }
 
@@ -232,15 +247,25 @@ const FilterBar = ({ filters, onChange, onForceReset, onSaveFilter, isLoggedIn }
     { value: "Dados oficiais", label: "Dados Oficiais" }
   ];
 
+  // Active filter summary
+  const activeFilterLabels: string[] = [];
+  if (filters.country !== defaultFilters.country) {
+    const cl = countries.flatMap(g => g.items).find(c => c.value === filters.country)?.label?.replace(/^[^\w\s]*\s*/, '');
+    if (cl) activeFilterLabels.push(cl);
+  }
+  if (filters.period !== defaultFilters.period) activeFilterLabels.push(filters.period);
+  if (filters.category !== defaultFilters.category) activeFilterLabels.push(filters.category);
+  if (filters.type !== defaultFilters.type) activeFilterLabels.push(filters.type);
+
   return (
-    <div className="sticky top-[52px] z-40 bg-card/95 dark:bg-card/95 backdrop-blur-sm border-b border-border" style={{ height: 44 }}>
-      <div className="h-full px-4 flex items-center overflow-x-auto scrollbar-thin" style={{ gap: 8 }}>
+    <div className="sticky top-[52px] z-40 bg-card dark:bg-card border-b-2 border-border shadow-sm" style={{ height: 48 }}>
+      <div className="h-full px-4 flex items-center gap-2 overflow-x-auto scrollbar-hide">
         <ChipDropdown
           chipLabel="Global"
           value={filters.country}
           options={[]}
           isActive={filters.country !== defaultFilters.country}
-          icon={<Globe size={12} />}
+          icon={<Globe size={13} />}
           onChange={(v) => update("country", v)}
           onClear={() => update("country", defaultFilters.country)}
           isGrouped
@@ -251,7 +276,7 @@ const FilterBar = ({ filters, onChange, onForceReset, onSaveFilter, isLoggedIn }
           value={filters.period}
           options={periodOptions}
           isActive={filters.period !== defaultFilters.period}
-          icon={<Calendar size={12} />}
+          icon={<Calendar size={13} />}
           onChange={(v) => update("period", v)}
           onClear={() => update("period", defaultFilters.period)}
         />
@@ -260,7 +285,7 @@ const FilterBar = ({ filters, onChange, onForceReset, onSaveFilter, isLoggedIn }
           value={filters.category}
           options={categoryOptions}
           isActive={filters.category !== defaultFilters.category}
-          icon={<LayoutGrid size={12} />}
+          icon={<LayoutGrid size={13} />}
           onChange={(v) => update("category", v)}
           onClear={() => update("category", defaultFilters.category)}
         />
@@ -269,21 +294,20 @@ const FilterBar = ({ filters, onChange, onForceReset, onSaveFilter, isLoggedIn }
           value={filters.type}
           options={typeOptions}
           isActive={filters.type !== defaultFilters.type}
-          icon={<Layers size={12} />}
+          icon={<Layers size={13} />}
           onChange={(v) => update("type", v)}
           onClear={() => update("type", defaultFilters.type)}
         />
 
-        {/* Spacer before action buttons */}
-        <div style={{ width: 8, flexShrink: 0 }} />
+        <div className="w-px h-5 bg-border/50 mx-1 flex-shrink-0" />
 
-        {/* Reset button — only when filters active */}
+        {/* Reset button */}
         {isFiltered && (
           <Tooltip>
             <TooltipTrigger asChild>
               <button
                 onClick={() => { onChange(defaultFilters); onForceReset?.(); }}
-                className="flex items-center justify-center group w-[30px] h-[30px] flex-shrink-0 rounded-lg border border-border bg-card text-muted-foreground hover:border-muted-foreground/50 hover:bg-muted hover:text-foreground transition-all duration-[120ms]"
+                className="flex items-center justify-center group w-[32px] h-[32px] flex-shrink-0 rounded-lg border border-border bg-card text-muted-foreground hover:border-destructive/50 hover:bg-destructive/10 hover:text-destructive transition-all duration-150"
                 aria-label={lang === "pt" ? "Limpar filtros" : "Clear filters"}
               >
                 <RotateCcw size={13} className="group-hover:animate-[spin_0.3s_ease-in-out]" />
@@ -298,7 +322,7 @@ const FilterBar = ({ filters, onChange, onForceReset, onSaveFilter, isLoggedIn }
           <TooltipTrigger asChild>
             <button
               onClick={() => onSaveFilter?.()}
-              className="flex items-center justify-center w-[30px] h-[30px] flex-shrink-0 rounded-lg border border-border bg-card text-muted-foreground hover:border-muted-foreground/50 hover:bg-muted hover:text-foreground transition-all duration-[120ms]"
+              className="flex items-center justify-center w-[32px] h-[32px] flex-shrink-0 rounded-lg border border-border bg-card text-muted-foreground hover:border-primary/40 hover:bg-accent hover:text-foreground transition-all duration-150"
               aria-label={lang === "pt" ? "Criar alerta" : "Create alert"}
             >
               <Bell size={13} />
@@ -306,6 +330,16 @@ const FilterBar = ({ filters, onChange, onForceReset, onSaveFilter, isLoggedIn }
           </TooltipTrigger>
           <TooltipContent side="bottom" className="text-[10px]">{lang === "pt" ? "Criar alerta" : "Create alert"}</TooltipContent>
         </Tooltip>
+
+        {/* Active filter summary */}
+        {isFiltered && activeFilterLabels.length > 0 && (
+          <>
+            <div className="w-px h-5 bg-border/50 mx-1 flex-shrink-0" />
+            <span className="text-[10px] text-muted-foreground flex-shrink-0 whitespace-nowrap">
+              {lang === "pt" ? "Filtrando" : "Filtering"}: <span className="font-medium text-foreground/70">{activeFilterLabels.join(" · ")}</span>
+            </span>
+          </>
+        )}
 
         <div className="flex-1" />
       </div>
