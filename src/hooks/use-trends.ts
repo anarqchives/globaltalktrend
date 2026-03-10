@@ -826,10 +826,10 @@ export function useTrends(filters: FilterState, onTrendCountsChange: (counts: Re
     const smartFetch = () => {
       const idle = Date.now() - lastActivity > IDLE_THRESHOLD;
       if (idle) {
-        console.log("🔄 Usuário inativo, atualizando trends...");
+        if (import.meta.env.DEV) console.log("🔄 Usuário inativo, atualizando trends...");
         fetchTrends();
       } else {
-        console.log("⏳ Usuário ativo, adiando atualização por 30s...");
+        if (import.meta.env.DEV) console.log("⏳ Usuário ativo, adiando atualização por 30s...");
         // Retry in 30s
         window.setTimeout(() => {
           if (Date.now() - lastActivity > IDLE_THRESHOLD) fetchTrends();
