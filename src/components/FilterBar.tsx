@@ -292,16 +292,6 @@ const FilterBar = ({ filters, onChange, onForceReset, onSaveFilter, isLoggedIn }
                   color: "#6B7280",
                   transition: "all 120ms ease",
                 }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.borderColor = "#9CA3AF";
-                  e.currentTarget.style.background = "#F9FAFB";
-                  e.currentTarget.style.color = "#111827";
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.borderColor = "#E5E7EB";
-                  e.currentTarget.style.background = "hsl(var(--card))";
-                  e.currentTarget.style.color = "#6B7280";
-                }}
                 aria-label={lang === "pt" ? "Limpar filtros" : "Clear filters"}
               >
                 <RotateCcw size={13} className="group-hover:animate-[spin_0.3s_ease-in-out]" />
