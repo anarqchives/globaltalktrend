@@ -236,9 +236,10 @@ const TrendHeader = ({ totalTrends = 0, countriesCount = 0, onRefresh, refreshin
                 </button>
                 <button
                   onClick={() => setLoginOpen(true)}
-                  className="flex items-center gap-1 rounded-full text-caption font-semibold bg-primary text-primary-foreground hover:bg-primary/90 transition-colors shadow-sm h-9 px-4 min-w-[44px] min-h-[44px]">
-                  <LogIn className="w-3.5 h-3.5" />
+                  className="flex items-center gap-1 rounded-full font-semibold text-white hover:brightness-110 transition-all"
+                  style={{ background: '#2563EB', height: '30px', padding: '0 12px', fontSize: '12px' }}>
                   <span className="hidden sm:inline">{t("enter")}</span>
+                  <span className="text-xs">→</span>
                 </button>
               </>
             )}
