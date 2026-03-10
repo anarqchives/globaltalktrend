@@ -763,7 +763,10 @@ const Index = () => {
         {isMobile ? (
           <>
             {/* Trend Radar — fixed height on mobile */}
-            <div className="max-h-[40vh] overflow-y-auto overflow-x-hidden shrink-0">
+            <div 
+              className="overflow-y-auto overflow-x-hidden shrink-0 transition-[max-height] duration-300 ease-in-out"
+              style={{ maxHeight: mobileRadarCollapsed ? 42 : '40vh' }}
+            >
               <TrendRadar
                 trends={filteredTrends}
                 allTrends={allTrends}
@@ -772,6 +775,8 @@ const Index = () => {
                 onSelectTrend={handleSelectTrend}
                 onFilterCountry={(code) => setFilters(f => ({ ...f, country: code }))}
                 onAnomalyClick={handleAnomalyClick}
+                isCollapsed={mobileRadarCollapsed}
+                onToggleCollapse={() => setMobileRadarCollapsed(c => !c)}
               />
             </div>
             {/* Timeline/Map */}
