@@ -215,6 +215,19 @@ const GoogleMapView = ({
   const flowHoverInfoRef = useRef<any>(null);
   const sentimentMarkersRef = useRef<any[]>([]);
   const sentimentCirclesRef = useRef<any[]>([]);
+  const rafIdsRef = useRef<number[]>([]);
+
+  // Cancel all rAF loops helper
+  const cancelAllRafs = useCallback(() => {
+    rafIdsRef.current.forEach(id => cancelAnimationFrame(id));
+    rafIdsRef.current = [];
+  }, []);
+
+  // Track rAF registrations
+  const trackRaf = useCallback((id: number) => {
+    rafIdsRef.current.push(id);
+    return id;
+  }, []);
 
   // Track updates for notification
   useEffect(() => {
