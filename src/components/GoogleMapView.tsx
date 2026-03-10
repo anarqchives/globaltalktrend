@@ -868,9 +868,9 @@ const GoogleMapView = ({
           strokeOpacity: 0.2 + 0.1 * Math.sin(progress * Math.PI * 2),
           scale: breathScale,
         });
-        scheduleRaf(animateBreathing);
+        scheduleRaf(`breath-${bubbleIndex}`, animateBreathing);
       };
-      scheduleRaf(animateBreathing);
+      scheduleRaf(`breath-${bubbleIndex}`, animateBreathing);
 
       // Flag label
       const flag = bubble.countryId.length === 2
