@@ -128,7 +128,7 @@ const Index = () => {
   const [criticalDismissed, setCriticalDismissed] = useState(false);
   const [emergingDismissed, setEmergingDismissed] = useState(false);
   const [heatmapDismissed, setHeatmapDismissed] = useState(false);
-  const [showOnboarding, setShowOnboarding] = useState(false);
+  
   const [trendContexts, setTrendContexts] = useState<Record<string, string>>({});
 
   useEffect(() => {
