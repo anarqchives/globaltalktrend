@@ -15,18 +15,23 @@ import FreshnessIndicator from "./FreshnessIndicator";
 import { CrossPlatformCluster } from "@/hooks/use-cross-platform";
 import { getTooltip } from "@/lib/format-utils";
 
+// Source brand colors — consistent everywhere per design system
 const platformIcons: Record<string, { emoji: string; color: string }> = {
-  YouTube: { emoji: "▶", color: "hsl(0, 72%, 51%)" },
+  YouTube: { emoji: "▶", color: "#FF0000" },
   Reddit: { emoji: "◉", color: "hsl(16, 100%, 50%)" },
-  "Google Trends": { emoji: "◎", color: "hsl(210, 100%, 40%)" },
+  "Google Trends": { emoji: "◎", color: "#4285F4" },
   NewsAPI: { emoji: "◈", color: "hsl(142, 60%, 40%)" },
   Bluesky: { emoji: "🦋", color: "hsl(200, 100%, 50%)" },
-  Mastodon: { emoji: "🐘", color: "hsl(270, 60%, 55%)" },
-  "Hacker News": { emoji: "🔶", color: "hsl(25, 100%, 50%)" },
+  Mastodon: { emoji: "🐘", color: "#6364FF" },
+  "Hacker News": { emoji: "🔶", color: "#FF6600" },
   Wikipedia: { emoji: "📖", color: "hsl(0, 0%, 40%)" },
   "Stack Overflow": { emoji: "💻", color: "hsl(25, 90%, 50%)" },
-  GitHub: { emoji: "🐙", color: "hsl(0, 0%, 20%)" },
+  GitHub: { emoji: "🐙", color: "#24292E" },
   "X (Twitter)": { emoji: "𝕏", color: "hsl(0, 0%, 15%)" },
+  "The Guardian": { emoji: "📰", color: "#0D6EFD" },
+  "GNews": { emoji: "📰", color: "hsl(160, 60%, 45%)" },
+  "PubMed": { emoji: "🔬", color: "#007CBB" },
+  "Variety": { emoji: "🎬", color: "#B8860B" },
 };
 
 const countryCodeToFlag = (code?: string) => {
