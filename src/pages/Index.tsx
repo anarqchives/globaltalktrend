@@ -131,11 +131,6 @@ const Index = () => {
   
   const [trendContexts, setTrendContexts] = useState<Record<string, string>>({});
 
-  useEffect(() => {
-    if (user?.id && !hasCompletedOnboarding(user.id)) {
-      setShowOnboarding(true);
-    }
-  }, [user?.id]);
 
   useEffect(() => {
     if (criticalMoments.length > 0) setCriticalDismissed(false);
