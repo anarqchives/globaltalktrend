@@ -449,20 +449,32 @@ const Index = () => {
               </span>
             </TooltipTrigger>
           </Tooltip>
-          {/* Compact toggle only */}
-          <div className="flex items-center bg-secondary rounded-lg p-0.5 gap-0.5">
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <button
-                  onClick={() => { setAllCollapsed(true); setAllExpanded(false); setCompactMode(!compactMode); }}
-                  className={`flex items-center justify-center rounded-md transition-all duration-[120ms] ${compactMode ? 'bg-card text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}
-                  style={{ width: 28, height: 28 }}
-                >
-                  <ChevronsUp className="w-3.5 h-3.5" />
-                </button>
-              </TooltipTrigger>
-              <TooltipContent side="bottom" className="text-[10px]">{lang === "pt" ? "Compactar" : "Compact"}</TooltipContent>
-            </Tooltip>
+          {/* View toggle: Expandido / Compacto */}
+          <div className="flex items-center overflow-hidden" style={{ border: "1px solid #E5E7EB", borderRadius: 8 }}>
+            <button
+              onClick={() => setCompactMode(false)}
+              className="flex items-center justify-center transition-all duration-[120ms]"
+              style={{
+                width: 28, height: 26,
+                background: !compactMode ? "#111827" : "hsl(var(--card))",
+                color: !compactMode ? "white" : "#9CA3AF",
+              }}
+              title={lang === "pt" ? "Expandido" : "Expanded"}
+            >
+              <LayoutGrid size={13} />
+            </button>
+            <button
+              onClick={() => setCompactMode(true)}
+              className="flex items-center justify-center transition-all duration-[120ms]"
+              style={{
+                width: 28, height: 26,
+                background: compactMode ? "#111827" : "hsl(var(--card))",
+                color: compactMode ? "white" : "#9CA3AF",
+              }}
+              title={lang === "pt" ? "Compacto" : "Compact"}
+            >
+              <List size={13} />
+            </button>
           </div>
           {/* Close timeline button */}
           {!isMobile && (
