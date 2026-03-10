@@ -678,7 +678,7 @@ const TimelineCard = ({
             </div>
           )}
 
-          {/* ⑦ SENTIMENT — collapsible */}
+          {/* ⑦ SENTIMENT — collapsible, refined bar */}
           <div className="mb-3">
             <button onClick={() => setSentimentOpen(!sentimentOpen)} className="flex items-center gap-1.5 text-[10px] font-semibold text-muted-foreground uppercase tracking-wide hover:text-foreground transition-colors w-full">
               <ChevronDown className={`w-3 h-3 transition-transform duration-150 ${sentimentOpen ? 'rotate-0' : '-rotate-90'}`} />
@@ -686,22 +686,21 @@ const TimelineCard = ({
             </button>
             {sentimentOpen && (
               <div className="mt-2">
-                {/* Horizontal segmented bar */}
                 {(() => {
                   const pos = changePositive ? 55 : 25;
                   const neu = 30;
                   const neg = changePositive ? 15 : 45;
                   return (
                     <>
-                      <div className="w-full h-3 rounded-full overflow-hidden flex">
-                        <div style={{ width: `${pos}%` }} className="bg-emerald-500" />
-                        <div style={{ width: `${neu}%` }} className="bg-muted-foreground/30" />
-                        <div style={{ width: `${neg}%` }} className="bg-destructive" />
+                      <div className="w-full h-1.5 rounded-full overflow-hidden flex">
+                        <div style={{ width: `${pos}%`, background: 'linear-gradient(90deg, #34D399, #10B981)' }} />
+                        <div style={{ width: `${neu}%`, background: '#E5E7EB' }} />
+                        <div style={{ width: `${neg}%`, background: 'linear-gradient(90deg, #F87171, #EF4444)' }} />
                       </div>
-                      <div className="flex items-center gap-3 mt-1.5 text-[11px]">
-                        <span className="text-emerald-600 dark:text-emerald-400">😊 {t("positive")}: {pos}%</span>
-                        <span className="text-muted-foreground">😐 {t("neutral")}: {neu}%</span>
-                        <span className="text-destructive">😞 {t("negative")}: {neg}%</span>
+                      <div className="flex items-center justify-between mt-1.5 text-[11px]">
+                        <span style={{ color: '#059669' }}>😊 {pos}% {t("positive")}</span>
+                        <span style={{ color: '#9CA3AF' }}>{neu}% {t("neutral")}</span>
+                        <span style={{ color: '#DC2626' }}>{neg}% {t("negative")} 😞</span>
                       </div>
                     </>
                   );

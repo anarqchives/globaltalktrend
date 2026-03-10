@@ -449,31 +449,19 @@ const Index = () => {
               </span>
             </TooltipTrigger>
           </Tooltip>
-          {/* Expand/Collapse segmented control */}
+          {/* Compact toggle only */}
           <div className="flex items-center bg-secondary rounded-lg p-0.5 gap-0.5">
             <Tooltip>
               <TooltipTrigger asChild>
                 <button
-                  onClick={() => { setAllExpanded(true); setAllCollapsed(false); setCompactMode(false); }}
-                  className={`flex items-center justify-center rounded-md transition-all duration-[120ms] ${allExpanded && !compactMode ? 'bg-card text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}
-                  style={{ width: 28, height: 28 }}
-                >
-                  <ChevronsDown className="w-3.5 h-3.5" />
-                </button>
-              </TooltipTrigger>
-              <TooltipContent side="bottom" className="text-[10px]">{lang === "pt" ? "Expandir todos" : "Expand all"}</TooltipContent>
-            </Tooltip>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <button
-                  onClick={() => { setAllCollapsed(true); setAllExpanded(false); setCompactMode(true); }}
-                  className={`flex items-center justify-center rounded-md transition-all duration-[120ms] ${allCollapsed || compactMode ? 'bg-card text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}
+                  onClick={() => { setAllCollapsed(true); setAllExpanded(false); setCompactMode(!compactMode); }}
+                  className={`flex items-center justify-center rounded-md transition-all duration-[120ms] ${compactMode ? 'bg-card text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}
                   style={{ width: 28, height: 28 }}
                 >
                   <ChevronsUp className="w-3.5 h-3.5" />
                 </button>
               </TooltipTrigger>
-              <TooltipContent side="bottom" className="text-[10px]">{lang === "pt" ? "Compactar todos" : "Collapse all"}</TooltipContent>
+              <TooltipContent side="bottom" className="text-[10px]">{lang === "pt" ? "Compactar" : "Compact"}</TooltipContent>
             </Tooltip>
           </div>
           {/* Close timeline button */}
