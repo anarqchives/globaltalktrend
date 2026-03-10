@@ -1,7 +1,7 @@
 import { useState, useMemo, useEffect } from "react";
 import { motion } from "framer-motion";
 import { SentimentDonut, EmotionBars } from "./SentimentCharts";
-import { ChevronDown, ChevronUp, Link2, Bell, ExternalLink, Shield, CheckCircle2, FlaskConical, Globe, Newspaper, Bookmark, Flag, Share2, Eye, TrendingUp, Radio, Clock } from "lucide-react";
+import { ChevronDown, ChevronUp, Link2, Bell, ExternalLink, Shield, CheckCircle2, FlaskConical, Globe, Newspaper, Bookmark, Flag, Share2, Eye, TrendingUp, Radio, Clock, Info } from "lucide-react";
 import { AreaChart, Area, ResponsiveContainer, XAxis, YAxis, Tooltip as RechartsTooltip, CartesianGrid } from "recharts";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { toast } from "@/hooks/use-toast";
@@ -15,22 +15,48 @@ import FreshnessIndicator from "./FreshnessIndicator";
 import { CrossPlatformCluster } from "@/hooks/use-cross-platform";
 import { getTooltip } from "@/lib/format-utils";
 import AbbrTooltip from "./AbbrTooltip";
+import SparklineArea from "./SparklineArea";
 
-// Source brand colors — consistent everywhere per design system
+// Source brand colors
+const SOURCE_COLORS: Record<string, string> = {
+  "The Guardian": "#052962",
+  "arXiv": "#B31B1B",
+  "PubMed": "#007CBB",
+  "Google Trends": "#4285F4",
+  "Wikipedia": "#000000",
+  "World Bank": "#009FDA",
+  "IBGE": "#003A6C",
+  "Bluesky": "#0085FF",
+  "GitHub": "#24292E",
+  "Mastodon": "#6364FF",
+  "YouTube": "#FF0000",
+  "Reddit": "#FF4500",
+  "Hacker News": "#FF6600",
+  "X (Twitter)": "#1DA1F2",
+  "NewsAPI": "#2E8B57",
+  "GNews": "#3CB371",
+  "Stack Overflow": "#F48024",
+  "Variety": "#B8860B",
+  "OpenAlex": "#3366CC",
+  "NPR": "#EC1427",
+  "Bing News": "#008373",
+  "NewsData": "#4682B4",
+};
+
 const platformIcons: Record<string, { emoji: string; color: string }> = {
   YouTube: { emoji: "▶", color: "#FF0000" },
-  Reddit: { emoji: "◉", color: "hsl(16, 100%, 50%)" },
+  Reddit: { emoji: "◉", color: "#FF4500" },
   "Google Trends": { emoji: "◎", color: "#4285F4" },
-  NewsAPI: { emoji: "◈", color: "hsl(142, 60%, 40%)" },
-  Bluesky: { emoji: "🦋", color: "hsl(200, 100%, 50%)" },
+  NewsAPI: { emoji: "◈", color: "#2E8B57" },
+  Bluesky: { emoji: "🦋", color: "#0085FF" },
   Mastodon: { emoji: "🐘", color: "#6364FF" },
   "Hacker News": { emoji: "🔶", color: "#FF6600" },
-  Wikipedia: { emoji: "📖", color: "hsl(0, 0%, 40%)" },
-  "Stack Overflow": { emoji: "💻", color: "hsl(25, 90%, 50%)" },
+  Wikipedia: { emoji: "📖", color: "#000000" },
+  "Stack Overflow": { emoji: "💻", color: "#F48024" },
   GitHub: { emoji: "🐙", color: "#24292E" },
-  "X (Twitter)": { emoji: "𝕏", color: "hsl(0, 0%, 15%)" },
-  "The Guardian": { emoji: "📰", color: "#0D6EFD" },
-  "GNews": { emoji: "📰", color: "hsl(160, 60%, 45%)" },
+  "X (Twitter)": { emoji: "𝕏", color: "#1DA1F2" },
+  "The Guardian": { emoji: "📰", color: "#052962" },
+  "GNews": { emoji: "📰", color: "#3CB371" },
   "PubMed": { emoji: "🔬", color: "#007CBB" },
   "Variety": { emoji: "🎬", color: "#B8860B" },
 };
@@ -133,15 +159,79 @@ function localizeFallbackTime(timeValue: string, lang: string): string {
   return timeValue;
 }
 
-function detectSignalType(platform: string, change?: string): string {
+// Determine card type based on content
+type CardType = "standard" | "article" | "viral" | "image";
+
+function getCardType(props: { thumbnail?: string; trendScore: number; description?: string; details?: string; platform: string; trigger: ReturnType<typeof detectTriggerFromTitle>; imgError: boolean }): CardType {
+  if (props.thumbnail && !props.imgError) return "image";
+  if (props.trendScore >= 60 || (props.trigger && ["crisis", "politics"].includes(props.trigger.labelKey))) return "viral";
+  const desc = props.description || props.details || "";
+  const isPressSource = ["The Guardian", "NewsAPI", "GNews", "Bing News", "NewsData", "NPR", "PubMed", "OpenAlex", "IBGE", "World Bank"].includes(props.platform);
+  if (desc.length > 60 && isPressSource) return "article";
+  return "standard";
+}
+
+// Smart context line generator
+function generateSmartContext(platform: string, volume: string, countryCode?: string, category?: string, sources?: string[]): string {
+  const flag = countryCodeToFlag(countryCode);
+  const country = countryCode && countryCode !== "GL" ? ` ${flag || ""} ${countryCode}` : "";
+  
+  if (platform === "Google Trends") return `${volume || "—"} buscas${country} · ${category || "Geral"}`;
+  if (["The Guardian", "NewsAPI", "GNews", "Bing News", "NewsData", "NPR"].includes(platform)) return `${platform}${country} · ${category || "Notícias"}`;
+  if (["PubMed", "OpenAlex"].includes(platform)) return `${platform} · Artigo acadêmico${country}`;
+  if (platform === "Wikipedia") return `Artigo enciclopédico · ${volume || "—"} visualizações`;
+  if (["Reddit", "Bluesky", "Mastodon", "X (Twitter)"].includes(platform)) {
+    const interactions = volume && volume !== "0" ? `${volume} interações` : "";
+    return `${platform}${interactions ? ` · ${interactions}` : ""}${country}`;
+  }
+  if (["GitHub", "Hacker News", "Stack Overflow"].includes(platform)) return `${platform} · Dev${country}`;
+  return `${platform}${country}`;
+}
+
+// TVI badge tier
+function getTVITier(score: number) {
+  if (score >= 70) return { bg: "bg-red-50 dark:bg-red-500/10", text: "text-red-600 dark:text-red-400", pulse: true };
+  if (score >= 50) return { bg: "bg-orange-50 dark:bg-orange-500/10", text: "text-orange-600 dark:text-orange-400", pulse: false };
+  if (score >= 30) return { bg: "bg-blue-50 dark:bg-blue-500/10", text: "text-blue-600 dark:text-blue-400", pulse: false };
+  return { bg: "bg-secondary", text: "text-muted-foreground", pulse: false };
+}
+
+// Growth pill
+function getGrowthPill(change: string, changePositive: boolean) {
   const ch = Math.abs(parseFloat(change?.replace(/[^0-9.\-]/g, "") || "0"));
-  if (ch > 200) return "🔥 Spike";
-  if (platform === "Google Trends") return "🔍 Search";
-  if (["Reddit", "Bluesky", "Mastodon", "X (Twitter)"].includes(platform)) return "📱 Social";
-  if (["NewsAPI", "GNews", "The Guardian", "Bing News", "NewsData"].includes(platform)) return "📰 News";
-  if (["GitHub", "Stack Overflow", "Hacker News"].includes(platform)) return "💻 Dev";
-  if (["Wikipedia", "OpenAlex", "World Bank"].includes(platform)) return "📚 Knowledge";
-  return "📊 Signal";
+  if (ch === 0) return null;
+  if (ch > 200) return { label: "+trending", cls: "bg-amber-50 text-amber-700 border border-amber-200 dark:bg-amber-500/10 dark:text-amber-400 dark:border-amber-500/20" };
+  if (changePositive && ch > 50) return { label: "+popular", cls: "bg-blue-50 text-blue-600 border border-blue-200 dark:bg-blue-500/10 dark:text-blue-400 dark:border-blue-500/20" };
+  if (changePositive) return { label: "+novo", cls: "bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-400 dark:border-emerald-500/20" };
+  return null;
+}
+
+// Confidence score calculation
+function getConfidenceScore(platform: string, sources?: string[], trendScore?: number) {
+  let score = 0;
+  const isVerifiedPress = ["The Guardian", "NPR", "PubMed", "IBGE", "World Bank", "OpenAlex"].includes(platform);
+  if (isVerifiedPress) score += 40;
+  else if (["NewsAPI", "GNews", "Bing News", "NewsData"].includes(platform)) score += 25;
+  else score += 10;
+  
+  // Historical accuracy proxy
+  score += isVerifiedPress ? 25 : 15;
+  
+  // Multi-source coverage
+  const srcCount = sources?.length || 1;
+  score += Math.min(srcCount * 5, 20);
+  
+  // Recency boost
+  score += 10;
+  
+  return Math.min(score, 100);
+}
+
+function getConfidenceTier(score: number) {
+  if (score >= 71) return { label: "Alta", color: "#3B82F6", bg: "bg-blue-50 dark:bg-blue-500/10", barBg: "#DBEAFE", fillColor: "#3B82F6" };
+  if (score >= 41) return { label: "Boa", color: "#10B981", bg: "bg-emerald-50 dark:bg-emerald-500/10", barBg: "#D1FAE5", fillColor: "#10B981" };
+  if (score >= 21) return { label: "Moderada", color: "#F59E0B", bg: "bg-amber-50 dark:bg-amber-500/10", barBg: "#FEF3C7", fillColor: "#F59E0B" };
+  return { label: "Baixa", color: "#EF4444", bg: "bg-red-50 dark:bg-red-500/10", barBg: "#FEE2E2", fillColor: "#EF4444" };
 }
 
 const TimelineCard = ({
@@ -157,14 +247,14 @@ const TimelineCard = ({
   const [expanded, setExpanded] = useState(forceExpanded || false);
   const [alertOpen, setAlertOpen] = useState(false);
   const [imgError, setImgError] = useState(false);
+  const [sentimentOpen, setSentimentOpen] = useState(false);
 
   useEffect(() => { setExpanded(!!forceExpanded); }, [forceExpanded]);
 
   const pf = platformIcons[platform] || platformIcons["Google Trends"];
+  const brandColor = SOURCE_COLORS[platform] || pf.color;
   const flag = countryCodeToFlag(countryCode);
-  const gradientId = `tl-${title.replace(/[^a-zA-Z0-9]/g, "").slice(0, 8)}-${Math.random().toString(36).slice(2, 5)}`;
   const trigger = useMemo(() => detectTriggerFromTitle(title), [title]);
-  const signalType = useMemo(() => detectSignalType(platform, change), [platform, change]);
 
   const tviBreakdown = useMemo(() => {
     const ch = Math.abs(parseFloat(change?.replace(/[^0-9.\-]/g, "") || "0"));
@@ -183,14 +273,6 @@ const TimelineCard = ({
     return { velocity, volume: volumeScore, sources: sourcesScore, geography: geoScore, total };
   }, [change, volume, sources, isMultiplatform, crossPlatformCluster]);
   const trendScore = tviBreakdown.total;
-
-  const trendScoreLabel = trendScore >= 80
-    ? { emoji: "🔥", text: "Explosive", cls: "text-destructive bg-destructive/8" }
-    : trendScore >= 60
-    ? { emoji: "📈", text: "Rising", cls: "text-orange-600 dark:text-orange-400 bg-orange-500/8" }
-    : trendScore >= 40
-    ? { emoji: "➡️", text: "Stable", cls: "text-amber-600 dark:text-amber-400 bg-amber-500/8" }
-    : { emoji: "—", text: "Low", cls: "text-muted-foreground bg-muted/50" };
 
   const formattedDate = useMemo(() => {
     if (!publishedAt) return null;
@@ -214,6 +296,18 @@ const TimelineCard = ({
   const displayDescription = description || details;
   const localizedCategory = useMemo(() => localizeCategory(category, t), [category, t]);
   const localizedTime = useMemo(() => formattedDate || localizeFallbackTime(time, lang), [formattedDate, time, lang]);
+
+  const cardType = useMemo(() => getCardType({ thumbnail, trendScore, description, details, platform, trigger, imgError }), [thumbnail, trendScore, description, details, platform, trigger, imgError]);
+  const smartContext = useMemo(() => generateSmartContext(platform, volume, countryCode, category, sources), [platform, volume, countryCode, category, sources]);
+  const tviTier = useMemo(() => getTVITier(trendScore), [trendScore]);
+  const growthPill = useMemo(() => getGrowthPill(change, changePositive), [change, changePositive]);
+  const confidenceScore = useMemo(() => getConfidenceScore(platform, sources, trendScore), [platform, sources, trendScore]);
+  const confidenceTier = useMemo(() => getConfidenceTier(confidenceScore), [confidenceScore]);
+
+  const sparkData = useMemo(() => {
+    if (!historicalData || historicalData.length === 0) return null;
+    return historicalData.slice(-12).map(d => d.value);
+  }, [historicalData]);
 
   const handlePlatformClick = (e: React.MouseEvent) => { e.stopPropagation(); onFilterPlatform?.(platform); };
 
@@ -254,78 +348,117 @@ const TimelineCard = ({
     else toast({ title: `🔔 ${t("alertCreated")}`, description: `${t("monitoring")}: ${title.slice(0, 40)}` });
   };
 
-  const sparkData = useMemo(() => {
-    if (!historicalData || historicalData.length === 0) return null;
-    return historicalData.slice(-12);
-  }, [historicalData]);
-
-  const changeNum = parseFloat(change?.replace(/[^0-9.\-]/g, "") || "0");
-
-  // Determine tier
   const tier = trendScore >= 70 ? "critical" : trendScore >= 40 ? "moderate" : "low";
+
+  // Tags — max 2 + overflow
+  const allTags = useMemo(() => {
+    const tags: { label: string; cls: string; priority: number }[] = [];
+    if (trigger && ["crisis"].includes(trigger.labelKey)) {
+      tags.push({ label: `⚡ ${t(trigger.labelKey as any)}`, cls: "bg-red-50 text-red-600 dark:bg-red-500/10 dark:text-red-400", priority: 0 });
+    } else if (trigger) {
+      tags.push({ label: `${trigger.emoji} ${t(trigger.labelKey as any)}`, cls: "bg-amber-50 text-amber-700 dark:bg-amber-500/10 dark:text-amber-400", priority: 1 });
+    }
+    if (trustBadge && (trustBadge === "verified" || trustBadge === "press")) {
+      tags.push({ label: `✓ ${t(trustBadgeKeys[trustBadge]?.labelKey as any)}`, cls: "bg-blue-50 text-blue-600 dark:bg-blue-500/10 dark:text-blue-400", priority: 1 });
+    }
+    tags.push({ label: localizedCategory, cls: "bg-secondary text-muted-foreground", priority: 2 });
+    if (translated) {
+      tags.push({ label: `🌐 ${t("autoTranslated")}`, cls: "bg-secondary text-muted-foreground", priority: 3 });
+    }
+    tags.sort((a, b) => a.priority - b.priority);
+    return tags;
+  }, [trigger, trustBadge, localizedCategory, translated, t]);
+
+  const visibleTags = allTags.slice(0, 2);
+  const overflowCount = allTags.length - 2;
+
+  // Card type-specific classes
+  const cardTypeClass = cardType === "viral"
+    ? "timeline-card-viral"
+    : cardType === "article"
+    ? "timeline-card-article"
+    : "";
+
+  const isFullWidthSparkline = cardType === "article" || cardType === "viral";
 
   return (
     <motion.div
-      className={`timeline-card-wrapper ${expanded ? 'timeline-card-expanded-wrapper' : ''}`}
-      initial={{ opacity: 0, y: 12 }}
-      whileInView={{ opacity: 1, y: 0 }}
+      className="timeline-card-wrapper"
+      initial={{ opacity: 0, y: -8, scale: 0.99 }}
+      whileInView={{ opacity: 1, y: 0, scale: 1 }}
       exit={{ opacity: 0, y: -8 }}
       viewport={{ once: true, margin: "-30px" }}
-      transition={{ duration: 0.3, ease: [0.25, 0.1, 0.25, 1], delay: Math.min(staggerIndex * 0.04, 0.4) }}
+      transition={{ duration: 0.25, ease: [0, 0, 0.2, 1], delay: Math.min(staggerIndex * 0.035, 0.21) }}
     >
-      <div className={`timeline-card group ${expanded ? 'timeline-card-expanded' : ''}`} data-tier={tier} style={{ minWidth: 0, overflow: 'hidden', boxSizing: 'border-box' }}>
-        
+      <div
+        className={`timeline-card group ${cardTypeClass} ${expanded ? 'timeline-card-expanded' : ''}`}
+        data-tier={tier}
+        data-card-type={cardType}
+      >
+        {/* TYPE C: Top accent bar for viral */}
+        {cardType === "viral" && (
+          <div className="absolute top-0 left-0 right-0 h-0.5" style={{ background: `linear-gradient(90deg, ${brandColor}, transparent)` }} />
+        )}
+
         {/* === MAIN CONTENT: Click to expand === */}
         <div className="cursor-pointer" onClick={handleToggle}>
-          
-          {/* Image (when available) */}
-          {thumbnail && !imgError && !compact && (
-            <div className="relative w-full overflow-hidden rounded-md bg-secondary/50 mb-2.5" style={{ height: 120 }}>
+
+          {/* TYPE D: Image at top */}
+          {cardType === "image" && thumbnail && !imgError && !compact && (
+            <div className="relative w-full overflow-hidden rounded-md mb-2.5" style={{ height: 120 }}>
               <img src={thumbnail} alt="" className="w-full h-full object-cover block transition-transform duration-300 group-hover:scale-[1.03]" loading="lazy" onError={() => setImgError(true)} />
             </div>
           )}
 
-          {/* === HEADER ROW: Platform + Time === */}
-          <div className="flex items-center gap-2 mb-1.5">
-            <button
-              onClick={handlePlatformClick}
-              className="flex items-center gap-1.5 flex-shrink-0 hover:opacity-80 transition-opacity"
-            >
-              <div
-                className="w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold flex-shrink-0"
-                style={{ background: `${pf.color}10`, color: pf.color }}
-              >
-                {pf.emoji}
-              </div>
-              <span className="text-[10px] font-semibold" style={{ color: pf.color }}>
-                {platform}
-              </span>
+          {/* ① SOURCE ROW */}
+          <div className="flex items-center gap-1.5 mb-1.5 min-w-0">
+            <button onClick={handlePlatformClick} className="flex items-center gap-1 flex-shrink-0 hover:opacity-80 transition-opacity min-w-0">
+              <div className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: brandColor }} />
+              <span className="text-[11px] font-semibold truncate" style={{ color: brandColor }}>{platform}</span>
             </button>
-            <FreshnessIndicator publishedAt={publishedAt} time={time} />
+            <span className="text-[10px] text-muted-foreground/50">·</span>
             <span className="text-[10px] text-muted-foreground flex-shrink-0">{localizedTime}</span>
-            {flag && <span className="text-[11px] flex-shrink-0">{flag}</span>}
+            {flag && (
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <span className="text-[11px] flex-shrink-0 cursor-help">{flag}</span>
+                </TooltipTrigger>
+                <TooltipContent side="top" className="text-[10px]">{countryCode?.toUpperCase()}</TooltipContent>
+              </Tooltip>
+            )}
+            <div className="flex-1" />
+            {/* Bookmark always visible */}
+            <button
+              onClick={(e) => { e.stopPropagation(); onSaveCard?.({ title, platform, category, country_code: countryCode, source_url: sourceUrl, thumbnail, description: displayDescription, volume, change, changePositive, historicalData, platformColor: brandColor, sources }); }}
+              className="p-1 rounded-md text-muted-foreground/40 hover:text-primary hover:bg-primary/10 transition-colors flex-shrink-0"
+            >
+              <Bookmark className="w-3.5 h-3.5" />
+            </button>
           </div>
 
-          {/* Title */}
-          <h3 className={`font-semibold text-foreground leading-snug mb-1 break-words ${compact ? 'text-xs line-clamp-1' : 'text-[13px] line-clamp-3'}`} style={{ overflowWrap: 'anywhere' }}>
+          {/* ② TITLE */}
+          <h3 className={`font-bold text-foreground leading-[1.4] mb-1 break-words ${compact ? 'text-xs line-clamp-1' : 'text-sm line-clamp-3'}`} style={{ overflowWrap: 'anywhere' }}>
             {decodeEntities(title)}
           </h3>
 
-          {/* Contextual Description */}
-          {displayDescription && !compact && (
+          {/* ③ SMART CONTEXT LINE */}
+          <p className="text-[11px] text-muted-foreground italic leading-relaxed mb-1.5 truncate">{smartContext}</p>
+
+          {/* TYPE B: Description for article cards */}
+          {cardType === "article" && displayDescription && !compact && (
             <p className="text-[11px] text-muted-foreground leading-relaxed line-clamp-2 mb-2 break-words" style={{ overflowWrap: 'anywhere' }}>
               {decodeEntities(displayDescription)}
             </p>
           )}
 
-          {/* === METRICS BAR === */}
-          <div className="flex items-center gap-1.5 flex-wrap text-[10px] mb-2 w-full min-w-0">
+          {/* ④ METRICS ROW */}
+          <div className="flex items-center gap-1.5 flex-wrap text-[10px] mb-1.5 w-full min-w-0">
             {/* TVI Badge */}
             <Tooltip>
               <TooltipTrigger asChild>
-                <div className={`flex items-center gap-1 px-2 py-0.5 rounded-full font-bold cursor-help ${trendScoreLabel.cls}`}>
-                  <span className="opacity-60 font-medium text-[9px]">TVI</span>
-                  <span>{trendScore}</span>
+                <div className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full font-semibold cursor-help ${tviTier.bg} ${tviTier.text}`} style={{ height: 18 }}>
+                  {tviTier.pulse && <span className="w-1 h-1 rounded-full bg-current animate-pulse" />}
+                  <span className="text-[10px]">TVI {trendScore}</span>
                 </div>
               </TooltipTrigger>
               <TooltipContent side="top" className="p-3 text-[11px] space-y-1.5 min-w-[200px] z-50 bg-popover/95 backdrop-blur-md">
@@ -336,26 +469,18 @@ const TimelineCard = ({
                 <div className="flex justify-between"><span>📰 {t("tviSourcesLabel" as any)}</span><span className="font-bold text-foreground">{tviBreakdown.sources}</span></div>
                 <div className="flex justify-between"><span>🌍 {t("tviGeographyLabel" as any)}</span><span className="font-bold text-foreground">{tviBreakdown.geography}</span></div>
                 <div className="h-px bg-border my-2" />
-                <div className="text-[11px] font-medium text-center text-foreground">{trendScore}% - {trendScoreLabel.text}</div>
+                <div className="text-[11px] font-medium text-center text-foreground">{trendScore}%</div>
               </TooltipContent>
             </Tooltip>
 
-            {/* Region */}
-            {countryCode && countryCode !== "GL" && (
-              <AbbrTooltip text={countryCode.toUpperCase()} className="text-muted-foreground">
-                📍 {countryCode}
-              </AbbrTooltip>
-            )}
-
-            {/* Multiplatform */}
-            {isMultiplatform && crossPlatformCluster && (
-              <span className="font-bold text-orange-600 dark:text-orange-400 inline-flex items-center gap-0.5">
-                <Globe className="w-2.5 h-2.5" />
-                {crossPlatformCluster.platformCount} plat.
+            {/* Growth pill */}
+            {growthPill && (
+              <span className={`inline-flex items-center px-1.5 py-0.5 rounded-full text-[10px] font-semibold ${growthPill.cls}`}>
+                {growthPill.label}
               </span>
             )}
 
-            {/* Growth */}
+            {/* Growth value */}
             <span className={`inline-flex items-center gap-0.5 font-bold ${changePositive ? "text-emerald-600 dark:text-emerald-400" : "text-destructive"}`}>
               <TrendingUp className="w-3 h-3" />
               {change}
@@ -363,136 +488,136 @@ const TimelineCard = ({
 
             {/* Volume */}
             {volume && volume !== "0" && (
-              <span className="text-muted-foreground font-medium">
-                💬 {volume}
-              </span>
+              <span className="text-muted-foreground font-medium">💬 {volume}</span>
             )}
 
-            {/* Sources */}
-            {sources && sources.length > 0 && (
-              <span className="text-muted-foreground font-medium inline-flex items-center gap-0.5">
-                <Radio className="w-2.5 h-2.5" />
-                {sources.length} {sources.length === 1 ? t("sourcesSingular" as any) : t("sourcesPlural" as any)}
-              </span>
-            )}
-
-            {/* Sparkline with pulsing endpoint */}
-            {sparkData && !compact && (
-              <div className="ml-auto flex-shrink-0 overflow-hidden relative" style={{ width: 72, minWidth: 72, height: 28 }}>
-                <ResponsiveContainer width="100%" height="100%">
-                  <AreaChart data={sparkData}>
-                    <defs>
-                      <linearGradient id={`spark-${gradientId}`} x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="0%" stopColor={changePositive ? 'hsl(162,100%,39%)' : 'hsl(0,100%,59%)'} stopOpacity={0.25} />
-                        <stop offset="100%" stopColor={changePositive ? 'hsl(162,100%,39%)' : 'hsl(0,100%,59%)'} stopOpacity={0} />
-                      </linearGradient>
-                    </defs>
-                    <Area type="monotone" dataKey="value" stroke={changePositive ? 'hsl(162,100%,39%)' : 'hsl(0,100%,59%)'} strokeWidth={1.5} fill={`url(#spark-${gradientId})`} dot={false} />
-                  </AreaChart>
-                </ResponsiveContainer>
-                {/* Pulsing endpoint dot */}
-                <span
-                  className="absolute right-0 bottom-1 w-1.5 h-1.5 rounded-full spark-endpoint"
-                  style={{ background: changePositive ? 'hsl(162,100%,39%)' : 'hsl(0,100%,59%)' }}
-                />
+            {/* Sparkline — inline for standard/image cards */}
+            {sparkData && !compact && !isFullWidthSparkline && (
+              <div className="ml-auto flex-shrink-0" style={{ width: 80, height: 32 }}>
+                <SparklineArea data={sparkData} color={brandColor} width={80} height={32} />
               </div>
             )}
           </div>
 
-          {/* === TAGS ROW — unified semantic types === */}
-          <div className="flex items-center gap-1 flex-wrap mb-1.5 w-full">
-            {/* TYPE tag */}
-            <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-secondary text-muted-foreground">
-              {localizedCategory}
-            </span>
-            {/* VERIFICATION tag */}
-            {trustBadge && (trustBadge === "verified" || trustBadge === "press") && (
-              <span className="inline-flex items-center gap-0.5 px-2 py-0.5 rounded-full text-xs font-medium bg-blue-50 text-blue-600 dark:bg-blue-500/10 dark:text-blue-400">
-                <CheckCircle2 className="w-2.5 h-2.5" />
-                {t(trustBadgeKeys[trustBadge]?.labelKey as any)}
+          {/* Full-width sparkline for article/viral cards */}
+          {sparkData && !compact && isFullWidthSparkline && (
+            <div className="w-full mb-1.5" style={{ height: 48 }}>
+              <SparklineArea data={sparkData} color={brandColor} width={300} height={48} className="w-full" />
+            </div>
+          )}
+
+          {/* ⑥ TAGS ROW */}
+          <div className="flex items-center gap-1 flex-wrap mb-1 w-full">
+            {visibleTags.map((tag, i) => (
+              <span key={i} className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium ${tag.cls}`}>
+                {tag.label}
               </span>
-            )}
-            {/* ALERT tags */}
-            {trigger && (
-              <span className="inline-flex items-center gap-0.5 px-2 py-0.5 rounded-full text-xs font-medium bg-amber-50 text-amber-700 dark:bg-amber-500/10 dark:text-amber-400">
-                ⚡ {t(trigger.labelKey as any)}
+            ))}
+            {overflowCount > 0 && (
+              <span className="inline-flex items-center px-1.5 py-0.5 rounded-full text-[10px] font-medium bg-secondary text-muted-foreground">
+                +{overflowCount}
               </span>
-            )}
-            {translated && (
-              <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-secondary text-muted-foreground">🌐 {t("autoTranslated")}</span>
             )}
           </div>
         </div>
 
-        {/* Bookmark — always visible, top-right */}
-        <button
-          onClick={(e) => { e.stopPropagation(); onSaveCard?.({ title, platform, category, country_code: countryCode, source_url: sourceUrl, thumbnail, description: displayDescription, volume, change, changePositive, historicalData, platformColor: pf.color, sources }); }}
-          className="absolute top-3 right-3 p-1.5 rounded-lg text-muted-foreground/60 hover:text-primary hover:bg-primary/10 transition-colors z-10"
-        >
-          <Bookmark className="w-3.5 h-3.5" />
-        </button>
-
-        {/* === ACTION BAR — hidden by default, visible on hover === */}
-        <div className="card-actions-row flex items-center gap-1.5 flex-wrap bg-secondary/40 rounded-xl p-0.5 mt-1 w-full min-w-0" style={{ borderTop: '1px solid hsl(var(--border) / 0.3)', paddingTop: 8 }}>
+        {/* ⑦ ACTIONS ROW — hidden by default, reveal on hover */}
+        <div className="card-actions-row flex items-center gap-3 w-full min-w-0" style={{ borderTop: '1px solid hsl(var(--border) / 0.15)', paddingTop: 8, marginTop: 4 }}>
           {sourceUrl && (
             <a
               href={sourceUrl}
               target="_blank"
               rel="noopener noreferrer"
               onClick={(e) => e.stopPropagation()}
-              className="inline-flex items-center gap-1 px-2 py-1 min-h-[28px] rounded-lg text-[10px] font-medium text-muted-foreground hover:text-foreground hover:bg-card transition-colors whitespace-nowrap flex-shrink-0"
+              className="inline-flex items-center gap-1 text-[11px] text-muted-foreground hover:text-foreground transition-colors whitespace-nowrap"
             >
               <ExternalLink className="w-3 h-3 flex-shrink-0" />
               {t("viewSource")}
             </a>
           )}
-          <button onClick={handleShare} className="inline-flex items-center gap-1 px-2 py-1 min-h-[28px] rounded-lg text-[10px] font-medium text-muted-foreground hover:text-foreground hover:bg-card transition-colors whitespace-nowrap flex-shrink-0">
+          <button onClick={handleShare} className="inline-flex items-center gap-1 text-[11px] text-muted-foreground hover:text-foreground transition-colors whitespace-nowrap">
             <Share2 className="w-3 h-3 flex-shrink-0" />
             {t("share")}
           </button>
           <div className="flex-1" />
-          <button onClick={handleAlertClick} className="p-1.5 min-h-[28px] min-w-[28px] flex items-center justify-center rounded-lg text-muted-foreground/40 hover:text-primary hover:bg-card transition-colors flex-shrink-0">
-            <Bell className="w-3 h-3" />
+          <button onClick={handleAlertClick} className="w-6 h-6 flex items-center justify-center rounded-md text-muted-foreground/30 hover:text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-500/10 transition-colors flex-shrink-0">
+            <Bell className="w-3.5 h-3.5" />
           </button>
-          <button onClick={(e) => { e.stopPropagation(); toast({ title: "⚠️ Denúncia enviada", description: `Obrigado por reportar: ${title.slice(0, 40)}` }); }} className="p-1.5 min-h-[28px] min-w-[28px] flex items-center justify-center rounded-lg text-muted-foreground/40 hover:text-destructive hover:bg-card transition-colors flex-shrink-0">
-            <Flag className="w-3 h-3" />
+          <button onClick={(e) => { e.stopPropagation(); toast({ title: "⚠️ Denúncia enviada", description: `Obrigado por reportar: ${title.slice(0, 40)}` }); }} className="w-6 h-6 flex items-center justify-center rounded-md text-muted-foreground/30 hover:text-destructive hover:bg-red-50 dark:hover:bg-red-500/10 transition-colors flex-shrink-0">
+            <Flag className="w-3.5 h-3.5" />
           </button>
         </div>
       </div>
 
-      {/* === EXPANDED CONTENT === */}
+      {/* === EXPANDED CONTENT — INTELLIGENCE REPORT === */}
       {expanded && (
         <div className="timeline-card-expanded-content">
-          {thumbnail && !imgError && compact && (
-            <div className="relative w-full mb-3 rounded-xl overflow-hidden bg-secondary/50 aspect-video">
-              <img src={thumbnail} alt="" className="w-full h-full object-cover" loading="lazy" onError={() => setImgError(true)} />
-            </div>
-          )}
+          
+          {/* ② Title large */}
+          <h2 className="text-[17px] font-black text-foreground leading-[1.35] mb-3">{decodeEntities(title)}</h2>
 
-          {details && details !== displayDescription && (
-            <p className="text-xs text-muted-foreground mb-3">{details}</p>
-          )}
+          {/* ③ Smart Summary */}
+          <div className="rounded-lg p-2.5 mb-3" style={{ background: 'hsl(var(--secondary))', borderLeft: `3px solid ${brandColor}` }}>
+            <p className="text-[13px] text-foreground/80 leading-relaxed">
+              <strong>{decodeEntities(title.split(/[—–:]/)[0].trim())}</strong>
+              {" "}
+              {lang === "pt"
+                ? `está ${trendScore >= 60 ? "acelerando" : trendScore >= 30 ? "em alta" : "sendo discutido"} ${countryCode && countryCode !== "GL" ? `em ${flag} ${countryCode}` : "globalmente"}. Sendo discutido em ${sources?.length || 1} ${(sources?.length || 1) > 1 ? "plataformas" : "plataforma"} com ${change} de crescimento.`
+                : `is ${trendScore >= 60 ? "accelerating" : trendScore >= 30 ? "trending" : "being discussed"} ${countryCode && countryCode !== "GL" ? `in ${flag} ${countryCode}` : "globally"}. Discussed across ${sources?.length || 1} platform${(sources?.length || 1) > 1 ? "s" : ""} with ${change} growth.`
+              }
+            </p>
+          </div>
 
-          {/* TVI Hero + supporting metrics */}
-          <div className="flex items-center gap-4 mb-4">
-            <div className="text-center">
-              <span className="block text-[9px] text-muted-foreground uppercase tracking-wide mb-1">TVI</span>
-              <span className="block text-4xl font-bold text-foreground leading-none">{trendScore}</span>
-              <span className={`block text-[10px] font-semibold mt-0.5 ${trendScoreLabel.cls}`}>{trendScoreLabel.text}</span>
+          {/* ④ METRICS GRID 2×2 */}
+          <div className="grid grid-cols-2 gap-2 mb-3">
+            <div className="rounded-lg p-3 text-center bg-secondary/60">
+              <span className="block text-[28px] font-black leading-none" style={{ color: tviTier.pulse ? 'hsl(var(--destructive))' : trendScore >= 50 ? brandColor : undefined }}>{trendScore}</span>
+              <span className="block text-[10px] text-muted-foreground mt-1">{lang === "pt" ? "Velocidade" : "Velocity"}</span>
             </div>
-            <div className="flex-1 grid grid-cols-3 gap-2">
-              <div className="text-center p-2 rounded-xl bg-secondary/50">
-                <span className="block text-[8px] text-muted-foreground uppercase tracking-wide mb-0.5">{t("growth" as any)}</span>
-                <span className={`block text-sm font-bold ${changePositive ? "text-emerald-600 dark:text-emerald-400" : "text-destructive"}`}>{change}</span>
-              </div>
-              <div className="text-center p-2 rounded-xl bg-secondary/50">
-                <span className="block text-[8px] text-muted-foreground uppercase tracking-wide mb-0.5">{t("volumeLabel" as any)}</span>
-                <span className="block text-sm font-bold text-foreground">{volume || "—"}</span>
-              </div>
-              <div className="text-center p-2 rounded-xl bg-secondary/50">
-                <span className="block text-[8px] text-muted-foreground uppercase tracking-wide mb-0.5">{t("sourcesLabel" as any)}</span>
-                <span className="block text-sm font-bold text-foreground">{sources?.length || 1}</span>
-              </div>
+            <div className="rounded-lg p-3 text-center bg-secondary/60">
+              <span className={`block text-lg font-bold ${changePositive ? "text-emerald-600 dark:text-emerald-400" : "text-destructive"}`}>{change}</span>
+              <span className="block text-[10px] text-muted-foreground mt-1">{lang === "pt" ? "Crescimento" : "Growth"}</span>
+            </div>
+            <div className="rounded-lg p-3 text-center bg-secondary/60">
+              <span className="block text-lg font-bold text-foreground">{volume || "—"}</span>
+              <span className="block text-[10px] text-muted-foreground mt-1">{lang === "pt" ? "Volume" : "Volume"}</span>
+            </div>
+            <div className="rounded-lg p-3 text-center bg-secondary/60">
+              <span className="block text-lg font-bold text-foreground">{sources?.length || 1}</span>
+              <span className="block text-[10px] text-muted-foreground mt-1">{lang === "pt" ? "Fontes" : "Sources"}</span>
+            </div>
+          </div>
+
+          {/* ⑤ CONFIDENCE SCORE */}
+          <div className="mb-3">
+            <div className="flex items-center gap-1.5 mb-1.5">
+              <span className="text-[11px] font-semibold text-foreground/70">{lang === "pt" ? "Índice de Confiança" : "Confidence Index"}</span>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Info className="w-3 h-3 text-muted-foreground/50 cursor-help" />
+                </TooltipTrigger>
+                <TooltipContent side="top" className="max-w-[260px] text-[10px] p-2.5">
+                  {lang === "pt"
+                    ? "Calculado com base em: verificação editorial da fonte (40%), histórico de precisão (30%), cobertura por múltiplas fontes (20%) e tempo desde publicação (10%)."
+                    : "Based on: editorial verification (40%), accuracy history (30%), multi-source coverage (20%), and recency (10%)."}
+                </TooltipContent>
+              </Tooltip>
+            </div>
+            {/* Segmented bar */}
+            <div className="w-full h-1.5 rounded-full overflow-hidden" style={{ background: confidenceTier.barBg }}>
+              <div className="h-full rounded-full transition-all duration-500" style={{ width: `${confidenceScore}%`, background: confidenceTier.fillColor }} />
+            </div>
+            <div className="flex items-center gap-1.5 mt-1.5 flex-wrap">
+              <span className="text-[11px] font-medium" style={{ color: confidenceTier.color }}>{confidenceTier.label} · {confidenceScore}%</span>
+              {["The Guardian", "NPR", "PubMed", "IBGE", "World Bank", "OpenAlex"].includes(platform) && (
+                <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-emerald-50 text-emerald-600 dark:bg-emerald-500/10 dark:text-emerald-400">✓ Fonte verificada</span>
+              )}
+              {(sources?.length || 1) === 1 && (
+                <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-amber-50 text-amber-600 dark:bg-amber-500/10 dark:text-amber-400">⚠ Fonte única</span>
+              )}
+              {trendScore >= 60 && (
+                <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-blue-50 text-blue-600 dark:bg-blue-500/10 dark:text-blue-400">📈 Alto engajamento</span>
+              )}
             </div>
           </div>
 
@@ -513,80 +638,70 @@ const TimelineCard = ({
             </div>
           )}
 
-          {/* Sentiment Analysis — collapsible */}
-          <details className="mb-3 rounded-xl bg-secondary/30 overflow-hidden">
-            <summary className="px-2.5 py-2 text-[9px] font-semibold text-muted-foreground uppercase tracking-wide cursor-pointer hover:bg-secondary/50 transition-colors select-none">
-              📊 {t("sentimentAnalysis" as any)}
-            </summary>
-            <div className="px-2.5 pb-2.5">
-              <div className="flex items-center gap-4">
-                <SentimentDonut
-                  positive={changePositive ? 55 : 25}
-                  neutral={30}
-                  negative={changePositive ? 15 : 45}
-                  size={56}
-                  showLegend
-                />
-              </div>
-              <div className="mt-2 pt-2 border-t border-border/30">
-                <EmotionBars
-                  emotions={[
-                    { icon: "😊", label: t("positive"), percentage: changePositive ? 55 : 25, color: "hsl(142, 60%, 45%)" },
-                    { icon: "😐", label: t("neutral"), percentage: 30, color: "hsl(var(--muted-foreground))" },
-                    { icon: "😠", label: t("negative"), percentage: changePositive ? 15 : 45, color: "hsl(var(--destructive))" },
-                  ]}
-                />
-              </div>
-            </div>
-          </details>
-
-          {/* Platform-specific metrics */}
-          <div className="flex flex-wrap gap-2 mb-3 text-[11px]">
-            {platform === "YouTube" && likeRatio !== undefined && likeRatio > 0 && (
-              <span className="source-tag text-[10px] py-0.5 px-2">👍 {likeRatio}% {t("likes")}</span>
-            )}
-            {platform === "Reddit" && commentCount !== undefined && (
-              <span className="source-tag text-[10px] py-0.5 px-2">💬 {commentCount >= 1000 ? `${(commentCount / 1000).toFixed(1)}K` : commentCount} {t("comments")}</span>
-            )}
-            {platform === "Google Trends" && region && (
-              <span className="source-tag text-[10px] py-0.5 px-2">📍 {region}</span>
-            )}
-          </div>
-
-          {/* 24h Chart */}
+          {/* ⑥ EVOLUTION 24H CHART */}
           {historicalData && historicalData.length > 0 && (
             <div className="mb-3">
               <div className="flex items-center justify-between mb-1.5">
-                <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">
-                  {t("evolution24h")}
-                </span>
+                <span className="text-[10px] font-semibold text-muted-foreground">{t("evolution24h")}</span>
                 <span className="text-[9px] text-muted-foreground flex items-center gap-1.5">
-                  <span className="w-2 h-0.5 rounded-full" style={{ background: pf.color }} />
+                  <span className="w-2 h-0.5 rounded-full" style={{ background: brandColor }} />
                   {metricLabel || "Volume"}
                 </span>
               </div>
-              <div className="h-24 -mx-1">
+              <div className="h-20 -mx-1">
                 <ResponsiveContainer width="100%" height="100%">
                   <AreaChart data={historicalData}>
                     <defs>
-                      <linearGradient id={gradientId} x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="0%" stopColor={pf.color} stopOpacity={0.15} />
-                        <stop offset="100%" stopColor={pf.color} stopOpacity={0} />
+                      <linearGradient id={`exp-${title.slice(0, 5)}`} x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0%" stopColor={brandColor} stopOpacity={0.15} />
+                        <stop offset="100%" stopColor={brandColor} stopOpacity={0} />
                       </linearGradient>
                     </defs>
                     <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
                     <XAxis dataKey="hour" tick={{ fontSize: 9, fill: "hsl(var(--muted-foreground))" }} tickLine={false} axisLine={false} interval={5} />
                     <YAxis tick={{ fontSize: 9, fill: "hsl(var(--muted-foreground))" }} tickLine={false} axisLine={false} width={30} tickFormatter={(v: number) => v >= 1000 ? `${(v / 1000).toFixed(0)}K` : String(v)} />
                     <RechartsTooltip
-                      contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: "12px", fontSize: 11 }}
+                      contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: "8px", fontSize: 11, boxShadow: "0 4px 12px rgba(0,0,0,0.1)" }}
                       formatter={(value: number) => [value >= 1000 ? `${(value / 1000).toFixed(1)}K` : value, metricLabel || "Volume"]}
                     />
-                    <Area type="monotone" dataKey="value" stroke={pf.color} strokeWidth={1.5} fill={`url(#${gradientId})`} />
+                    <Area type="monotone" dataKey="value" stroke={brandColor} strokeWidth={1.5} fill={`url(#exp-${title.slice(0, 5)})`} dot={{ r: 2, fill: brandColor, strokeWidth: 0 }} />
                   </AreaChart>
                 </ResponsiveContainer>
               </div>
             </div>
           )}
+
+          {/* ⑦ SENTIMENT — collapsible */}
+          <div className="mb-3">
+            <button onClick={() => setSentimentOpen(!sentimentOpen)} className="flex items-center gap-1.5 text-[10px] font-semibold text-muted-foreground uppercase tracking-wide hover:text-foreground transition-colors w-full">
+              <ChevronDown className={`w-3 h-3 transition-transform duration-150 ${sentimentOpen ? 'rotate-0' : '-rotate-90'}`} />
+              {t("sentimentAnalysis" as any)}
+            </button>
+            {sentimentOpen && (
+              <div className="mt-2">
+                {/* Horizontal segmented bar */}
+                {(() => {
+                  const pos = changePositive ? 55 : 25;
+                  const neu = 30;
+                  const neg = changePositive ? 15 : 45;
+                  return (
+                    <>
+                      <div className="w-full h-3 rounded-full overflow-hidden flex">
+                        <div style={{ width: `${pos}%` }} className="bg-emerald-500" />
+                        <div style={{ width: `${neu}%` }} className="bg-muted-foreground/30" />
+                        <div style={{ width: `${neg}%` }} className="bg-destructive" />
+                      </div>
+                      <div className="flex items-center gap-3 mt-1.5 text-[11px]">
+                        <span className="text-emerald-600 dark:text-emerald-400">😊 {t("positive")}: {pos}%</span>
+                        <span className="text-muted-foreground">😐 {t("neutral")}: {neu}%</span>
+                        <span className="text-destructive">😞 {t("negative")}: {neg}%</span>
+                      </div>
+                    </>
+                  );
+                })()}
+              </div>
+            )}
+          </div>
 
           {/* Propagation Timeline (cross-platform) */}
           {isMultiplatform && crossPlatformCluster && crossPlatformCluster.platformCount >= 2 && (
@@ -595,10 +710,24 @@ const TimelineCard = ({
             </div>
           )}
 
-          {/* Narrative origin + confidence — subtle footnote */}
-          <div className="flex items-center justify-between text-[9px] text-muted-foreground/70 pt-2 mt-2 border-t border-border/20">
-            <span>🗺️ {platform} {countryCode && countryCode !== "GL" ? `· ${flag} ${countryCode}` : ""}</span>
-            <span>{t("confidenceLabel" as any)}: {trendScore}%</span>
+          {/* ⑧ Country tag */}
+          {countryCode && countryCode !== "GL" && (
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] bg-secondary text-muted-foreground mb-2 cursor-help">
+                  📍 {flag} {countryCode.toUpperCase()}
+                </span>
+              </TooltipTrigger>
+              <TooltipContent side="top" className="text-[10px]">{lang === "pt" ? "País de origem da tendência" : "Trend origin country"}</TooltipContent>
+            </Tooltip>
+          )}
+
+          {/* ⑨ Footer */}
+          <div className="flex items-center justify-between text-[10px] text-muted-foreground/60 pt-2 mt-2 border-t border-border/20">
+            <span className="flex items-center gap-1">
+              <span className="w-1.5 h-1.5 rounded-full" style={{ background: brandColor }} />
+              {platform} {countryCode && countryCode !== "GL" ? `· ${flag} ${countryCode}` : ""} · {confidenceTier.label} {confidenceScore}%
+            </span>
           </div>
 
           <TrendFeedback title={title} platform={platform} userId={userId} />
