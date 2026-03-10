@@ -724,7 +724,17 @@ const GoogleMapView = ({
         });
       }
     };
-    
+
+    return () => {
+      localRafIds.forEach(id => cancelAnimationFrame(id));
+      flowPolylinesRef.current.forEach(p => p.setMap(null));
+      flowPolylinesRef.current = [];
+      flowOriginPulsesRef.current.forEach(p => p.setMap(null));
+      flowOriginPulsesRef.current = [];
+      flowParticlesRef.current.forEach(p => p.setMap(null));
+      flowParticlesRef.current = [];
+      flowHoverInfoRef.current?.close();
+    };
   }, [mapMode, flowArcs, mapLoaded, isDark, isMobile, t, onSelectCountry, lang]);
 
   // ─── SENTIMENT BUBBLE MAP rendering with enhanced animations ───
