@@ -1196,9 +1196,9 @@ const GoogleMapView = ({
           const current = from + (to - from) * eased;
           const icon = marker.getIcon();
           if (icon) marker.setIcon({ ...icon, scale: current });
-          if (progress < 1) requestAnimationFrame(step);
+          if (progress < 1) scheduleRaf(step);
         };
-        requestAnimationFrame(step);
+        scheduleRaf(step);
       };
 
       const hoverScale = scale * 1.4;
