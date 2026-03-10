@@ -766,7 +766,7 @@ export default function WeeklyPulseDashboard({ trends }: { trends: TrendCardProp
           let maxVal = 0;
           for (const cat of analysis.topCats) for (const day of orderedDays) { const v = analysis.catByDay[cat]?.[day] || 0; if (v > maxVal) maxVal = v; }
           const getCellBg = (v: number, cat: string) => {
-            if (maxVal === 0 || v === 0) return "transparent";
+            if (maxVal === 0 || v === 0) return "hsl(var(--muted) / 0.3)";
             const intensity = v / maxVal;
             const base = getCatColor(cat);
             if (intensity > 0.8) return base;
@@ -777,12 +777,12 @@ export default function WeeklyPulseDashboard({ trends }: { trends: TrendCardProp
           };
           return (
             <>
-              <div className="grid gap-[3px]" style={{ gridTemplateColumns: `80px repeat(${days.length}, 1fr)` }}>
+              <div className="grid" style={{ gridTemplateColumns: `80px repeat(${days.length}, 1fr)`, gap: 4 }}>
                 <div />
                 {days.map(d => <div key={d} className="text-[10px] text-muted-foreground text-center font-medium py-1">{d}</div>)}
                 {analysis.topCats.map(cat => (
                   <React.Fragment key={cat}>
-                    <div className="text-[11px] text-muted-foreground font-medium flex items-center gap-1 truncate pr-1">
+                    <div className="text-[11px] text-muted-foreground font-medium flex items-center gap-1 truncate pr-1" style={{ height: 40 }}>
                       <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: getCatColor(cat) }} />
                       {cat}
                     </div>
@@ -795,8 +795,8 @@ export default function WeeklyPulseDashboard({ trends }: { trends: TrendCardProp
                           <TooltipTrigger asChild>
                             <motion.div
                               className="rounded cursor-help flex items-center justify-center"
-                              style={{ backgroundColor: getCellBg(v, cat), aspectRatio: "1", minHeight: 24 }}
-                              whileHover={{ scale: 1.15, zIndex: 10 }}
+                              style={{ backgroundColor: getCellBg(v, cat), height: 40 }}
+                              whileHover={{ scale: 1.08, zIndex: 10 }}
                             >
                               {v > 0 && <span className="text-[8px] font-bold text-foreground/70">{fmtNum(v)}</span>}
                             </motion.div>
