@@ -24,45 +24,44 @@ serve(async (req) => {
   }
 
   try {
-    const { title, details, platform, volume, category, sources, description } = await req.json();
-
+    const body = await req.json();
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
 
-    const prompt = `Analise esta tendência e forneça uma análise contextual completa.
+    // Support both single trend and batch modes
+    const trends = body.trends || [body];
+    const lang = body.lang || "pt";
 
-Título: ${title}
-Plataforma: ${platform}
-Volume: ${volume}
-Categoria: ${category || "Geral"}
-Fontes: ${sources?.join(", ") || "Não disponível"}
-Detalhes: ${details || description || "Não disponível"}
+    if (trends.length === 0) {
+      return new Response(JSON.stringify({ contexts: [] }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
 
-Responda APENAS com JSON válido no formato abaixo. Sem markdown, sem explicação, apenas o JSON:
+    // Build batch prompt
+    const trendLines = trends.slice(0, 20).map((t: any, i: number) =>
+      `${i + 1}. "${t.title}" | Plataforma: ${t.platform || "?"} | País: ${t.countryCode || "GL"} | Volume: ${t.volume || "?"} | Categoria: ${t.category || "Geral"}`
+    ).join("\n");
 
-{
-  "trigger": {
-    "type": "launch|politics|crisis|sports|statement|viral|science|business|culture|other",
-    "emoji": "emoji adequado ao tipo",
-    "label": "rótulo curto em português (ex: Lançamento, Crise, Eleição)",
-    "confidence": 0.0-1.0
-  },
-  "contextSummary": "Frase curta explicando: Trend impulsionada por [gatilho] com participação de [fontes principais]",
-  "sentimentWords": [
-    {"word": "palavra1", "sentiment": "positive|negative|neutral", "weight": 1-10},
-    {"word": "palavra2", "sentiment": "positive|negative|neutral", "weight": 1-10}
-  ],
-  "topSources": [
-    {"name": "nome da fonte/veículo", "type": "press|social|official|tech", "relevance": 1-10}
-  ],
-  "keyInsight": "Uma frase de insight acionável sobre esta trend"
-}
+    const prompt = lang === "pt"
+      ? `Para cada trend abaixo, gere UMA frase de contexto em português (máximo 200 caracteres) explicando:
+- O que é este assunto
+- Por que está em alta agora
+- Onde está sendo mais discutido
 
-Regras:
-- sentimentWords: extraia 10-20 palavras-chave relevantes do título e detalhes, classificando cada uma por sentimento
-- topSources: liste 3-5 fontes/veículos prováveis baseados na plataforma e conteúdo
-- trigger types: launch (filme/música/produto), politics (eleição/governo), crisis (acidente/desastre), sports (jogo/campeonato), statement (declaração/polêmica), viral (crescimento orgânico), science (descoberta/pesquisa), business (mercado/economia), culture (arte/evento cultural)
-- Responda em português`;
+${trendLines}
+
+Responda APENAS com JSON válido: { "contexts": [{ "index": 0, "context": "frase" }, ...] }
+NÃO repita o título na frase. Seja conciso e informativo.`
+      : `For each trend below, generate ONE context sentence in ${lang} (max 200 chars) explaining:
+- What this topic is about
+- Why it's trending now
+- Where it's being discussed most
+
+${trendLines}
+
+Respond ONLY with valid JSON: { "contexts": [{ "index": 0, "context": "sentence" }, ...] }
+Do NOT repeat the title. Be concise and informative.`;
 
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
@@ -71,7 +70,7 @@ Regras:
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: "google/gemini-3-flash-preview",
+        model: "google/gemini-2.5-flash-lite",
         messages: [
           { role: "system", content: "You are a trend context analyst. Always respond with valid JSON only, no markdown, no code blocks." },
           { role: "user", content: prompt },
@@ -108,11 +107,20 @@ Regras:
       parsed = null;
     }
 
-    if (!parsed) {
-      throw new Error("Failed to parse AI response");
+    if (!parsed?.contexts) {
+      // Fallback: return empty contexts
+      return new Response(JSON.stringify({ contexts: [] }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
     }
 
-    return new Response(JSON.stringify(parsed), {
+    // Map back to titles
+    const results = parsed.contexts.map((c: any) => ({
+      title: trends[c.index]?.title || "",
+      context: c.context || "",
+    })).filter((c: any) => c.title && c.context);
+
+    return new Response(JSON.stringify({ contexts: results }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (e) {
