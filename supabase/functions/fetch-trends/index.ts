@@ -119,7 +119,7 @@ async function fetchYouTubeTrends(lang = "pt"): Promise<TrendItem[]> {
         description: item.snippet?.description?.slice(0, 150) || "",
         likeRatio,
         commentCount: comments,
-        countryCode: "BR",
+        countryCode: regionCode,
         sourceUrl: `https://www.youtube.com/watch?v=${item.id}`,
         thumbnail: item.snippet?.thumbnails?.high?.url || item.snippet?.thumbnails?.medium?.url || item.snippet?.thumbnails?.default?.url || "",
         publishedAt: item.snippet?.publishedAt || "",

@@ -320,6 +320,7 @@ const Index = () => {
       const hasUserScrolled = scrollRef.current && scrollRef.current.scrollTop > 150;
       if (!isActive && !hasExpandedCard && !hasUserScrolled) {
         fetchTrends().then(() => {
+          timeSinceLastFetchRef.current = 0;
           setTimeSinceLastFetch(0);
           setUpdatePending(false);
         });
