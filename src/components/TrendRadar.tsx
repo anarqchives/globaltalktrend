@@ -12,6 +12,7 @@ import { CriticalMoment } from "@/hooks/use-critical-moments";
 import { AnomalyAlert } from "@/hooks/use-anomaly-alerts";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { supabase } from "@/integrations/supabase/client";
+import AbbrTooltip from "./AbbrTooltip";
 
 interface TrendRadarProps {
   trends: TrendCardProps[];
