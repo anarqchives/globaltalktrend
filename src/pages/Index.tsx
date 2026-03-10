@@ -414,7 +414,7 @@ const Index = () => {
 
   const masonryStyle = useMemo(() => ({
     columnCount: gridColumns,
-    columnGap: 0,
+    columnGap: 4,
     columnFill: 'balance' as const,
   }), [gridColumns]);
 

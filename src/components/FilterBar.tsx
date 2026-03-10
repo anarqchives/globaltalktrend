@@ -302,11 +302,28 @@ const FilterBar = ({ filters, onChange, onForceReset, onSaveFilter, isLoggedIn }
             <TooltipTrigger asChild>
               <button
                 onClick={() => { onChange(defaultFilters); onForceReset?.(); }}
-                className="flex items-center justify-center rounded-lg text-muted-foreground/60 hover:text-foreground hover:bg-muted transition-all group"
-                style={{ width: 28, height: 28, flexShrink: 0 }}
+                className="flex items-center justify-center group"
+                style={{
+                  width: 30, height: 30, flexShrink: 0,
+                  borderRadius: 8,
+                  border: "1px solid #E5E7EB",
+                  background: "hsl(var(--card))",
+                  color: "#6B7280",
+                  transition: "all 120ms ease",
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.borderColor = "#9CA3AF";
+                  e.currentTarget.style.background = "#F9FAFB";
+                  e.currentTarget.style.color = "#111827";
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.borderColor = "#E5E7EB";
+                  e.currentTarget.style.background = "hsl(var(--card))";
+                  e.currentTarget.style.color = "#6B7280";
+                }}
                 aria-label={lang === "pt" ? "Limpar filtros" : "Clear filters"}
               >
-                <RotateCcw size={14} className="group-hover:animate-[spin_0.3s_ease-in-out]" />
+                <RotateCcw size={13} className="group-hover:animate-[spin_0.3s_ease-in-out]" />
               </button>
             </TooltipTrigger>
             <TooltipContent side="bottom" className="text-[10px]">{lang === "pt" ? "Limpar filtros" : "Clear filters"}</TooltipContent>
@@ -318,11 +335,28 @@ const FilterBar = ({ filters, onChange, onForceReset, onSaveFilter, isLoggedIn }
           <TooltipTrigger asChild>
             <button
               onClick={() => onSaveFilter?.()}
-              className="flex items-center justify-center rounded-lg text-muted-foreground/60 hover:text-foreground hover:bg-muted transition-all"
-              style={{ width: 28, height: 28, flexShrink: 0 }}
+              className="flex items-center justify-center"
+              style={{
+                width: 30, height: 30, flexShrink: 0,
+                borderRadius: 8,
+                border: "1px solid #E5E7EB",
+                background: "hsl(var(--card))",
+                color: "#6B7280",
+                transition: "all 120ms ease",
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.borderColor = "#9CA3AF";
+                e.currentTarget.style.background = "#F9FAFB";
+                e.currentTarget.style.color = "#111827";
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.borderColor = "#E5E7EB";
+                e.currentTarget.style.background = "hsl(var(--card))";
+                e.currentTarget.style.color = "#6B7280";
+              }}
               aria-label={lang === "pt" ? "Criar alerta" : "Create alert"}
             >
-              <Bell size={14} />
+              <Bell size={13} />
             </button>
           </TooltipTrigger>
           <TooltipContent side="bottom" className="text-[10px]">{lang === "pt" ? "Criar alerta" : "Create alert"}</TooltipContent>
