@@ -123,8 +123,8 @@ const TrendHeader = ({ totalTrends = 0, countriesCount = 0, onRefresh, refreshin
           </div>
 
           {/* ─── CENTER: Live status badge (emotional hero) ─── */}
-          <div className="flex items-center justify-center">
-            <div className="flex items-center gap-1.5 text-xs">
+          <div className="flex items-center justify-center min-w-0">
+            <div className="flex items-center gap-1 sm:gap-1.5 text-[10px] sm:text-xs min-w-0">
               {/* Pulsing green dot — 6px */}
               <span className="relative flex items-center justify-center w-1.5 h-1.5 flex-shrink-0">
                 <span className="absolute w-full h-full rounded-full live-pulse-dot bg-positive" />
@@ -135,8 +135,8 @@ const TrendHeader = ({ totalTrends = 0, countriesCount = 0, onRefresh, refreshin
               </span>
               <span className="text-muted-foreground/40">·</span>
               <OnlineUsersCount />
-              <span className="text-muted-foreground/40">·</span>
-              <CountdownTimer />
+              <span className="hidden sm:inline text-muted-foreground/40">·</span>
+              <span className="hidden sm:inline"><CountdownTimer /></span>
             </div>
           </div>
 
