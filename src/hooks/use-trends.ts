@@ -985,7 +985,7 @@ export function useTrends(filters: FilterState, onTrendCountsChange: (counts: Re
       }
 
       // No data at all for this country — show empty state
-      console.log(`ℹ️ Nenhuma trend encontrada para ${countryFilter}`);
+      if (import.meta.env.DEV) console.log(`ℹ️ Nenhuma trend encontrada para ${countryFilter}`);
       return [];
     }
 
