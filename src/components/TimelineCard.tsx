@@ -388,54 +388,27 @@ const TimelineCard = ({
             )}
           </div>
 
-          {/* === TAGS ROW — WCAG contrast === */}
+          {/* === TAGS ROW — unified semantic types === */}
           <div className="flex items-center gap-1 flex-wrap mb-1.5">
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <span className="inline-flex items-center px-1.5 py-0.5 rounded-md text-[9px] font-semibold bg-primary/8 text-primary cursor-help">
-                  {localizedCategory}
-                </span>
-              </TooltipTrigger>
-              <TooltipContent side="top" className="text-[10px]">{getTooltip("category", lang)}</TooltipContent>
-            </Tooltip>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <span className="inline-flex items-center px-1.5 py-0.5 rounded-md text-[9px] font-semibold bg-secondary text-secondary-foreground cursor-help">
-                  {signalType}
-                </span>
-              </TooltipTrigger>
-              <TooltipContent side="top" className="text-[10px]">{getTooltip("signalType", lang)}</TooltipContent>
-            </Tooltip>
-            {trustBadge && trustBadgeKeys[trustBadge] && (
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <span className={`inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-md text-[9px] font-semibold cursor-help ${trustBadgeKeys[trustBadge].className}`}>
-                    {trustBadgeKeys[trustBadge].icon}
-                    {t(trustBadgeKeys[trustBadge].labelKey as any)}
-                  </span>
-                </TooltipTrigger>
-                <TooltipContent side="top" className="text-[10px]">
-                  {getTooltip(trustBadge === "verified" ? "trustVerified" : trustBadge === "official" ? "trustOfficial" : trustBadge === "scientific" ? "trustScientific" : trustBadge === "press" ? "trustPress" : "trustInternational", lang)}
-                </TooltipContent>
-              </Tooltip>
+            {/* TYPE tag */}
+            <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-secondary text-muted-foreground">
+              {localizedCategory}
+            </span>
+            {/* VERIFICATION tag */}
+            {trustBadge && (trustBadge === "verified" || trustBadge === "press") && (
+              <span className="inline-flex items-center gap-0.5 px-2 py-0.5 rounded-full text-xs font-medium bg-blue-50 text-blue-600 dark:bg-blue-500/10 dark:text-blue-400">
+                <CheckCircle2 className="w-2.5 h-2.5" />
+                {t(trustBadgeKeys[trustBadge]?.labelKey as any)}
+              </span>
             )}
+            {/* ALERT tags */}
             {trigger && (
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <span className="inline-flex items-center px-1.5 py-0.5 rounded-md text-[9px] font-semibold bg-destructive/8 text-destructive cursor-help">
-                    {trigger.emoji} {t(trigger.labelKey as any)}
-                  </span>
-                </TooltipTrigger>
-                <TooltipContent side="top" className="text-[10px]">{getTooltip("trigger", lang)}</TooltipContent>
-              </Tooltip>
+              <span className="inline-flex items-center gap-0.5 px-2 py-0.5 rounded-full text-xs font-medium bg-amber-50 text-amber-700 dark:bg-amber-500/10 dark:text-amber-400">
+                ⚡ {t(trigger.labelKey as any)}
+              </span>
             )}
             {translated && (
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <span className="text-[9px] font-semibold text-primary bg-primary/6 px-1.5 py-0.5 rounded-md cursor-help">🌐 {t("autoTranslated")}</span>
-                </TooltipTrigger>
-                <TooltipContent side="top" className="text-[10px]">{t("autoTranslated")}</TooltipContent>
-              </Tooltip>
+              <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-secondary text-muted-foreground">🌐 {t("autoTranslated")}</span>
             )}
           </div>
         </div>
