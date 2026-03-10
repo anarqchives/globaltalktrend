@@ -128,6 +128,7 @@ const Index = () => {
   const [emergingDismissed, setEmergingDismissed] = useState(false);
   const [heatmapDismissed, setHeatmapDismissed] = useState(false);
   const [showOnboarding, setShowOnboarding] = useState(false);
+  const [trendContexts, setTrendContexts] = useState<Record<string, string>>({});
 
   useEffect(() => {
     if (user?.id && !hasCompletedOnboarding(user.id)) {
