@@ -114,30 +114,11 @@ function ChipDropdown({ chipLabel, value, options, isActive, icon, onChange, onC
     <div ref={ref} className="relative flex-shrink-0">
       <button
         onClick={() => setOpen(!open)}
-        className="inline-flex items-center transition-all duration-[120ms]"
-        style={{
-          height: 30,
-          padding: "0 10px",
-          borderRadius: 8,
-          border: isActive ? "1px solid hsl(var(--foreground))" : "1px solid #E5E7EB",
-          background: isActive ? "hsl(var(--foreground))" : "hsl(var(--card))",
-          color: isActive ? "hsl(var(--background))" : "#374151",
-          fontSize: 12,
-          fontWeight: 500,
-          gap: 5,
-        }}
-        onMouseEnter={(e) => {
-          if (!isActive) {
-            e.currentTarget.style.borderColor = "#9CA3AF";
-            e.currentTarget.style.background = "#F9FAFB";
-          }
-        }}
-        onMouseLeave={(e) => {
-          if (!isActive) {
-            e.currentTarget.style.borderColor = "#E5E7EB";
-            e.currentTarget.style.background = "hsl(var(--card))";
-          }
-        }}
+        className={`inline-flex items-center transition-all duration-[120ms] h-[30px] px-2.5 rounded-lg text-xs font-medium gap-[5px] border ${
+          isActive
+            ? "border-foreground bg-foreground text-background"
+            : "border-border bg-card text-muted-foreground hover:border-muted-foreground/50 hover:bg-muted"
+        }`}
       >
         <span className="flex-shrink-0" style={{ display: "flex", alignItems: "center" }}>{icon}</span>
         <span className="truncate max-w-[100px]">{displayText}</span>
@@ -253,7 +234,7 @@ const FilterBar = ({ filters, onChange, onForceReset, onSaveFilter, isLoggedIn }
 
   return (
     <div className="sticky top-[52px] z-40 bg-card/95 dark:bg-card/95 backdrop-blur-sm border-b border-border" style={{ height: 44 }}>
-      <div className="h-full px-4 flex items-center" style={{ gap: 8 }}>
+      <div className="h-full px-4 flex items-center overflow-x-auto scrollbar-thin" style={{ gap: 8 }}>
         <ChipDropdown
           chipLabel="Global"
           value={filters.country}
@@ -302,25 +283,7 @@ const FilterBar = ({ filters, onChange, onForceReset, onSaveFilter, isLoggedIn }
             <TooltipTrigger asChild>
               <button
                 onClick={() => { onChange(defaultFilters); onForceReset?.(); }}
-                className="flex items-center justify-center group"
-                style={{
-                  width: 30, height: 30, flexShrink: 0,
-                  borderRadius: 8,
-                  border: "1px solid #E5E7EB",
-                  background: "hsl(var(--card))",
-                  color: "#6B7280",
-                  transition: "all 120ms ease",
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.borderColor = "#9CA3AF";
-                  e.currentTarget.style.background = "#F9FAFB";
-                  e.currentTarget.style.color = "#111827";
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.borderColor = "#E5E7EB";
-                  e.currentTarget.style.background = "hsl(var(--card))";
-                  e.currentTarget.style.color = "#6B7280";
-                }}
+                className="flex items-center justify-center group w-[30px] h-[30px] flex-shrink-0 rounded-lg border border-border bg-card text-muted-foreground hover:border-muted-foreground/50 hover:bg-muted hover:text-foreground transition-all duration-[120ms]"
                 aria-label={lang === "pt" ? "Limpar filtros" : "Clear filters"}
               >
                 <RotateCcw size={13} className="group-hover:animate-[spin_0.3s_ease-in-out]" />
@@ -335,25 +298,7 @@ const FilterBar = ({ filters, onChange, onForceReset, onSaveFilter, isLoggedIn }
           <TooltipTrigger asChild>
             <button
               onClick={() => onSaveFilter?.()}
-              className="flex items-center justify-center"
-              style={{
-                width: 30, height: 30, flexShrink: 0,
-                borderRadius: 8,
-                border: "1px solid #E5E7EB",
-                background: "hsl(var(--card))",
-                color: "#6B7280",
-                transition: "all 120ms ease",
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.borderColor = "#9CA3AF";
-                e.currentTarget.style.background = "#F9FAFB";
-                e.currentTarget.style.color = "#111827";
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.borderColor = "#E5E7EB";
-                e.currentTarget.style.background = "hsl(var(--card))";
-                e.currentTarget.style.color = "#6B7280";
-              }}
+              className="flex items-center justify-center w-[30px] h-[30px] flex-shrink-0 rounded-lg border border-border bg-card text-muted-foreground hover:border-muted-foreground/50 hover:bg-muted hover:text-foreground transition-all duration-[120ms]"
               aria-label={lang === "pt" ? "Criar alerta" : "Create alert"}
             >
               <Bell size={13} />

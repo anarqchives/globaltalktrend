@@ -1,6 +1,7 @@
 import { AreaChart, Area, ResponsiveContainer, XAxis, YAxis, Tooltip, CartesianGrid } from "recharts";
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { Share2, MessageCircle, ThumbsUp, MapPin, Newspaper, ExternalLink, Shield, CheckCircle2, FlaskConical, Globe } from "lucide-react";
+import SparklineArea from "./SparklineArea";
 import { toast } from "@/hooks/use-toast";
 
 export interface TrendCardProps {
@@ -81,9 +82,11 @@ const TrendCard = ({
   const [expanded, setExpanded] = useState(false);
   const flag = countryCodeToFlag(countryCode);
 
-  const chartData = sparkData.map((v, i) => ({ x: i, y: v }));
   const colors = platformColors[platform] || platformColors["Google Trends"];
-  const gradientId = `grad-${title.replace(/[^a-zA-Z0-9]/g, "").slice(0, 10)}-${Math.random().toString(36).slice(2, 6)}`;
+  const gradientId = useMemo(
+    () => `grad-${title.replace(/[^a-zA-Z0-9]/g, "").slice(0, 10)}-${Math.random().toString(36).slice(2, 6)}`,
+    [title]
+  );
   const histGradientId = `hist-${gradientId}`;
 
   const handleShare = (e: React.MouseEvent) => {
@@ -160,25 +163,9 @@ const TrendCard = ({
         )}
       </div>
 
-      {/* Mini sparkline */}
+      {/* Mini sparkline — lightweight SVG instead of Recharts */}
       <div className="h-10 mt-3">
-        <ResponsiveContainer width="100%" height="100%">
-          <AreaChart data={chartData}>
-            <defs>
-              <linearGradient id={gradientId} x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stopColor={colors.stroke} stopOpacity={0.3} />
-                <stop offset="100%" stopColor={colors.stroke} stopOpacity={0} />
-              </linearGradient>
-            </defs>
-            <Area
-              type="monotone"
-              dataKey="y"
-              stroke={colors.stroke}
-              strokeWidth={1.5}
-              fill={`url(#${gradientId})`}
-            />
-          </AreaChart>
-        </ResponsiveContainer>
+        <SparklineArea data={sparkData} color={colors.stroke} width={200} height={40} className="w-full" />
       </div>
 
       {/* Expanded details with historical chart */}

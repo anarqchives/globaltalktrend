@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Trash2, ExternalLink, Share2, GripVertical, ChevronDown, ChevronUp, Sparkles } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -254,14 +254,13 @@ export default function BentoDashboard({ cards, loading, onRemove, onReorder }: 
   const [orderedCards, setOrderedCards] = useState<SavedCard[]>([]);
   const [initialized, setInitialized] = useState(false);
 
-  // Sync cards from parent
-  if (!initialized && cards.length > 0) {
-    setOrderedCards(cards);
-    setInitialized(true);
-  }
-  if (initialized && cards.length !== orderedCards.length) {
-    setOrderedCards(cards);
-  }
+  // Sync cards from parent — moved to useEffect to avoid setState during render
+  useEffect(() => {
+    if (cards.length > 0) {
+      setOrderedCards(cards);
+      setInitialized(true);
+    }
+  }, [cards]);
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),

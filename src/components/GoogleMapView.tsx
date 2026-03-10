@@ -1,5 +1,5 @@
 /// <reference types="google.maps" />
-import { useEffect, useRef, useState, useMemo, useCallback } from "react";
+import { useEffect, useRef, useState, useMemo, useCallback, useId } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { setOptions, importLibrary } from "@googlemaps/js-api-loader";
 import { supabase } from "@/integrations/supabase/client";
@@ -215,6 +215,19 @@ const GoogleMapView = ({
   const flowHoverInfoRef = useRef<any>(null);
   const sentimentMarkersRef = useRef<any[]>([]);
   const sentimentCirclesRef = useRef<any[]>([]);
+  const rafIdsRef = useRef<number[]>([]);
+
+  // Cancel all rAF loops helper
+  const cancelAllRafs = useCallback(() => {
+    rafIdsRef.current.forEach(id => cancelAnimationFrame(id));
+    rafIdsRef.current = [];
+  }, []);
+
+  // Track rAF registrations
+  const trackRaf = useCallback((id: number) => {
+    rafIdsRef.current.push(id);
+    return id;
+  }, []);
 
   // Track updates for notification
   useEffect(() => {
@@ -265,18 +278,29 @@ const GoogleMapView = ({
     setMapRetry((r) => r + 1);
   }, []);
 
-  // Load Google Maps
+  // Load Google Maps (with sessionStorage cache for API key)
   useEffect(() => {
     let cancelled = false;
     const loadMap = async () => {
       try {
-        const { data, error: fnError } = await supabase.functions.invoke("get-maps-key");
+        const CACHE_KEY = "gtt_maps_api_key";
+        let apiKey = sessionStorage.getItem(CACHE_KEY);
+        if (!apiKey) {
+          const { data, error: fnError } = await supabase.functions.invoke("get-maps-key");
+          if (cancelled) return;
+          if (fnError || !data?.key) {
+            setMapError("Chave do mapa indisponível para este domínio");
+            return;
+          }
+          apiKey = data.key;
+          sessionStorage.setItem(CACHE_KEY, apiKey!);
+        }
         if (cancelled) return;
-        if (fnError || !data?.key) {
+        if (!apiKey) {
           setMapError("Chave do mapa indisponível para este domínio");
           return;
         }
-        setOptions({ key: data.key, v: "weekly", libraries: ["marker"] });
+        setOptions({ key: apiKey, v: "weekly", libraries: ["marker"] });
         const [mapsLib, markerLib] = await Promise.all([importLibrary("maps"), importLibrary("marker")]);
         let vizLib: any = null;
         try { vizLib = await importLibrary("visualization"); } catch { /* ok */ }
@@ -381,6 +405,12 @@ const GoogleMapView = ({
 
   useEffect(() => {
     const map = googleMapRef.current;
+    const localRafIds: number[] = [];
+    const scheduleRaf = (fn: FrameRequestCallback) => {
+      const id = requestAnimationFrame(fn);
+      localRafIds.push(id);
+      return id;
+    };
     if (!map || !mapLoaded) return;
 
     // Cleanup previous flow elements
@@ -455,9 +485,9 @@ const GoogleMapView = ({
           strokeWeight: baseWeight * throbScale,
           strokeOpacity: throbOpacity,
         });
-        requestAnimationFrame(animateThrobbing);
+        scheduleRaf(animateThrobbing);
       };
-      requestAnimationFrame(animateThrobbing);
+      scheduleRaf(animateThrobbing);
 
       // Particle flow animation (soft glowing dot traveling along arc)
       const particleSpeed = 0.3 + (1 - arc.timeDelta / 8) * 0.7; // 0.3-1.0 based on propagation speed
@@ -526,9 +556,9 @@ const GoogleMapView = ({
           scale: (4 + (arc.volume / maxVol) * 3) * pulseScale,
         });
 
-        requestAnimationFrame(animateParticle);
+        scheduleRaf(animateParticle);
       };
-      requestAnimationFrame(animateParticle);
+      scheduleRaf(animateParticle);
 
       // Origin country pulsing ripple
       const originPulse = new g.maps.Marker({
@@ -565,9 +595,9 @@ const GoogleMapView = ({
           strokeOpacity: opacity,
           scale,
         });
-        requestAnimationFrame(animateOriginPulse);
+        scheduleRaf(animateOriginPulse);
       };
-      requestAnimationFrame(animateOriginPulse);
+      scheduleRaf(animateOriginPulse);
 
       // Hover interactions
       const handleHover = (e: any, isEnter: boolean) => {
@@ -694,7 +724,17 @@ const GoogleMapView = ({
         });
       }
     };
-    
+
+    return () => {
+      localRafIds.forEach(id => cancelAnimationFrame(id));
+      flowPolylinesRef.current.forEach(p => p.setMap(null));
+      flowPolylinesRef.current = [];
+      flowOriginPulsesRef.current.forEach(p => p.setMap(null));
+      flowOriginPulsesRef.current = [];
+      flowParticlesRef.current.forEach(p => p.setMap(null));
+      flowParticlesRef.current = [];
+      flowHoverInfoRef.current?.close();
+    };
   }, [mapMode, flowArcs, mapLoaded, isDark, isMobile, t, onSelectCountry, lang]);
 
   // ─── SENTIMENT BUBBLE MAP rendering with enhanced animations ───
@@ -704,6 +744,12 @@ const GoogleMapView = ({
 
   useEffect(() => {
     const map = googleMapRef.current;
+    const localRafIds: number[] = [];
+    const scheduleRaf = (fn: FrameRequestCallback) => {
+      const id = requestAnimationFrame(fn);
+      localRafIds.push(id);
+      return id;
+    };
     if (!map || !mapLoaded) return;
 
     // Cleanup previous sentiment overlays
@@ -783,9 +829,9 @@ const GoogleMapView = ({
           innerGlow.setRadius(baseRadius * 0.6 * pulseScale);
         }
         
-        requestAnimationFrame(animateBubblePulse);
+        scheduleRaf(animateBubblePulse);
       };
-      requestAnimationFrame(animateBubblePulse);
+      scheduleRaf(animateBubblePulse);
 
       // Outer breathing ring
       const breathingRing = new g.maps.Marker({
@@ -822,9 +868,9 @@ const GoogleMapView = ({
           strokeOpacity: 0.2 + 0.1 * Math.sin(progress * Math.PI * 2),
           scale: breathScale,
         });
-        requestAnimationFrame(animateBreathing);
+        scheduleRaf(animateBreathing);
       };
-      requestAnimationFrame(animateBreathing);
+      scheduleRaf(animateBreathing);
 
       // Flag label
       const flag = bubble.countryId.length === 2
@@ -896,9 +942,9 @@ const GoogleMapView = ({
               strokeOpacity: rippleOpacity,
               scale: rippleScale,
             });
-            requestAnimationFrame(animateRipple);
+            scheduleRaf(animateRipple);
           };
-          requestAnimationFrame(animateRipple);
+          scheduleRaf(animateRipple);
         }
 
         const bg = isDark ? "rgba(19,22,32,0.97)" : "rgba(255,255,255,0.97)";
@@ -992,10 +1038,10 @@ const GoogleMapView = ({
           circle.setOptions({ fillOpacity: 0.22 + 0.15 * (1 - eased) });
           
           if (progress < 1) {
-            requestAnimationFrame(animatePop);
+            scheduleRaf(animatePop);
           }
         };
-        requestAnimationFrame(animatePop);
+        scheduleRaf(animatePop);
         
         showTooltip(labelMarker, false);
       };
@@ -1036,7 +1082,17 @@ const GoogleMapView = ({
       infoWindowRef.current?.close();
     };
     document.addEventListener('map-sentiment-filter', handler);
-    return () => document.removeEventListener('map-sentiment-filter', handler);
+    return () => {
+      localRafIds.forEach(id => cancelAnimationFrame(id));
+      sentimentMarkersRef.current.forEach(m => m.setMap(null));
+      sentimentMarkersRef.current = [];
+      sentimentCirclesRef.current.forEach(c => c.setMap(null));
+      sentimentCirclesRef.current = [];
+      sentimentRipplesRef.current.forEach(r => r.setMap(null));
+      sentimentRipplesRef.current = [];
+      infoWindowRef.current?.close();
+      document.removeEventListener('map-sentiment-filter', handler);
+    };
   }, [mapMode, sentimentBubbles, mapLoaded, isDark, isMobile, t, onSelectCountry]);
 
   // Sync heatmap/markers visibility based on mapMode
@@ -1049,6 +1105,12 @@ const GoogleMapView = ({
   // Markers with animated ripple + vibrant colors
   useEffect(() => {
     const map = googleMapRef.current;
+    const localRafIds: number[] = [];
+    const scheduleRaf = (fn: FrameRequestCallback) => {
+      const id = requestAnimationFrame(fn);
+      localRafIds.push(id);
+      return id;
+    };
     if (!map || !mapLoaded) return;
     markersRef.current.forEach((m) => m.setMap(null));
     markersRef.current = [];
@@ -1100,9 +1162,9 @@ const GoogleMapView = ({
               strokeOpacity: opacity,
               scale: currentScale,
             });
-            requestAnimationFrame(animateRipple);
+            scheduleRaf(animateRipple);
           };
-          requestAnimationFrame(animateRipple);
+          scheduleRaf(animateRipple);
         }
       }
 
@@ -1134,9 +1196,9 @@ const GoogleMapView = ({
           const current = from + (to - from) * eased;
           const icon = marker.getIcon();
           if (icon) marker.setIcon({ ...icon, scale: current });
-          if (progress < 1) requestAnimationFrame(step);
+          if (progress < 1) scheduleRaf(step);
         };
-        requestAnimationFrame(step);
+        scheduleRaf(step);
       };
 
       const hoverScale = scale * 1.4;
@@ -1370,6 +1432,16 @@ const GoogleMapView = ({
 
       markersRef.current.push(marker);
     });
+
+    return () => {
+      localRafIds.forEach(id => cancelAnimationFrame(id));
+      markersRef.current.forEach(m => m.setMap(null));
+      markersRef.current = [];
+      rippleOverlaysRef.current.forEach(o => o.setMap(null));
+      rippleOverlaysRef.current = [];
+      hoverInfoRef.current?.close();
+      infoWindowRef.current?.close();
+    };
   }, [trendCounts, maxCount, avgCount, selectedCountry, mapLoaded, onSelectCountry, t, trends, isDark, isMobile]);
 
   // Pan to selected/highlighted country
