@@ -23,10 +23,7 @@ import { toast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { AreaChart, Area, ResponsiveContainer, XAxis, YAxis, Tooltip, CartesianGrid } from "recharts";
 
-const countryCodeToFlag = (code?: string | null) => {
-  if (!code || code.length !== 2) return null;
-  return String.fromCodePoint(...[...code.toUpperCase()].map(c => 0x1F1E6 + c.charCodeAt(0) - 65));
-};
+import { countryCodeToFlag } from "@/lib/shared-utils";
 
 interface BentoDashboardProps {
   cards: SavedCard[];

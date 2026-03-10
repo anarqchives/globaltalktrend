@@ -402,4 +402,4 @@ const CountdownTimer = () => {
   );
 };
 
-export default TrendHeader;
+export default React.memo(TrendHeader);

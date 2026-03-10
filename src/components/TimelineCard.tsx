@@ -755,4 +755,4 @@ const TimelineCard = ({
   );
 };
 
-export default TimelineCard;
+export default React.memo(TimelineCard);

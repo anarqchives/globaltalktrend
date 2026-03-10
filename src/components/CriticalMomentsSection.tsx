@@ -8,10 +8,7 @@ import { toast } from "@/hooks/use-toast";
 import type { CriticalMoment } from "@/hooks/use-critical-moments";
 import AbbrTooltip from "./AbbrTooltip";
 
-const countryCodeToFlag = (code?: string) => {
-  if (!code || code.length !== 2) return null;
-  return String.fromCodePoint(...[...code.toUpperCase()].map(c => 0x1F1E6 + c.charCodeAt(0) - 65));
-};
+import { countryCodeToFlag } from "@/lib/shared-utils";
 
 const platformColors: Record<string, string> = {
   YouTube: "#FF0000",

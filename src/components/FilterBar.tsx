@@ -313,4 +313,4 @@ const FilterBar = ({ filters, onChange, onForceReset, onSaveFilter, isLoggedIn }
   );
 };
 
-export default FilterBar;
+export default React.memo(FilterBar);

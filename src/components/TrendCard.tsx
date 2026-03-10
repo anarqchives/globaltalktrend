@@ -256,4 +256,4 @@ const TrendCard = ({
   );
 };
 
-export default TrendCard;
+export default React.memo(TrendCard);
