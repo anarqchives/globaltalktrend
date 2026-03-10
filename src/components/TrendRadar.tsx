@@ -686,8 +686,8 @@ export default function TrendRadar({ trends, allTrends, criticalMoments, anomali
 
         {/* Content */}
         <div
-          className={`overflow-hidden flex-1 min-h-0 transition-opacity duration-200 ease-out ${collapsed ? "opacity-0 pointer-events-none" : "opacity-100"}`}
-          style={{ flexGrow: collapsed ? 0 : 1 }}
+          className={`flex-1 min-h-0 transition-all duration-200 ease-out ${collapsed ? "opacity-0 pointer-events-none max-h-0 overflow-hidden" : "opacity-100 overflow-hidden"}`}
+          style={{ flexGrow: collapsed ? 0 : 1, minHeight: collapsed ? 0 : 120 }}
         >
           <div className="h-full relative">
             <TabsContent value="signals" className="absolute inset-0 mt-0 overflow-hidden data-[state=inactive]:hidden animate-in fade-in-0 duration-200 flex flex-col">
