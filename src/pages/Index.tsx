@@ -602,7 +602,7 @@ const Index = () => {
                 )}
                 {ultimas24h.length > 0 && (
                   <>
-                    <div className="feed-section-label flex items-center gap-1.5 text-muted-foreground">
+                    <div className="feed-section-label flex items-center gap-1.5 text-muted-foreground" style={{ gridColumn: '1 / -1' }}>
                       📅 24H
                       <span className="text-micro font-normal ml-1">({ultimas24h.length})</span>
                     </div>

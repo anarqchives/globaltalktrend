@@ -273,7 +273,7 @@ const TimelineCard = ({
       viewport={{ once: true, margin: "-30px" }}
       transition={{ duration: 0.3, ease: [0.25, 0.1, 0.25, 1], delay: Math.min(staggerIndex * 0.04, 0.4) }}
     >
-      <div className={`timeline-card group ${expanded ? 'timeline-card-expanded' : ''}`} data-tier={tier}>
+      <div className={`timeline-card group ${expanded ? 'timeline-card-expanded' : ''}`} data-tier={tier} style={{ minWidth: 0, overflow: 'hidden', boxSizing: 'border-box' }}>
         
         {/* === MAIN CONTENT: Click to expand === */}
         <div className="cursor-pointer" onClick={handleToggle}>
