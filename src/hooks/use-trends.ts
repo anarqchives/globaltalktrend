@@ -27,7 +27,7 @@ const SOURCE_GROUPS: Record<string, string[]> = {
   tech: ["Hacker News", "GitHub", "Stack Overflow"],
   busca: ["Google Trends"],
   enciclopedia: ["Wikipedia"],
-  conflitos: ["GDELT"],
+  conflitos: ["GDELT", "GDELT DOC"],
 };
 
 // ─── Source Health Tracker ──────────────────────────────────────────
