@@ -1413,10 +1413,7 @@ const GoogleMapView = ({
     { key: "sentiment", icon: Heart, labelKey: "mapSentiment" },
   ];
 
-  const modeBtnClass = (active: boolean) =>
-    `relative z-10 h-6 min-h-[24px] max-h-[24px] px-2 rounded-full transition-colors duration-200 outline-none ring-0 focus:outline-none focus:ring-0 inline-flex items-center gap-1 text-[9px] font-semibold tracking-wide uppercase ${
-      active ? "text-primary-foreground" : "text-muted-foreground hover:text-foreground"
-    }`;
+  const modeBtnBase = "relative z-10 h-7 px-3 rounded-full transition-colors duration-200 outline-none inline-flex items-center gap-1.5 text-[10px] font-semibold tracking-wide uppercase";
 
   // Current max intensity for legend marker position
   const currentMaxIntensity = useMemo(() => {
@@ -1427,33 +1424,28 @@ const GoogleMapView = ({
 
   return (
     <div className="w-full h-full relative" style={{ isolation: "isolate" }}>
-      {/* Map controls + Top Trends */}
-      {/* Map toolbar: tabs + close — full-width bar at top */}
-      <div className="absolute top-0 left-0 right-0 z-[5] h-9 flex items-center justify-between px-2 bg-white/90 dark:bg-card/90 backdrop-blur-lg border-b border-border/20 pointer-events-auto">
+      {/* Map toolbar */}
+      <div className="absolute top-0 left-0 right-0 z-[5] h-9 flex items-center px-2 bg-white/90 dark:bg-card/90 backdrop-blur-lg border-b border-border/20 pointer-events-auto">
         <div className="relative flex items-center gap-0 p-0.5 rounded-lg pointer-events-auto">
-          {/* Sliding pill indicator */}
-          <motion.div
-            className="absolute top-0.5 bottom-0.5 rounded-full bg-primary shadow-sm"
-            layout
-            transition={{ type: "spring", stiffness: 400, damping: 30 }}
-            style={{
-              left: `${mapModes.findIndex(m => m.key === mapMode) * (100 / mapModes.length)}%`,
-              width: `${100 / mapModes.length}%`,
-            }}
-            animate={{
-              left: `${mapModes.findIndex(m => m.key === mapMode) * (100 / mapModes.length)}%`,
-            }}
-          />
           {mapModes.map(({ key, icon: Icon, labelKey }) => (
-            <button key={key} onClick={() => setMapMode(key)} className={modeBtnClass(mapMode === key)} title={t(labelKey as any)}>
-              <Icon className="w-3 h-3" />
-              <span className="hidden sm:inline">{t(labelKey as any)}</span>
+            <button key={key} onClick={() => setMapMode(key)} className={`${modeBtnBase} ${mapMode === key ? "text-primary-foreground" : "text-muted-foreground hover:text-foreground"}`} title={t(labelKey as any)}>
+              {mapMode === key && (
+                <motion.div
+                  layoutId="map-mode-pill"
+                  className="absolute inset-0 rounded-full bg-primary shadow-sm"
+                  transition={{ type: "spring", stiffness: 500, damping: 35 }}
+                />
+              )}
+              <span className="relative z-10 flex items-center gap-1.5">
+                <Icon className="w-3 h-3" />
+                <span className="hidden sm:inline">{t(labelKey as any)}</span>
+              </span>
             </button>
           ))}
           {selectedCountry !== "global" && (
             <button
               onClick={() => { onSelectCountry("global"); googleMapRef.current?.panTo({ lat: 20, lng: 0 }); googleMapRef.current?.setZoom(2.5); }}
-              className={modeBtnClass(false)}
+              className={`${modeBtnBase} text-muted-foreground hover:text-foreground`}
               title={t("global")}
             >
               <Globe className="w-3 h-3" />
