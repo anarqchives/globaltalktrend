@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { Globe, Calendar, LayoutGrid, Layers, ChevronDown, X, Bell, RotateCcw } from "lucide-react";
 import { useLanguage, LangCode } from "@/contexts/LanguageContext";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
