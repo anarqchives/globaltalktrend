@@ -77,7 +77,7 @@ export const countries = [
 ];
 
 interface ChipDropdownProps {
-  label: string;
+  chipLabel: string;
   value: string;
   options: { value: string; label: string }[];
   isActive: boolean;
@@ -88,7 +88,7 @@ interface ChipDropdownProps {
   groups?: typeof countries;
 }
 
-function ChipDropdown({ label, value, options, isActive, icon, onChange, onClear, isGrouped, groups }: ChipDropdownProps) {
+function ChipDropdown({ chipLabel, value, options, isActive, icon, onChange, onClear, isGrouped, groups }: ChipDropdownProps) {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
 
@@ -101,31 +101,56 @@ function ChipDropdown({ label, value, options, isActive, icon, onChange, onClear
     return () => document.removeEventListener("mousedown", handleClick);
   }, [open]);
 
-  const displayLabel = isGrouped && groups
-    ? groups.flatMap(g => g.items).find(c => c.value === value)?.label || label
-    : options.find(o => o.value === value)?.label || label;
+  // For active state, show the selected value label; otherwise show chipLabel
+  const selectedLabel = isGrouped && groups
+    ? groups.flatMap(g => g.items).find(c => c.value === value)?.label
+    : options.find(o => o.value === value)?.label;
+
+  const displayText = isActive && selectedLabel
+    ? selectedLabel.replace(/^[^\w\s]*\s*/, '')
+    : chipLabel;
 
   return (
     <div ref={ref} className="relative flex-shrink-0">
       <button
         onClick={() => setOpen(!open)}
-        className={`inline-flex items-center gap-1.5 rounded-full transition-all duration-[120ms] ${
-          isActive
-            ? "bg-foreground text-background"
-            : "bg-secondary hover:bg-muted text-muted-foreground"
-        }`}
-        style={{ height: 28, padding: "0 10px", fontSize: 12, fontWeight: isActive ? 600 : 500 }}
+        className="inline-flex items-center transition-all duration-[120ms]"
+        style={{
+          height: 30,
+          padding: "0 10px",
+          borderRadius: 8,
+          border: isActive ? "1px solid hsl(var(--foreground))" : "1px solid #E5E7EB",
+          background: isActive ? "hsl(var(--foreground))" : "hsl(var(--card))",
+          color: isActive ? "hsl(var(--background))" : "#374151",
+          fontSize: 12,
+          fontWeight: 500,
+          gap: 5,
+        }}
+        onMouseEnter={(e) => {
+          if (!isActive) {
+            e.currentTarget.style.borderColor = "#9CA3AF";
+            e.currentTarget.style.background = "#F9FAFB";
+          }
+        }}
+        onMouseLeave={(e) => {
+          if (!isActive) {
+            e.currentTarget.style.borderColor = "#E5E7EB";
+            e.currentTarget.style.background = "hsl(var(--card))";
+          }
+        }}
       >
-        <span className="truncate max-w-[100px]">{displayLabel.replace(/^[^\w\s]*\s*/, '')}</span>
+        <span className="flex-shrink-0" style={{ display: "flex", alignItems: "center" }}>{icon}</span>
+        <span className="truncate max-w-[100px]">{displayText}</span>
         {isActive ? (
           <span
             onClick={(e) => { e.stopPropagation(); onClear(); setOpen(false); }}
             className="flex-shrink-0 cursor-pointer hover:opacity-70"
+            style={{ marginLeft: 4, display: "flex", alignItems: "center" }}
           >
-            <X className="w-2.5 h-2.5" />
+            <X size={10} />
           </span>
         ) : (
-          <ChevronDown className="w-2.5 h-2.5 flex-shrink-0 opacity-60" />
+          <ChevronDown size={10} className="flex-shrink-0 opacity-60" style={{ marginLeft: 4 }} />
         )}
       </button>
 
@@ -230,43 +255,46 @@ const FilterBar = ({ filters, onChange, onForceReset, onSaveFilter, isLoggedIn }
     <div className="sticky top-[52px] z-40 bg-card/95 dark:bg-card/95 backdrop-blur-sm border-b border-border" style={{ height: 44 }}>
       <div className="h-full px-4 flex items-center" style={{ gap: 8 }}>
         <ChipDropdown
-          label={t("global")}
+          chipLabel="Global"
           value={filters.country}
           options={[]}
           isActive={filters.country !== defaultFilters.country}
-          icon={<Globe className="w-3 h-3" />}
+          icon={<Globe size={12} />}
           onChange={(v) => update("country", v)}
           onClear={() => update("country", defaultFilters.country)}
           isGrouped
           groups={countries}
         />
         <ChipDropdown
-          label={t("today")}
+          chipLabel={lang === "pt" ? "Hoje" : "Today"}
           value={filters.period}
           options={periodOptions}
           isActive={filters.period !== defaultFilters.period}
-          icon={<Calendar className="w-3 h-3" />}
+          icon={<Calendar size={12} />}
           onChange={(v) => update("period", v)}
           onClear={() => update("period", defaultFilters.period)}
         />
         <ChipDropdown
-          label={t("all")}
+          chipLabel={lang === "pt" ? "Categoria" : "Category"}
           value={filters.category}
           options={categoryOptions}
           isActive={filters.category !== defaultFilters.category}
-          icon={<LayoutGrid className="w-3 h-3" />}
+          icon={<LayoutGrid size={12} />}
           onChange={(v) => update("category", v)}
           onClear={() => update("category", defaultFilters.category)}
         />
         <ChipDropdown
-          label={t("allMedia")}
+          chipLabel={lang === "pt" ? "Mídia" : "Media"}
           value={filters.type}
           options={typeOptions}
           isActive={filters.type !== defaultFilters.type}
-          icon={<Layers className="w-3 h-3" />}
+          icon={<Layers size={12} />}
           onChange={(v) => update("type", v)}
           onClear={() => update("type", defaultFilters.type)}
         />
+
+        {/* Spacer before action buttons */}
+        <div style={{ width: 8, flexShrink: 0 }} />
 
         {/* Reset button — only when filters active */}
         {isFiltered && (
@@ -275,32 +303,30 @@ const FilterBar = ({ filters, onChange, onForceReset, onSaveFilter, isLoggedIn }
               <button
                 onClick={() => { onChange(defaultFilters); onForceReset?.(); }}
                 className="flex items-center justify-center rounded-lg text-muted-foreground/60 hover:text-foreground hover:bg-muted transition-all group"
-                style={{ width: 28, height: 28 }}
-                aria-label={lang === "pt" ? "Limpar todos os filtros" : "Clear all filters"}
+                style={{ width: 28, height: 28, flexShrink: 0 }}
+                aria-label={lang === "pt" ? "Limpar filtros" : "Clear filters"}
               >
-                <RotateCcw className="w-3.5 h-3.5 group-hover:animate-[spin_0.3s_ease-in-out]" />
+                <RotateCcw size={14} className="group-hover:animate-[spin_0.3s_ease-in-out]" />
               </button>
             </TooltipTrigger>
-            <TooltipContent side="bottom" className="text-[10px]">{lang === "pt" ? "Limpar todos os filtros" : "Clear all filters"}</TooltipContent>
+            <TooltipContent side="bottom" className="text-[10px]">{lang === "pt" ? "Limpar filtros" : "Clear filters"}</TooltipContent>
           </Tooltip>
         )}
 
-        {/* Alert bell — inline after reset */}
-        {isLoggedIn && onSaveFilter && (
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <button
-                onClick={onSaveFilter}
-                className="flex items-center justify-center rounded-lg text-muted-foreground/60 hover:text-foreground hover:bg-muted transition-all"
-                style={{ width: 28, height: 28 }}
-                aria-label={t("createAlert")}
-              >
-                <Bell className="w-3.5 h-3.5" />
-              </button>
-            </TooltipTrigger>
-            <TooltipContent side="bottom" className="text-[10px]">{t("createAlert")}</TooltipContent>
-          </Tooltip>
-        )}
+        {/* Alert bell */}
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <button
+              onClick={() => onSaveFilter?.()}
+              className="flex items-center justify-center rounded-lg text-muted-foreground/60 hover:text-foreground hover:bg-muted transition-all"
+              style={{ width: 28, height: 28, flexShrink: 0 }}
+              aria-label={lang === "pt" ? "Criar alerta" : "Create alert"}
+            >
+              <Bell size={14} />
+            </button>
+          </TooltipTrigger>
+          <TooltipContent side="bottom" className="text-[10px]">{lang === "pt" ? "Criar alerta" : "Create alert"}</TooltipContent>
+        </Tooltip>
 
         <div className="flex-1" />
       </div>
