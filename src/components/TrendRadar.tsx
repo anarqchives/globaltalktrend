@@ -482,12 +482,24 @@ function AnomaliesPredictive({ anomalies, lang, onAnomalyClick }: {
               {/* Actions */}
               <div className="flex items-center justify-between mt-auto pt-1 border-t border-border/10">
                 <span className={`text-[8px] font-bold ${info.color}`}>{info.emoji} {info.label}</span>
-                <button
-                  onClick={(ev) => { ev.stopPropagation(); onAnomalyClick?.(`${anomaly.trend.platform}-${anomaly.trend.title.slice(0, 20)}`); }}
-                  className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-md bg-primary text-primary-foreground text-[8px] font-semibold hover:bg-primary/90 transition-colors"
-                >
-                  <Eye className="w-2 h-2" /> Timeline
-                </button>
+                {anomaly.trend.sourceUrl ? (
+                  <a
+                    href={anomaly.trend.sourceUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    onClick={(ev) => ev.stopPropagation()}
+                    className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-md bg-primary text-primary-foreground text-[8px] font-semibold hover:bg-primary/90 transition-colors"
+                  >
+                    <ExternalLink className="w-2 h-2" /> {lang === "pt" ? "Fonte" : "Source"}
+                  </a>
+                ) : (
+                  <button
+                    onClick={(ev) => { ev.stopPropagation(); onAnomalyClick?.(`${anomaly.trend.platform}-${anomaly.trend.title.slice(0, 20)}`); }}
+                    className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-md bg-primary text-primary-foreground text-[8px] font-semibold hover:bg-primary/90 transition-colors"
+                  >
+                    <Eye className="w-2 h-2" /> {lang === "pt" ? "Detalhes" : "Details"}
+                  </button>
+                )}
               </div>
 
               <AnimatePresence>
