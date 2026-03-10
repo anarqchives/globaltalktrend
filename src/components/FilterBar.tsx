@@ -299,49 +299,34 @@ const FilterBar = ({ filters, onChange, onForceReset, onSaveFilter, isLoggedIn }
           onClear={() => update("type", defaultFilters.type)}
         />
 
-        <div className="w-px h-5 bg-border/50 mx-1 flex-shrink-0" />
-
         {/* Reset button */}
         {isFiltered && (
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <button
-                onClick={() => { onChange(defaultFilters); onForceReset?.(); }}
-                className="flex items-center justify-center group w-[32px] h-[32px] flex-shrink-0 rounded-lg border border-border bg-card text-muted-foreground hover:border-destructive/50 hover:bg-destructive/10 hover:text-destructive transition-all duration-150"
-                aria-label={lang === "pt" ? "Limpar filtros" : "Clear filters"}
-              >
-                <RotateCcw size={13} className="group-hover:animate-[spin_0.3s_ease-in-out]" />
-              </button>
-            </TooltipTrigger>
-            <TooltipContent side="bottom" className="text-[10px]">{lang === "pt" ? "Limpar filtros" : "Clear filters"}</TooltipContent>
-          </Tooltip>
+          <button
+            onClick={() => { onChange(defaultFilters); onForceReset?.(); }}
+            className="flex items-center justify-center group w-[28px] h-[28px] sm:w-[32px] sm:h-[32px] flex-shrink-0 rounded-lg border border-border bg-card text-muted-foreground hover:border-destructive/50 hover:bg-destructive/10 hover:text-destructive transition-all duration-150"
+            aria-label={lang === "pt" ? "Limpar filtros" : "Clear filters"}
+            title={lang === "pt" ? "Limpar filtros" : "Clear filters"}
+          >
+            <RotateCcw size={12} className="group-hover:animate-[spin_0.3s_ease-in-out]" />
+          </button>
         )}
 
         {/* Alert bell */}
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <button
-              onClick={() => onSaveFilter?.()}
-              className="flex items-center justify-center w-[32px] h-[32px] flex-shrink-0 rounded-lg border border-border bg-card text-muted-foreground hover:border-primary/40 hover:bg-accent hover:text-foreground transition-all duration-150"
-              aria-label={lang === "pt" ? "Criar alerta" : "Create alert"}
-            >
-              <Bell size={13} />
-            </button>
-          </TooltipTrigger>
-          <TooltipContent side="bottom" className="text-[10px]">{lang === "pt" ? "Criar alerta" : "Create alert"}</TooltipContent>
-        </Tooltip>
+        <button
+          onClick={() => onSaveFilter?.()}
+          className="flex items-center justify-center w-[28px] h-[28px] sm:w-[32px] sm:h-[32px] flex-shrink-0 rounded-lg border border-border bg-card text-muted-foreground hover:border-primary/40 hover:bg-accent hover:text-foreground transition-all duration-150"
+          aria-label={lang === "pt" ? "Criar alerta" : "Create alert"}
+          title={lang === "pt" ? "Criar alerta" : "Create alert"}
+        >
+          <Bell size={12} />
+        </button>
 
-        {/* Active filter summary */}
+        {/* Active filter summary — hidden on mobile to save space */}
         {isFiltered && activeFilterLabels.length > 0 && (
-          <>
-            <div className="w-px h-5 bg-border/50 mx-1 flex-shrink-0" />
-            <span className="text-[10px] text-muted-foreground flex-shrink-0 whitespace-nowrap">
-              {lang === "pt" ? "Filtrando" : "Filtering"}: <span className="font-medium text-foreground/70">{activeFilterLabels.join(" · ")}</span>
-            </span>
-          </>
-        )}
-
-        <div className="flex-1" />
+          <span className="hidden sm:inline text-[10px] text-muted-foreground flex-shrink-0 whitespace-nowrap ml-1">
+            {lang === "pt" ? "Filtrando" : "Filtering"}: <span className="font-medium text-foreground/70">{activeFilterLabels.join(" · ")}</span>
+          </span>
+        )
       </div>
     </div>
   );
