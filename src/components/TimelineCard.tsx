@@ -584,6 +584,12 @@ const TimelineCard = ({
             </div>
           )}
 
+          {/* Narrative origin + confidence — subtle footnote */}
+          <div className="flex items-center justify-between text-[9px] text-muted-foreground/70 pt-2 mt-2 border-t border-border/20">
+            <span>🗺️ {platform} {countryCode && countryCode !== "GL" ? `· ${flag} ${countryCode}` : ""}</span>
+            <span>{t("confidenceLabel" as any)}: {trendScore}%</span>
+          </div>
+
           <TrendFeedback title={title} platform={platform} userId={userId} />
         </div>
       )}
