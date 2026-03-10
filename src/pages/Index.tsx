@@ -591,7 +591,7 @@ const Index = () => {
                 )}
                 {ultimas2h.length > 0 && (
                   <>
-                    <div className="feed-section-label flex items-center gap-1.5 text-muted-foreground">
+                    <div className="feed-section-label flex items-center gap-1.5 text-muted-foreground" style={{ gridColumn: '1 / -1' }}>
                       ⏳ {lang === "pt" ? "ÚLTIMAS 2H" : "LAST 2H"}
                       <span className="text-micro font-normal ml-1">({ultimas2h.length})</span>
                     </div>
