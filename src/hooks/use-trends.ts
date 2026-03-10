@@ -607,7 +607,7 @@ export function useTrends(filters: FilterState, onTrendCountsChange: (counts: Re
         functionName: string,
         timeoutMs: number
       ) => {
-        console.log(`🔍 Buscando ${sourceName}...`);
+        if (import.meta.env.DEV) console.log(`🔍 Buscando ${sourceName}...`);
         const result = await withTimeout(
           supabase.functions.invoke(functionName, { body: { lang } }).catch(() => ({ data: { trends: [] } })),
           timeoutMs,
