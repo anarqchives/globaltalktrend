@@ -67,11 +67,6 @@ export default function CriticalMomentsSection({ moments, onSelectTrend }: Props
         <span className="text-xs font-bold uppercase tracking-wider" style={{ color: '#CF1322', letterSpacing: '0.5px' }}>
           🔴 {lang === "pt" ? "CRÍTICO" : "CRITICAL"} · {moments.length}
         </span>
-        <span className="text-[10px] text-muted-foreground italic hidden sm:inline">
-          {lang === "pt"
-            ? "Eventos críticos — picos de volume, convergência de mídias e propagação geográfica"
-            : "Critical events — volume spikes, media convergence and geographic spread"}
-        </span>
       </div>
 
       {/* 2-column masonry grid */}
