@@ -562,19 +562,11 @@ const Index = () => {
               <>
                 {agora.length > 0 && (
                   <>
-                    <motion.div
-                      className="px-1.5 py-1 mt-0.5"
-                      initial={{ opacity: 0, x: -6 }}
-                      whileInView={{ opacity: 1, x: 0 }}
-                      viewport={{ once: true }}
-                      transition={{ duration: 0.3 }}
-                    >
-                      <span className="text-[10px] font-bold text-destructive uppercase tracking-wide flex items-center gap-1">
-                        <span className="w-1.5 h-1.5 rounded-full bg-destructive animate-pulse" />
-                        🔥 Agora
-                        <span className="text-[9px] font-normal text-muted-foreground ml-0.5">({agora.length})</span>
-                      </span>
-                    </motion.div>
+                    <div className="feed-section-label flex items-center gap-1.5">
+                      <span className="w-1.5 h-1.5 rounded-full bg-destructive animate-pulse" />
+                      🔥 {lang === "pt" ? "AGORA" : "NOW"}
+                      <span className="text-micro font-normal text-muted-foreground ml-1">({agora.length})</span>
+                    </div>
                     <div style={gridStyle}>
                         {agora.map((trend) => renderCard(trend, globalIndex++))}
                     </div>
@@ -582,18 +574,10 @@ const Index = () => {
                 )}
                 {ultimas2h.length > 0 && (
                   <>
-                    <motion.div
-                      className="px-1.5 py-1 mt-1"
-                      initial={{ opacity: 0, x: -6 }}
-                      whileInView={{ opacity: 1, x: 0 }}
-                      viewport={{ once: true }}
-                      transition={{ duration: 0.3, delay: 0.05 }}
-                    >
-                      <span className="text-[10px] font-bold text-amber-600 dark:text-amber-400 uppercase tracking-wide flex items-center gap-1">
-                        ⏳ Últimas 2h
-                        <span className="text-[9px] font-normal text-muted-foreground ml-0.5">({ultimas2h.length})</span>
-                      </span>
-                    </motion.div>
+                    <div className="feed-section-label flex items-center gap-1.5 text-muted-foreground">
+                      ⏳ {lang === "pt" ? "ÚLTIMAS 2H" : "LAST 2H"}
+                      <span className="text-micro font-normal ml-1">({ultimas2h.length})</span>
+                    </div>
                     <div style={gridStyle}>
                         {ultimas2h.map((trend) => renderCard(trend, globalIndex++))}
                     </div>
@@ -601,18 +585,10 @@ const Index = () => {
                 )}
                 {ultimas24h.length > 0 && (
                   <>
-                    <motion.div
-                      className="px-1.5 py-1 mt-1"
-                      initial={{ opacity: 0, x: -6 }}
-                      whileInView={{ opacity: 1, x: 0 }}
-                      viewport={{ once: true }}
-                      transition={{ duration: 0.3, delay: 0.08 }}
-                    >
-                      <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wide flex items-center gap-1">
-                        📅 24h
-                        <span className="text-[9px] font-normal text-muted-foreground ml-0.5">({ultimas24h.length})</span>
-                      </span>
-                    </motion.div>
+                    <div className="feed-section-label flex items-center gap-1.5 text-muted-foreground">
+                      📅 24H
+                      <span className="text-micro font-normal ml-1">({ultimas24h.length})</span>
+                    </div>
                     <div style={gridStyle}>
                         {ultimas24h.map((trend) => renderCard(trend, globalIndex++))}
                     </div>
