@@ -485,9 +485,9 @@ const GoogleMapView = ({
           strokeWeight: baseWeight * throbScale,
           strokeOpacity: throbOpacity,
         });
-        requestAnimationFrame(animateThrobbing);
+        scheduleRaf(animateThrobbing);
       };
-      requestAnimationFrame(animateThrobbing);
+      scheduleRaf(animateThrobbing);
 
       // Particle flow animation (soft glowing dot traveling along arc)
       const particleSpeed = 0.3 + (1 - arc.timeDelta / 8) * 0.7; // 0.3-1.0 based on propagation speed
