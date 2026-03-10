@@ -116,9 +116,6 @@ function ChipDropdown({ label, value, options, isActive, icon, onChange, onClear
         }`}
         style={{ height: 28, padding: "0 10px", fontSize: 12, fontWeight: isActive ? 600 : 500 }}
       >
-        <span className={`flex-shrink-0 ${isActive ? "text-background/70" : "text-muted-foreground/60"}`} style={{ width: 12, height: 12 }}>
-          {icon}
-        </span>
         <span className="truncate max-w-[100px]">{displayLabel}</span>
         {isActive ? (
           <span
