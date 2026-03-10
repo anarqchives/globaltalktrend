@@ -967,7 +967,7 @@ export function useTrends(filters: FilterState, onTrendCountsChange: (counts: Re
             }
           }
           if (keywordMatches.length > 0) {
-            console.log("🔍 Camada 3 - Encontradas por palavras-chave:", keywordMatches.length);
+            if (import.meta.env.DEV) console.log("🔍 Camada 3 - Encontradas por palavras-chave:", keywordMatches.length);
           }
         }
       }
