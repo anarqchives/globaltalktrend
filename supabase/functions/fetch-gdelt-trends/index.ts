@@ -136,17 +136,26 @@ serve(async (req) => {
       const category = inferCategory(title, article.domain);
       const domain = article.domain || "";
 
-      // Extract time info
+      // Extract time info — GDELT seendate format: "20260310T232600Z"
       const seenDate = article.seendate || "";
       let timeStr = "agora";
       if (seenDate) {
         try {
-          const d = new Date(seenDate.replace(/(\d{4})(\d{2})(\d{2})T(\d{2})(\d{2})(\d{2})/, "$1-$2-$3T$4:$5:$6Z"));
-          const diffMin = Math.round((Date.now() - d.getTime()) / 60000);
-          if (diffMin < 5) timeStr = "agora";
-          else if (diffMin < 60) timeStr = `há ${diffMin} min`;
-          else if (diffMin < 1440) timeStr = `há ${Math.round(diffMin / 60)}h`;
-          else timeStr = `há ${Math.round(diffMin / 1440)}d`;
+          // Parse GDELT compact date format
+          const match = seenDate.match(/(\d{4})(\d{2})(\d{2})T(\d{2})(\d{2})(\d{2})/);
+          let d: Date;
+          if (match) {
+            d = new Date(`${match[1]}-${match[2]}-${match[3]}T${match[4]}:${match[5]}:${match[6]}Z`);
+          } else {
+            d = new Date(seenDate);
+          }
+          if (!isNaN(d.getTime())) {
+            const diffMin = Math.round((Date.now() - d.getTime()) / 60000);
+            if (diffMin < 0 || diffMin < 5) timeStr = "agora";
+            else if (diffMin < 60) timeStr = `há ${diffMin} min`;
+            else if (diffMin < 1440) timeStr = `há ${Math.round(diffMin / 60)}h`;
+            else timeStr = `há ${Math.round(diffMin / 1440)}d`;
+          }
         } catch {
           timeStr = "recente";
         }
