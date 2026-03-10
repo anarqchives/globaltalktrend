@@ -412,17 +412,11 @@ const Index = () => {
     setFilters(f => ({ ...f, [key]: defaultFilters[key] }));
   };
 
-  const gridStyle = useMemo(() => ({
-    display: 'grid' as const,
-    gridTemplateColumns: `repeat(auto-fill, minmax(260px, 1fr))`,
-    gap: 0,
-    alignItems: 'start' as const,
-  }), []);
-
-  const cardWrapperStyle = useMemo(() => ({
-    minWidth: 0,
-    overflow: 'hidden' as const,
-  }), []);
+  const masonryStyle = useMemo(() => ({
+    columnCount: gridColumns,
+    columnGap: 0,
+    columnFill: 'balance' as const,
+  }), [gridColumns]);
 
   const renderTimeline = () => (
     <div ref={(el) => { (scrollRef as any).current = el; (gridRef as any).current = el; }} className={`flex flex-col gap-0.5 p-2 h-full overflow-y-auto overflow-x-hidden scrollbar-thin relative transition-opacity duration-200 w-full max-w-full ${filterTransitioning ? 'opacity-60' : 'opacity-100'}`}>
