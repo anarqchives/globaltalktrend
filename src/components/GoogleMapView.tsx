@@ -1105,6 +1105,12 @@ const GoogleMapView = ({
   // Markers with animated ripple + vibrant colors
   useEffect(() => {
     const map = googleMapRef.current;
+    const localRafIds: number[] = [];
+    const scheduleRaf = (fn: FrameRequestCallback) => {
+      const id = requestAnimationFrame(fn);
+      localRafIds.push(id);
+      return id;
+    };
     if (!map || !mapLoaded) return;
     markersRef.current.forEach((m) => m.setMap(null));
     markersRef.current = [];
