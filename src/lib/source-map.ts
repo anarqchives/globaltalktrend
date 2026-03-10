@@ -133,11 +133,13 @@ export const SOURCE_MAP: Record<string, SourceInfo> = {
   "arXiv":                { country: "GL", mediaType: "ciencia", category: "Ciência", reliability: 0.8 },
   "PubMed":               { country: "GL", mediaType: "ciencia", category: "Saúde", reliability: 0.95 },
   "Crossref":             { country: "GL", mediaType: "ciencia", category: "Ciência", reliability: 0.8 },
+  "Semantic Scholar":     { country: "GL", mediaType: "ciencia", category: "Ciência", reliability: 0.85 },
 
   // ─── Tech ────────────────────────────────────────
   "Hacker News":          { country: "GL", mediaType: "tech", category: "Tecnologia", reliability: 0.7 },
   "GitHub":               { country: "GL", mediaType: "tech", category: "Tecnologia", reliability: 0.7 },
   "Stack Overflow":       { country: "GL", mediaType: "tech", category: "Tecnologia", reliability: 0.7 },
+  "Lobsters":             { country: "GL", mediaType: "tech", category: "Tecnologia", reliability: 0.7 },
 
   // ─── Enciclopédia ────────────────────────────────
   "Wikipedia":            { country: "GL", mediaType: "enciclopedia", category: "Conhecimento", reliability: 0.8 },
@@ -147,13 +149,9 @@ export const SOURCE_MAP: Record<string, SourceInfo> = {
   "GDELT DOC":            { country: "GL", mediaType: "conflitos", category: "Geral", reliability: 0.75, note: "GDELT DOC 2.0 — sentimento + volume global em 65 idiomas" },
   "ACLED":                { country: "GL", mediaType: "conflitos", category: "Conflitos/Crises", reliability: 0.9 },
 
-  // ─── Onda 2: Novas fontes ─────────────────────────
-  "Crossref":             { country: "GL", mediaType: "ciencia", category: "Ciência", reliability: 0.8 },
-  "Semantic Scholar":     { country: "GL", mediaType: "ciencia", category: "Ciência", reliability: 0.85 },
+  // ─── Dados Oficiais Internacionais ─────────────────
   "OMS (WHO)":            { country: "GL", mediaType: "dados-oficiais", category: "Saúde", reliability: 1.0 },
   "FMI (IMF)":            { country: "GL", mediaType: "dados-oficiais", category: "Negócios/Finanças", reliability: 1.0 },
-  "Lobsters":             { country: "GL", mediaType: "tech", category: "Tecnologia", reliability: 0.7 },
-  "arXiv":                { country: "GL", mediaType: "ciencia", category: "Ciência", reliability: 0.8 },
 };
 
 // Map filter type values to source map mediaType values
