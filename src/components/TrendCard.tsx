@@ -82,9 +82,11 @@ const TrendCard = ({
   const [expanded, setExpanded] = useState(false);
   const flag = countryCodeToFlag(countryCode);
 
-  const chartData = sparkData.map((v, i) => ({ x: i, y: v }));
   const colors = platformColors[platform] || platformColors["Google Trends"];
-  const gradientId = `grad-${title.replace(/[^a-zA-Z0-9]/g, "").slice(0, 10)}-${Math.random().toString(36).slice(2, 6)}`;
+  const gradientId = useMemo(
+    () => `grad-${title.replace(/[^a-zA-Z0-9]/g, "").slice(0, 10)}-${Math.random().toString(36).slice(2, 6)}`,
+    [title]
+  );
   const histGradientId = `hist-${gradientId}`;
 
   const handleShare = (e: React.MouseEvent) => {
