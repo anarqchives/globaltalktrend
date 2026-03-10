@@ -664,7 +664,8 @@ export function useTrends(filters: FilterState, onTrendCountsChange: (counts: Re
       const extraSourcesTrends: TrendCardProps[] = extraSourcesResult.data?.trends || [];
       const socialTrends: TrendCardProps[] = socialTrendsResult.data?.trends || [];
       const openDataTrends: TrendCardProps[] = openDataResult.data?.trends || [];
-      const rawTrends = [...edgeTrends, ...extraTrends, ...extraSourcesTrends, ...socialTrends, ...openDataTrends, ...redditItems, ...blueskyItems, ...mastodonItems];
+      const gdeltDocTrends: TrendCardProps[] = gdeltDocResult.data?.trends || [];
+      const rawTrends = [...edgeTrends, ...extraTrends, ...extraSourcesTrends, ...socialTrends, ...openDataTrends, ...redditItems, ...blueskyItems, ...mastodonItems, ...gdeltDocTrends];
       
       if (import.meta.env.DEV) console.log("📦 Total de trends combinadas:", rawTrends.length);
 

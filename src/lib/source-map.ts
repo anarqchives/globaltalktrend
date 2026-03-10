@@ -144,6 +144,7 @@ export const SOURCE_MAP: Record<string, SourceInfo> = {
 
   // ─── Conflitos ───────────────────────────────────
   "GDELT":                { country: "GL", mediaType: "conflitos", category: "Conflitos/Crises", reliability: 0.7 },
+  "GDELT DOC":            { country: "GL", mediaType: "conflitos", category: "Geral", reliability: 0.75, note: "GDELT DOC 2.0 — sentimento + volume global em 65 idiomas" },
 };
 
 // Map filter type values to source map mediaType values
