@@ -776,8 +776,9 @@ const Index = () => {
               ) : (
                 <ResizablePanelGroup
                   direction="vertical"
-                  className="flex-1 min-h-0 [&>div]:transition-[flex-grow] [&>div]:duration-300 [&>div]:ease-[cubic-bezier(0.4,0,0.2,1)]"
+                  className="flex-1 min-h-0 [&>div]:transition-[flex-grow] [&>div]:duration-300 [&>div]:ease-[cubic-bezier(0.4,0,0.2,1)] [&>[data-panel-group-direction]]:gap-0"
                   key={`v-${panelVisibility.radar}-${panelVisibility.timeline}-${panelVisibility.map}`}
+                  style={{ gap: 0 }}
                 >
                   {/* Radar Panel — resizable vertically */}
                   {panelVisibility.radar && (

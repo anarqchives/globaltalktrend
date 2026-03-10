@@ -152,7 +152,17 @@ export default function CriticalMomentsSection({ moments, onSelectTrend }: Props
                 </div>
               )}
 
-              {/* ④ SPARKLINE AREA */}
+              {/* ④ CRITICALITY REASON */}
+              {changeNum > 0 && (
+                <div className="mx-3.5 mt-2 p-2 rounded-md text-xs text-muted-foreground leading-relaxed"
+                  style={{ background: 'hsl(var(--muted) / 0.3)', borderLeft: `3px solid ${tviColor}40` }}>
+                  {lang === "pt"
+                    ? `${trend.title.split(" ").slice(0, 4).join(" ")} está sendo discutido em ${m.platformCount} plataforma${m.platformCount > 1 ? "s" : ""} simultaneamente, com crescimento de ${Math.abs(changeNum)}% nas últimas horas${m.countryCount > 1 ? `, concentrado em ${countryCodeToFlag(trend.countryCode) || ""} ${trend.countryCode?.toUpperCase() || "múltiplos países"}` : ""}.`
+                    : `${trend.title.split(" ").slice(0, 4).join(" ")} is being discussed on ${m.platformCount} platform${m.platformCount > 1 ? "s" : ""} simultaneously, with ${Math.abs(changeNum)}% growth in recent hours${m.countryCount > 1 ? `, concentrated in ${countryCodeToFlag(trend.countryCode) || ""} ${trend.countryCode?.toUpperCase() || "multiple countries"}` : ""}.`}
+                </div>
+              )}
+
+              {/* ⑤ SPARKLINE AREA */}
               <div className="px-3.5 pt-2 h-14 relative">
                 {sparkData.length > 3 && !isFlat ? (
                   <>
@@ -182,7 +192,38 @@ export default function CriticalMomentsSection({ moments, onSelectTrend }: Props
                 )}
               </div>
 
-              {/* ⑤ METRICS STRIP */}
+              {/* ⑥ CONTEXT BLOCK (Quem / Onde / Quando) */}
+              <div className="mx-3.5 mt-2 space-y-0.5">
+                {/* Quem fala */}
+                <div className="flex items-center gap-1.5" style={{ height: 22 }}>
+                  <span className="text-[9px] text-muted-foreground/60 uppercase tracking-wide w-10 flex-shrink-0">{lang === "pt" ? "Quem" : "Who"}</span>
+                  <div className="flex items-center gap-1 text-[11px] text-muted-foreground truncate min-w-0">
+                    <span className="w-1.5 h-1.5 rounded-full flex-shrink-0" style={{ backgroundColor: pColor }} />
+                    <span>{trend.platform}</span>
+                    {m.mediaTypes.length > 1 && (
+                      <span className="text-muted-foreground/50">· +{m.mediaTypes.length - 1} {lang === "pt" ? "outras" : "others"}</span>
+                    )}
+                  </div>
+                </div>
+                {/* Onde */}
+                <div className="flex items-center gap-1.5" style={{ height: 22 }}>
+                  <span className="text-[9px] text-muted-foreground/60 uppercase tracking-wide w-10 flex-shrink-0">{lang === "pt" ? "Onde" : "Where"}</span>
+                  <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
+                    {flag && <span>{flag} {trend.countryCode?.toUpperCase()}</span>}
+                    {m.countryCount > 1 && <span className="text-muted-foreground/50">· +{m.countryCount - 1}</span>}
+                  </div>
+                </div>
+                {/* Quando */}
+                <div className="flex items-center gap-1.5" style={{ height: 22 }}>
+                  <span className="text-[9px] text-muted-foreground/60 uppercase tracking-wide w-10 flex-shrink-0">{lang === "pt" ? "Quando" : "When"}</span>
+                  <span className="text-[11px] text-muted-foreground">
+                    {lang === "pt" ? `Detectado ${trend.time || "agora"}` : `Detected ${trend.time || "now"}`}
+                    {trend.peakAt && ` · ${lang === "pt" ? "Pico" : "Peak"}: ${trend.peakAt}`}
+                  </span>
+                </div>
+              </div>
+
+              {/* ⑦ METRICS STRIP */}
               <div className="mx-3.5 mt-2 p-2 rounded-lg bg-muted/30 flex items-center justify-between text-center">
                 <Tooltip>
                   <TooltipTrigger asChild>
@@ -193,7 +234,7 @@ export default function CriticalMomentsSection({ moments, onSelectTrend }: Props
                     </div>
                   </TooltipTrigger>
                   <TooltipContent side="top" className="text-[10px] max-w-[200px]">
-                    Trend Velocity Index — mede a velocidade de propagação (0–100)
+                    Trend Velocity Index — {lang === "pt" ? "mede a velocidade de propagação (0–100)" : "measures propagation speed (0–100)"}
                   </TooltipContent>
                 </Tooltip>
                 <div className="w-px h-6 bg-border/40" />
@@ -205,18 +246,15 @@ export default function CriticalMomentsSection({ moments, onSelectTrend }: Props
                     </div>
                   </TooltipTrigger>
                   <TooltipContent side="top" className="text-[10px]">
-                    {m.mediaTypes.join(", ") || `${m.platformCount} plataformas`}
+                    {m.mediaTypes.join(", ") || `${m.platformCount} ${lang === "pt" ? "plataformas" : "platforms"}`}
                   </TooltipContent>
                 </Tooltip>
                 <div className="w-px h-6 bg-border/40" />
                 <Tooltip>
                   <TooltipTrigger asChild>
-                    <div className="cursor-help text-center flex items-center gap-1">
-                      <Globe2 className="w-2.5 h-2.5 text-muted-foreground" />
-                      <div>
-                        <div className="text-sm font-bold text-foreground">{m.countryCount}</div>
-                        <div className="text-[9px] text-muted-foreground">{lang === "pt" ? "países" : "countries"}</div>
-                      </div>
+                    <div className="cursor-help text-center">
+                      <div className="text-[9px] text-muted-foreground">{lang === "pt" ? "Países" : "Countries"}</div>
+                      <div className="text-sm font-bold text-foreground">{m.countryCount}</div>
                     </div>
                   </TooltipTrigger>
                   <TooltipContent side="top" className="text-[10px]">

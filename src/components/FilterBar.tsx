@@ -268,13 +268,30 @@ const FilterBar = ({ filters, onChange, onForceReset, onSaveFilter, isLoggedIn }
           onClear={() => update("type", defaultFilters.type)}
         />
 
-        {/* Alert bell — inline after last chip */}
+        {/* Reset button — only when filters active */}
+        {isFiltered && (
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <button
+                onClick={() => { onChange(defaultFilters); onForceReset?.(); }}
+                className="flex items-center justify-center rounded-lg text-muted-foreground/60 hover:text-foreground hover:bg-muted transition-all group"
+                style={{ width: 28, height: 28 }}
+                aria-label={lang === "pt" ? "Limpar todos os filtros" : "Clear all filters"}
+              >
+                <RotateCcw className="w-3.5 h-3.5 group-hover:animate-[spin_0.3s_ease-in-out]" />
+              </button>
+            </TooltipTrigger>
+            <TooltipContent side="bottom" className="text-[10px]">{lang === "pt" ? "Limpar todos os filtros" : "Clear all filters"}</TooltipContent>
+          </Tooltip>
+        )}
+
+        {/* Alert bell — inline after reset */}
         {isLoggedIn && onSaveFilter && (
           <Tooltip>
             <TooltipTrigger asChild>
               <button
                 onClick={onSaveFilter}
-                className="flex items-center justify-center rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted transition-all"
+                className="flex items-center justify-center rounded-lg text-muted-foreground/60 hover:text-foreground hover:bg-muted transition-all"
                 style={{ width: 28, height: 28 }}
                 aria-label={t("createAlert")}
               >
@@ -286,18 +303,6 @@ const FilterBar = ({ filters, onChange, onForceReset, onSaveFilter, isLoggedIn }
         )}
 
         <div className="flex-1" />
-
-        {/* Clear all */}
-        {isFiltered && (
-          <button
-            onClick={() => { onChange(defaultFilters); onForceReset?.(); }}
-            className="flex items-center gap-1 text-muted-foreground hover:text-foreground transition-colors whitespace-nowrap"
-            style={{ fontSize: 11 }}
-          >
-            <RotateCcw className="w-3 h-3" />
-            <span className="hidden sm:inline">{lang === "pt" ? "Limpar" : lang === "es" ? "Limpiar" : "Clear"}</span>
-          </button>
-        )}
       </div>
     </div>
   );

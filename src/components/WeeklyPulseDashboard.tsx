@@ -905,45 +905,80 @@ export default function WeeklyPulseDashboard({ trends }: { trends: TrendCardProp
         title={t(lang, "Alcance Global", "Global Reach")}
         subtitle={t(lang, "Países com maior volume de tendências detectadas", "Countries with highest detected trend volume")}
       >
-        <div className="space-y-2">
-          {analysis.countryData.map((country, i) => {
-            const regionColor = REGION_COLORS[country.region] || "#6B7280";
-            const maxCount = analysis.countryData[0]?.count || 1;
-            const barPct = Math.round((country.count / maxCount) * 100);
-            return (
-              <Tooltip key={country.code}>
-                <TooltipTrigger asChild>
-                  <motion.div
-                    initial={{ opacity: 0, x: -8 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: i * 0.04 }}
-                    className="flex items-center gap-2 cursor-help"
-                  >
-                    <span className="text-sm flex-shrink-0">{country.flag}</span>
-                    <AbbrTooltip text={country.code.toUpperCase()} className="text-[11px] font-medium text-foreground w-8" />
-                    <div className="flex-1 h-1.5 bg-muted/30 rounded-full overflow-hidden">
-                      <motion.div className="h-full rounded-full"
-                        style={{ background: `linear-gradient(90deg, ${regionColor}, ${regionColor}80)` }}
-                        initial={{ width: 0 }} animate={{ width: `${barPct}%` }}
-                        transition={{ duration: 0.4, delay: i * 0.04, ease: "easeOut" }} />
-                    </div>
-                    <span className="text-[11px] font-semibold text-foreground w-10 text-right">{country.count}</span>
-                    <span className="text-[10px] text-muted-foreground w-8 text-right">{country.pct}%</span>
-                  </motion.div>
-                </TooltipTrigger>
-                <TooltipContent side="top" className="text-[10px]">
-                  {country.region} · {country.count} {t(lang, "tendências", "trends")} · {country.pct}% {t(lang, "do total", "of total")}
-                </TooltipContent>
-              </Tooltip>
-            );
-          })}
-          {analysis.countryData.length === 0 && (
-            <div className="text-center py-4 text-xs text-muted-foreground">
-              <Globe className="w-5 h-5 mx-auto mb-1 opacity-30" />
-              {t(lang, "Dados geográficos indisponíveis", "Geographic data unavailable")}
+        {(() => {
+          const COUNTRY_NAMES: Record<string, Record<string, string>> = {
+            US: { pt: "Estados Unidos", en: "United States" }, BR: { pt: "Brasil", en: "Brazil" },
+            IN: { pt: "Índia", en: "India" }, GB: { pt: "Reino Unido", en: "United Kingdom" },
+            DE: { pt: "Alemanha", en: "Germany" }, FR: { pt: "França", en: "France" },
+            JP: { pt: "Japão", en: "Japan" }, KR: { pt: "Coreia do Sul", en: "South Korea" },
+            CA: { pt: "Canadá", en: "Canada" }, AU: { pt: "Austrália", en: "Australia" },
+            MX: { pt: "México", en: "Mexico" }, IT: { pt: "Itália", en: "Italy" },
+            ES: { pt: "Espanha", en: "Spain" }, AR: { pt: "Argentina", en: "Argentina" },
+            CN: { pt: "China", en: "China" }, RU: { pt: "Rússia", en: "Russia" },
+            ZA: { pt: "África do Sul", en: "South Africa" }, NG: { pt: "Nigéria", en: "Nigeria" },
+            EG: { pt: "Egito", en: "Egypt" }, KE: { pt: "Quênia", en: "Kenya" },
+            TR: { pt: "Turquia", en: "Turkey" }, SA: { pt: "Arábia Saudita", en: "Saudi Arabia" },
+            AE: { pt: "Emirados Árabes", en: "UAE" }, ID: { pt: "Indonésia", en: "Indonesia" },
+            TH: { pt: "Tailândia", en: "Thailand" }, PL: { pt: "Polônia", en: "Poland" },
+            NL: { pt: "Países Baixos", en: "Netherlands" }, SE: { pt: "Suécia", en: "Sweden" },
+            CO: { pt: "Colômbia", en: "Colombia" }, CL: { pt: "Chile", en: "Chile" },
+            PT: { pt: "Portugal", en: "Portugal" }, UA: { pt: "Ucrânia", en: "Ukraine" },
+          };
+          const REGION_GRADIENTS: Record<string, string> = {
+            Americas: "linear-gradient(90deg, #6366F1, #818CF8)",
+            Europe: "linear-gradient(90deg, #3B82F6, #60A5FA)",
+            Asia: "linear-gradient(90deg, #10B981, #34D399)",
+            "Middle East": "linear-gradient(90deg, #F59E0B, #FBBF24)",
+            Africa: "linear-gradient(90deg, #EF4444, #F87171)",
+            Oceania: "linear-gradient(90deg, #8B5CF6, #A78BFA)",
+            Eurasia: "linear-gradient(90deg, #EC4899, #F472B6)",
+            Global: "linear-gradient(90deg, #9CA3AF, #D1D5DB)",
+          };
+          const getCountryName = (code: string) => COUNTRY_NAMES[code]?.[lang] || COUNTRY_NAMES[code]?.en || code;
+
+          return (
+            <div className="space-y-2">
+              {analysis.countryData.map((country, i) => {
+                const regionColor = REGION_COLORS[country.region] || "#6B7280";
+                const maxCount = analysis.countryData[0]?.count || 1;
+                const barPct = Math.round((country.count / maxCount) * 100);
+                const gradient = REGION_GRADIENTS[country.region] || REGION_GRADIENTS.Global;
+                return (
+                  <Tooltip key={country.code}>
+                    <TooltipTrigger asChild>
+                      <motion.div
+                        initial={{ opacity: 0, x: -8 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ delay: i * 0.04 }}
+                        className="flex items-center gap-2 cursor-help"
+                      >
+                        <span className="text-sm flex-shrink-0">{country.flag}</span>
+                        <span className="text-[11px] font-medium text-foreground truncate" style={{ width: 100 }}>{getCountryName(country.code)}</span>
+                        <div className="flex-1 h-1.5 bg-muted/30 rounded-full overflow-hidden">
+                          <motion.div className="h-full rounded-full"
+                            style={{ background: gradient }}
+                            initial={{ width: 0 }} animate={{ width: `${barPct}%` }}
+                            transition={{ duration: 0.4, delay: i * 0.04, ease: "easeOut" }} />
+                        </div>
+                        <span className="text-[11px] font-semibold text-foreground w-10 text-right">{country.count}</span>
+                        <span className="text-[10px] text-muted-foreground w-8 text-right">{country.pct}%</span>
+                      </motion.div>
+                    </TooltipTrigger>
+                    <TooltipContent side="top" className="text-[10px]">
+                      {country.region} · {country.count} {t(lang, "tendências", "trends")} · {country.pct}% {t(lang, "do total", "of total")}
+                    </TooltipContent>
+                  </Tooltip>
+                );
+              })}
+              {analysis.countryData.length === 0 && (
+                <div className="text-center py-4 text-xs text-muted-foreground">
+                  <Globe className="w-5 h-5 mx-auto mb-1 opacity-30" />
+                  {t(lang, "Dados geográficos indisponíveis", "Geographic data unavailable")}
+                </div>
+              )}
             </div>
-          )}
-        </div>
+          );
+        })()}
       </SectionCard>
 
       {/* ═══════ SECTION H: INSIGHTS ═══════ */}
