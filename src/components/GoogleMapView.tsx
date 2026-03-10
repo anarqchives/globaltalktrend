@@ -556,9 +556,9 @@ const GoogleMapView = ({
           scale: (4 + (arc.volume / maxVol) * 3) * pulseScale,
         });
 
-        scheduleRaf(animateParticle);
+        scheduleRaf(`particle-${arcIndex}`, animateParticle);
       };
-      scheduleRaf(animateParticle);
+      scheduleRaf(`particle-${arcIndex}`, animateParticle);
 
       // Origin country pulsing ripple
       const originPulse = new g.maps.Marker({
