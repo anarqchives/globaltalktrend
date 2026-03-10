@@ -124,18 +124,18 @@ const TrendHeader = ({ totalTrends = 0, countriesCount = 0, onRefresh, refreshin
 
           {/* ─── CENTER: Live status badge (emotional hero) ─── */}
           <div className="flex items-center justify-center">
-            <div className="flex items-center gap-sp-2 px-4 py-1 rounded-full bg-secondary/50 dark:bg-black/5">
-              {/* Pulsing green dot */}
-              <span className="relative flex items-center justify-center w-2 h-2 flex-shrink-0">
+            <div className="flex items-center gap-1.5 text-xs">
+              {/* Pulsing green dot — 6px */}
+              <span className="relative flex items-center justify-center w-1.5 h-1.5 flex-shrink-0">
                 <span className="absolute w-full h-full rounded-full live-pulse-dot bg-positive" />
                 <span className="relative w-1.5 h-1.5 rounded-full bg-positive" />
               </span>
-              <span className="text-caption font-medium whitespace-nowrap" style={{ color: 'hsl(162, 100%, 39%)' }}>
+              <span className="font-medium whitespace-nowrap" style={{ color: 'hsl(162, 100%, 39%)' }}>
                 {t("live")}
               </span>
-              <span className="w-px h-3 bg-border" />
+              <span className="text-muted-foreground/40">·</span>
               <OnlineUsersCount />
-              <span className="w-px h-3 bg-border" />
+              <span className="text-muted-foreground/40">·</span>
               <CountdownTimer />
             </div>
           </div>
@@ -171,14 +171,14 @@ const TrendHeader = ({ totalTrends = 0, countriesCount = 0, onRefresh, refreshin
               {dark ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
             </button>
 
-            {/* Apoie — gradient pill, always in header */}
+            {/* Apoie — compact gradient pill */}
             <a
               href="https://buy.stripe.com/fZu7sMgw6cHLeTnbWVdIA00"
               target="_blank"
               rel="noopener noreferrer"
-              className="apoie-pill hidden sm:flex items-center gap-1"
+              className="hidden sm:flex items-center rounded-full text-white text-xs font-semibold hover:brightness-110 transition-all"
+              style={{ background: 'linear-gradient(135deg, #FF6B00, #FF2D2D)', height: '30px', padding: '0 12px', fontSize: '12px' }}
             >
-              <Heart className="w-3 h-3" />
               Apoie
             </a>
 
@@ -236,9 +236,10 @@ const TrendHeader = ({ totalTrends = 0, countriesCount = 0, onRefresh, refreshin
                 </button>
                 <button
                   onClick={() => setLoginOpen(true)}
-                  className="flex items-center gap-1 rounded-full text-caption font-semibold bg-primary text-primary-foreground hover:bg-primary/90 transition-colors shadow-sm h-9 px-4 min-w-[44px] min-h-[44px]">
-                  <LogIn className="w-3.5 h-3.5" />
+                  className="flex items-center gap-1 rounded-full font-semibold text-white hover:brightness-110 transition-all"
+                  style={{ background: '#2563EB', height: '30px', padding: '0 12px', fontSize: '12px' }}>
                   <span className="hidden sm:inline">{t("enter")}</span>
+                  <span className="text-xs">→</span>
                 </button>
               </>
             )}
@@ -354,9 +355,9 @@ const OnlineUsersCount = () => {
     return () => clearInterval(interval);
   }, []);
   return (
-    <span className="flex items-center gap-1 text-caption tabular-nums">
+    <span className="flex items-center gap-1 text-xs tabular-nums">
       <span className="font-semibold text-foreground">{count}</span>
-      <span className="text-muted-foreground text-micro font-medium">online</span>
+      <span className="text-muted-foreground font-medium">online</span>
     </span>
   );
 };
@@ -392,7 +393,7 @@ const CountdownTimer = () => {
   const secs = seconds % 60;
 
   return (
-    <span className={`text-caption font-mono tabular-nums text-muted-foreground transition-opacity duration-300 ${fading ? 'opacity-0' : 'opacity-100'}`}>
+    <span className={`text-xs font-mono tabular-nums text-muted-foreground transition-opacity duration-300 ${fading ? 'opacity-0' : 'opacity-100'}`}>
       {String(mins).padStart(2, '0')}:{String(secs).padStart(2, '0')}
     </span>
   );
