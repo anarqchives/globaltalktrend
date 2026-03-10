@@ -400,7 +400,7 @@ const TimelineCard = ({
           </div>
 
           {/* === TAGS ROW — unified semantic types === */}
-          <div className="flex items-center gap-1 flex-wrap mb-1.5">
+          <div className="flex items-center gap-1 flex-wrap mb-1.5 w-full">
             {/* TYPE tag */}
             <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-secondary text-muted-foreground">
               {localizedCategory}
