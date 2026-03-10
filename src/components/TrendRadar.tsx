@@ -619,7 +619,7 @@ export default function TrendRadar({ trends, allTrends, criticalMoments, anomali
     <div className="flex flex-col overflow-hidden h-full bg-card/30">
       <Tabs value={tab} onValueChange={setTab} className="flex flex-col h-full min-h-0">
         {/* Unified header bar */}
-        <div className="px-4 h-10 flex items-center gap-3 flex-shrink-0 bg-secondary/30 border-b border-border/50">
+        <div className="px-4 h-10 flex items-center gap-3 flex-shrink-0 bg-secondary/30 border-b border-border/50 relative z-20">
           {/* Label */}
           <div className="flex items-center gap-1.5 mr-2 flex-shrink-0">
             <Radar className="w-4 h-4 text-primary" />
