@@ -579,7 +579,7 @@ const Index = () => {
               <>
                 {agora.length > 0 && (
                   <>
-                    <div className="feed-section-label flex items-center gap-1.5">
+                    <div className="feed-section-label flex items-center gap-1.5" style={{ gridColumn: '1 / -1' }}>
                       <span className="w-1.5 h-1.5 rounded-full bg-destructive animate-pulse" />
                       🔥 {lang === "pt" ? "AGORA" : "NOW"}
                       <span className="text-micro font-normal text-muted-foreground ml-1">({agora.length})</span>
