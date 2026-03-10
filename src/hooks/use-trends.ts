@@ -1003,7 +1003,7 @@ export function useTrends(filters: FilterState, onTrendCountsChange: (counts: Re
             return matchCountry && matchCategory;
           });
           if (categoryOnly.length > 0) {
-            console.log(`✅ Fallback: ${categoryOnly.length} trends da categoria (ignorando tipo)`);
+            if (import.meta.env.DEV) console.log(`✅ Fallback: ${categoryOnly.length} trends da categoria (ignorando tipo)`);
             return categoryOnly.sort((a, b) => (b.relevanceScore || 50) - (a.relevanceScore || 50));
           }
         }
