@@ -737,7 +737,7 @@ export function useTrends(filters: FilterState, onTrendCountsChange: (counts: Re
       const pressPlatforms = SOURCE_GROUPS.imprensa;
       const imprensaData = combinedTrends.filter((trend) => pressPlatforms.includes(trend.platform));
       if (imprensaData.length === 0) {
-        console.log("📰 Imprensa sem dados - mostrando aviso");
+        if (import.meta.env.DEV) console.log("📰 Imprensa sem dados - mostrando aviso");
         combinedTrends.unshift({
           icon: "📰", platform: "The Guardian",
           title: "Fontes de imprensa temporariamente indisponíveis",
