@@ -229,6 +229,7 @@ const TimelineCard = ({
   staggerIndex = 0, compact = false,
 }: TimelineCardProps & { staggerIndex?: number; compact?: boolean }) => {
   const { t, lang } = useLanguage();
+  const isMobile = useIsMobile();
   const [expanded, setExpanded] = useState(forceExpanded || false);
   const [alertOpen, setAlertOpen] = useState(false);
   const [imgError, setImgError] = useState(false);
