@@ -595,16 +595,24 @@ const TimelineCard = ({
               )}
             </div>
 
-            {/* Sentiment inline */}
+            {/* Sentiment inline with legend */}
             {(() => {
               const pos = changePositive ? 55 : 25;
               const neu = 30;
               const neg = changePositive ? 15 : 45;
               return (
                 <div className="flex items-center gap-2 mb-2 text-[10px]">
-                  <span className="text-emerald-600">😊 {pos}%</span>
-                  <span className="text-muted-foreground">😐 {neu}%</span>
-                  <span className="text-red-500">😠 {neg}%</span>
+                  <span className="flex items-center gap-0.5"><span className="w-1.5 h-1.5 rounded-full bg-emerald-500 inline-block" /> <span className="text-emerald-600 dark:text-emerald-400">{lang === "pt" ? "Pos" : "Pos"} {pos}%</span></span>
+                  <span className="flex items-center gap-0.5"><span className="w-1.5 h-1.5 rounded-full bg-muted-foreground/40 inline-block" /> <span className="text-muted-foreground">{lang === "pt" ? "Neu" : "Neu"} {neu}%</span></span>
+                  <span className="flex items-center gap-0.5"><span className="w-1.5 h-1.5 rounded-full bg-red-500 inline-block" /> <span className="text-red-500">{lang === "pt" ? "Neg" : "Neg"} {neg}%</span></span>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <span className="text-muted-foreground/50 cursor-help ml-auto">ⓘ</span>
+                    </TooltipTrigger>
+                    <TooltipContent side="top" className="text-[10px]">
+                      {lang === "pt" ? "Distribuição de sentimento nas menções" : "Sentiment distribution across mentions"}
+                    </TooltipContent>
+                  </Tooltip>
                 </div>
               );
             })()}
