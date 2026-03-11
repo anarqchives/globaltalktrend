@@ -60,9 +60,27 @@ const PLATFORM_LANG: Record<string, string> = {
   arXiv: "en",
 };
 
+// Detect non-Latin scripts that always need translation regardless of target lang
+const NON_LATIN_REGEX = /[\u3000-\u9FFF\u1100-\u11FF\uAC00-\uD7AF\u0400-\u04FF\u0600-\u06FF\u0E00-\u0E7F\u3040-\u309F\u30A0-\u30FF\uFF00-\uFFEF]/;
+const ENGLISH_INDICATORS = /\b(the|and|of|for|has|with|that|this|from|will|about|after|before|between|during|into|said|says|could|would|should|their|which|there|these|those|other|where)\b/i;
+
 function needsTranslation(trend: TrendCardProps, lang: string): boolean {
-  // If target lang is "pt" (default), skip translation — content is already mixed/acceptable
-  if (lang === "pt") return false;
+  const title = trend.title || "";
+  
+  // Non-Latin scripts ALWAYS need translation (CJK, Cyrillic, Arabic, Thai, etc.)
+  if (NON_LATIN_REGEX.test(title)) {
+    // If target is "pt", still translate non-Latin titles
+    return true;
+  }
+  
+  // If target lang is "pt" (default), skip Latin-script content
+  if (lang === "pt") {
+    // But translate if title looks English and platform isn't explicitly PT
+    if (ENGLISH_INDICATORS.test(title) && PLATFORM_LANG[trend.platform] !== "pt") {
+      return false; // Keep English titles as-is in PT mode (acceptable)
+    }
+    return false;
+  }
   
   // If the platform already produces content in the target language, skip
   const platformLang = PLATFORM_LANG[trend.platform];
