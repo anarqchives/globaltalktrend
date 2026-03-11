@@ -89,6 +89,7 @@ interface TimelineCardProps extends TrendCardProps {
   onClick?: () => void;
   onFilterPlatform?: (platform: string) => void;
   onExpand?: (title: string, platform: string, metadata?: any) => void;
+  onToggleExpand?: (expanded: boolean) => void;
   userId?: string | null;
   onTrackAction?: (action: string, points: number, metadata?: Record<string, any>) => void;
   forceExpanded?: boolean;
