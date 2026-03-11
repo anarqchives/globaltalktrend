@@ -14,6 +14,25 @@ function parseChange(change: string): number {
   return match ? parseFloat(match[0]) : 0;
 }
 
+// Platform-specific thresholds to prevent tech platforms from dominating signals
+const PLATFORM_THRESHOLDS: Record<string, number> = {
+  GitHub: 500,
+  "Hacker News": 400,
+  "Stack Overflow": 400,
+  "Google Trends": 150,
+  "The Guardian": 80,
+  NPR: 80,
+  Reddit: 200,
+  YouTube: 150,
+  FRED: 50,
+  "World Bank": 50,
+  IBGE: 50,
+  OpenAlex: 200,
+  PubMed: 100,
+  Wikipedia: 150,
+};
+const MAX_PER_PLATFORM = 3;
+
 /** Request notification permission and return status */
 async function requestPushPermission(): Promise<boolean> {
   if (!("Notification" in window)) return false;
