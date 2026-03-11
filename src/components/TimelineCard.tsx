@@ -525,7 +525,7 @@ const TimelineCard = ({
 
             {/* ── CONTEXT SECTION ── */}
             <div className="rounded-lg p-2.5 mb-3" style={{ background: 'hsl(var(--secondary))', borderLeft: `3px solid ${brandColor}` }}>
-              <p className="text-[12px] text-foreground/80 leading-relaxed">
+              <p className={`text-[12px] text-foreground/80 leading-relaxed ${isMobile ? 'line-clamp-3' : ''}`}>
                 {decodeEntities(expandedContext)}
               </p>
             </div>
