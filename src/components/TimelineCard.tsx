@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useEffect } from "react";
 import { motion } from "framer-motion";
-import { ChevronUp, ExternalLink, Bell, Bookmark, Flag, Share2, TrendingUp, Info } from "lucide-react";
+import { ChevronUp, ExternalLink, Bell, Bookmark, Flag, Share2, TrendingUp, Info, MoreHorizontal } from "lucide-react";
 import { AreaChart, Area, ResponsiveContainer, XAxis, YAxis, Tooltip as RechartsTooltip, CartesianGrid } from "recharts";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { toast } from "@/hooks/use-toast";
