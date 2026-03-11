@@ -125,7 +125,8 @@ export const SOURCE_MAP: Record<string, SourceInfo> = {
   // ─── Dados Oficiais ──────────────────────────────
   "World Bank":           { country: "GL", mediaType: "dados-oficiais", category: "Negócios/Finanças", reliability: 0.95 },
   "IMF":                  { country: "GL", mediaType: "dados-oficiais", category: "Negócios/Finanças", reliability: 0.95 },
-  "FRED":                 { country: "US", mediaType: "dados-oficiais", category: "Negócios/Finanças", reliability: 0.95 },
+  "FRED":                 { country: "US", mediaType: "dados-oficiais", category: "Negócios/Finanças", reliability: 0.95, note: "Federal Reserve Economic Data — indicadores econômicos oficiais dos EUA" },
+  "The News API":         { country: "GL", mediaType: "imprensa", reliability: 0.8, note: "Agregador global de notícias em múltiplos idiomas" },
   "NOAA":                 { country: "US", mediaType: "dados-oficiais", category: "Clima/Meio Ambiente", reliability: 0.95 },
 
   // ─── Ciência ─────────────────────────────────────

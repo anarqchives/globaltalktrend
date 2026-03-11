@@ -35,3 +35,9 @@ verify_jwt = false
 
 [functions.save-trend-snapshots]
 verify_jwt = false
+
+[functions.fetch-fred]
+verify_jwt = false
+
+[functions.fetch-thenewsapi]
+verify_jwt = false
