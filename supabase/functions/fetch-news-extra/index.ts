@@ -286,9 +286,16 @@ async function fetchNPR(): Promise<TrendItem[]> {
 const RSS_FEEDS = [
   // ── AMÉRICA LATINA ──
   { url: "https://feeds.folha.uol.com.br/emcimadahora/rss.xml", name: "Folha de S.Paulo", icon: "🇧🇷", country: "BR", category: "Notícias" },
+  { url: "https://feeds.folha.uol.com.br/poder/rss091.xml", name: "Folha de S.Paulo", icon: "🇧🇷", country: "BR", category: "Política" },
+  { url: "https://feeds.folha.uol.com.br/mercado/rss091.xml", name: "Folha de S.Paulo", icon: "🇧🇷", country: "BR", category: "Negócios/Finanças" },
   { url: "https://oglobo.globo.com/rss.xml", name: "O Globo", icon: "🇧🇷", country: "BR", category: "Notícias" },
   { url: "https://www.estadao.com.br/feed", name: "Estadão", icon: "🇧🇷", country: "BR", category: "Notícias" },
   { url: "https://g1.globo.com/rss/g1", name: "G1", icon: "🇧🇷", country: "BR", category: "Notícias" },
+  { url: "https://rss.uol.com.br/feed/noticias.xml", name: "UOL", icon: "🇧🇷", country: "BR", category: "Notícias" },
+  { url: "https://agenciabrasil.ebc.com.br/rss/ultimasnoticias/feed.xml", name: "Agência Brasil", icon: "🇧🇷", country: "BR", category: "Notícias" },
+  { url: "https://www.bbc.com/portuguese/index.xml", name: "BBC Brasil", icon: "🇧🇷", country: "BR", category: "Notícias" },
+  { url: "https://www.cartacapital.com.br/feed", name: "Carta Capital", icon: "🇧🇷", country: "BR", category: "Política" },
+  { url: "https://valor.globo.com/rss", name: "Valor Econômico", icon: "🇧🇷", country: "BR", category: "Negócios/Finanças" },
   { url: "https://www.clarin.com/rss/lo-ultimo/", name: "Clarín", icon: "🇦🇷", country: "AR", category: "Notícias" },
   { url: "https://www.lanacion.com.ar/arc/outboundfeeds/rss/", name: "La Nación", icon: "🇦🇷", country: "AR", category: "Notícias" },
   { url: "https://www.eluniversal.com.mx/arc/outboundfeeds/rss/", name: "El Universal MX", icon: "🇲🇽", country: "MX", category: "Notícias" },

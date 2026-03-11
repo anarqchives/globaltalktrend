@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useEffect } from "react";
 import { motion } from "framer-motion";
-import { ChevronUp, ExternalLink, Bell, Bookmark, Flag, Share2, TrendingUp, Info } from "lucide-react";
+import { ChevronUp, ExternalLink, Bell, Bookmark, Flag, Share2, TrendingUp, Info, MoreHorizontal } from "lucide-react";
 import { AreaChart, Area, ResponsiveContainer, XAxis, YAxis, Tooltip as RechartsTooltip, CartesianGrid } from "recharts";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { toast } from "@/hooks/use-toast";
@@ -13,6 +13,7 @@ import PropagationTimeline from "./PropagationTimeline";
 import { CrossPlatformCluster } from "@/hooks/use-cross-platform";
 import AbbrTooltip from "./AbbrTooltip";
 import SparklineArea from "./SparklineArea";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 // Source brand colors
 const SOURCE_COLORS: Record<string, string> = {
@@ -228,6 +229,7 @@ const TimelineCard = ({
   staggerIndex = 0, compact = false,
 }: TimelineCardProps & { staggerIndex?: number; compact?: boolean }) => {
   const { t, lang } = useLanguage();
+  const isMobile = useIsMobile();
   const [expanded, setExpanded] = useState(forceExpanded || false);
   const [alertOpen, setAlertOpen] = useState(false);
   const [imgError, setImgError] = useState(false);
@@ -491,7 +493,7 @@ const TimelineCard = ({
 
         {/* ═══ EXPANDED STATE ═══ */}
         {expanded && (
-          <div className="p-3 max-h-[500px] overflow-y-auto">
+          <div className={`p-3 overflow-y-auto ${isMobile ? 'max-h-[350px]' : 'max-h-[500px]'}`}>
             {/* Header + collapse */}
             <div className="flex items-center gap-1.5 mb-1.5 cursor-pointer" onClick={handleToggle}>
               <div className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: brandColor }} />
@@ -523,13 +525,13 @@ const TimelineCard = ({
 
             {/* ── CONTEXT SECTION ── */}
             <div className="rounded-lg p-2.5 mb-3" style={{ background: 'hsl(var(--secondary))', borderLeft: `3px solid ${brandColor}` }}>
-              <p className="text-[12px] text-foreground/80 leading-relaxed">
+              <p className={`text-[12px] text-foreground/80 leading-relaxed ${isMobile ? 'line-clamp-3' : ''}`}>
                 {decodeEntities(expandedContext)}
               </p>
             </div>
 
-            {/* ── METRICS GRID — always 4 columns, auto-sized ── */}
-            <div className="grid grid-cols-4 gap-1 mb-3">
+            {/* ── METRICS GRID — responsive ── */}
+            <div className={`grid gap-1 mb-3 ${isMobile ? 'grid-cols-2' : 'grid-cols-4'}`}>
               {[
                 { value: String(trendScore), label: "TVI", highlight: trendScore >= 60 },
                 { value: change, label: lang === "pt" ? "Cresc." : "Growth" },
@@ -555,7 +557,7 @@ const TimelineCard = ({
                     📊 {metricLabel || (lang === "pt" ? "volume/hora" : "volume/hour")}
                   </span>
                 </div>
-                <div className="h-[100px]">
+                <div style={{ height: isMobile ? 80 : 100 }}>
                   <ResponsiveContainer width="100%" height="100%">
                     <AreaChart data={historicalData}>
                       <defs>
@@ -593,16 +595,24 @@ const TimelineCard = ({
               )}
             </div>
 
-            {/* Sentiment inline */}
+            {/* Sentiment inline with legend */}
             {(() => {
               const pos = changePositive ? 55 : 25;
               const neu = 30;
               const neg = changePositive ? 15 : 45;
               return (
                 <div className="flex items-center gap-2 mb-2 text-[10px]">
-                  <span className="text-emerald-600">😊 {pos}%</span>
-                  <span className="text-muted-foreground">😐 {neu}%</span>
-                  <span className="text-red-500">😠 {neg}%</span>
+                  <span className="flex items-center gap-0.5"><span className="w-1.5 h-1.5 rounded-full bg-emerald-500 inline-block" /> <span className="text-emerald-600 dark:text-emerald-400">{lang === "pt" ? "Pos" : "Pos"} {pos}%</span></span>
+                  <span className="flex items-center gap-0.5"><span className="w-1.5 h-1.5 rounded-full bg-muted-foreground/40 inline-block" /> <span className="text-muted-foreground">{lang === "pt" ? "Neu" : "Neu"} {neu}%</span></span>
+                  <span className="flex items-center gap-0.5"><span className="w-1.5 h-1.5 rounded-full bg-red-500 inline-block" /> <span className="text-red-500">{lang === "pt" ? "Neg" : "Neg"} {neg}%</span></span>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <span className="text-muted-foreground/50 cursor-help ml-auto">ⓘ</span>
+                    </TooltipTrigger>
+                    <TooltipContent side="top" className="text-[10px]">
+                      {lang === "pt" ? "Distribuição de sentimento nas menções" : "Sentiment distribution across mentions"}
+                    </TooltipContent>
+                  </Tooltip>
                 </div>
               );
             })()}
@@ -614,32 +624,32 @@ const TimelineCard = ({
               </div>
             )}
 
-            {/* Source link */}
-            {sourceUrl && (
-              <a
-                href={sourceUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                onClick={(e) => e.stopPropagation()}
-                className="inline-flex items-center gap-1 text-[11px] font-medium text-primary hover:text-primary/80 transition-colors mb-2"
-              >
-                <ExternalLink className="w-3 h-3" />
-                🔗 {lang === "pt" ? "Ver fonte original" : "View original source"} →
-              </a>
-            )}
+            {/* Source link removed — now in action bar via ExternalLink icon */}
 
-            {/* Footer actions */}
-            <div className="flex items-center gap-3 pt-2 border-t border-border/20 text-[10px] text-muted-foreground">
-              <button onClick={handleShare} className="hover:text-foreground transition-colors flex items-center gap-1">
-                <Share2 className="w-3 h-3" /> {t("share")}
+            {/* Footer actions — compact icon bar */}
+            <div className="flex items-center gap-1 pt-2 border-t border-border/20 text-muted-foreground">
+              <button onClick={handleShare} className="p-1.5 rounded-md hover:bg-secondary hover:text-foreground transition-colors" title={t("share") as string}>
+                <Share2 className="w-3.5 h-3.5" />
               </button>
-              <button onClick={handleAlertClick} className="hover:text-foreground transition-colors flex items-center gap-1">
-                <Bell className="w-3 h-3" /> {lang === "pt" ? "Alerta" : "Alert"}
+              <button
+                onClick={(e) => { e.stopPropagation(); onSaveCard?.({ title, platform, category, country_code: countryCode, source_url: sourceUrl, thumbnail, description: contextText }); }}
+                className="p-1.5 rounded-md hover:bg-secondary hover:text-foreground transition-colors" title={lang === "pt" ? "Salvar" : "Save"}
+              >
+                <Bookmark className="w-3.5 h-3.5" />
               </button>
+              <button onClick={handleAlertClick} className="p-1.5 rounded-md hover:bg-secondary hover:text-foreground transition-colors" title={lang === "pt" ? "Alerta" : "Alert"}>
+                <Bell className="w-3.5 h-3.5" />
+              </button>
+              {sourceUrl && (
+                <a href={sourceUrl} target="_blank" rel="noopener noreferrer" onClick={(e) => e.stopPropagation()}
+                  className="p-1.5 rounded-md hover:bg-secondary hover:text-foreground transition-colors" title={lang === "pt" ? "Ver fonte" : "View source"}>
+                  <ExternalLink className="w-3.5 h-3.5" />
+                </a>
+              )}
               <div className="flex-1" />
-              <span className="text-muted-foreground/40 flex items-center gap-1">
+              <span className="text-[9px] text-muted-foreground/40 flex items-center gap-1">
                 <span className="w-1.5 h-1.5 rounded-full" style={{ background: brandColor }} />
-                {platform} · {confidenceTier.label} {confidenceScore}%
+                {confidenceTier.label} {confidenceScore}%
               </span>
             </div>
 

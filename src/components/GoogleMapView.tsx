@@ -6,7 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { TrendCardProps } from "./TrendCard";
-import { Map, Flame, Globe, RefreshCw, GitBranch, Heart, X } from "lucide-react";
+import { Map, Flame, Globe, RefreshCw, GitBranch, Heart, X, Plus, Minus } from "lucide-react";
 import {
   computeFlowArcs, computeSentimentBubbles, computeCurvePoints,
   sentimentColors, type FlowArc, type SentimentBubble, type Sentiment,
@@ -313,7 +313,8 @@ const GoogleMapView = ({
         };
         const map = new GMap(mapRef.current, {
           center: { lat: 20, lng: 0 }, zoom: 2.5, minZoom: 2, maxZoom: 8,
-          disableDefaultUI: true, zoomControl: true, zoomControlOptions: { position: 3 },
+          disableDefaultUI: true, zoomControl: false,
+          mapTypeControl: false, streetViewControl: false, fullscreenControl: false,
           mapTypeId: "roadmap", styles: isDark ? darkStyles : lightStyles,
           gestureHandling: "greedy", backgroundColor: isDark ? "#131620" : "#f0f0f0",
         });
@@ -1542,6 +1543,26 @@ const GoogleMapView = ({
 
       {/* Map container */}
       <div ref={mapRef} className="absolute inset-0 z-0" />
+
+      {/* Custom zoom controls */}
+      {mapLoaded && (
+        <div className={`absolute z-20 flex flex-col gap-1 ${isMobile ? 'bottom-24 right-2' : 'bottom-[100px] right-3'}`}>
+          <button
+            onClick={() => googleMapRef.current?.setZoom((googleMapRef.current?.getZoom() || 3) + 1)}
+            className={`${isMobile ? 'w-11 h-11' : 'w-9 h-9'} rounded-lg bg-white/90 dark:bg-card/90 backdrop-blur-xl border border-border/30 shadow-sm flex items-center justify-center text-foreground hover:bg-white dark:hover:bg-card transition-colors`}
+            aria-label="Zoom in"
+          >
+            <Plus className="w-4 h-4" />
+          </button>
+          <button
+            onClick={() => googleMapRef.current?.setZoom((googleMapRef.current?.getZoom() || 3) - 1)}
+            className={`${isMobile ? 'w-11 h-11' : 'w-9 h-9'} rounded-lg bg-white/90 dark:bg-card/90 backdrop-blur-xl border border-border/30 shadow-sm flex items-center justify-center text-foreground hover:bg-white dark:hover:bg-card transition-colors`}
+            aria-label="Zoom out"
+          >
+            <Minus className="w-4 h-4" />
+          </button>
+        </div>
+      )}
 
       {/* Mode transition fade overlay */}
       <AnimatePresence>

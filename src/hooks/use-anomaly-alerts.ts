@@ -14,6 +14,25 @@ function parseChange(change: string): number {
   return match ? parseFloat(match[0]) : 0;
 }
 
+// Platform-specific thresholds to prevent tech platforms from dominating signals
+const PLATFORM_THRESHOLDS: Record<string, number> = {
+  GitHub: 500,
+  "Hacker News": 400,
+  "Stack Overflow": 400,
+  "Google Trends": 150,
+  "The Guardian": 80,
+  NPR: 80,
+  Reddit: 200,
+  YouTube: 150,
+  FRED: 50,
+  "World Bank": 50,
+  IBGE: 50,
+  OpenAlex: 200,
+  PubMed: 100,
+  Wikipedia: 150,
+};
+const MAX_PER_PLATFORM = 3;
+
 /** Request notification permission and return status */
 async function requestPushPermission(): Promise<boolean> {
   if (!("Notification" in window)) return false;
@@ -68,8 +87,9 @@ export function useAnomalyAlerts(trends: TrendCardProps[]) {
       const key = t.title.toLowerCase().slice(0, 40);
       const change = parseChange(t.change);
       const platforms = new Set((titleMap.get(key) || []).map(x => x.platform));
+      const threshold = PLATFORM_THRESHOLDS[t.platform] || 250;
 
-      if (change > 300) {
+      if (change > threshold * 1.2) {
         results.push({
           trend: t,
           type: "spike",
@@ -89,7 +109,7 @@ export function useAnomalyAlerts(trends: TrendCardProps[]) {
         continue;
       }
 
-      if (change > 200) {
+      if (change > threshold * 0.8) {
         results.push({
           trend: t,
           type: "rapid_growth",
@@ -99,11 +119,17 @@ export function useAnomalyAlerts(trends: TrendCardProps[]) {
       }
     }
 
+    // Deduplicate by title and enforce per-platform diversity cap
     const seen = new Set<string>();
+    const platformCounts: Record<string, number> = {};
     return results.filter(a => {
       const k = a.trend.title.toLowerCase().slice(0, 40);
       if (seen.has(k)) return false;
       seen.add(k);
+      const plat = a.trend.platform;
+      const count = platformCounts[plat] || 0;
+      if (count >= MAX_PER_PLATFORM) return false;
+      platformCounts[plat] = count + 1;
       return true;
     }).slice(0, 10);
   }, [trends]);

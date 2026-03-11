@@ -309,14 +309,25 @@ export default function WeeklyPulseDashboard({ trends }: { trends: TrendCardProp
     }
 
     // Category momentum — calculate relative to average
+    // Only use days up to today to avoid future days (which are 0) skewing momentum to -100%
     const categoryMomentum = topCats.map(cat => {
       const volumes = Object.fromEntries(orderedDays.map(d => [d, catDaily[d]?.[cat] || 0]));
-      const vals = orderedDays.map(d => volumes[d] || 0);
-      const firstHalf = vals.slice(0, Math.ceil(vals.length / 2)).reduce((a, b) => a + b, 0);
-      const secondHalf = vals.slice(Math.ceil(vals.length / 2)).reduce((a, b) => a + b, 0);
+      // Only consider days up to today (exclude future days with 0 values)
+      const activeDays = todayIndex >= 0 ? orderedDays.slice(0, todayIndex + 1) : orderedDays;
+      const vals = activeDays.map(d => volumes[d] || 0);
       const total = catTotal[cat] || 0;
-      const momentum = firstHalf > 0 ? Math.round(((secondHalf - firstHalf) / firstHalf) * 100)
-        : secondHalf > 0 ? 100 : 0;
+      
+      let momentum: number;
+      if (vals.length < 2) {
+        momentum = 0;
+      } else {
+        const midpoint = Math.ceil(vals.length / 2);
+        const firstHalf = vals.slice(0, midpoint).reduce((a, b) => a + b, 0);
+        const secondHalf = vals.slice(midpoint).reduce((a, b) => a + b, 0);
+        if (firstHalf <= 0 && secondHalf <= 0) momentum = 0;
+        else if (firstHalf <= 0) momentum = 100;
+        else momentum = Math.round(((secondHalf - firstHalf) / firstHalf) * 100);
+      }
       return { name: cat, volumes, momentum, total };
     });
 
