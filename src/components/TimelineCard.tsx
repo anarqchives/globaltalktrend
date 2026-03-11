@@ -624,19 +624,7 @@ const TimelineCard = ({
               </div>
             )}
 
-            {/* Source link */}
-            {sourceUrl && (
-              <a
-                href={sourceUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                onClick={(e) => e.stopPropagation()}
-                className="inline-flex items-center gap-1 text-[11px] font-medium text-primary hover:text-primary/80 transition-colors mb-2"
-              >
-                <ExternalLink className="w-3 h-3" />
-                🔗 {lang === "pt" ? "Ver fonte original" : "View original source"} →
-              </a>
-            )}
+            {/* Source link removed — now in action bar via ExternalLink icon */}
 
             {/* Footer actions — compact icon bar */}
             <div className="flex items-center gap-1 pt-2 border-t border-border/20 text-muted-foreground">
