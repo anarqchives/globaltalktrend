@@ -341,7 +341,7 @@ const Index = () => {
     );
     observer.observe(sentinel);
     return () => observer.disconnect();
-  }, [hasMore, loading, filteredTrends.length]);
+  }, [hasMore, loading, diversifiedTrends.length]);
 
   const handleMapClick = (code: string) => {
     setFilters((f) => ({ ...f, country: code }));
