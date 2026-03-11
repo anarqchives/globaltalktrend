@@ -13,6 +13,7 @@ import PropagationTimeline from "./PropagationTimeline";
 import { CrossPlatformCluster } from "@/hooks/use-cross-platform";
 import AbbrTooltip from "./AbbrTooltip";
 import SparklineArea from "./SparklineArea";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 // Source brand colors
 const SOURCE_COLORS: Record<string, string> = {
