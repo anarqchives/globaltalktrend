@@ -87,8 +87,9 @@ export function useAnomalyAlerts(trends: TrendCardProps[]) {
       const key = t.title.toLowerCase().slice(0, 40);
       const change = parseChange(t.change);
       const platforms = new Set((titleMap.get(key) || []).map(x => x.platform));
+      const threshold = PLATFORM_THRESHOLDS[t.platform] || 250;
 
-      if (change > 300) {
+      if (change > threshold * 1.2) {
         results.push({
           trend: t,
           type: "spike",
@@ -108,7 +109,7 @@ export function useAnomalyAlerts(trends: TrendCardProps[]) {
         continue;
       }
 
-      if (change > 200) {
+      if (change > threshold * 0.8) {
         results.push({
           trend: t,
           type: "rapid_growth",
@@ -118,11 +119,17 @@ export function useAnomalyAlerts(trends: TrendCardProps[]) {
       }
     }
 
+    // Deduplicate by title and enforce per-platform diversity cap
     const seen = new Set<string>();
+    const platformCounts: Record<string, number> = {};
     return results.filter(a => {
       const k = a.trend.title.toLowerCase().slice(0, 40);
       if (seen.has(k)) return false;
       seen.add(k);
+      const plat = a.trend.platform;
+      const count = platformCounts[plat] || 0;
+      if (count >= MAX_PER_PLATFORM) return false;
+      platformCounts[plat] = count + 1;
       return true;
     }).slice(0, 10);
   }, [trends]);

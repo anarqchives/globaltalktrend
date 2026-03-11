@@ -313,7 +313,8 @@ const GoogleMapView = ({
         };
         const map = new GMap(mapRef.current, {
           center: { lat: 20, lng: 0 }, zoom: 2.5, minZoom: 2, maxZoom: 8,
-          disableDefaultUI: true, zoomControl: true, zoomControlOptions: { position: 3 },
+          disableDefaultUI: true, zoomControl: false,
+          mapTypeControl: false, streetViewControl: false, fullscreenControl: false,
           mapTypeId: "roadmap", styles: isDark ? darkStyles : lightStyles,
           gestureHandling: "greedy", backgroundColor: isDark ? "#131620" : "#f0f0f0",
         });
