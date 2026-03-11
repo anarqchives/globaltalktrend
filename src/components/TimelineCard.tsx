@@ -530,8 +530,8 @@ const TimelineCard = ({
               </p>
             </div>
 
-            {/* ── METRICS GRID — always 4 columns, auto-sized ── */}
-            <div className="grid grid-cols-4 gap-1 mb-3">
+            {/* ── METRICS GRID — responsive ── */}
+            <div className={`grid gap-1 mb-3 ${isMobile ? 'grid-cols-2' : 'grid-cols-4'}`}>
               {[
                 { value: String(trendScore), label: "TVI", highlight: trendScore >= 60 },
                 { value: change, label: lang === "pt" ? "Cresc." : "Growth" },
