@@ -638,18 +638,30 @@ const TimelineCard = ({
               </a>
             )}
 
-            {/* Footer actions */}
-            <div className="flex items-center gap-3 pt-2 border-t border-border/20 text-[10px] text-muted-foreground">
-              <button onClick={handleShare} className="hover:text-foreground transition-colors flex items-center gap-1">
-                <Share2 className="w-3 h-3" /> {t("share")}
+            {/* Footer actions — compact icon bar */}
+            <div className="flex items-center gap-1 pt-2 border-t border-border/20 text-muted-foreground">
+              <button onClick={handleShare} className="p-1.5 rounded-md hover:bg-secondary hover:text-foreground transition-colors" title={t("share") as string}>
+                <Share2 className="w-3.5 h-3.5" />
               </button>
-              <button onClick={handleAlertClick} className="hover:text-foreground transition-colors flex items-center gap-1">
-                <Bell className="w-3 h-3" /> {lang === "pt" ? "Alerta" : "Alert"}
+              <button
+                onClick={(e) => { e.stopPropagation(); onSaveCard?.({ title, platform, category, country_code: countryCode, source_url: sourceUrl, thumbnail, description: contextText }); }}
+                className="p-1.5 rounded-md hover:bg-secondary hover:text-foreground transition-colors" title={lang === "pt" ? "Salvar" : "Save"}
+              >
+                <Bookmark className="w-3.5 h-3.5" />
               </button>
+              <button onClick={handleAlertClick} className="p-1.5 rounded-md hover:bg-secondary hover:text-foreground transition-colors" title={lang === "pt" ? "Alerta" : "Alert"}>
+                <Bell className="w-3.5 h-3.5" />
+              </button>
+              {sourceUrl && (
+                <a href={sourceUrl} target="_blank" rel="noopener noreferrer" onClick={(e) => e.stopPropagation()}
+                  className="p-1.5 rounded-md hover:bg-secondary hover:text-foreground transition-colors" title={lang === "pt" ? "Ver fonte" : "View source"}>
+                  <ExternalLink className="w-3.5 h-3.5" />
+                </a>
+              )}
               <div className="flex-1" />
-              <span className="text-muted-foreground/40 flex items-center gap-1">
+              <span className="text-[9px] text-muted-foreground/40 flex items-center gap-1">
                 <span className="w-1.5 h-1.5 rounded-full" style={{ background: brandColor }} />
-                {platform} · {confidenceTier.label} {confidenceScore}%
+                {confidenceTier.label} {confidenceScore}%
               </span>
             </div>
 
