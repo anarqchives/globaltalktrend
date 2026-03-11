@@ -237,16 +237,52 @@ const Index = () => {
     setVisibleCount(INITIAL_COUNT);
   }, [filters]);
 
-  const visibleTrends = filteredTrends.slice(0, visibleCount);
-  const hasMore = visibleCount < filteredTrends.length;
-
   const SOURCE_PRIORITY: Record<string, number> = {
     "The Guardian": 1, "NPR": 1, "NewsAPI": 2, "GNews": 2, "Bing News": 2, "NewsData": 2,
+    "The News API": 2, "TheNewsAPI": 2,
     "Reddit": 3, "Bluesky": 3, "Mastodon": 3, "X (Twitter)": 3, "YouTube": 4,
     "Hacker News": 5, "Stack Overflow": 5, "GitHub": 5,
-    "Wikipedia": 6, "OpenAlex": 6, "World Bank": 6, "IBGE": 6,
+    "Wikipedia": 6, "OpenAlex": 6, "World Bank": 6, "IBGE": 6, "FRED": 6,
     "Google Trends": 99,
   };
+
+  // Diversify: sort by priority then interleave to cap Google Trends dominance
+  const diversifiedTrends = useMemo(() => {
+    const isGT = (t: TrendCardProps) => t.platform?.toLowerCase().includes("google trends");
+
+    // Sort all trends by source priority first
+    const sorted = [...filteredTrends].sort((a, b) => {
+      const pa = SOURCE_PRIORITY[a.platform] || 4;
+      const pb = SOURCE_PRIORITY[b.platform] || 4;
+      return pa - pb;
+    });
+
+    // Separate non-GT and GT
+    const nonGT = sorted.filter(t => !isGT(t));
+    const gt = sorted.filter(t => isGT(t));
+
+    // Interleave: for every 4 non-GT cards, allow 1 GT card
+    const result: TrendCardProps[] = [];
+    let gtIdx = 0;
+    let nonGTCount = 0;
+
+    for (const t of nonGT) {
+      result.push(t);
+      nonGTCount++;
+      if (nonGTCount % 4 === 0 && gtIdx < gt.length) {
+        result.push(gt[gtIdx++]);
+      }
+    }
+    // Append remaining GT at the end
+    while (gtIdx < gt.length) {
+      result.push(gt[gtIdx++]);
+    }
+
+    return result;
+  }, [filteredTrends]);
+
+  const visibleTrends = diversifiedTrends.slice(0, visibleCount);
+  const hasMore = visibleCount < diversifiedTrends.length;
 
   const groupedTrends = useMemo(() => {
     const now = Date.now();
@@ -266,12 +302,6 @@ const Index = () => {
       return now - 12 * ONE_HOUR;
     };
 
-    const sortByPriority = (a: TrendCardProps, b: TrendCardProps) => {
-      const pa = SOURCE_PRIORITY[a.platform] || 4;
-      const pb = SOURCE_PRIORITY[b.platform] || 4;
-      return pa - pb;
-    };
-
     const agora: TrendCardProps[] = [];
     const ultimas2h: TrendCardProps[] = [];
     const ultimas24h: TrendCardProps[] = [];
@@ -283,10 +313,6 @@ const Index = () => {
       else if (diff < TWO_HOURS) ultimas2h.push(trend);
       else ultimas24h.push(trend);
     }
-
-    agora.sort(sortByPriority);
-    ultimas2h.sort(sortByPriority);
-    ultimas24h.sort(sortByPriority);
 
     return { agora, ultimas2h, ultimas24h };
   }, [visibleTrends]);
