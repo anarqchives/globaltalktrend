@@ -222,7 +222,7 @@ const TimelineCard = ({
   details, historicalData, metricLabel, likeRatio, commentCount, region,
   countryCode, sources, sourceUrl, trustBadge, thumbnail, publishedAt,
   description, firstSeenAt, peakAt, relevanceScore, translated,
-  onClick, onFilterPlatform, onExpand, userId, onTrackAction,
+  onClick, onFilterPlatform, onExpand, onToggleExpand, userId, onTrackAction,
   forceExpanded, isMultiplatform, crossPlatformCluster, onSaveCard,
   aiContext,
   staggerIndex = 0, compact = false,
