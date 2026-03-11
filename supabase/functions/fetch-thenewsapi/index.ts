@@ -47,12 +47,14 @@ function spark(): number[] {
 
 function detectCategory(title: string, desc: string): string {
   const text = `${title} ${desc}`.toLowerCase();
-  if (/tech|ai |artificial|software|crypto|blockchain|apple|google|microsoft|robot/i.test(text)) return "Tecnologia";
-  if (/sport|football|soccer|nba|tennis|olympic/i.test(text)) return "Esportes";
+  // ⚠️ Entertainment FIRST — catches reality shows before "voto"/"eliminação" trigger politics
+  if (/bbb|big brother|paredão|sincerão|reality show|reality tv|masterchef|the voice|a fazenda|survivor|american idol|got talent/i.test(text)) return "Entretenimento";
+  if (/movie|music|celebrity|entertainment|film|series|netflix|disney|anime|manga|trailer|concert|oscar|grammy|novela|streaming|hbo/i.test(text)) return "Entretenimento";
+  if (/tech|ai |artificial|software|crypto|blockchain|apple|google|microsoft|robot|openai|chatgpt/i.test(text)) return "Tecnologia";
+  if (/sport|football|soccer|nba|nfl|tennis|olympic|championship|league|fifa|campeonato|futebol/i.test(text)) return "Esportes";
   if (/health|covid|vaccine|disease|medical|hospital/i.test(text)) return "Saúde";
-  if (/economy|market|stock|gdp|inflation|trade|bank/i.test(text)) return "Negócios/Finanças";
+  if (/economy|market|stock|gdp|inflation|trade|bank|tariff/i.test(text)) return "Negócios/Finanças";
   if (/climate|environment|pollution|carbon|energy/i.test(text)) return "Clima/Meio Ambiente";
-  if (/movie|music|celebrity|entertainment|film|series/i.test(text)) return "Entretenimento";
   if (/science|research|study|discovery|space|nasa/i.test(text)) return "Ciência";
   if (/politic|election|government|president|congress|parliament/i.test(text)) return "Política";
   return "Geral";
