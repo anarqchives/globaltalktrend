@@ -579,17 +579,17 @@ const TimelineCard = ({
             )}
 
             {/* ── Confidence inline ── */}
-            <div className="flex items-center gap-2 mb-2 text-[10px]">
-              <span className="text-muted-foreground">{lang === "pt" ? "Confiança" : "Confidence"}:</span>
-              <div className="flex-1 h-1 rounded-full bg-secondary overflow-hidden max-w-[120px]">
+            <div className="flex items-center gap-1.5 mb-2 text-[10px] overflow-hidden">
+              <span className="text-muted-foreground flex-shrink-0">{lang === "pt" ? "Confiança" : "Confidence"}:</span>
+              <div className="flex-1 h-1 rounded-full bg-secondary overflow-hidden max-w-[80px] min-w-[40px]">
                 <div className="h-full rounded-full transition-all" style={{ width: `${confidenceScore}%`, background: confidenceTier.color }} />
               </div>
-              <span className="font-medium" style={{ color: confidenceTier.color }}>{confidenceScore}%</span>
+              <span className="font-medium flex-shrink-0" style={{ color: confidenceTier.color }}>{confidenceScore}%</span>
               {["The Guardian", "NPR", "PubMed", "IBGE", "World Bank", "OpenAlex"].includes(platform) && (
-                <span className="text-emerald-600 dark:text-emerald-400">✓ {lang === "pt" ? "Verificada" : "Verified"}</span>
+                <span className="text-emerald-600 dark:text-emerald-400 flex-shrink-0 truncate">✓</span>
               )}
               {(sources?.length || 1) === 1 && (
-                <span className="text-amber-600 dark:text-amber-400">⚠ {lang === "pt" ? "Fonte única" : "Single source"}</span>
+                <span className="text-amber-600 dark:text-amber-400 flex-shrink-0 truncate">⚠</span>
               )}
             </div>
 
