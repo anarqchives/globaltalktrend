@@ -571,6 +571,9 @@ const Index = () => {
                   onClick={() => {
                     trackAction("view", 1, { title: trend.title, platform: trend.platform, countryCode: trend.countryCode, category: trend.category });
                   }}
+                  onToggleExpand={(isExpanded) => {
+                    setExpandedTrendId(isExpanded ? trendId : null);
+                  }}
                   onExpand={(title, platform, metadata) => {
                     trackView(title, platform, metadata);
                     if (trend.countryCode) {

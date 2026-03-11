@@ -89,6 +89,7 @@ interface TimelineCardProps extends TrendCardProps {
   onClick?: () => void;
   onFilterPlatform?: (platform: string) => void;
   onExpand?: (title: string, platform: string, metadata?: any) => void;
+  onToggleExpand?: (expanded: boolean) => void;
   userId?: string | null;
   onTrackAction?: (action: string, points: number, metadata?: Record<string, any>) => void;
   forceExpanded?: boolean;
@@ -221,7 +222,7 @@ const TimelineCard = ({
   details, historicalData, metricLabel, likeRatio, commentCount, region,
   countryCode, sources, sourceUrl, trustBadge, thumbnail, publishedAt,
   description, firstSeenAt, peakAt, relevanceScore, translated,
-  onClick, onFilterPlatform, onExpand, userId, onTrackAction,
+  onClick, onFilterPlatform, onExpand, onToggleExpand, userId, onTrackAction,
   forceExpanded, isMultiplatform, crossPlatformCluster, onSaveCard,
   aiContext,
   staggerIndex = 0, compact = false,
@@ -311,6 +312,7 @@ const TimelineCard = ({
   const handleToggle = () => {
     const next = !expanded;
     setExpanded(next);
+    onToggleExpand?.(next);
     if (next) {
       onExpand?.(title, platform, { volume, category, countryCode });
       onTrackAction?.("expand", 2, { title, platform, countryCode, category });
