@@ -479,10 +479,10 @@ const Index = () => {
   };
 
   const masonryStyle = useMemo(() => ({
-    columnCount: Math.max(gridColumns, isMobile ? 1 : 2),
+    columnCount: 1,
     columnGap: 0,
-    columnFill: 'balance' as const,
-  }), [gridColumns, isMobile]);
+    columnFill: 'auto' as const,
+  }), []);
 
   const renderTimeline = () => (
     <div ref={(el) => { (scrollRef as any).current = el; (gridRef as any).current = el; }} className={`flex flex-col gap-0.5 p-1 sm:p-2 h-full overflow-y-auto overflow-x-hidden scrollbar-thin relative transition-opacity duration-200 w-full max-w-full box-border ${filterTransitioning ? 'opacity-60' : 'opacity-100'}`} style={{ maxWidth: '100vw' }}>
