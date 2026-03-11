@@ -312,6 +312,7 @@ const TimelineCard = ({
   const handleToggle = () => {
     const next = !expanded;
     setExpanded(next);
+    onToggleExpand?.(next);
     if (next) {
       onExpand?.(title, platform, { volume, category, countryCode });
       onTrackAction?.("expand", 2, { title, platform, countryCode, category });
