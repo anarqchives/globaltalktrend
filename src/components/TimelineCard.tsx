@@ -464,19 +464,19 @@ const TimelineCard = ({
             )}
 
             {/* ⑤ Metrics inline */}
-            <div className="flex items-center gap-2 text-[10px] text-muted-foreground mb-1.5 flex-wrap">
+            <div className="flex items-center gap-2 text-[10px] text-muted-foreground mb-1.5 overflow-hidden">
               {volume && volume !== "0" && (
-                <span className="font-medium">📊 {volume}</span>
+                <span className="font-medium truncate">📊 {volume}</span>
               )}
-              <span className={`font-bold flex items-center gap-0.5 ${changePositive ? "text-emerald-600 dark:text-emerald-400" : "text-destructive"}`}>
+              <span className={`font-bold flex items-center gap-0.5 flex-shrink-0 ${changePositive ? "text-emerald-600 dark:text-emerald-400" : "text-destructive"}`}>
                 <TrendingUp className="w-2.5 h-2.5" />
                 {change}
               </span>
               {commentCount != null && commentCount > 0 && (
-                <span>💬 {commentCount >= 1000 ? `${(commentCount / 1000).toFixed(1)}K` : commentCount}</span>
+                <span className="truncate">💬 {commentCount >= 1000 ? `${(commentCount / 1000).toFixed(1)}K` : commentCount}</span>
               )}
               {likeRatio != null && likeRatio > 0 && (
-                <span>👍 {likeRatio}%</span>
+                <span className="flex-shrink-0">👍 {likeRatio}%</span>
               )}
             </div>
 
