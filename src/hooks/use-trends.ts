@@ -649,6 +649,8 @@ export function useTrends(filters: FilterState, onTrendCountsChange: (counts: Re
         redditItems, blueskyItems, mastodonItems, gdeltDocResult,
         // ONDA 2:
         crossrefResult, semanticResult, whoResult, imfResult, techScienceResult,
+        // ONDA 2 extras:
+        fredResult, theNewsApiResult,
       ] = await Promise.all([
         invokeFunctionWithLogs("Google Trends", "fetch-trends", 12000),
         invokeFunctionWithLogs("The Guardian/News Extra", "fetch-news-extra", 10000),
@@ -665,6 +667,9 @@ export function useTrends(filters: FilterState, onTrendCountsChange: (counts: Re
         invokeFunctionWithLogs("OMS Saúde", "fetch-who-data", 8000),
         invokeFunctionWithLogs("FMI Economia", "fetch-imf-data", 8000),
         invokeFunctionWithLogs("Tech/Science Extra", "fetch-tech-science-extra", 8000),
+        // ONDA 2 extras:
+        invokeFunctionWithLogs("FRED Economics", "fetch-fred", 8000),
+        invokeFunctionWithLogs("The News API", "fetch-thenewsapi", 10000),
       ]);
 
       // Save health state
