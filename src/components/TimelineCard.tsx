@@ -493,7 +493,7 @@ const TimelineCard = ({
 
         {/* ═══ EXPANDED STATE ═══ */}
         {expanded && (
-          <div className="p-3 max-h-[500px] overflow-y-auto">
+          <div className={`p-3 overflow-y-auto ${isMobile ? 'max-h-[350px]' : 'max-h-[500px]'}`}>
             {/* Header + collapse */}
             <div className="flex items-center gap-1.5 mb-1.5 cursor-pointer" onClick={handleToggle}>
               <div className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: brandColor }} />
