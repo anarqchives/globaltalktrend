@@ -687,11 +687,14 @@ export function useTrends(filters: FilterState, onTrendCountsChange: (counts: Re
       const whoTrends: TrendCardProps[] = whoResult.data?.trends || [];
       const imfTrends: TrendCardProps[] = imfResult.data?.trends || [];
       const techScienceTrends: TrendCardProps[] = techScienceResult.data?.trends || [];
+      const fredTrends: TrendCardProps[] = fredResult.data?.trends || [];
+      const theNewsApiTrends: TrendCardProps[] = theNewsApiResult.data?.trends || [];
 
       const rawTrends = [
         ...edgeTrends, ...extraTrends, ...extraSourcesTrends, ...socialTrends, ...openDataTrends,
         ...redditItems, ...blueskyItems, ...mastodonItems, ...gdeltDocTrends,
         ...crossrefTrends, ...semanticTrends, ...whoTrends, ...imfTrends, ...techScienceTrends,
+        ...fredTrends, ...theNewsApiTrends,
       ];
       
       if (import.meta.env.DEV) console.log("📦 Total de trends combinadas:", rawTrends.length);
