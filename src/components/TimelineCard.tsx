@@ -464,19 +464,19 @@ const TimelineCard = ({
             )}
 
             {/* ⑤ Metrics inline */}
-            <div className="flex items-center gap-2 text-[10px] text-muted-foreground mb-1.5 flex-wrap">
+            <div className="flex items-center gap-2 text-[10px] text-muted-foreground mb-1.5 overflow-hidden">
               {volume && volume !== "0" && (
-                <span className="font-medium">📊 {volume}</span>
+                <span className="font-medium truncate">📊 {volume}</span>
               )}
-              <span className={`font-bold flex items-center gap-0.5 ${changePositive ? "text-emerald-600 dark:text-emerald-400" : "text-destructive"}`}>
+              <span className={`font-bold flex items-center gap-0.5 flex-shrink-0 ${changePositive ? "text-emerald-600 dark:text-emerald-400" : "text-destructive"}`}>
                 <TrendingUp className="w-2.5 h-2.5" />
                 {change}
               </span>
               {commentCount != null && commentCount > 0 && (
-                <span>💬 {commentCount >= 1000 ? `${(commentCount / 1000).toFixed(1)}K` : commentCount}</span>
+                <span className="truncate">💬 {commentCount >= 1000 ? `${(commentCount / 1000).toFixed(1)}K` : commentCount}</span>
               )}
               {likeRatio != null && likeRatio > 0 && (
-                <span>👍 {likeRatio}%</span>
+                <span className="flex-shrink-0">👍 {likeRatio}%</span>
               )}
             </div>
 
@@ -528,19 +528,19 @@ const TimelineCard = ({
               </p>
             </div>
 
-            {/* ── METRICS GRID — responsive 2×2 on mobile, 4×1 on wider ── */}
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5 mb-3">
+            {/* ── METRICS GRID — always 4 columns, auto-sized ── */}
+            <div className="grid grid-cols-4 gap-1 mb-3">
               {[
                 { value: String(trendScore), label: "TVI", highlight: trendScore >= 60 },
-                { value: change, label: lang === "pt" ? "Crescimento" : "Growth" },
+                { value: change, label: lang === "pt" ? "Cresc." : "Growth" },
                 { value: volume || "—", label: "Volume" },
                 { value: String(sources?.length || 1), label: lang === "pt" ? "Fontes" : "Sources" },
               ].map((m, i) => (
-                <div key={i} className="text-center rounded-lg px-1 py-2 bg-secondary/50 min-w-0 overflow-hidden">
-                  <span className={`block text-sm font-bold leading-tight ${m.highlight ? 'text-destructive' : changePositive && i === 1 ? 'text-emerald-600 dark:text-emerald-400' : 'text-foreground'}`} style={{ overflowWrap: 'anywhere', wordBreak: 'break-word' }}>
+                <div key={i} className="text-center rounded-lg px-1 py-1.5 bg-secondary/50 min-w-0 overflow-hidden">
+                  <span className={`block text-xs font-bold leading-tight truncate ${m.highlight ? 'text-destructive' : changePositive && i === 1 ? 'text-emerald-600 dark:text-emerald-400' : 'text-foreground'}`}>
                     {m.value}
                   </span>
-                  <span className="block text-[8px] text-muted-foreground mt-0.5 uppercase tracking-wider">{m.label}</span>
+                  <span className="block text-[7px] text-muted-foreground mt-0.5 uppercase tracking-wider truncate">{m.label}</span>
                 </div>
               ))}
             </div>
@@ -579,17 +579,17 @@ const TimelineCard = ({
             )}
 
             {/* ── Confidence inline ── */}
-            <div className="flex items-center gap-2 mb-2 text-[10px]">
-              <span className="text-muted-foreground">{lang === "pt" ? "Confiança" : "Confidence"}:</span>
-              <div className="flex-1 h-1 rounded-full bg-secondary overflow-hidden max-w-[120px]">
+            <div className="flex items-center gap-1.5 mb-2 text-[10px] overflow-hidden">
+              <span className="text-muted-foreground flex-shrink-0">{lang === "pt" ? "Confiança" : "Confidence"}:</span>
+              <div className="flex-1 h-1 rounded-full bg-secondary overflow-hidden max-w-[80px] min-w-[40px]">
                 <div className="h-full rounded-full transition-all" style={{ width: `${confidenceScore}%`, background: confidenceTier.color }} />
               </div>
-              <span className="font-medium" style={{ color: confidenceTier.color }}>{confidenceScore}%</span>
+              <span className="font-medium flex-shrink-0" style={{ color: confidenceTier.color }}>{confidenceScore}%</span>
               {["The Guardian", "NPR", "PubMed", "IBGE", "World Bank", "OpenAlex"].includes(platform) && (
-                <span className="text-emerald-600 dark:text-emerald-400">✓ {lang === "pt" ? "Verificada" : "Verified"}</span>
+                <span className="text-emerald-600 dark:text-emerald-400 flex-shrink-0 truncate">✓</span>
               )}
               {(sources?.length || 1) === 1 && (
-                <span className="text-amber-600 dark:text-amber-400">⚠ {lang === "pt" ? "Fonte única" : "Single source"}</span>
+                <span className="text-amber-600 dark:text-amber-400 flex-shrink-0 truncate">⚠</span>
               )}
             </div>
 
