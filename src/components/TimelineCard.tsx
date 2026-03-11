@@ -557,7 +557,7 @@ const TimelineCard = ({
                     📊 {metricLabel || (lang === "pt" ? "volume/hora" : "volume/hour")}
                   </span>
                 </div>
-                <div className="h-[100px]">
+                <div style={{ height: isMobile ? 80 : 100 }}>
                   <ResponsiveContainer width="100%" height="100%">
                     <AreaChart data={historicalData}>
                       <defs>
