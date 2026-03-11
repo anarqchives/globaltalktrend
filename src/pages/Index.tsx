@@ -334,7 +334,7 @@ const Index = () => {
     const observer = new IntersectionObserver(
       (entries) => {
         if (entries[0].isIntersecting && hasMore && !loading) {
-          setVisibleCount((prev) => Math.min(prev + LOAD_MORE_COUNT, filteredTrends.length));
+          setVisibleCount((prev) => Math.min(prev + LOAD_MORE_COUNT, diversifiedTrends.length));
         }
       },
       { root: scrollRef.current, rootMargin: "200px", threshold: 0 }
