@@ -338,7 +338,7 @@ const Discover = () => {
 
       {/* ─── FILTER BAR ─── */}
       <div className="sticky top-[56px] z-30 bg-background/80 backdrop-blur-xl border-b border-border/40">
-        <div className="px-4 md:px-8 lg:px-12 max-w-[1400px] mx-auto w-full flex items-center gap-2 py-2.5 overflow-x-auto scrollbar-none">
+        <div className="px-4 md:px-8 lg:px-12 max-w-[1400px] mx-auto w-full flex items-center gap-1.5 py-2 overflow-x-auto scrollbar-none" role="tablist" aria-label="Category filters">
           {/* Categories */}
           {CATEGORIES.map((cat) => {
             const Icon = cat.icon;
