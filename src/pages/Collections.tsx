@@ -75,7 +75,7 @@ const Collections = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background flex flex-col">
+    <div className="min-h-screen bg-background flex flex-col page-enter">
       <AppHeader />
 
       <main className="flex-1 px-4 md:px-8 lg:px-12 py-8 md:py-12 max-w-[1400px] mx-auto w-full">
