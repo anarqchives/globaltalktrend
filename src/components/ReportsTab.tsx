@@ -593,9 +593,9 @@ export default function ReportsTab({ userId }: ReportsTabProps) {
           className="w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 transition-colors disabled:opacity-50"
         >
           {generating === "report" ? (
-            <><div className="w-4 h-4 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full animate-spin" /> Gerando {reportMode === "academic" ? "relatório acadêmico" : "relatório"}…</>
+            <><div className="w-4 h-4 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full animate-spin" /> Gerando relatório…</>
           ) : (
-            <><Sparkles className="w-4 h-4" /> Gerar {reportMode === "academic" ? "Relatório Acadêmico" : "Relatório Executivo"}{compareMode ? " + Comparação" : ""}</>
+            <><Sparkles className="w-4 h-4" /> Gerar Relatório Completo{compareMode ? " + Comparação" : ""}</>
           )}
         </button>
 
