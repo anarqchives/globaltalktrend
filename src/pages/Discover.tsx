@@ -347,8 +347,10 @@ const Discover = () => {
               <button
                 key={cat.key}
                 onClick={() => setActiveCategory(cat.key)}
+                role="tab"
+                aria-selected={activeCategory === cat.key}
                 className={cn(
-                  "inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[12px] font-medium whitespace-nowrap transition-all duration-150 shrink-0",
+                  "inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-medium whitespace-nowrap transition-all duration-150 shrink-0 touch-target-sm",
                   active
                     ? "bg-foreground text-background"
                     : "bg-secondary/60 text-muted-foreground hover:bg-secondary hover:text-foreground"
