@@ -97,11 +97,7 @@ const DiscoveryCard = React.memo(({ trend, size, index }: DiscoveryCardProps) =>
   const description = trend.description || trend.details || "";
 
   const handleClick = () => {
-    if (trend.sourceUrl) {
-      window.open(trend.sourceUrl, "_blank", "noopener");
-    } else {
-      navigate(`/dashboard?highlight=${encodeURIComponent(trend.title)}`);
-    }
+    navigate(`/topic?title=${encodeURIComponent(trend.title)}&platform=${encodeURIComponent(trend.platform)}`);
   };
 
   // Card height classes based on size
