@@ -440,28 +440,48 @@ const TopicPage = () => {
 
         {/* ═══════════════════ ANALYTICAL CONTEXT ═══════════════════ */}
         <motion.section custom={7} variants={fadeUp} initial="hidden" animate="visible" className="intelligence-module p-5 md:p-6">
-          <div className="flex items-center gap-2 mb-3">
-            <AlertTriangle className="w-3.5 h-3.5 text-muted-foreground/40" />
+          <div className="flex items-center gap-2 mb-4">
+            <Zap className="w-3.5 h-3.5 text-primary/60" />
             <h2 className="text-[13px] font-semibold text-foreground uppercase tracking-wider">
-              {en ? "Analytical Context" : "Contexto Analítico"}
+              {en ? "Intelligence Summary" : "Resumo de Inteligência"}
             </h2>
           </div>
-          <div className="text-muted-foreground/70 text-[13px] leading-relaxed space-y-3 max-w-3xl">
+          <div className="text-foreground/80 text-[14px] leading-[1.7] space-y-4 max-w-3xl">
             {topic?.details ? (
               <p>{topic.details}</p>
             ) : (
-              <p>
-                {en
-                  ? `This topic is currently trending on ${topic?.platform || topicPlatform} with a TVI score of ${tvi}/100 (${tviTier.label}). The signal is in the "${lifecycle.labelEn}" stage of its lifecycle. ${lifecycle.descEn} Cross-referencing ${crossPlatformSignals.length} additional signals from other platforms and ${geoDistribution.length} geographic regions.`
-                  : `Este tópico está em destaque no ${topic?.platform || topicPlatform} com um score TVI de ${tvi}/100 (${tviTier.label}). O sinal está na fase "${lifecycle.label}" do seu ciclo de vida. ${lifecycle.desc} Cruzando ${crossPlatformSignals.length} sinais adicionais de outras plataformas e ${geoDistribution.length} regiões geográficas.`}
-              </p>
+              <>
+                <p className="text-[15px] font-medium leading-[1.6]">
+                  {en
+                    ? `This signal registers a TVI score of ${tvi}/100 (${tviTier.label}), indicating ${tvi >= 50 ? 'significant cross-platform resonance' : 'moderate attention'} across the information ecosystem.`
+                    : `Este sinal registra um score TVI de ${tvi}/100 (${tviTier.label}), indicando ${tvi >= 50 ? 'ressonância significativa cross-platform' : 'atenção moderada'} no ecossistema de informação.`}
+                </p>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                  <div className="p-3 rounded-lg bg-secondary/30">
+                    <p className="text-[10px] text-muted-foreground/50 uppercase tracking-wider font-medium mb-1">{en ? "Lifecycle" : "Ciclo de vida"}</p>
+                    <p className="text-[13px] font-semibold" style={{ color: `hsl(${lifecycle.color})` }}>{lifecycle.icon} {en ? lifecycle.labelEn : lifecycle.label}</p>
+                    <p className="text-[11px] text-muted-foreground/60 mt-0.5">{en ? lifecycle.descEn : lifecycle.desc}</p>
+                  </div>
+                  <div className="p-3 rounded-lg bg-secondary/30">
+                    <p className="text-[10px] text-muted-foreground/50 uppercase tracking-wider font-medium mb-1">{en ? "Cross-platform" : "Cross-platform"}</p>
+                    <p className="text-[13px] font-semibold text-foreground">{crossPlatformSignals.length} {en ? "related signals" : "sinais relacionados"}</p>
+                    <p className="text-[11px] text-muted-foreground/60 mt-0.5">{en ? "From other sources" : "De outras fontes"}</p>
+                  </div>
+                  <div className="p-3 rounded-lg bg-secondary/30">
+                    <p className="text-[10px] text-muted-foreground/50 uppercase tracking-wider font-medium mb-1">{en ? "Geography" : "Geografia"}</p>
+                    <p className="text-[13px] font-semibold text-foreground">{geoDistribution.length} {en ? "regions" : "regiões"}</p>
+                    <p className="text-[11px] text-muted-foreground/60 mt-0.5">{en ? "Signal diffusion" : "Difusão do sinal"}</p>
+                  </div>
+                </div>
+              </>
             )}
           </div>
-          <div className="mt-4 pt-3 border-t border-border/15">
-            <p className="text-[10px] text-muted-foreground/30 leading-relaxed">
+          <div className="mt-5 pt-3 border-t border-border/15">
+            <p className="text-[10px] text-muted-foreground/30 leading-relaxed flex items-center gap-1.5">
+              <AlertTriangle className="w-3 h-3 shrink-0" />
               {en
-                ? "⚠️ This analysis is generated from public data signals and does not constitute a recommendation. Always verify with primary sources."
-                : "⚠️ Esta análise é gerada a partir de sinais de dados públicos e não constitui uma recomendação. Sempre verifique com fontes primárias."}
+                ? "This analysis is generated from public data signals and does not constitute a recommendation. Always verify with primary sources."
+                : "Esta análise é gerada a partir de sinais de dados públicos e não constitui uma recomendação. Sempre verifique com fontes primárias."}
             </p>
           </div>
         </motion.section>
