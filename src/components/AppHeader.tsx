@@ -1,10 +1,9 @@
 import React, { useState, useEffect } from "react";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Sun, Moon, LogOut, LogIn, Info, ChevronDown, User, FileText,
-  Star, BookOpen, Users, Loader2, Compass, BarChart3, Map, Menu, X,
-  Bookmark, TrendingUp
+  Loader2, Menu, X, BarChart3, BookOpen, RefreshCw
 } from "lucide-react";
 import { useLanguage, languages } from "@/contexts/LanguageContext";
 import { lovable } from "@/integrations/lovable/index";
@@ -19,15 +18,6 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
 
-const NAV_ITEMS = [
-  { key: "discover", path: "/", icon: Compass, labelPt: "Explorar", labelEn: "Explore" },
-  { key: "dashboard", path: "/dashboard", icon: TrendingUp, labelPt: "Tendências", labelEn: "Trends" },
-  { key: "map", path: "/mapa", icon: Map, labelPt: "Mapa", labelEn: "Maps" },
-  { key: "reports", path: "/reports", icon: FileText, labelPt: "Relatórios", labelEn: "Reports" },
-  { key: "collections", path: "/collections", icon: Bookmark, labelPt: "Coleções", labelEn: "Collections" },
-  { key: "profile", path: "/perfil", icon: User, labelPt: "Perfil", labelEn: "Profile" },
-];
-
 interface AppHeaderProps {
   minimal?: boolean;
 }
@@ -35,6 +25,7 @@ interface AppHeaderProps {
 const AppHeader = ({ minimal = false }: AppHeaderProps) => {
   const { lang, setLang, t } = useLanguage();
   const location = useLocation();
+  const navigate = useNavigate();
   const [user, setUser] = useState<any>(null);
   const [loginOpen, setLoginOpen] = useState(false);
   const [loginLoading, setLoginLoading] = useState<"google" | "apple" | null>(null);
@@ -86,108 +77,80 @@ const AppHeader = ({ minimal = false }: AppHeaderProps) => {
   const userName = user?.user_metadata?.full_name || user?.email?.split("@")[0] || "";
   const userInitial = userName.charAt(0).toUpperCase();
 
-  const getNavLabel = (item: typeof NAV_ITEMS[0]) => lang === "en" ? item.labelEn : item.labelPt;
-
-  const isActive = (path: string) => {
-    if (path === "/") return location.pathname === "/";
-    return location.pathname.startsWith(path);
-  };
-
   return (
     <>
-      <header className="sticky top-0 z-50 h-[52px] sm:h-[56px] flex items-center px-4 md:px-6 lg:px-8 bg-background/80 backdrop-blur-xl border-b border-border/40" role="banner">
+      <header className="sticky top-0 z-50 h-[52px] flex items-center px-4 md:px-6 lg:px-8 bg-background/85 backdrop-blur-xl border-b border-border/30" role="banner">
         <div className="w-full max-w-[1440px] mx-auto flex items-center justify-between">
 
           {/* ─── LEFT: Logo ─── */}
-          <Link to="/" className="flex items-center gap-2 min-w-0 shrink-0" aria-label="Global Talk Trend - Home">
-            <h1 className="text-[14px] sm:text-[15px] font-bold tracking-tight whitespace-nowrap select-none text-foreground">
+          <Link to="/welcome" className="flex items-center gap-1.5 min-w-0 shrink-0" aria-label="Global Talk Trend - Home">
+            <span className="text-[14px] font-bold tracking-tight whitespace-nowrap select-none text-foreground">
               <span className="hidden sm:inline">Global Talk Trend</span>
               <span className="sm:hidden">GTT</span>
-            </h1>
-            <span className="hidden lg:flex items-center gap-1 text-[9px] text-muted-foreground/50 font-semibold uppercase tracking-widest">
-              <span className="relative flex items-center justify-center w-1.5 h-1.5">
-                <span className="absolute w-full h-full rounded-full live-pulse-dot" style={{ background: 'hsl(var(--color-positive))' }} />
-                <span className="relative w-1.5 h-1.5 rounded-full" style={{ background: 'hsl(var(--color-positive))' }} />
-              </span>
-              LIVE
             </span>
           </Link>
 
-          {/* ─── CENTER: Navigation ─── */}
-          {!minimal && (
-            <nav className="hidden md:flex items-center gap-0.5" aria-label="Main navigation">
-              {NAV_ITEMS.map((item) => {
-                const Icon = item.icon;
-                const active = isActive(item.path);
-                return (
-                  <Link
-                    key={item.key}
-                    to={item.path}
-                    aria-current={active ? "page" : undefined}
-                    className={cn(
-                      "relative flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[12px] font-medium transition-all duration-150",
-                      active
-                        ? "text-foreground bg-secondary/80"
-                        : "text-muted-foreground hover:text-foreground hover:bg-secondary/40"
-                    )}
-                  >
-                    <Icon className="w-3.5 h-3.5" />
-                    {getNavLabel(item)}
-                    {active && (
-                      <motion.div
-                        layoutId="nav-indicator"
-                        className="absolute bottom-0 left-2 right-2 h-[2px] bg-primary rounded-full"
-                        transition={{ type: "spring", stiffness: 500, damping: 35 }}
-                      />
-                    )}
-                  </Link>
-                );
-              })}
-            </nav>
-          )}
+          {/* ─── RIGHT: Controls ─── */}
+          <div className="flex items-center gap-2 shrink-0">
 
-          {/* ─── RIGHT: Utilities ─── */}
-          <div className="flex items-center gap-1 sm:gap-1.5 shrink-0">
-            {/* Language */}
+            {/* Language selector + refresh hint */}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <button 
-                  className="inline-flex items-center gap-0.5 px-2 rounded-lg border border-border/40 hover:border-border hover:bg-secondary/40 transition-all"
-                  style={{ height: 30, fontSize: 11, fontWeight: 500 }}
+                <button
+                  className="inline-flex items-center gap-1 px-2.5 h-9 rounded-lg border border-border/40 hover:border-border hover:bg-secondary/40 transition-all text-[12px] font-medium"
                   aria-label={lang === "en" ? "Change language" : "Mudar idioma"}
                 >
-                  <span className="text-muted-foreground">{lang.toUpperCase()}</span>
+                  <span className="text-muted-foreground">🌐</span>
+                  <span className="text-foreground">{lang.toUpperCase()}</span>
                   <ChevronDown className="w-2.5 h-2.5 text-muted-foreground/50" />
                 </button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="min-w-[180px] max-h-[300px] overflow-y-auto">
+              <DropdownMenuContent align="end" className="min-w-[200px] max-h-[340px] overflow-y-auto">
                 {languages.map((l) =>
                   <DropdownMenuItem
                     key={l.code}
-                    className={cn("text-body gap-2", lang === l.code && "bg-primary/10 text-primary font-semibold")}
+                    className={cn("gap-2 text-[13px]", lang === l.code && "bg-primary/10 text-primary font-semibold")}
                     onClick={() => setLang(l.code)}>
                     <span className="font-medium">{l.label}</span>
-                    <span className="text-muted-foreground text-caption">{l.name}</span>
+                    <span className="text-muted-foreground text-[11px]">{l.name}</span>
                   </DropdownMenuItem>
                 )}
+                <DropdownMenuSeparator />
+                <DropdownMenuItem className="gap-2 text-[11px] text-muted-foreground" onClick={() => {
+                  window.dispatchEvent(new Event("trend-refresh"));
+                  toast({ title: lang === "en" ? "Refreshing translations..." : "Atualizando traduções..." });
+                }}>
+                  <RefreshCw className="w-3 h-3" />
+                  {lang === "en" ? "Force re-translate" : "Forçar retradução"}
+                </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
 
             {/* Dark mode */}
             <button
               onClick={() => setDark(!dark)}
-              className="flex items-center justify-center w-[30px] h-[30px] rounded-lg text-muted-foreground hover:text-foreground hover:bg-secondary/40 transition-all"
+              className="flex items-center justify-center w-9 h-9 rounded-lg text-muted-foreground hover:text-foreground hover:bg-secondary/40 transition-all"
               aria-label={dark ? "Switch to light mode" : "Switch to dark mode"}
             >
               {dark ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
             </button>
 
-            {/* Support */}
+            {/* About */}
+            <button
+              onClick={() => navigate("/metodologia")}
+              className="flex items-center justify-center w-9 h-9 rounded-lg text-muted-foreground hover:text-foreground hover:bg-secondary/40 transition-all"
+              aria-label={lang === "en" ? "About" : "Sobre"}
+            >
+              <Info className="w-4 h-4" />
+            </button>
+
+            {/* Support — highlighted */}
             <a
               href="https://buy.stripe.com/fZu7sMgw6cHLeTnbWVdIA00"
               target="_blank"
               rel="noopener noreferrer"
-              className="apoie-pill hidden sm:flex items-center"
+              className="hidden sm:flex items-center h-9 px-3.5 rounded-lg text-[12px] font-semibold transition-all hover:brightness-105"
+              style={{ background: '#f5e56b', color: '#1a1a1a' }}
               aria-label={lang === "en" ? "Support the project" : "Apoie o projeto"}
             >
               {t("support")}
@@ -197,8 +160,8 @@ const AppHeader = ({ minimal = false }: AppHeaderProps) => {
             {user ? (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <button className="flex items-center justify-center w-[30px] h-[30px] rounded-full hover:ring-2 hover:ring-primary/20 transition-all" aria-label="User menu">
-                    <Avatar className="w-7 h-7">
+                  <button className="flex items-center justify-center w-9 h-9 rounded-full hover:ring-2 hover:ring-primary/20 transition-all" aria-label="User menu">
+                    <Avatar className="w-8 h-8">
                       {userAvatar && <AvatarImage src={userAvatar} alt={userName} />}
                       <AvatarFallback className="text-xs font-bold text-white" style={{ background: 'linear-gradient(135deg, hsl(var(--primary)), hsl(270 60% 50%))' }}>
                         {userInitial}
@@ -206,22 +169,25 @@ const AppHeader = ({ minimal = false }: AppHeaderProps) => {
                     </Avatar>
                   </button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-56">
-                  <DropdownMenuItem className="text-body gap-2" asChild>
-                    <Link to="/perfil?tab=dashboard"><Users className="w-3.5 h-3.5" /> Dashboard</Link>
+                <DropdownMenuContent align="end" className="w-52">
+                  <div className="px-3 py-2 border-b border-border/40">
+                    <p className="text-[12px] font-semibold text-foreground truncate">{userName}</p>
+                    <p className="text-[10px] text-muted-foreground truncate">{user?.email}</p>
+                  </div>
+                  <DropdownMenuItem className="gap-2 text-[13px]" asChild>
+                    <Link to="/dashboard"><BarChart3 className="w-3.5 h-3.5" /> Dashboard</Link>
                   </DropdownMenuItem>
-                  <DropdownMenuItem className="text-body gap-2" asChild>
-                    <Link to="/perfil?tab=reports"><FileText className="w-3.5 h-3.5" /> {lang === "en" ? "Reports" : "Relatórios"}</Link>
+                  <DropdownMenuItem className="gap-2 text-[13px]" asChild>
+                    <Link to="/reports"><FileText className="w-3.5 h-3.5" /> {lang === "en" ? "Generate Report" : "Gerar Relatório"}</Link>
                   </DropdownMenuItem>
-                  <DropdownMenuItem className="text-body gap-2" asChild>
-                    <Link to="/perfil?tab=stats"><Star className="w-3.5 h-3.5" /> {lang === "en" ? "Stats" : "Estatísticas"}</Link>
+                  <DropdownMenuItem className="gap-2 text-[13px]" asChild>
+                    <Link to="/perfil?tab=stats"><BarChart3 className="w-3.5 h-3.5" /> {lang === "en" ? "Stats" : "Estatísticas"}</Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem className="gap-2 text-[13px]" asChild>
+                    <Link to="/metodologia"><BookOpen className="w-3.5 h-3.5" /> {lang === "en" ? "Methodology" : "Metodologia"}</Link>
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
-                  <DropdownMenuItem className="text-body gap-2" asChild>
-                    <Link to="/historico"><BookOpen className="w-3.5 h-3.5" /> {lang === "en" ? "History" : "Histórico"}</Link>
-                  </DropdownMenuItem>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={handleLogout} className="text-body gap-2 text-destructive focus:text-destructive">
+                  <DropdownMenuItem onClick={handleLogout} className="gap-2 text-[13px] text-destructive focus:text-destructive">
                     <LogOut className="w-3.5 h-3.5" /> {lang === "en" ? "Sign out" : "Sair"}
                   </DropdownMenuItem>
                 </DropdownMenuContent>
@@ -229,19 +195,19 @@ const AppHeader = ({ minimal = false }: AppHeaderProps) => {
             ) : (
               <button
                 onClick={() => setLoginOpen(true)}
-                className="flex items-center gap-1.5 rounded-full text-xs font-semibold transition-all"
-                style={{ background: 'hsl(var(--foreground))', color: 'hsl(var(--background))', height: 30, padding: '0 14px', borderRadius: 999 }}
+                className="flex items-center gap-1.5 h-9 px-4 rounded-full text-[12px] font-semibold transition-all"
+                style={{ background: 'hsl(var(--foreground))', color: 'hsl(var(--background))' }}
               >
                 <span className="hidden sm:inline">{t("enter")}</span>
                 <LogIn className="w-3.5 h-3.5 sm:hidden" />
               </button>
             )}
 
-            {/* Mobile nav toggle */}
+            {/* Mobile hamburger */}
             {!minimal && (
               <button
                 onClick={() => setMobileNavOpen(!mobileNavOpen)}
-                className="md:hidden flex items-center justify-center w-[30px] h-[30px] rounded-lg text-muted-foreground hover:text-foreground hover:bg-secondary/40 transition-all"
+                className="md:hidden flex items-center justify-center w-9 h-9 rounded-lg text-muted-foreground hover:text-foreground hover:bg-secondary/40 transition-all"
                 aria-label={mobileNavOpen ? "Close menu" : "Open menu"}
               >
                 {mobileNavOpen ? <X className="w-4 h-4" /> : <Menu className="w-4 h-4" />}
@@ -262,27 +228,38 @@ const AppHeader = ({ minimal = false }: AppHeaderProps) => {
             className="md:hidden fixed top-[52px] inset-x-0 z-40 bg-background/95 backdrop-blur-xl border-b border-border/40 px-4 py-3 flex flex-col gap-0.5"
             aria-label="Mobile navigation"
           >
-            {NAV_ITEMS.map((item) => {
-              const Icon = item.icon;
-              const active = isActive(item.path);
+            {[
+              { path: "/", labelPt: "Explorar", labelEn: "Explore" },
+              { path: "/dashboard", labelPt: "Dashboard", labelEn: "Dashboard" },
+              { path: "/mapa", labelPt: "Mapa", labelEn: "Maps" },
+              { path: "/reports", labelPt: "Relatórios", labelEn: "Reports" },
+              { path: "/perfil", labelPt: "Perfil", labelEn: "Profile" },
+            ].map((item) => {
+              const active = item.path === "/" ? location.pathname === "/" : location.pathname.startsWith(item.path);
               return (
                 <Link
-                  key={item.key}
+                  key={item.path}
                   to={item.path}
                   onClick={() => setMobileNavOpen(false)}
-                  aria-current={active ? "page" : undefined}
                   className={cn(
                     "flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all",
-                    active
-                      ? "text-foreground bg-primary/8"
-                      : "text-muted-foreground hover:text-foreground hover:bg-secondary/40"
+                    active ? "text-foreground bg-primary/8" : "text-muted-foreground hover:text-foreground hover:bg-secondary/40"
                   )}
                 >
-                  <Icon className="w-4 h-4" />
-                  {getNavLabel(item)}
+                  {lang === "en" ? item.labelEn : item.labelPt}
                 </Link>
               );
             })}
+            {/* Mobile support button */}
+            <a
+              href="https://buy.stripe.com/fZu7sMgw6cHLeTnbWVdIA00"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="sm:hidden flex items-center justify-center gap-2 mx-4 mt-2 h-10 rounded-lg text-[13px] font-semibold"
+              style={{ background: '#f5e56b', color: '#1a1a1a' }}
+            >
+              {t("support")}
+            </a>
           </motion.nav>
         )}
       </AnimatePresence>
@@ -295,7 +272,7 @@ const AppHeader = ({ minimal = false }: AppHeaderProps) => {
               <DialogTitle className="text-lg font-semibold tracking-tight">
                 {lang === "en" ? "Sign in to Global Talk Trend" : "Entrar no Global Talk Trend"}
               </DialogTitle>
-              <DialogDescription className="text-body text-muted-foreground">
+              <DialogDescription className="text-[13px] text-muted-foreground">
                 {lang === "en" ? "Save trends, create alerts and track your history" : "Salve trends, crie alertas e acompanhe seu histórico"}
               </DialogDescription>
             </DialogHeader>

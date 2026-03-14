@@ -12,7 +12,6 @@ import { ErrorBoundary, OfflineBanner } from "./components/ErrorBoundary";
 // Eagerly load the main pages (critical path)
 import Discover from "./pages/Discover";
 import PrivacyPopup from "./components/PrivacyPopup";
-import IntroductionModal from "./components/IntroductionModal";
 
 // Lazy-load the dashboard (heavy)
 const Index = lazy(() => import("./pages/Index"));
@@ -75,7 +74,6 @@ const App = () => {
             <Toaster />
             <Sonner />
             <PrivacyPopup />
-            <IntroductionModal />
             <BrowserRouter>
               <Suspense fallback={<PageLoader />}>
                 <Routes>
