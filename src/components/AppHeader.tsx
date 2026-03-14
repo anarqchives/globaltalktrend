@@ -123,8 +123,9 @@ const AppHeader = ({ minimal = false }: AppHeaderProps) => {
                   <Link
                     key={item.key}
                     to={item.path}
+                    aria-current={active ? "page" : undefined}
                     className={cn(
-                      "relative flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[13px] font-medium transition-all duration-150",
+                      "relative flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[12px] font-medium transition-all duration-150 touch-target-sm",
                       active
                         ? "text-foreground bg-secondary/80"
                         : "text-muted-foreground hover:text-foreground hover:bg-secondary/50"
