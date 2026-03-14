@@ -91,7 +91,7 @@ export default function ReportsTab({ userId }: ReportsTabProps) {
   const [report, setReport] = useState<ReportData | null>(null);
   const [rawData, setRawData] = useState<SnapshotRow[]>([]);
   const [generatedAt, setGeneratedAt] = useState<Date | null>(null);
-  const [reportMode, setReportMode] = useState<"executive" | "academic">("executive");
+  const reportMode = "executive"; // Single comprehensive report type
 
   const [compareMode, setCompareMode] = useState(false);
   const [comparePeriod, setComparePeriod] = useState("7d");
