@@ -12,6 +12,7 @@ import { ErrorBoundary, OfflineBanner } from "./components/ErrorBoundary";
 // Eagerly load the main pages (critical path)
 import Discover from "./pages/Discover";
 import PrivacyPopup from "./components/PrivacyPopup";
+import IntroductionModal from "./components/IntroductionModal";
 
 // Lazy-load the dashboard (heavy)
 const Index = lazy(() => import("./pages/Index"));
@@ -27,6 +28,9 @@ const Teste = lazy(() => import("./pages/Teste"));
 const Admin = lazy(() => import("./pages/Admin"));
 const PublicProfile = lazy(() => import("./pages/PublicProfile"));
 const Privacidade = lazy(() => import("./pages/Privacidade"));
+const TopicPage = lazy(() => import("./pages/TopicPage"));
+const Reports = lazy(() => import("./pages/Reports"));
+const Collections = lazy(() => import("./pages/Collections"));
 
 const queryClient = new QueryClient({ defaultOptions: { queries: { retry: 1 } } });
 
@@ -71,6 +75,7 @@ const App = () => {
             <Toaster />
             <Sonner />
             <PrivacyPopup />
+            <IntroductionModal />
             <BrowserRouter>
               <Suspense fallback={<PageLoader />}>
                 <Routes>
@@ -78,6 +83,9 @@ const App = () => {
                   <Route path="/welcome" element={<Welcome />} />
                   <Route path="/dashboard" element={<Index />} />
                   <Route path="/mapa" element={<Index />} />
+                  <Route path="/topic" element={<TopicPage />} />
+                  <Route path="/reports" element={<Reports />} />
+                  <Route path="/collections" element={<Collections />} />
                   <Route path="/auth/callback" element={<AuthCallback />} />
                   <Route path="/metodologia" element={<Methodology />} />
                   <Route path="/historico" element={<History />} />

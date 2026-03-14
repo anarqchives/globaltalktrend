@@ -3,7 +3,8 @@ import { Link, useLocation } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Sun, Moon, LogOut, LogIn, Info, ChevronDown, User, FileText,
-  Star, BookOpen, Users, Loader2, Compass, BarChart3, Map, Menu, X
+  Star, BookOpen, Users, Loader2, Compass, BarChart3, Map, Menu, X,
+  Bookmark, TrendingUp
 } from "lucide-react";
 import { useLanguage, languages } from "@/contexts/LanguageContext";
 import { lovable } from "@/integrations/lovable/index";
@@ -19,11 +20,11 @@ import {
 import { cn } from "@/lib/utils";
 
 const NAV_ITEMS = [
-  { key: "discover", path: "/", icon: Compass, labelPt: "Descobrir", labelEn: "Discover" },
-  { key: "dashboard", path: "/dashboard", icon: BarChart3, labelPt: "Dashboard", labelEn: "Dashboard" },
-  { key: "map", path: "/mapa", icon: Map, labelPt: "Mapa", labelEn: "Map" },
-  { key: "reports", path: "/perfil?tab=reports", icon: FileText, labelPt: "Relatórios", labelEn: "Reports" },
-  { key: "methodology", path: "/metodologia", icon: BookOpen, labelPt: "Metodologia", labelEn: "Methodology" },
+  { key: "discover", path: "/", icon: Compass, labelPt: "Explorar", labelEn: "Explore" },
+  { key: "dashboard", path: "/dashboard", icon: TrendingUp, labelPt: "Tendências", labelEn: "Trends" },
+  { key: "map", path: "/mapa", icon: Map, labelPt: "Mapa", labelEn: "Maps" },
+  { key: "reports", path: "/reports", icon: FileText, labelPt: "Relatórios", labelEn: "Reports" },
+  { key: "collections", path: "/collections", icon: Bookmark, labelPt: "Coleções", labelEn: "Collections" },
 ];
 
 interface AppHeaderProps {
