@@ -436,6 +436,7 @@ const TopicPage = () => {
                 data={topic.sparkData}
                 color={isPositive ? "hsl(var(--color-positive))" : "hsl(var(--color-critical))"}
                 height={80}
+                width={600}
               />
             </div>
           </motion.section>
