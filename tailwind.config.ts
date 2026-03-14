@@ -57,7 +57,7 @@ export default {
   				border: 'hsl(var(--sidebar-border))',
   				ring: 'hsl(var(--sidebar-ring))'
   			},
-  			// Semantic colors
+  			// Semantic status colors
   			critical: {
   				DEFAULT: 'hsl(var(--color-critical))',
   				bg: 'hsl(var(--color-critical-bg))',
@@ -74,20 +74,55 @@ export default {
   				DEFAULT: 'hsl(var(--color-positive))',
   				bg: 'hsl(var(--color-positive-bg))',
   			},
+  			// Chart palette
+  			chart: {
+  				'1': 'hsl(var(--chart-1))',
+  				'2': 'hsl(var(--chart-2))',
+  				'3': 'hsl(var(--chart-3))',
+  				'4': 'hsl(var(--chart-4))',
+  				'5': 'hsl(var(--chart-5))',
+  				'6': 'hsl(var(--chart-6))',
+  			},
+  			// Status backgrounds
+  			warning: {
+  				bg: 'hsl(var(--warning-bg))',
+  				fg: 'hsl(var(--warning-fg))',
+  			},
+  			success: {
+  				bg: 'hsl(var(--success-bg))',
+  				fg: 'hsl(var(--success-fg))',
+  			},
+  			info: {
+  				bg: 'hsl(var(--info-bg))',
+  				fg: 'hsl(var(--info-fg))',
+  			},
   		},
   		spacing: {
+  			'sp-0': 'var(--space-0)',
   			'sp-1': 'var(--space-1)',
   			'sp-2': 'var(--space-2)',
   			'sp-3': 'var(--space-3)',
   			'sp-4': 'var(--space-4)',
+  			'sp-5': 'var(--space-5)',
   			'sp-6': 'var(--space-6)',
   			'sp-8': 'var(--space-8)',
+  			'sp-10': 'var(--space-10)',
   			'sp-12': 'var(--space-12)',
+  			'sp-16': 'var(--space-16)',
   		},
   		borderRadius: {
   			lg: 'var(--radius)',
   			md: 'calc(var(--radius) - 2px)',
-  			sm: 'calc(var(--radius) - 4px)'
+  			sm: 'calc(var(--radius) - 4px)',
+  			xl: 'calc(var(--radius) + 4px)',
+  			'2xl': 'calc(var(--radius) + 8px)',
+  		},
+  		boxShadow: {
+  			'elevation-xs': 'var(--shadow-xs)',
+  			'elevation-sm': 'var(--shadow-sm)',
+  			'elevation-md': 'var(--shadow-md)',
+  			'elevation-lg': 'var(--shadow-lg)',
+  			'focus-ring': 'var(--shadow-focus)',
   		},
   		keyframes: {
   			'accordion-down': {
@@ -100,11 +135,31 @@ export default {
   			},
   			'shimmer': {
   				'100%': { transform: 'translateX(100%)' }
-  			}
+  			},
+  			'fade-in': {
+  				from: { opacity: '0', transform: 'translateY(4px)' },
+  				to: { opacity: '1', transform: 'translateY(0)' }
+  			},
+  			'fade-out': {
+  				from: { opacity: '1', transform: 'translateY(0)' },
+  				to: { opacity: '0', transform: 'translateY(4px)' }
+  			},
+  			'scale-in': {
+  				from: { opacity: '0', transform: 'scale(0.95)' },
+  				to: { opacity: '1', transform: 'scale(1)' }
+  			},
+  			'slide-in-right': {
+  				from: { transform: 'translateX(100%)' },
+  				to: { transform: 'translateX(0)' }
+  			},
   		},
   		animation: {
   			'accordion-down': 'accordion-down 0.2s ease-out',
-  			'accordion-up': 'accordion-up 0.2s ease-out'
+  			'accordion-up': 'accordion-up 0.2s ease-out',
+  			'fade-in': 'fade-in 0.2s ease-out',
+  			'fade-out': 'fade-out 0.15s ease-in',
+  			'scale-in': 'scale-in 0.2s ease-out',
+  			'slide-in-right': 'slide-in-right 0.3s ease-out',
   		},
   		fontFamily: {
   			sans: [
@@ -122,7 +177,9 @@ export default {
   			mono: ['ui-monospace', 'SFMono-Regular', 'Menlo', 'Monaco', 'Consolas', 'Liberation Mono', 'Courier New', 'monospace']
   		},
   		fontSize: {
-  			'hero': ['28px', { lineHeight: '1.1', fontWeight: '800', letterSpacing: '-0.5px' }],
+  			'hero': ['28px', { lineHeight: '1.1', fontWeight: '700', letterSpacing: '-0.5px' }],
+  			'display': ['22px', { lineHeight: '1.15', fontWeight: '700', letterSpacing: '-0.3px' }],
+  			'heading': ['18px', { lineHeight: '1.25', fontWeight: '600', letterSpacing: '-0.2px' }],
   			'title': ['15px', { lineHeight: '1.3', fontWeight: '600' }],
   			'body': ['13px', { lineHeight: '1.5', fontWeight: '400' }],
   			'caption': ['11px', { lineHeight: '1.3', fontWeight: '500', letterSpacing: '0.3px' }],
