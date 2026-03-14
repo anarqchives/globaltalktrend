@@ -7,9 +7,17 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { TrendCardProps } from "./TrendCard";
 import { Flame, Globe, RefreshCw, GitBranch, Heart, X, Plus, Minus } from "lucide-react";
+import { 
+  computeFlowArcs, 
+  computeSentimentBubbles, 
+  computeCurvePoints,
+  deriveSentiment,
+  sentimentColors,
+  type Sentiment,
+  type FlowArc,
+  type SentimentBubble
+} from "@/lib/map-visualizations";
 
-// Tipos
-type Sentiment = "positive" | "negative" | "mixed" | "neutral";
 type MapMode = "heatmap" | "flow" | "sentiment";
 
 interface CountryPoint {
@@ -19,37 +27,6 @@ interface CountryPoint {
   lng: number;
 }
 
-interface FlowArc {
-  originId: string;
-  originName: string;
-  destId: string;
-  destName: string;
-  trendTitle: string;
-  volume: number;
-  sentiment: Sentiment;
-  timeDelta: number;
-  similarity: number;
-}
-
-interface SentimentBubble {
-  countryId: string;
-  countryName: string;
-  volume: number;
-  growth: number;
-  sentiment: { positive: number; negative: number; neutral: number; mixed: number };
-  dominantSentiment: Sentiment;
-  trendCount: number;
-  topTrends: Array<{ title: string; sentiment: Sentiment; volume: number }>;
-}
-
-const sentimentColors: Record<Sentiment, string> = {
-  positive: "#10b981",
-  negative: "#ef4444",
-  mixed: "#f59e0b",
-  neutral: "#6b7280",
-};
-
-// Pontos dos países (lista completa)
 const countryPoints: CountryPoint[] = [
   { id: "BR", name: "Brasil", lat: -14.24, lng: -51.93 },
   { id: "US", name: "EUA", lat: 37.09, lng: -95.71 },
@@ -100,35 +77,34 @@ const countryPoints: CountryPoint[] = [
   { id: "NZ", name: "Nova Zelândia", lat: -40.9, lng: 174.89 },
 ];
 
-// Estilos do mapa
 const lightStyles: google.maps.MapTypeStyle[] = [
-  { elementType: "geometry", stylers: [{ color: "#f5f7fa" }] },
+  { elementType: "geometry", stylers: [{ color: "#f8fafb" }] },
   { elementType: "labels.icon", stylers: [{ visibility: "off" }] },
   { elementType: "labels.text.fill", stylers: [{ color: "#9ca3af" }] },
   { elementType: "labels.text.stroke", stylers: [{ color: "#ffffff" }, { weight: 2 }] },
-  { featureType: "administrative.country", elementType: "geometry.stroke", stylers: [{ color: "#a0afc0" }, { weight: 1 }] },
-  { featureType: "administrative.country", elementType: "labels.text.fill", stylers: [{ color: "#2d3748" }] },
-  { featureType: "water", elementType: "geometry", stylers: [{ color: "#d4e7ff" }] },
+  { featureType: "administrative.country", elementType: "geometry.stroke", stylers: [{ color: "#d1d5db" }, { weight: 0.5 }] },
+  { featureType: "administrative.country", elementType: "labels.text.fill", stylers: [{ color: "#6b7280" }] },
+  { featureType: "water", elementType: "geometry", stylers: [{ color: "#e5f2ff" }] },
 ];
 
 const darkStyles: google.maps.MapTypeStyle[] = [
-  { elementType: "geometry", stylers: [{ color: "#131620" }] },
+  { elementType: "geometry", stylers: [{ color: "#0f1419" }] },
   { elementType: "labels.icon", stylers: [{ visibility: "off" }] },
-  { elementType: "labels.text.fill", stylers: [{ color: "#4b5563" }] },
-  { elementType: "labels.text.stroke", stylers: [{ color: "#131620" }, { weight: 2 }] },
-  { featureType: "administrative.country", elementType: "geometry.stroke", stylers: [{ color: "#2d3348" }, { weight: 0.5 }] },
-  { featureType: "water", elementType: "geometry", stylers: [{ color: "#0c1121" }] },
+  { elementType: "labels.text.fill", stylers: [{ color: "#64748b" }] },
+  { elementType: "labels.text.stroke", stylers: [{ color: "#0f1419" }, { weight: 2 }] },
+  { featureType: "administrative.country", elementType: "geometry.stroke", stylers: [{ color: "#1e293b" }, { weight: 0.5 }] },
+  { featureType: "water", elementType: "geometry", stylers: [{ color: "#0c2847" }] },
 ];
 
-function getMarkerColor(intensity: number): { fill: string; glow: string } {
-  if (intensity > 0.8) return { fill: "#ff3300", glow: "rgba(255,51,0,0.45)" };
-  if (intensity > 0.6) return { fill: "#ffaa00", glow: "rgba(255,170,0,0.4)" };
-  if (intensity > 0.4) return { fill: "#facc15", glow: "rgba(250,204,21,0.35)" };
-  if (intensity > 0.2) return { fill: "#00ff9d", glow: "rgba(0,255,157,0.3)" };
-  return { fill: "#00a6ff", glow: "rgba(0,166,255,0.3)" };
+function getHeatmapColor(intensity: number): string {
+  if (intensity > 0.85) return "#ff2d00";
+  if (intensity > 0.7) return "#ff8c00";
+  if (intensity > 0.55) return "#ffc107";
+  if (intensity > 0.4) return "#00d4aa";
+  if (intensity > 0.25) return "#00a8ff";
+  return "#0066cc";
 }
 
-// Componente principal
 interface GoogleMapViewProps {
   trendCounts: Record<string, number>;
   selectedCountry: string;
@@ -143,22 +119,108 @@ interface GoogleMapViewProps {
 
 const UpdateNotification = ({ countriesUpdated, newTrends, onDismiss }: { countriesUpdated: number; newTrends: number; onDismiss: () => void }) => (
   <motion.div
-    initial={{ x: 100, opacity: 0 }}
-    animate={{ x: 0, opacity: 1 }}
-    exit={{ x: 100, opacity: 0 }}
+    initial={{ x: 100, opacity: 0, scale: 0.95 }}
+    animate={{ x: 0, opacity: 1, scale: 1 }}
+    exit={{ x: 100, opacity: 0, scale: 0.95 }}
     transition={{ type: "spring", stiffness: 300, damping: 25 }}
-    className="absolute top-3 right-3 z-30 flex items-center gap-3 bg-card/95 backdrop-blur-xl border border-border/30 rounded-2xl px-4 py-3 shadow-lg"
+    className="absolute top-3 right-3 z-30 flex items-center gap-3 bg-card/95 backdrop-blur-xl border border-border/50 rounded-2xl px-4 py-3 shadow-xl"
   >
-    <div className="w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center">
+    <div className="w-9 h-9 rounded-full bg-primary/15 flex items-center justify-center">
       <RefreshCw className="w-4 h-4 text-primary animate-spin" />
     </div>
     <div className="flex flex-col">
       <span className="text-xs font-semibold text-foreground">Mapa atualizado</span>
       <span className="text-[10px] text-muted-foreground">{countriesUpdated} países · {newTrends} trends</span>
     </div>
-    <button onClick={onDismiss} className="text-muted-foreground hover:text-foreground text-xs ml-1">✕</button>
+    <button onClick={onDismiss} className="text-muted-foreground hover:text-foreground text-xs ml-1 transition-colors">✕</button>
   </motion.div>
 );
+
+const RichTooltip = ({ country, count, sentiment, topTrends, intensity, isDark }: {
+  country: CountryPoint;
+  count: number;
+  sentiment: { positive: number; negative: number; neutral: number; mixed: number };
+  topTrends: Array<{ title: string; sentiment: Sentiment; volume: number }>;
+  intensity: number;
+  isDark: boolean;
+}) => {
+  const total = Object.values(sentiment).reduce((a, b) => a + b, 0) || 1;
+  const sentimentPerc = {
+    positive: Math.round((sentiment.positive / total) * 100),
+    negative: Math.round((sentiment.negative / total) * 100),
+    neutral: Math.round((sentiment.neutral / total) * 100),
+    mixed: Math.round((sentiment.mixed / total) * 100),
+  };
+
+  const flag = String.fromCodePoint(...[...country.id.toUpperCase()].map(c => 0x1F1E6 + c.charCodeAt(0) - 65));
+  const criticality = intensity > 0.8 ? "🔥 CRÍTICO" : intensity > 0.6 ? "⚡ ALTO" : intensity > 0.4 ? "📊 MODERADO" : "ℹ️ NORMAL";
+  const criticalityColor = intensity > 0.8 ? "#ef4444" : intensity > 0.6 ? "#f97316" : intensity > 0.4 ? "#eab308" : "#6b7280";
+
+  return (
+    <div style={{
+      fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
+      padding: "16px",
+      minWidth: "280px",
+      background: isDark ? "rgba(17,24,39,0.98)" : "rgba(255,255,255,0.98)",
+      color: isDark ? "#e2e8f0" : "#111827",
+      borderRadius: "16px",
+      backdropFilter: "blur(20px)",
+      border: `1.5px solid ${isDark ? "rgba(71,84,103,0.4)" : "rgba(0,0,0,0.08)"}`,
+      boxShadow: isDark ? "0 20px 40px rgba(0,0,0,0.4)" : "0 20px 40px rgba(0,0,0,0.1)",
+    }}>
+      {/* Header */}
+      <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "12px" }}>
+        <span style={{ fontSize: "28px" }}>{flag}</span>
+        <div>
+          <div style={{ fontWeight: "700", fontSize: "15px", letterSpacing: "-0.3px" }}>{country.name}</div>
+          <div style={{ fontSize: "12px", color: isDark ? "#cbd5e1" : "#6b7280", marginTop: "2px" }}>{count} trends ativas</div>
+        </div>
+      </div>
+
+      {/* Criticality Badge */}
+      <div style={{
+        fontSize: "11px",
+        fontWeight: "600",
+        background: criticalityColor,
+        color: "#fff",
+        padding: "4px 10px",
+        borderRadius: "12px",
+        display: "inline-block",
+        marginBottom: "12px",
+      }}>
+        {criticality}
+      </div>
+
+      {/* Sentiment Distribution */}
+      <div style={{ marginBottom: "12px" }}>
+        <div style={{ fontSize: "10px", fontWeight: "600", color: isDark ? "#cbd5e1" : "#4b5563", marginBottom: "6px", textTransform: "uppercase", letterSpacing: "0.5px" }}>Sentimento</div>
+        <div style={{ display: "flex", gap: "6px", flexWrap: "wrap" }}>
+          {sentimentPerc.positive > 0 && <div style={{ fontSize: "11px", background: "rgba(16,185,129,0.15)", color: "#10b981", padding: "2px 8px", borderRadius: "6px", fontWeight: "500" }}>😊 {sentimentPerc.positive}%</div>}
+          {sentimentPerc.negative > 0 && <div style={{ fontSize: "11px", background: "rgba(239,68,68,0.15)", color: "#ef4444", padding: "2px 8px", borderRadius: "6px", fontWeight: "500" }}>😠 {sentimentPerc.negative}%</div>}
+          {sentimentPerc.mixed > 0 && <div style={{ fontSize: "11px", background: "rgba(245,158,11,0.15)", color: "#f59e0b", padding: "2px 8px", borderRadius: "6px", fontWeight: "500" }}>😐 {sentimentPerc.mixed}%</div>}
+          {sentimentPerc.neutral > 0 && <div style={{ fontSize: "11px", background: "rgba(107,114,128,0.15)", color: "#9ca3af", padding: "2px 8px", borderRadius: "6px", fontWeight: "500" }}>😶 {sentimentPerc.neutral}%</div>}
+        </div>
+      </div>
+
+      {/* Top Trends */}
+      {topTrends.length > 0 && (
+        <div style={{ marginBottom: "12px" }}>
+          <div style={{ fontSize: "10px", fontWeight: "600", color: isDark ? "#cbd5e1" : "#4b5563", marginBottom: "6px", textTransform: "uppercase", letterSpacing: "0.5px" }}>Top Trends</div>
+          {topTrends.slice(0, 3).map((t, i) => (
+            <div key={i} style={{ fontSize: "11px", marginBottom: "4px", padding: "4px 0", display: "flex", gap: "6px", alignItems: "flex-start" }}>
+              <span style={{ color: sentimentColors[t.sentiment], fontWeight: "700", minWidth: "16px" }}>●</span>
+              <span style={{ flex: 1, lineHeight: "1.3" }}>{t.title.slice(0, 45)}{t.title.length > 45 ? "..." : ""}</span>
+            </div>
+          ))}
+        </div>
+      )}
+
+      <div style={{ fontSize: "10px", color: isDark ? "#94a3b8" : "#6b7280", marginTop: "8px", textAlign: "center", paddingTop: "8px", borderTop: `1px solid ${isDark ? "rgba(71,84,103,0.2)" : "rgba(0,0,0,0.05)"}` }}>
+        Clique para ver detalhes
+      </div>
+    </div>
+  );
+};
 
 const GoogleMapView = ({
   trendCounts,
@@ -175,10 +237,12 @@ const GoogleMapView = ({
   const isMobile = useIsMobile();
   const mapRef = useRef<HTMLDivElement>(null);
   const googleMapRef = useRef<google.maps.Map | null>(null);
-  const infoWindowRef = useRef<google.maps.InfoWindow | null>(null);
   const hoverInfoRef = useRef<google.maps.InfoWindow | null>(null);
   const heatmapRef = useRef<any>(null);
   const markersRef = useRef<google.maps.Marker[]>([]);
+  const polyinesRef = useRef<google.maps.Polyline[]>([]);
+  const flowParticlesRef = useRef<any[]>([]);
+
   const [mapLoaded, setMapLoaded] = useState(false);
   const [mapError, setMapError] = useState<string | null>(null);
   const [mapMode, setMapMode] = useState<MapMode>("heatmap");
@@ -186,7 +250,6 @@ const GoogleMapView = ({
   const [isDark, setIsDark] = useState(() => document.documentElement.classList.contains("dark"));
   const [updateNotif, setUpdateNotif] = useState<{ countries: number; trends: number } | null>(null);
   const [mapRetry, setMapRetry] = useState(0);
-  const prevCountsRef = useRef<Record<string, number>>({});
 
   // Detectar modo escuro
   useEffect(() => {
@@ -235,11 +298,10 @@ const GoogleMapView = ({
           mapTypeId: "roadmap",
           styles: isDark ? darkStyles : lightStyles,
           gestureHandling: "greedy",
-          backgroundColor: isDark ? "#131620" : "#f0f0f0",
+          backgroundColor: isDark ? "#0f1419" : "#f8fafb",
         });
 
         googleMapRef.current = map;
-        infoWindowRef.current = new InfoWindow();
         hoverInfoRef.current = new InfoWindow({ disableAutoPan: true });
         setMapLoaded(true);
       } catch (err) {
@@ -254,36 +316,50 @@ const GoogleMapView = ({
   const activeCountries = useMemo(() => Object.values(trendCounts).filter(v => v > 0).length, [trendCounts]);
   const totalTrends = useMemo(() => Object.values(trendCounts).reduce((a, b) => a + b, 0), [trendCounts]);
 
-  // Atualizar tooltip de hover
-  const showHoverTooltip = useCallback((country: CountryPoint, intensity: number) => {
+  // Computar bolhas de sentimento e arcos de fluxo
+  const sentimentBubbles = useMemo(() => 
+    computeSentimentBubbles(trends, countryPoints),
+    [trends]
+  );
+
+  const flowArcs = useMemo(() => 
+    computeFlowArcs(trends, countryPoints, 0.55),
+    [trends]
+  );
+
+  // Tooltip rico
+  const showRichTooltip = useCallback((country: CountryPoint, intensity: number, bubble?: SentimentBubble) => {
     if (!hoverInfoRef.current || !googleMapRef.current) return;
 
     const count = trendCounts[country.id] || 0;
-    const criticality = intensity > 0.8 ? "🔥 CRÍTICO" : intensity > 0.6 ? "⚡ ALTO" : intensity > 0.4 ? "📊 MODERADO" : "ℹ️ NORMAL";
-    const bg = isDark ? "rgba(19,22,32,0.97)" : "rgba(255,255,255,0.97)";
-    const text = isDark ? "#e2e8f0" : "#111827";
-    const border = isDark ? "rgba(45,51,72,0.5)" : "rgba(0,0,0,0.08)";
+    const countryTrends = trends.filter(t => t.countryCode === country.id);
+    const topTrends = countryTrends
+      .slice(0, 3)
+      .map(t => ({ title: t.title, sentiment: deriveSentiment(t), volume: parseInt(String(t.volume || 0).replace(/[^0-9]/g, "")) || 0 }));
 
-    const flag = country.id.length === 2 
-      ? String.fromCodePoint(...[...country.id.toUpperCase()].map(c => 0x1F1E6 + c.charCodeAt(0) - 65))
-      : "";
+    const sentiment = bubble ? bubble.sentiment : { positive: 0, negative: 0, neutral: 0, mixed: 0 };
 
-    hoverInfoRef.current.setContent(`
-      <div style="font-family:Inter,sans-serif;padding:12px 16px;min-width:200px;background:${bg};color:${text};border-radius:16px;backdrop-filter:blur(16px);border:1px solid ${border};">
-        <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
-          <span style="font-size:24px;">${flag}</span>
-          <div>
-            <div style="font-weight:600;font-size:14px;">${country.name}</div>
-            <div style="font-size:11px;color:#94a3b8;">${count} trends ativas</div>
-          </div>
-        </div>
-        <div style="font-size:11px;background:${intensity > 0.8 ? '#ef4444' : intensity > 0.6 ? '#f97316' : '#eab308'};color:#fff;padding:2px 8px;border-radius:12px;display:inline-block;margin-bottom:8px;">
-          ${criticality}
-        </div>
-        <div style="font-size:11px;color:${isDark ? '#94a3b8' : '#475569'};margin-bottom:8px;">Clique para ver detalhes</div>
-      </div>
-    `);
+    hoverInfoRef.current.setContent(
+      `<div id="rich-tooltip">${new XMLSerializer().serializeToString(
+        document.createElement("div")
+      )}</div>`
+    );
 
+    // Render com React
+    const el = document.createElement("div");
+    const root = ReactDOM.createRoot(el);
+    root.render(
+      <RichTooltip
+        country={country}
+        count={count}
+        sentiment={sentiment}
+        topTrends={topTrends}
+        intensity={intensity}
+        isDark={isDark}
+      />
+    );
+
+    hoverInfoRef.current.setContent(el);
     hoverInfoRef.current.open({
       map: googleMapRef.current,
       anchor: new google.maps.Marker({
@@ -292,154 +368,249 @@ const GoogleMapView = ({
         icon: { path: google.maps.SymbolPath.CIRCLE, scale: 0 },
       }),
     });
-  }, [trendCounts, isDark]);
+  }, [trendCounts, trends, isDark]);
 
-  // Renderizar heatmap
+  // Renderizar heatmap com animações fluidas
   const renderHeatmap = useCallback(async () => {
     if (!googleMapRef.current) return;
 
     try {
       const { HeatmapLayer } = (await google.maps.importLibrary("visualization")) as any;
-      
-      // Gerar dados para o heatmap
-      const heatmapData = countryPoints
-        .filter(country => trendCounts[country.id] > 0)
-        .flatMap(country => {
-          const count = trendCounts[country.id];
-          const intensity = Math.min(count / maxCount, 1);
-          return Array(Math.max(1, Math.round(intensity * 10)))
-            .fill(null)
-            .map(() => ({
-              location: new google.maps.LatLng(country.lat, country.lng),
-              weight: intensity,
-            }));
-        });
 
-      if (heatmapRef.current) {
-        heatmapRef.current.setMap(null);
-      }
+      // Limpar antigos
+      markersRef.current.forEach(m => m.setMap(null));
+      markersRef.current = [];
+      if (heatmapRef.current) heatmapRef.current.setMap(null);
+
+      // Gerar dados do heatmap
+      const heatmapData = countryPoints
+        .filter(c => trendCounts[c.id] > 0)
+        .flatMap(c => {
+          const count = trendCounts[c.id];
+          const intensity = Math.min(count / maxCount, 1);
+          return Array(Math.max(1, Math.ceil(intensity * 12)))
+            .fill(null)
+            .map((_, i) => {
+              const offsetLat = (Math.random() - 0.5) * 4;
+              const offsetLng = (Math.random() - 0.5) * 4;
+              return {
+                location: new google.maps.LatLng(c.lat + offsetLat, c.lng + offsetLng),
+                weight: intensity * (1 - i / 12),
+              };
+            });
+        });
 
       heatmapRef.current = new HeatmapLayer({
         data: heatmapData,
         map: googleMapRef.current,
-        radius: 30,
-        opacity: 0.7,
+        radius: 40,
+        opacity: 0.8,
+        gradient: [
+          "#0066cc",
+          "#00a8ff",
+          "#00d4aa",
+          "#ffc107",
+          "#ff8c00",
+          "#ff2d00",
+        ],
       });
 
-      // Adicionar marcadores
-      countryPoints.forEach(country => {
-        const count = trendCounts[country.id] || 0;
+      // Adicionar marcadores com pulsação
+      countryPoints.forEach((c, idx) => {
+        const count = trendCounts[c.id] || 0;
         if (count === 0) return;
 
         const intensity = Math.min(count / maxCount, 1);
-        const colors = getMarkerColor(intensity);
+        const color = getHeatmapColor(intensity);
+        const scale = 6 + intensity * 16;
 
         const marker = new google.maps.Marker({
-          position: { lat: country.lat, lng: country.lng },
+          position: { lat: c.lat, lng: c.lng },
           map: googleMapRef.current,
           icon: {
             path: google.maps.SymbolPath.CIRCLE,
-            scale: 8 + intensity * 12,
-            fillColor: colors.fill,
-            fillOpacity: 0.9,
+            scale,
+            fillColor: color,
+            fillOpacity: 0.85,
             strokeColor: "#fff",
-            strokeWeight: 2,
+            strokeWeight: 2.5,
           },
-          title: `${country.name}: ${count} trends`,
+          title: `${c.name}: ${count} trends`,
+          zIndex: Math.round(intensity * 1000),
         });
 
-        marker.addListener("click", () => onSelectCountry(country.id));
-        marker.addListener("mouseover", () => showHoverTooltip(country, intensity));
-        marker.addListener("mouseout", () => hoverInfoRef.current?.close());
+        marker.addListener("click", () => onSelectCountry(c.id));
+        marker.addListener("mouseover", () => {
+          marker.setIcon({
+            ...marker.getIcon(),
+            scale: scale * 1.15,
+            fillOpacity: 0.95,
+          } as any);
+          showRichTooltip(c, intensity);
+        });
+        marker.addListener("mouseout", () => {
+          marker.setIcon({
+            ...marker.getIcon(),
+            scale,
+            fillOpacity: 0.85,
+          } as any);
+          hoverInfoRef.current?.close();
+        });
 
         markersRef.current.push(marker);
       });
     } catch (err) {
       console.error("Erro ao renderizar heatmap:", err);
     }
-  }, [trendCounts, maxCount, onSelectCountry, showHoverTooltip]);
+  }, [trendCounts, maxCount, onSelectCountry, showRichTooltip]);
 
-  // Renderizar sentimentos
+  // Renderizar modo sentimento com bolhas pulsantes
   const renderSentimentMarkers = useCallback(() => {
     if (!googleMapRef.current) return;
 
-    countryPoints.forEach(country => {
-      const count = trendCounts[country.id] || 0;
-      if (count === 0) return;
+    markersRef.current.forEach(m => m.setMap(null));
+    markersRef.current = [];
 
-      const intensity = Math.min(count / maxCount, 1);
-      const sentiment: Sentiment = "neutral";
-      const color = sentimentColors[sentiment];
+    sentimentBubbles.forEach((bubble) => {
+      const c = countryPoints.find(p => p.id === bubble.countryId);
+      if (!c || bubble.volume === 0) return;
+
+      const intensity = Math.min(bubble.volume / maxCount, 1);
+      const color = sentimentColors[bubble.dominantSentiment];
+      const scale = 8 + intensity * 14;
+      const pulseDuration = 1.2 - intensity * 0.6; // Quanto mais crescimento, mais rápido
 
       const marker = new google.maps.Marker({
-        position: { lat: country.lat, lng: country.lng },
+        position: { lat: c.lat, lng: c.lng },
         map: googleMapRef.current,
         icon: {
           path: google.maps.SymbolPath.CIRCLE,
-          scale: 8 + intensity * 12,
+          scale,
           fillColor: color,
-          fillOpacity: 0.85,
+          fillOpacity: 0.8,
           strokeColor: "#fff",
           strokeWeight: 2,
         },
-        title: `${country.name}: ${count} trends`,
+        title: `${c.name}: ${bubble.volume} trends`,
+        zIndex: Math.round(intensity * 1000),
       });
 
-      marker.addListener("click", () => onSelectCountry(country.id));
-      marker.addListener("mouseover", () => showHoverTooltip(country, intensity));
+      // Animação de pulsação com CSS
+      const el = marker.getDiv() as HTMLElement;
+      if (el) {
+        el.style.animation = `pulse ${pulseDuration}s cubic-bezier(0.25, 0.1, 0.25, 1) infinite`;
+      }
+
+      marker.addListener("click", () => onSelectCountry(c.id));
+      marker.addListener("mouseover", () => showRichTooltip(c, intensity, bubble));
       marker.addListener("mouseout", () => hoverInfoRef.current?.close());
 
       markersRef.current.push(marker);
     });
-  }, [trendCounts, maxCount, onSelectCountry, showHoverTooltip]);
+  }, [sentimentBubbles, maxCount, onSelectCountry, showRichTooltip]);
 
-  // Renderizar fluxos
+  // Renderizar fluxos com partículas animadas
   const renderFlowArcs = useCallback(() => {
     if (!googleMapRef.current) return;
 
-    countryPoints.forEach(country => {
-      const count = trendCounts[country.id] || 0;
+    markersRef.current.forEach(m => m.setMap(null));
+    markersRef.current = [];
+    polyinesRef.current.forEach(p => p.setMap(null));
+    polyinesRef.current = [];
+    flowParticlesRef.current.forEach(p => p.setMap?.(null));
+    flowParticlesRef.current = [];
+
+    // Renderizar arcos
+    flowArcs.forEach((arc) => {
+      const origin = countryPoints.find(p => p.id === arc.originId);
+      const dest = countryPoints.find(p => p.id === arc.destId);
+      if (!origin || !dest) return;
+
+      const curvePoints = computeCurvePoints(origin.lat, origin.lng, dest.lat, dest.lng, 50);
+      const color = sentimentColors[arc.sentiment] || "#9ca3b8";
+      const strokeWeight = 1 + (arc.volume / maxCount) * 3;
+
+      const polyline = new google.maps.Polyline({
+        path: curvePoints.map(p => ({ lat: p.lat, lng: p.lng })),
+        geodesic: false,
+        strokeColor: color,
+        strokeOpacity: 0.6,
+        strokeWeight,
+        map: googleMapRef.current,
+        zIndex: 1,
+      });
+
+      polyinesRef.current.push(polyline);
+
+      // Partículas fluindo
+      const particleCount = Math.max(2, Math.round((arc.volume / maxCount) * 5));
+      for (let i = 0; i < particleCount; i++) {
+        const particle = new google.maps.Marker({
+          position: { lat: origin.lat, lng: origin.lng },
+          map: googleMapRef.current,
+          icon: {
+            path: google.maps.SymbolPath.CIRCLE,
+            scale: 2 + (arc.volume / maxCount) * 2,
+            fillColor: color,
+            fillOpacity: 0.7,
+            strokeColor: "#fff",
+            strokeWeight: 0.5,
+          },
+          zIndex: 10,
+        });
+
+        const startTime = Date.now() + i * 200;
+        const duration = 3000 - (arc.similarity * 1000);
+
+        const animateParticle = () => {
+          const elapsed = Date.now() - startTime;
+          const progress = (elapsed % duration) / duration;
+          const point = curvePoints[Math.floor(progress * (curvePoints.length - 1))];
+
+          if (point) {
+            particle.setPosition({ lat: point.lat, lng: point.lng });
+          }
+
+          if (!particle.getMap()) return;
+          requestAnimationFrame(animateParticle);
+        };
+
+        animateParticle();
+        flowParticlesRef.current.push(particle);
+      }
+    });
+
+    // Marcadores nos países
+    countryPoints.forEach(c => {
+      const count = trendCounts[c.id] || 0;
       if (count === 0) return;
 
       const intensity = Math.min(count / maxCount, 1);
-
       const marker = new google.maps.Marker({
-        position: { lat: country.lat, lng: country.lng },
+        position: { lat: c.lat, lng: c.lng },
         map: googleMapRef.current,
         icon: {
           path: google.maps.SymbolPath.CIRCLE,
-          scale: 6 + intensity * 10,
+          scale: 5 + intensity * 8,
           fillColor: "#3b82f6",
           fillOpacity: 0.7,
           strokeColor: "#fff",
           strokeWeight: 2,
         },
-        title: `${country.name}: ${count} trends`,
       });
 
-      marker.addListener("click", () => onSelectCountry(country.id));
-      marker.addListener("mouseover", () => showHoverTooltip(country, intensity));
+      marker.addListener("click", () => onSelectCountry(c.id));
+      marker.addListener("mouseover", () => showRichTooltip(c, intensity));
       marker.addListener("mouseout", () => hoverInfoRef.current?.close());
 
       markersRef.current.push(marker);
     });
-  }, [trendCounts, maxCount, onSelectCountry, showHoverTooltip]);
+  }, [flowArcs, trendCounts, maxCount, onSelectCountry, showRichTooltip]);
 
-  // Renderizar visualizações quando o modo muda
+  // Efeito: renderizar quando modo muda
   useEffect(() => {
     if (!mapLoaded || !googleMapRef.current) return;
 
-    // Limpar marcadores antigos
-    markersRef.current.forEach(marker => marker.setMap(null));
-    markersRef.current = [];
-
-    // Limpar heatmap
-    if (heatmapRef.current) {
-      heatmapRef.current.setMap(null);
-      heatmapRef.current = null;
-    }
-
-    // Renderizar novo modo
     if (mapMode === "heatmap") {
       renderHeatmap();
     } else if (mapMode === "sentiment") {
@@ -457,10 +628,21 @@ const GoogleMapView = ({
 
   return (
     <div className="w-full h-full relative" style={{ isolation: "isolate" }}>
+      <style>{`
+        @keyframes pulse {
+          0%, 100% { transform: scale(1); opacity: 0.8; }
+          50% { transform: scale(1.15); opacity: 0.95; }
+        }
+        @keyframes fadeIn {
+          from { opacity: 0; transform: scale(0.95) translateY(10px); }
+          to { opacity: 1; transform: scale(1) translateY(0); }
+        }
+      `}</style>
+
       {/* Toolbar */}
-      <div className="absolute top-3 left-3 z-20 flex gap-1 bg-white/90 dark:bg-card/90 backdrop-blur-xl rounded-lg p-1 border border-border/30 shadow-sm">
+      <div className="absolute top-3 left-3 z-20 flex gap-1 bg-white/85 dark:bg-slate-950/85 backdrop-blur-xl rounded-xl p-1 border border-border/40 shadow-lg">
         {mapModes.map(({ key, icon: Icon, labelKey }) => (
-          <button
+          <motion.button
             key={key}
             onClick={() => {
               setModeTransitioning(true);
@@ -469,26 +651,30 @@ const GoogleMapView = ({
                 setModeTransitioning(false);
               }, 150);
             }}
-            className={`relative px-3 py-1.5 rounded-md text-xs font-medium transition-colors ${
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            className={`relative px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
               mapMode === key
-                ? "bg-primary text-primary-foreground"
-                : "text-muted-foreground hover:text-foreground hover:bg-muted"
+                ? "bg-gradient-to-r from-blue-500 to-cyan-500 text-white shadow-lg shadow-blue-500/30"
+                : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
             }`}
           >
             <span className="flex items-center gap-1.5">
               <Icon className="w-3.5 h-3.5" />
               {labelKey}
             </span>
-          </button>
+          </motion.button>
         ))}
         {selectedCountry !== "global" && (
-          <button
+          <motion.button
             onClick={() => onSelectCountry("global")}
-            className="px-3 py-1.5 rounded-md text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-muted flex items-center gap-1.5"
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            className="px-3 py-1.5 rounded-lg text-xs font-semibold text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-all flex items-center gap-1.5"
           >
             <Globe className="w-3.5 h-3.5" />
             Global
-          </button>
+          </motion.button>
         )}
       </div>
 
@@ -508,19 +694,23 @@ const GoogleMapView = ({
 
       {/* Zoom controls */}
       {mapLoaded && (
-        <div className={`absolute z-20 flex flex-col gap-1 ${isMobile ? 'bottom-24 right-2' : 'bottom-[100px] right-3'}`}>
-          <button
+        <div className={`absolute z-20 flex flex-col gap-2 ${isMobile ? 'bottom-24 right-3' : 'bottom-[120px] right-3'}`}>
+          <motion.button
             onClick={() => googleMapRef.current?.setZoom((googleMapRef.current?.getZoom() || 3) + 1)}
-            className="w-9 h-9 rounded-lg bg-white/90 dark:bg-card/90 backdrop-blur-xl border border-border/30 shadow-sm flex items-center justify-center text-foreground hover:bg-white dark:hover:bg-card transition-colors"
+            whileHover={{ scale: 1.1 }}
+            whileTap={{ scale: 0.9 }}
+            className="w-10 h-10 rounded-lg bg-white/85 dark:bg-slate-950/85 backdrop-blur-xl border border-border/40 shadow-lg flex items-center justify-center text-foreground hover:bg-white dark:hover:bg-slate-900 transition-colors"
           >
             <Plus className="w-4 h-4" />
-          </button>
-          <button
+          </motion.button>
+          <motion.button
             onClick={() => googleMapRef.current?.setZoom((googleMapRef.current?.getZoom() || 3) - 1)}
-            className="w-9 h-9 rounded-lg bg-white/90 dark:bg-card/90 backdrop-blur-xl border border-border/30 shadow-sm flex items-center justify-center text-foreground hover:bg-white dark:hover:bg-card transition-colors"
+            whileHover={{ scale: 1.1 }}
+            whileTap={{ scale: 0.9 }}
+            className="w-10 h-10 rounded-lg bg-white/85 dark:bg-slate-950/85 backdrop-blur-xl border border-border/40 shadow-lg flex items-center justify-center text-foreground hover:bg-white dark:hover:bg-slate-900 transition-colors"
           >
             <Minus className="w-4 h-4" />
-          </button>
+          </motion.button>
         </div>
       )}
 
@@ -532,47 +722,74 @@ const GoogleMapView = ({
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.15 }}
-            className="absolute inset-0 z-[3] bg-background/20 backdrop-blur-[2px] pointer-events-none"
+            className="absolute inset-0 z-[5] bg-background/10 backdrop-blur-sm pointer-events-none"
           />
         )}
       </AnimatePresence>
 
       {/* Loading */}
       {!mapLoaded && !mapError && (
-        <div className="absolute inset-0 flex items-center justify-center bg-background/50 backdrop-blur-sm">
-          <div className="flex items-center gap-3 text-muted-foreground text-sm">
-            <div className="w-5 h-5 border-2 border-primary/30 border-t-primary rounded-full animate-spin" />
-            <span className="font-medium">Carregando mapa…</span>
-          </div>
-        </div>
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          className="absolute inset-0 flex items-center justify-center bg-background/50 backdrop-blur-sm z-10"
+        >
+          <motion.div
+            animate={{ rotate: 360 }}
+            transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
+            className="flex flex-col items-center gap-3"
+          >
+            <div className="w-8 h-8 border-3 border-primary/20 border-t-primary rounded-full" />
+            <span className="text-sm font-medium text-muted-foreground">Carregando mapa…</span>
+          </motion.div>
+        </motion.div>
       )}
 
       {/* Error */}
       {mapError && (
-        <div className="absolute inset-0 flex items-center justify-center bg-background/30 backdrop-blur-sm">
-          <div className="text-center p-6 bg-card/80 backdrop-blur-xl rounded-2xl border border-border/30 shadow-lg max-w-xs">
-            <div className="text-3xl mb-3">🗺️</div>
-            <p className="text-sm font-medium text-foreground mb-1">{mapError}</p>
-            <p className="text-xs text-muted-foreground/60 mb-4">Tente recarregar</p>
-            <button
+        <motion.div
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="absolute inset-0 flex items-center justify-center bg-background/30 backdrop-blur-sm z-10"
+        >
+          <motion.div
+            initial={{ y: 20 }}
+            animate={{ y: 0 }}
+            className="text-center p-8 bg-card/90 backdrop-blur-xl rounded-2xl border border-border/40 shadow-xl max-w-xs"
+          >
+            <div className="text-4xl mb-4">🗺️</div>
+            <p className="text-sm font-semibold text-foreground mb-2">{mapError}</p>
+            <p className="text-xs text-muted-foreground/70 mb-6">Tente recarregar</p>
+            <motion.button
               onClick={() => setMapRetry(r => r + 1)}
-              className="px-4 py-2 rounded-full bg-primary text-primary-foreground text-xs font-semibold"
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              className="px-6 py-2 rounded-full bg-gradient-to-r from-blue-500 to-cyan-500 text-white text-xs font-semibold shadow-lg shadow-blue-500/30 hover:shadow-blue-500/50 transition-all"
             >
               🔄 Tentar novamente
-            </button>
-          </div>
-        </div>
+            </motion.button>
+          </motion.div>
+        </motion.div>
       )}
 
       {/* Legend */}
-      <div className="absolute bottom-3 left-3 z-20 bg-white/90 dark:bg-card/90 backdrop-blur-xl border border-border/30 rounded-lg p-2 text-[10px] text-muted-foreground">
+      <motion.div
+        initial={{ opacity: 0, x: -20 }}
+        animate={{ opacity: 1, x: 0 }}
+        className="absolute bottom-3 left-3 z-20 bg-white/85 dark:bg-slate-950/85 backdrop-blur-xl border border-border/40 rounded-xl p-3 text-[10px] text-muted-foreground shadow-lg"
+      >
         {mapMode === "heatmap" && (
           <>
-            <div className="flex items-center gap-2 mb-1">
-              <div className="w-20 h-2 rounded-full bg-gradient-to-r from-[#00a6ff] via-[#00ff9d] via-[#ffff00] via-[#ffaa00] to-[#ff3300]" />
-              <span>Baixo → Alto volume</span>
+            <div className="flex items-center gap-2 mb-2">
+              <div className="w-24 h-2.5 rounded-full bg-gradient-to-r from-[#0066cc] via-[#ffc107] to-[#ff2d00]" />
+              <span className="font-medium">Intensidade</span>
             </div>
-            <div className="flex gap-3 text-[9px]">
+            <div className="flex gap-4 text-[9px]">
+              <span className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-red-600" />Crítico</span>
+              <span className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-orange-500" />Alto</span>
+              <span className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-cyan-400" />Normal</span>
+            </div>
+            <div className="flex gap-3 text-[9px] mt-2 pt-2 border-t border-border/30">
               <span>🔥 Máx: {maxCount}</span>
               <span>🌍 {activeCountries} países</span>
               <span>📊 {totalTrends} trends</span>
@@ -580,12 +797,12 @@ const GoogleMapView = ({
           </>
         )}
         {mapMode === "flow" && (
-          <div className="text-[10px]">🌊 Fluxo de tendências entre países</div>
+          <div className="text-[11px] font-medium">🌊 Fluxo de propagação entre países</div>
         )}
         {mapMode === "sentiment" && (
-          <div className="text-[10px]">💭 Cores = sentimento · Tamanho = volume</div>
+          <div className="text-[11px] font-medium">💭 Pulsação = sentimento dominante</div>
         )}
-      </div>
+      </motion.div>
     </div>
   );
 };
