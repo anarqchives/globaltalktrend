@@ -115,7 +115,7 @@ const AppHeader = ({ minimal = false }: AppHeaderProps) => {
 
           {/* ─── CENTER: Navigation ─── */}
           {!minimal && (
-            <nav className="hidden md:flex items-center gap-1">
+            <nav className="hidden md:flex items-center gap-0.5" aria-label="Main navigation">
               {NAV_ITEMS.map((item) => {
                 const Icon = item.icon;
                 const active = isActive(item.path);
