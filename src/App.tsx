@@ -9,9 +9,12 @@ import { UserModeProvider } from "@/contexts/UserModeContext";
 import { toast } from "@/hooks/use-toast";
 import { ErrorBoundary, OfflineBanner } from "./components/ErrorBoundary";
 
-// Eagerly load the main page (critical path)
-import Index from "./pages/Index";
+// Eagerly load the main pages (critical path)
+import Discover from "./pages/Discover";
 import PrivacyPopup from "./components/PrivacyPopup";
+
+// Lazy-load the dashboard (heavy)
+const Index = lazy(() => import("./pages/Index"));
 
 // Lazy-load secondary pages
 const Welcome = lazy(() => import("./pages/Welcome"));
@@ -71,7 +74,7 @@ const App = () => {
             <BrowserRouter>
               <Suspense fallback={<PageLoader />}>
                 <Routes>
-                  <Route path="/" element={<Index />} />
+                  <Route path="/" element={<Discover />} />
                   <Route path="/welcome" element={<Welcome />} />
                   <Route path="/dashboard" element={<Index />} />
                   <Route path="/mapa" element={<Index />} />
