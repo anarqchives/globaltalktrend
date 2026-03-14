@@ -74,7 +74,7 @@ const App = () => {
             <BrowserRouter>
               <Suspense fallback={<PageLoader />}>
                 <Routes>
-                  <Route path="/" element={<Index />} />
+                  <Route path="/" element={<Discover />} />
                   <Route path="/welcome" element={<Welcome />} />
                   <Route path="/dashboard" element={<Index />} />
                   <Route path="/mapa" element={<Index />} />
