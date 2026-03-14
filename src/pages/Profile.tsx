@@ -258,9 +258,7 @@ const Profile = () => {
             {activeTab === "reports" && <ReportsTab userId={user.id} />}
             {activeTab === "alerts" && <AlertsTab alerts={alerts} loading={alertsLoading} onToggle={toggleAlert} onDelete={deleteAlert} onCreate={createAlert} countryLabel={countryLabel} />}
             {activeTab === "history" && <HistoryTab history={history} loading={historyLoading} onClear={clearHistory} onDelete={deleteItem} onNavigate={(id) => navigate("/")} />}
-            {activeTab === "stats" && <StatsTab history={history} totalPoints={totalPoints} achievements={achievements} unlocked={unlocked} loading={gamLoading} countryLabel={countryLabel} />}
-            {activeTab === "privacy" && <PrivacyTab profile={profile} onUpdate={updateProfile} updating={profileUpdating} />}
-            {activeTab === "settings" && <SettingsTab lang={lang} setLang={setLang} dark={dark} setDark={setDark} user={user} />}
+            {/* Removed: stats, privacy, settings tabs */}
           </motion.div>
         </AnimatePresence>
       </div>
