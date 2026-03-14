@@ -77,12 +77,14 @@ const Index = () => {
   const [allCollapsed, setAllCollapsed] = useState(false);
   // Panel visibility for collapsible sections
   const [panelVisibility, setPanelVisibility] = useState(() => {
-    // Map starts collapsed by default
+    // Map starts open by default on desktop
     try {
       const saved = localStorage.getItem("map-panel-open");
-      return { radar: true, timeline: true, map: saved === "true" };
+      const isMobileInit = window.innerWidth < 768;
+      if (saved !== null) return { radar: true, timeline: true, map: saved === "true" };
+      return { radar: true, timeline: true, map: !isMobileInit };
     } catch {
-      return { radar: true, timeline: true, map: false };
+      return { radar: true, timeline: true, map: true };
     }
   });
   const togglePanel = (panel: "radar" | "timeline" | "map") => {
