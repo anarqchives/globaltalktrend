@@ -12,6 +12,7 @@ import { ErrorBoundary, OfflineBanner } from "./components/ErrorBoundary";
 // Eagerly load the main pages (critical path)
 import Discover from "./pages/Discover";
 import PrivacyPopup from "./components/PrivacyPopup";
+import IntroductionModal from "./components/IntroductionModal";
 
 // Lazy-load the dashboard (heavy)
 const Index = lazy(() => import("./pages/Index"));
@@ -27,6 +28,9 @@ const Teste = lazy(() => import("./pages/Teste"));
 const Admin = lazy(() => import("./pages/Admin"));
 const PublicProfile = lazy(() => import("./pages/PublicProfile"));
 const Privacidade = lazy(() => import("./pages/Privacidade"));
+const TopicPage = lazy(() => import("./pages/TopicPage"));
+const Reports = lazy(() => import("./pages/Reports"));
+const Collections = lazy(() => import("./pages/Collections"));
 
 const queryClient = new QueryClient({ defaultOptions: { queries: { retry: 1 } } });
 
