@@ -337,6 +337,39 @@ export type Database = {
         }
         Relationships: []
       }
+      trend_context_cache: {
+        Row: {
+          created_at: string
+          expires_at: string
+          generated_context: string
+          id: string
+          lang: string
+          model_used: string
+          original_title: string
+          trend_title_hash: string
+        }
+        Insert: {
+          created_at?: string
+          expires_at?: string
+          generated_context: string
+          id?: string
+          lang?: string
+          model_used?: string
+          original_title: string
+          trend_title_hash: string
+        }
+        Update: {
+          created_at?: string
+          expires_at?: string
+          generated_context?: string
+          id?: string
+          lang?: string
+          model_used?: string
+          original_title?: string
+          trend_title_hash?: string
+        }
+        Relationships: []
+      }
       trend_feedback: {
         Row: {
           created_at: string
