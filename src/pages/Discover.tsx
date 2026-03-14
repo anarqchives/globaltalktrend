@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useMemo, useCallback, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
 import AppHeader from "@/components/AppHeader";
 import { useTrends } from "@/hooks/use-trends";
 import { useTranslatedTrends } from "@/hooks/use-translated-trends";
@@ -221,11 +222,27 @@ const defaultFilters: FilterState = {
 
 const Discover = () => {
   const { t, lang } = useLanguage();
+  const navigate = useNavigate();
   const isMobile = useIsMobile();
   const [activeCategory, setActiveCategory] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [searchOpen, setSearchOpen] = useState(false);
   const searchRef = useRef<HTMLInputElement>(null);
+
+  // First-visit redirect to /welcome
+  useEffect(() => {
+    const hasVisited = localStorage.getItem("gtt-has-visited");
+    if (!hasVisited) {
+      supabase.auth.getSession().then(({ data: { session } }) => {
+        if (!session?.user) {
+          localStorage.setItem("gtt-has-visited", "true");
+          navigate("/welcome", { replace: true });
+        } else {
+          localStorage.setItem("gtt-has-visited", "true");
+        }
+      });
+    }
+  }, [navigate]);
 
   const [, setTrendCounts] = useState<Record<string, number>>({});
   const { filteredTrends: rawTrends, loading, isFirstLoad } = useTrends(defaultFilters, setTrendCounts, lang);
