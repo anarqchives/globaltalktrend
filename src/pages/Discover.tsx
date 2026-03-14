@@ -11,7 +11,7 @@ import { TrendCardProps } from "@/components/TrendCard";
 import SparklineArea from "@/components/SparklineArea";
 import { countryCodeToFlag } from "@/lib/shared-utils";
 import { FilterState } from "@/components/FilterBar";
-import { ArrowUpRight, TrendingUp, Globe, BarChart3, Newspaper, FlaskConical, Search, X, Zap, Activity } from "lucide-react";
+import { ArrowUpRight, TrendingUp, Globe, BarChart3, Newspaper, FlaskConical, Search, X, Zap, Activity, Clock } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 /* ─── CATEGORIES ─── */
@@ -26,23 +26,24 @@ const CATEGORIES = [
   { key: "Saúde", labelPt: "Saúde", labelEn: "Health", icon: Zap },
 ];
 
-/* ─── EDITORIAL GRID LAYOUT ─── */
+/* ─── EDITORIAL GRID ─── */
 type CardVariant = "hero" | "featured" | "standard" | "wide" | "compact";
 
 const getCardVariant = (index: number): CardVariant => {
   const pattern: CardVariant[] = [
-    "hero", "standard", "standard", "featured",
-    "wide", "standard", "compact", "compact",
-    "featured", "standard", "standard", "hero",
-    "standard", "wide", "compact", "standard",
-    "compact", "featured", "standard", "standard",
+    "hero", "featured", "standard",
+    "standard", "wide", "compact", "compact",
+    "featured", "standard", "standard",
+    "wide", "compact", "standard", "featured",
+    "standard", "compact", "standard", "standard",
+    "hero", "standard",
   ];
   return pattern[index % pattern.length];
 };
 
 const gridSpans: Record<CardVariant, string> = {
   hero: "col-span-4 sm:col-span-6 lg:col-span-8 row-span-2",
-  featured: "col-span-4 sm:col-span-6 lg:col-span-4 row-span-2",
+  featured: "col-span-4 sm:col-span-3 lg:col-span-4 row-span-2",
   wide: "col-span-4 sm:col-span-6 lg:col-span-8",
   standard: "col-span-4 sm:col-span-3 lg:col-span-4",
   compact: "col-span-2 sm:col-span-3 lg:col-span-4",
@@ -68,8 +69,6 @@ const platformAccent: Record<string, string> = {
 const getAccentColor = (platform: string) => platformAccent[platform] || "220 15% 40%";
 
 /* ─── SIGNAL INTELLIGENCE HELPERS ─── */
-
-/** Compute a simple TVI (Trend Velocity Index) 0-100 from available data */
 function computeTVI(trend: TrendCardProps): number {
   const vol = parseVolume(trend.volume);
   const change = Math.abs(parseChange(trend.change));
@@ -78,34 +77,23 @@ function computeTVI(trend: TrendCardProps): number {
   return Math.max(0, Math.min(100, raw));
 }
 
-/** Determine lifecycle stage from change rate and sparkData trajectory */
 function getLifecycleStage(trend: TrendCardProps): { label: string; labelEn: string; color: string; icon: string } {
   const change = parseChange(trend.change);
   const spark = trend.sparkData || [];
-  
   if (spark.length >= 4) {
     const last = spark[spark.length - 1];
     const mid = spark[Math.floor(spark.length / 2)];
     const first = spark[0];
-    
-    if (last > mid && mid > first && change > 20) {
-      return { label: "Acelerando", labelEn: "Accelerating", color: "var(--color-high)", icon: "🚀" };
-    }
-    if (last >= mid * 0.95 && change > 5) {
-      return { label: "Pico", labelEn: "Peaking", color: "var(--color-critical)", icon: "🔥" };
-    }
-    if (last < mid && last < first * 0.8) {
-      return { label: "Declínio", labelEn: "Declining", color: "var(--color-neutral)", icon: "📉" };
-    }
+    if (last > mid && mid > first && change > 20) return { label: "Acelerando", labelEn: "Accelerating", color: "var(--color-high)", icon: "🚀" };
+    if (last >= mid * 0.95 && change > 5) return { label: "Pico", labelEn: "Peaking", color: "var(--color-critical)", icon: "🔥" };
+    if (last < mid && last < first * 0.8) return { label: "Declínio", labelEn: "Declining", color: "var(--color-neutral)", icon: "📉" };
   }
-  
   if (change > 40) return { label: "Acelerando", labelEn: "Accelerating", color: "var(--color-high)", icon: "🚀" };
   if (change > 10) return { label: "Emergente", labelEn: "Emerging", color: "var(--color-positive)", icon: "🌱" };
   if (change > 0) return { label: "Estável", labelEn: "Stable", color: "var(--color-neutral)", icon: "➡️" };
   return { label: "Declínio", labelEn: "Declining", color: "var(--color-neutral)", icon: "📉" };
 }
 
-/* ─── CATEGORY VISUALS ─── */
 const categoryVisual: Record<string, { gradient: string; emoji: string }> = {
   "Política": { gradient: "from-blue-500/5 to-transparent", emoji: "🏛" },
   "Tecnologia": { gradient: "from-violet-500/5 to-transparent", emoji: "⚡" },
@@ -138,20 +126,38 @@ const decodeEntities = (text: string): string => {
   } catch { return text; }
 };
 
+/* ─── TVI GAUGE (RADIAL) ─── */
+const TVIGauge = ({ score, size = 40 }: { score: number; size?: number }) => {
+  const radius = (size - 6) / 2;
+  const circumference = 2 * Math.PI * radius;
+  const offset = circumference - (score / 100) * circumference;
+  const color = score >= 80 ? "var(--color-critical)" : score >= 50 ? "var(--color-high)" : score >= 25 ? "var(--color-moderate)" : "var(--color-neutral)";
+  return (
+    <div className="tvi-gauge" style={{ width: size, height: size }}>
+      <svg width={size} height={size}>
+        <circle cx={size / 2} cy={size / 2} r={radius} fill="none" stroke="hsl(var(--border))" strokeWidth={3} />
+        <circle
+          cx={size / 2} cy={size / 2} r={radius} fill="none"
+          stroke={`hsl(${color})`} strokeWidth={3}
+          strokeDasharray={circumference} strokeDashoffset={offset}
+          strokeLinecap="round"
+          style={{ transition: "stroke-dashoffset 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94)" }}
+        />
+      </svg>
+      <span className="absolute text-[9px] font-bold tabular-nums" style={{ color: `hsl(${color})` }}>{score}</span>
+    </div>
+  );
+};
+
 /* ─── TVI MINI BAR ─── */
 const TVIMiniBar = ({ score }: { score: number }) => {
   const color = score >= 80 ? "var(--color-critical)" : score >= 50 ? "var(--color-high)" : score >= 25 ? "var(--color-moderate)" : "var(--color-neutral)";
   return (
     <div className="flex items-center gap-1.5">
       <div className="w-[32px] h-[3px] rounded-full bg-secondary overflow-hidden">
-        <div
-          className="h-full rounded-full transition-all duration-500"
-          style={{ width: `${score}%`, background: `hsl(${color})` }}
-        />
+        <div className="h-full rounded-full transition-all duration-500" style={{ width: `${score}%`, background: `hsl(${color})` }} />
       </div>
-      <span className="text-[9px] font-semibold tabular-nums" style={{ color: `hsl(${color})` }}>
-        {score}
-      </span>
+      <span className="text-[9px] font-semibold tabular-nums" style={{ color: `hsl(${color})` }}>{score}</span>
     </div>
   );
 };
@@ -187,41 +193,49 @@ const DiscoveryCard = React.memo(({ trend, variant, index, lang }: DiscoveryCard
   const showDescription = isHero || isFeatured || isWide;
   const showSparkline = isHero || isFeatured || variant === "standard";
   const showLifecycle = isHero || isFeatured || isWide;
-  const showTVI = !isCompact;
 
   return (
     <motion.article
-      initial={{ opacity: 0, y: 16 }}
+      initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -8 }}
-      transition={{ duration: 0.45, delay: Math.min(index * 0.035, 0.5), ease: [0.25, 0.46, 0.45, 0.94] }}
+      transition={{ duration: 0.5, delay: Math.min(index * 0.04, 0.6), ease: [0.25, 0.46, 0.45, 0.94] }}
       onClick={handleClick}
       className={cn(
-        "group relative flex flex-col justify-between rounded-2xl border border-border/40 bg-card overflow-hidden cursor-pointer",
-        "hover:border-border/70 hover:shadow-[var(--shadow-md)] transition-all duration-300",
+        "editorial-card group relative flex flex-col justify-between cursor-pointer",
         gridSpans[variant],
-        isHero && "min-h-[320px] sm:min-h-[400px]",
-        isFeatured && "min-h-[280px] sm:min-h-[360px]",
+        isHero && "editorial-card-hero",
+        isFeatured && "editorial-card-featured",
         isWide && "min-h-[180px] sm:min-h-[200px]",
-        variant === "standard" && "min-h-[200px] sm:min-h-[240px]",
-        isCompact && "min-h-[160px] sm:min-h-[200px]",
+        variant === "standard" && "min-h-[200px] sm:min-h-[260px]",
+        isCompact && "min-h-[170px] sm:min-h-[220px]",
       )}
     >
-      {/* Category gradient background */}
+      {/* Category gradient backdrop for hero/featured */}
       {(isHero || isFeatured) && catVisual && (
-        <div className={cn("absolute inset-0 bg-gradient-to-br pointer-events-none", catVisual.gradient)} />
+        <div className={cn("absolute inset-0 bg-gradient-to-br pointer-events-none opacity-80", catVisual.gradient)} />
       )}
 
-      {/* Accent strip */}
-      <div
-        className="absolute top-0 left-0 right-0 h-[2px] opacity-60 group-hover:opacity-100 transition-opacity duration-300"
-        style={{ background: `hsl(${accent})` }}
-      />
+      {/* Left accent bar for hero */}
+      {isHero && (
+        <div
+          className="absolute top-0 left-0 bottom-0 w-[3px] rounded-l-2xl opacity-80"
+          style={{ background: `hsl(${accent})` }}
+        />
+      )}
+
+      {/* Top accent strip for non-hero */}
+      {!isHero && (
+        <div
+          className="absolute top-0 left-0 right-0 h-[2px] opacity-40 group-hover:opacity-80 transition-opacity duration-300"
+          style={{ background: `hsl(${accent})` }}
+        />
+      )}
 
       {/* Content */}
       <div className={cn(
-        "relative flex flex-col gap-2.5 flex-1",
-        isHero ? "p-6 sm:p-8 gap-3.5" : isFeatured ? "p-5 sm:p-6 gap-3" : "p-4 sm:p-5 gap-2"
+        "relative flex flex-col gap-3 flex-1",
+        isHero ? "p-7 sm:p-8 lg:p-10 gap-4" : isFeatured ? "p-5 sm:p-6 gap-3" : "p-4 sm:p-5 gap-2.5"
       )}>
         {/* Meta row */}
         <div className="flex items-center justify-between gap-2">
@@ -238,30 +252,33 @@ const DiscoveryCard = React.memo(({ trend, variant, index, lang }: DiscoveryCard
           </div>
           <div className="flex items-center gap-1.5 shrink-0">
             {flag && <span className="text-xs">{flag}</span>}
-            <span className="text-[10px] text-muted-foreground">{trend.time}</span>
+            <span className="text-[10px] text-muted-foreground/70 flex items-center gap-0.5">
+              <Clock className="w-2.5 h-2.5" />
+              {trend.time}
+            </span>
           </div>
         </div>
 
-        {/* Lifecycle badge — hero/featured/wide */}
+        {/* Lifecycle badge + TVI */}
         {showLifecycle && (
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2.5">
             <span
               className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-widest"
               style={{ background: `hsl(${lifecycle.color} / 0.08)`, color: `hsl(${lifecycle.color})` }}
             >
               {lifecycle.icon} {en ? lifecycle.labelEn : lifecycle.label}
             </span>
-            {showTVI && <TVIMiniBar score={tvi} />}
+            {isHero ? <TVIGauge score={tvi} size={36} /> : <TVIMiniBar score={tvi} />}
           </div>
         )}
 
         {/* Title */}
         <h3 className={cn(
-          "font-bold leading-[1.2] tracking-tight text-foreground group-hover:text-primary transition-colors duration-200",
-          isHero ? "text-xl sm:text-2xl md:text-[28px] line-clamp-3" :
+          "font-bold leading-[1.15] tracking-tight text-foreground group-hover:text-primary transition-colors duration-200",
+          isHero ? "text-[22px] sm:text-[26px] md:text-[30px] lg:text-[34px] line-clamp-3" :
           isFeatured ? "text-lg sm:text-xl line-clamp-3" :
           isWide ? "text-base sm:text-lg line-clamp-2" :
-          isCompact ? "text-[13px] sm:text-sm line-clamp-2" :
+          isCompact ? "text-[13px] sm:text-sm line-clamp-3" :
           "text-[14px] sm:text-[15px] line-clamp-3"
         )}>
           {title}
@@ -277,51 +294,50 @@ const DiscoveryCard = React.memo(({ trend, variant, index, lang }: DiscoveryCard
           </p>
         )}
 
-        {/* Category emoji watermark for hero */}
-        {isHero && catVisual && (
-          <span className="text-[48px] sm:text-[64px] absolute bottom-6 right-6 opacity-[0.04] group-hover:opacity-[0.07] transition-opacity pointer-events-none select-none">
-            {catVisual.emoji}
-          </span>
-        )}
-
-        {/* Sparkline */}
+        {/* Sparkline — push to bottom */}
         {showSparkline && trend.sparkData?.length > 2 && (
-          <div className="mt-auto pt-2">
+          <div className="mt-auto pt-3">
             <SparklineArea
               data={trend.sparkData}
               color={`hsl(${accent})`}
-              height={isHero ? 52 : isFeatured ? 44 : 36}
-              width={isHero ? 220 : isFeatured ? 160 : 120}
+              height={isHero ? 56 : isFeatured ? 48 : 36}
+              width={isHero ? 240 : isFeatured ? 180 : 120}
             />
           </div>
+        )}
+
+        {/* Category emoji watermark */}
+        {isHero && catVisual && (
+          <span className="text-[56px] sm:text-[72px] absolute bottom-8 right-8 opacity-[0.03] group-hover:opacity-[0.06] transition-opacity pointer-events-none select-none">
+            {catVisual.emoji}
+          </span>
         )}
       </div>
 
       {/* Footer metrics */}
       <div className={cn(
         "flex items-center justify-between border-t border-border/30 mt-auto",
-        isHero ? "px-6 sm:px-8 pb-5 pt-3" : "px-4 sm:px-5 pb-3 pt-2"
+        isHero ? "px-7 sm:px-8 lg:px-10 pb-5 pt-3.5" : "px-4 sm:px-5 pb-3.5 pt-2.5"
       )}>
         <div className="flex items-center gap-3">
           {trend.volume && (
-            <span className={cn("font-medium text-muted-foreground", isCompact ? "text-[10px]" : "text-[11px]")}>
+            <span className={cn("font-medium text-muted-foreground tabular-nums", isCompact ? "text-[10px]" : "text-[11px]")}>
               {trend.volume}
             </span>
           )}
           {change !== 0 && (
             <span className={cn(
-              "font-semibold",
+              "font-semibold tabular-nums",
               isCompact ? "text-[10px]" : "text-[11px]",
               trend.changePositive ? "text-[hsl(var(--color-positive))]" : "text-[hsl(var(--color-critical))]"
             )}>
               {trend.changePositive ? "+" : ""}{trend.change}
             </span>
           )}
-          {/* TVI on standard cards (not shown in lifecycle row) */}
-          {!showLifecycle && showTVI && <TVIMiniBar score={tvi} />}
+          {!showLifecycle && <TVIMiniBar score={tvi} />}
         </div>
         <ArrowUpRight className={cn(
-          "text-muted-foreground/30 group-hover:text-primary group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-all duration-200",
+          "text-muted-foreground/20 group-hover:text-primary group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-all duration-200",
           isCompact ? "w-3 h-3" : "w-3.5 h-3.5"
         )} />
       </div>
@@ -411,45 +427,69 @@ const Discover = () => {
   const getCatLabel = (cat: typeof CATEGORIES[0]) => lang === "en" ? cat.labelEn : cat.labelPt;
   const en = lang === "en";
 
+  const now = new Date();
+  const timeStr = now.toLocaleTimeString(en ? "en-US" : "pt-BR", { hour: "2-digit", minute: "2-digit" });
+  const dateStr = now.toLocaleDateString(en ? "en-US" : "pt-BR", { weekday: "long", day: "numeric", month: "long" });
+
   return (
     <div className="min-h-screen bg-background flex flex-col page-enter">
       <AppHeader />
 
-      {/* ─── HERO ─── */}
-      <section className="px-4 sm:px-6 md:px-8 lg:px-12 pt-8 sm:pt-12 md:pt-14 pb-6 md:pb-8 max-w-[1440px] mx-auto w-full">
-        <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-6">
-          <div className="space-y-2 max-w-2xl">
-            <h1 className="text-foreground font-bold tracking-[-0.02em] leading-[1.08]" style={{ fontSize: 'clamp(1.75rem, 4.5vw, 3rem)' }}>
-              {en ? "Discover" : "Descobrir"}
+      {/* ═══════════════════ INTELLIGENCE BRIEFING HEADER ═══════════════════ */}
+      <section className="px-4 sm:px-6 md:px-8 lg:px-12 pt-8 sm:pt-10 md:pt-14 pb-0 max-w-[1440px] mx-auto w-full">
+        <div className="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-6 pb-6 md:pb-8 border-b border-border/40">
+          {/* Left: Briefing context */}
+          <div className="space-y-3 max-w-2xl">
+            {/* Date + time stamp */}
+            <div className="flex items-center gap-3 text-[11px] text-muted-foreground/60 uppercase tracking-wider font-medium">
+              <span className="flex items-center gap-1.5">
+                <span className="relative flex items-center justify-center w-1.5 h-1.5">
+                  <span className="absolute w-full h-full rounded-full bg-[hsl(var(--color-positive))] animate-ping opacity-60" />
+                  <span className="relative w-1.5 h-1.5 rounded-full bg-[hsl(var(--color-positive))]" />
+                </span>
+                {en ? "Live Intelligence" : "Inteligência ao vivo"}
+              </span>
+              <span className="w-px h-3 bg-border" />
+              <span className="capitalize">{dateStr}</span>
+              <span className="w-px h-3 bg-border" />
+              <span className="tabular-nums">{timeStr}</span>
+            </div>
+
+            <h1 className="text-foreground font-bold tracking-[-0.03em] leading-[1.05]" style={{ fontSize: 'clamp(1.75rem, 4.5vw, 3rem)' }}>
+              {en ? "Global Signal Explorer" : "Explorador de Sinais Globais"}
             </h1>
             <p className="text-muted-foreground leading-relaxed" style={{ fontSize: 'clamp(0.8125rem, 1.5vw, 0.9375rem)' }}>
               {en
-                ? "Explore global trends, emerging signals and cross-platform conversations in real time."
-                : "Explore tendências globais, sinais emergentes e conversas cross-platform em tempo real."}
+                ? "Emerging trends, cross-platform conversations and cultural signals detected in real time across 21+ sources."
+                : "Tendências emergentes, conversas cross-platform e sinais culturais detectados em tempo real em 21+ fontes."}
             </p>
           </div>
 
-          <div className="flex items-center gap-5 md:gap-6">
+          {/* Right: Signal stats */}
+          <div className="flex items-center gap-6 md:gap-8 shrink-0">
             {[
-              { value: stats.totalTrends, labelEn: "Signals", labelPt: "Sinais" },
-              { value: stats.platforms, labelEn: "Sources", labelPt: "Fontes" },
-              { value: stats.countries, labelEn: "Countries", labelPt: "Países" },
-            ].map((stat, i) => (
-              <React.Fragment key={stat.labelEn}>
-                {i > 0 && <div className="w-px h-8 bg-border/60" />}
-                <div className="text-right">
-                  <p className="text-[24px] md:text-[28px] font-bold text-foreground leading-none tracking-tight">{stat.value}</p>
-                  <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-medium mt-0.5">
-                    {en ? stat.labelEn : stat.labelPt}
-                  </p>
+              { value: stats.totalTrends, labelEn: "Signals", labelPt: "Sinais", icon: Activity },
+              { value: stats.platforms, labelEn: "Sources", labelPt: "Fontes", icon: Zap },
+              { value: stats.countries, labelEn: "Countries", labelPt: "Países", icon: Globe },
+            ].map((stat, i) => {
+              const Icon = stat.icon;
+              return (
+                <div key={stat.labelEn} className="text-right">
+                  <div className="flex items-center justify-end gap-1.5 mb-0.5">
+                    <Icon className="w-3 h-3 text-muted-foreground/40" />
+                    <p className="text-[10px] text-muted-foreground/60 uppercase tracking-wider font-medium">
+                      {en ? stat.labelEn : stat.labelPt}
+                    </p>
+                  </div>
+                  <p className="text-[28px] md:text-[32px] font-bold text-foreground leading-none tracking-tight tabular-nums">{stat.value}</p>
                 </div>
-              </React.Fragment>
-            ))}
+              );
+            })}
           </div>
         </div>
       </section>
 
-      {/* ─── FILTER BAR ─── */}
+      {/* ═══════════════════ FILTER BAR ═══════════════════ */}
       <div className="sticky top-[52px] sm:top-[56px] z-30 bg-background/80 backdrop-blur-xl border-b border-border/40">
         <div className="px-4 sm:px-6 md:px-8 lg:px-12 max-w-[1440px] mx-auto w-full flex items-center gap-1.5 py-2.5 overflow-x-auto scrollbar-none" role="tablist" aria-label="Category filters">
           {CATEGORIES.map((cat) => {
@@ -462,7 +502,7 @@ const Discover = () => {
                 role="tab"
                 aria-selected={active}
                 className={cn(
-                  "inline-flex items-center gap-1.5 px-3.5 py-2 rounded-full text-[11px] font-medium whitespace-nowrap transition-all duration-150 shrink-0",
+                  "compact-btn inline-flex items-center gap-1.5 px-3.5 py-2 rounded-full text-[11px] font-medium whitespace-nowrap transition-all duration-150 shrink-0",
                   active
                     ? "bg-foreground text-background shadow-sm"
                     : "bg-secondary/60 text-muted-foreground hover:bg-secondary hover:text-foreground"
@@ -490,12 +530,12 @@ const Discover = () => {
                   type="text"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder={en ? "Search…" : "Buscar…"}
+                  placeholder={en ? "Search signals…" : "Buscar sinais…"}
                   className="w-full h-9 pl-3.5 pr-8 rounded-full bg-secondary/60 border border-border/50 text-[12px] text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary/20"
                 />
                 <button
                   onClick={() => { setSearchOpen(false); setSearchQuery(""); }}
-                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                  className="compact-btn absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
                 >
                   <X className="w-3.5 h-3.5" />
                 </button>
@@ -503,7 +543,7 @@ const Discover = () => {
             ) : (
               <button
                 onClick={() => setSearchOpen(true)}
-                className="flex items-center justify-center w-9 h-9 rounded-full bg-secondary/60 text-muted-foreground hover:bg-secondary hover:text-foreground transition-all shrink-0"
+                className="compact-btn flex items-center justify-center w-9 h-9 rounded-full bg-secondary/60 text-muted-foreground hover:bg-secondary hover:text-foreground transition-all shrink-0"
                 aria-label={en ? "Search" : "Buscar"}
               >
                 <Search className="w-3.5 h-3.5" />
@@ -513,8 +553,8 @@ const Discover = () => {
         </div>
       </div>
 
-      {/* ─── EDITORIAL GRID ─── */}
-      <main className="flex-1 px-4 sm:px-6 md:px-8 lg:px-12 py-6 md:py-10 max-w-[1440px] mx-auto w-full">
+      {/* ═══════════════════ EDITORIAL GRID ═══════════════════ */}
+      <main className="flex-1 px-4 sm:px-6 md:px-8 lg:px-12 py-8 md:py-12 max-w-[1440px] mx-auto w-full">
         {loading && isFirstLoad ? (
           <div className="grid grid-cols-4 sm:grid-cols-6 lg:grid-cols-12 gap-3 sm:gap-4 auto-rows-[minmax(100px,auto)]">
             {Array.from({ length: 12 }).map((_, i) => {
@@ -525,10 +565,10 @@ const Discover = () => {
                   className={cn(
                     "rounded-2xl bg-secondary/30 animate-pulse",
                     gridSpans[v],
-                    v === "hero" ? "min-h-[320px]" :
+                    v === "hero" ? "min-h-[340px]" :
                     v === "featured" ? "min-h-[280px]" :
                     v === "wide" ? "min-h-[180px]" :
-                    v === "compact" ? "min-h-[160px]" : "min-h-[200px]"
+                    v === "compact" ? "min-h-[170px]" : "min-h-[200px]"
                   )}
                 />
               );
@@ -572,35 +612,43 @@ const Discover = () => {
         )}
 
         {displayTrends.length > 40 && (
-          <div className="flex justify-center pt-10">
+          <div className="flex justify-center pt-12">
             <button className="px-8 py-3 rounded-full border border-border text-sm font-medium text-muted-foreground hover:text-foreground hover:border-foreground/30 transition-all">
-              {en ? "Load more" : "Carregar mais"}
+              {en ? "Load more signals" : "Carregar mais sinais"}
             </button>
           </div>
         )}
       </main>
 
-      {/* ─── FOOTER ─── */}
+      {/* ═══════════════════ FOOTER ═══════════════════ */}
       <footer className="border-t border-border/40 px-4 sm:px-6 md:px-8 lg:px-12 py-6 max-w-[1440px] mx-auto w-full">
         <div className="mb-4">
-          <p className="text-[10px] text-muted-foreground/60 leading-relaxed max-w-2xl mx-auto text-center">
+          <p className="text-[10px] text-muted-foreground/50 leading-relaxed max-w-2xl mx-auto text-center">
             {en
               ? "⚠️ Insights represent analytical signals derived from public data sources. They do not constitute recommendations or predictions. Always verify with primary sources."
               : "⚠️ Os insights representam sinais analíticos derivados de fontes públicas. Não constituem recomendações ou previsões. Sempre verifique com fontes primárias."}
           </p>
         </div>
         <div className="flex flex-col sm:flex-row items-center justify-between gap-3">
-          <p className="text-[11px] text-muted-foreground/60">
+          <p className="text-[11px] text-muted-foreground/50">
             © {new Date().getFullYear()} Global Talk Trend
           </p>
-          <div className="flex items-center gap-1.5">
-            <span className="relative flex items-center justify-center w-1.5 h-1.5">
-              <span className="absolute w-full h-full rounded-full bg-[hsl(var(--color-positive))] animate-ping opacity-60" />
-              <span className="relative w-1.5 h-1.5 rounded-full bg-[hsl(var(--color-positive))]" />
-            </span>
-            <span className="text-[10px] text-muted-foreground/60 font-medium uppercase tracking-wider">
-              {en ? "Live data" : "Dados ao vivo"}
-            </span>
+          <div className="flex items-center gap-4 text-[10px] text-muted-foreground/40">
+            <Link to="/metodologia" className="hover:text-foreground transition-colors">
+              {en ? "Methodology" : "Metodologia"}
+            </Link>
+            <span className="w-px h-3 bg-border/40" />
+            <Link to="/privacidade" className="hover:text-foreground transition-colors">
+              {en ? "Privacy" : "Privacidade"}
+            </Link>
+            <span className="w-px h-3 bg-border/40" />
+            <div className="flex items-center gap-1.5">
+              <span className="relative flex items-center justify-center w-1.5 h-1.5">
+                <span className="absolute w-full h-full rounded-full bg-[hsl(var(--color-positive))] animate-ping opacity-60" />
+                <span className="relative w-1.5 h-1.5 rounded-full bg-[hsl(var(--color-positive))]" />
+              </span>
+              <span className="font-medium uppercase tracking-wider">{en ? "Live data" : "Dados ao vivo"}</span>
+            </div>
           </div>
         </div>
       </footer>

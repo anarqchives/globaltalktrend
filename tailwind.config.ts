@@ -122,6 +122,7 @@ export default {
   			'elevation-sm': 'var(--shadow-sm)',
   			'elevation-md': 'var(--shadow-md)',
   			'elevation-lg': 'var(--shadow-lg)',
+  			'elevation-xl': 'var(--shadow-xl)',
   			'focus-ring': 'var(--shadow-focus)',
   		},
   		keyframes: {
