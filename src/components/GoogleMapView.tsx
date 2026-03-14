@@ -178,6 +178,7 @@ const GoogleMapView = ({
   const infoWindowRef = useRef<google.maps.InfoWindow | null>(null);
   const hoverInfoRef = useRef<google.maps.InfoWindow | null>(null);
   const heatmapRef = useRef<any>(null);
+  const markersRef = useRef<google.maps.Marker[]>([]);
   const [mapLoaded, setMapLoaded] = useState(false);
   const [mapError, setMapError] = useState<string | null>(null);
   const [mapMode, setMapMode] = useState<MapMode>("heatmap");
@@ -218,6 +219,7 @@ const GoogleMapView = ({
 
         const { Map } = (await google.maps.importLibrary("maps")) as any;
         const { InfoWindow } = (await google.maps.importLibrary("maps")) as any;
+        const { HeatmapLayer } = (await google.maps.importLibrary("visualization")) as any;
 
         if (!mapRef.current) return;
 
@@ -272,7 +274,9 @@ const GoogleMapView = ({
             <div style="font-size:11px;color:#94a3b8;">${count} trends ativas</div>
           </div>
         </div>
-        <div style="font-size:11px;background:${intensity > 0.8 ? '#ef4444' : intensity > 0.6 ? '#f97316' : '#eab308'};color:#fff;padding:2px 8px;border-radius:12px;display:inline-block;margin-bottom:8px;">${criticality}</div>
+        <div style="font-size:11px;background:${intensity > 0.8 ? '#ef4444' : intensity > 0.6 ? '#f97316' : '#eab308'};color:#fff;padding:2px 8px;border-radius:12px;display:inline-block;margin-bottom:8px;">
+          ${criticality}
+        </div>
         <div style="font-size:11px;color:${isDark ? '#94a3b8' : '#475569'};margin-bottom:8px;">Clique para ver detalhes</div>
       </div>
     `);
@@ -286,6 +290,155 @@ const GoogleMapView = ({
       }),
     });
   }, [trendCounts, isDark]);
+
+  // Renderizar visualizações do mapa
+  useEffect(() => {
+    if (!mapLoaded || !googleMapRef.current) return;
+
+    // Limpar marcadores antigos
+    markersRef.current.forEach(marker => marker.setMap(null));
+    markersRef.current = [];
+
+    if (heatmapRef.current) {
+      heatmapRef.current.setMap(null);
+      heatmapRef.current = null;
+    }
+
+    if (mapMode === "heatmap") {
+      renderHeatmap();
+    } else if (mapMode === "sentiment") {
+      renderSentimentMarkers();
+    } else if (mapMode === "flow") {
+      renderFlowArcs();
+    }
+  }, [mapMode, mapLoaded, trendCounts]);
+
+  const renderHeatmap = useCallback(async () => {
+    if (!googleMapRef.current) return;
+
+    try {
+      const { HeatmapLayer } = (await google.maps.importLibrary("visualization")) as any;
+      
+      // Gerar dados para o heatmap
+      const heatmapData = countryPoints
+        .filter(country => trendCounts[country.id] > 0)
+        .flatMap(country => {
+          const count = trendCounts[country.id];
+          const intensity = Math.min(count / maxCount, 1);
+          // Criar múltiplos pontos ponderados pela intensidade
+          return Array(Math.max(1, Math.round(intensity * 10)))
+            .fill(null)
+            .map(() => ({
+              location: new google.maps.LatLng(country.lat, country.lng),
+              weight: intensity,
+            }));
+        });
+
+      heatmapRef.current = new HeatmapLayer({
+        data: heatmapData,
+        map: googleMapRef.current,
+        radius: 30,
+        opacity: 0.7,
+      });
+
+      // Adicionar marcadores customizados
+      countryPoints.forEach(country => {
+        const count = trendCounts[country.id] || 0;
+        if (count === 0) return;
+
+        const intensity = Math.min(count / maxCount, 1);
+        const colors = getMarkerColor(intensity);
+
+        const marker = new google.maps.Marker({
+          position: { lat: country.lat, lng: country.lng },
+          map: googleMapRef.current,
+          icon: {
+            path: google.maps.SymbolPath.CIRCLE,
+            scale: 8 + intensity * 12,
+            fillColor: colors.fill,
+            fillOpacity: 0.9,
+            strokeColor: "#fff",
+            strokeWeight: 2,
+          },
+          title: `${country.name}: ${count} trends`,
+        });
+
+        marker.addListener("click", () => onSelectCountry(country.id));
+        marker.addListener("mouseover", () => showHoverTooltip(country, intensity));
+        marker.addListener("mouseout", () => hoverInfoRef.current?.close());
+
+        markersRef.current.push(marker);
+      });
+    } catch (err) {
+      console.error("Erro ao renderizar heatmap:", err);
+    }
+  }, [trendCounts, maxCount, onSelectCountry, showHoverTooltip]);
+
+  const renderSentimentMarkers = useCallback(() => {
+    if (!googleMapRef.current) return;
+
+    countryPoints.forEach(country => {
+      const count = trendCounts[country.id] || 0;
+      if (count === 0) return;
+
+      const intensity = Math.min(count / maxCount, 1);
+      // Placeholder: usar sentimento neutro por padrão
+      const sentiment: Sentiment = "neutral";
+      const color = sentimentColors[sentiment];
+
+      const marker = new google.maps.Marker({
+        position: { lat: country.lat, lng: country.lng },
+        map: googleMapRef.current,
+        icon: {
+          path: google.maps.SymbolPath.CIRCLE,
+          scale: 8 + intensity * 12,
+          fillColor: color,
+          fillOpacity: 0.85,
+          strokeColor: "#fff",
+          strokeWeight: 2,
+        },
+        title: `${country.name}: ${count} trends`,
+      });
+
+      marker.addListener("click", () => onSelectCountry(country.id));
+      marker.addListener("mouseover", () => showHoverTooltip(country, intensity));
+      marker.addListener("mouseout", () => hoverInfoRef.current?.close());
+
+      markersRef.current.push(marker);
+    });
+  }, [trendCounts, maxCount, onSelectCountry, showHoverTooltip]);
+
+  const renderFlowArcs = useCallback(() => {
+    if (!googleMapRef.current) return;
+
+    // Placeholder: renderizar marcadores simples por enquanto
+    countryPoints.forEach(country => {
+      const count = trendCounts[country.id] || 0;
+      if (count === 0) return;
+
+      const intensity = Math.min(count / maxCount, 1);
+
+      const marker = new google.maps.Marker({
+        position: { lat: country.lat, lng: country.lng },
+        map: googleMapRef.current,
+        icon: {
+          path: google.maps.SymbolPath.CIRCLE,
+          scale: 6 + intensity * 10,
+          fillColor: "#3b82f6",
+          fillOpacity: 0.7,
+          strokeColor: "#fff",
+          strokeWeight: 2,
+        },
+        title: `${country.name}: ${count} trends`,
+      });
+
+      marker.addListener("click", () => onSelectCountry(country.id));
+      marker.addListener("mouseover", () => showHoverTooltip(country, intensity));
+      marker.addListener("mouseout", () => hoverInfoRef.current?.close());
+
+      markersRef.current.push(marker);
+    });
+  }, [trendCounts, maxCount, onSelectCountry, showHoverTooltip]);
 
   const maxCount = useMemo(() => Math.max(...Object.values(trendCounts), 1), [trendCounts]);
   const activeCountries = useMemo(() => Object.values(trendCounts).filter(v => v > 0).length, [trendCounts]);
@@ -353,13 +506,13 @@ const GoogleMapView = ({
         <div className={`absolute z-20 flex flex-col gap-1 ${isMobile ? 'bottom-24 right-2' : 'bottom-[100px] right-3'}`}>
           <button
             onClick={() => googleMapRef.current?.setZoom((googleMapRef.current?.getZoom() || 3) + 1)}
-            className="w-9 h-9 rounded-lg bg-white/90 dark:bg-card/90 backdrop-blur-xl border border-border/30 shadow-sm flex items-center justify-center text-foreground hover:bg-white dark:hover:bg-card"
+            className="w-9 h-9 rounded-lg bg-white/90 dark:bg-card/90 backdrop-blur-xl border border-border/30 shadow-sm flex items-center justify-center text-foreground hover:bg-white dark:hover:bg-card transition-colors"
           >
             <Plus className="w-4 h-4" />
           </button>
           <button
             onClick={() => googleMapRef.current?.setZoom((googleMapRef.current?.getZoom() || 3) - 1)}
-            className="w-9 h-9 rounded-lg bg-white/90 dark:bg-card/90 backdrop-blur-xl border border-border/30 shadow-sm flex items-center justify-center text-foreground hover:bg-white dark:hover:bg-card"
+            className="w-9 h-9 rounded-lg bg-white/90 dark:bg-card/90 backdrop-blur-xl border border-border/30 shadow-sm flex items-center justify-center text-foreground hover:bg-white dark:hover:bg-card transition-colors"
           >
             <Minus className="w-4 h-4" />
           </button>
