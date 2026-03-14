@@ -3,7 +3,7 @@ import { useSearchParams, Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import {
   ArrowLeft, Globe, TrendingUp, BarChart3, Clock, ExternalLink,
-  Share2, Bookmark, MapPin, Layers, ChevronRight, Zap, Activity, AlertTriangle
+  Share2, Bookmark, MapPin, Layers, ChevronRight, Zap, Activity, AlertTriangle, ArrowUpRight
 } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import AppHeader from "@/components/AppHeader";
@@ -44,19 +44,17 @@ function computeTVI(vol: string | undefined, change: string | undefined, sources
 function getLifecycle(change: string | undefined, sparkData?: number[]): { label: string; labelEn: string; color: string; icon: string; desc: string; descEn: string } {
   const c = parseFloat((change || "0").replace(/[^0-9.-]/g, ""));
   const spark = sparkData || [];
-  
   if (spark.length >= 4) {
     const last = spark[spark.length - 1];
     const mid = spark[Math.floor(spark.length / 2)];
     const first = spark[0];
-    if (last > mid && mid > first && c > 20) 
+    if (last > mid && mid > first && c > 20)
       return { label: "Acelerando", labelEn: "Accelerating", color: "var(--color-high)", icon: "🚀", desc: "Sinal ganhando velocidade rapidamente em múltiplas fontes.", descEn: "Signal gaining speed rapidly across multiple sources." };
-    if (last >= mid * 0.95 && c > 5) 
+    if (last >= mid * 0.95 && c > 5)
       return { label: "Pico", labelEn: "Peaking", color: "var(--color-critical)", icon: "🔥", desc: "Sinal no ponto máximo de intensidade. Monitorar evolução.", descEn: "Signal at peak intensity. Monitor evolution." };
     if (last < mid && last < first * 0.8)
       return { label: "Declínio", labelEn: "Declining", color: "var(--color-neutral)", icon: "📉", desc: "Sinal perdendo intensidade. Pode estar se estabilizando.", descEn: "Signal losing intensity. May be stabilizing." };
   }
-  
   if (c > 40) return { label: "Acelerando", labelEn: "Accelerating", color: "var(--color-high)", icon: "🚀", desc: "Crescimento acelerado detectado.", descEn: "Accelerated growth detected." };
   if (c > 10) return { label: "Emergente", labelEn: "Emerging", color: "var(--color-positive)", icon: "🌱", desc: "Sinal em fase inicial de crescimento.", descEn: "Signal in early growth phase." };
   if (c > 0) return { label: "Estável", labelEn: "Stable", color: "var(--color-neutral)", icon: "➡️", desc: "Sinal estável sem variação significativa.", descEn: "Stable signal without significant change." };
@@ -69,6 +67,32 @@ function getTVITier(score: number): { label: string; color: string } {
   if (score >= 25) return { label: "Moderate", color: "var(--color-moderate)" };
   return { label: "Low", color: "var(--color-neutral)" };
 }
+
+/* ─── TVI RADIAL GAUGE ─── */
+const TVIRadialGauge = ({ score, size = 96 }: { score: number; size?: number }) => {
+  const radius = (size - 10) / 2;
+  const circumference = 2 * Math.PI * radius;
+  const offset = circumference - (score / 100) * circumference;
+  const tier = getTVITier(score);
+  return (
+    <div className="tvi-gauge" style={{ width: size, height: size }}>
+      <svg width={size} height={size}>
+        <circle cx={size / 2} cy={size / 2} r={radius} fill="none" stroke="hsl(var(--border))" strokeWidth={5} opacity={0.4} />
+        <circle
+          cx={size / 2} cy={size / 2} r={radius} fill="none"
+          stroke={`hsl(${tier.color})`} strokeWidth={5}
+          strokeDasharray={circumference} strokeDashoffset={offset}
+          strokeLinecap="round"
+          style={{ transition: "stroke-dashoffset 1s cubic-bezier(0.25, 0.46, 0.45, 0.94)" }}
+        />
+      </svg>
+      <div className="absolute flex flex-col items-center">
+        <span className="text-[24px] font-bold tabular-nums leading-none" style={{ color: `hsl(${tier.color})` }}>{score}</span>
+        <span className="text-[9px] font-semibold uppercase tracking-wider mt-0.5" style={{ color: `hsl(${tier.color})` }}>{tier.label}</span>
+      </div>
+    </div>
+  );
+};
 
 const TopicPage = () => {
   const { lang } = useLanguage();
@@ -118,7 +142,6 @@ const TopicPage = () => {
     return Array.from(countryMap.values()).sort((a, b) => b.count - a.count).slice(0, 8);
   }, [translatedTrends, topic]);
 
-  // Cross-platform signals for this topic
   const crossPlatformSignals = useMemo(() => {
     if (!topic) return [];
     const titleWords = topic.title.toLowerCase().split(/\s+/).filter(w => w.length > 3);
@@ -165,7 +188,7 @@ const TopicPage = () => {
       <main className="flex-1 px-4 sm:px-6 md:px-8 lg:px-12 py-6 md:py-10 max-w-[1200px] mx-auto w-full">
         {/* Breadcrumb */}
         <motion.nav initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex items-center gap-1.5 text-[11px] text-muted-foreground mb-6">
-          <Link to="/" className="hover:text-foreground transition-colors">{en ? "Explore" : "Descobrir"}</Link>
+          <Link to="/" className="hover:text-foreground transition-colors compact-link">{en ? "Explore" : "Descobrir"}</Link>
           <ChevronRight className="w-3 h-3" />
           {topic?.category && (
             <>
@@ -176,24 +199,30 @@ const TopicPage = () => {
           <span className="text-foreground font-medium truncate max-w-[200px]">{topicTitle}</span>
         </motion.nav>
 
-        {/* ─── HEADER ─── */}
-        <motion.header custom={0} variants={fadeUp} initial="hidden" animate="visible" className="mb-8">
-          <Link to="/" className="inline-flex items-center gap-1.5 text-[12px] text-muted-foreground hover:text-foreground transition-colors mb-4">
+        {/* ═══════════════════ HEADER + TVI GAUGE ═══════════════════ */}
+        <motion.header custom={0} variants={fadeUp} initial="hidden" animate="visible" className="mb-10">
+          <Link to="/" className="compact-link inline-flex items-center gap-1.5 text-[12px] text-muted-foreground hover:text-foreground transition-colors mb-5">
             <ArrowLeft className="w-3.5 h-3.5" />
             {en ? "Back to Explore" : "Voltar à Descoberta"}
           </Link>
 
-          <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
+          <div className="flex flex-col md:flex-row md:items-start gap-6 md:gap-8">
+            {/* TVI Gauge — primary visual */}
+            <div className="shrink-0 flex flex-col items-center gap-2">
+              <TVIRadialGauge score={tvi} size={100} />
+              <span className="text-[9px] text-muted-foreground uppercase tracking-wider font-medium">Trend Velocity Index</span>
+            </div>
+
+            {/* Title + meta */}
             <div className="space-y-3 flex-1 min-w-0">
               <div className="flex items-center gap-2 flex-wrap">
-                <span className="px-2 py-0.5 rounded-full bg-primary/10 text-primary text-[10px] font-semibold uppercase tracking-wider">
+                <span className="px-2.5 py-0.5 rounded-full bg-primary/10 text-primary text-[10px] font-semibold uppercase tracking-wider">
                   {topic?.platform || topicPlatform}
                 </span>
                 {topic?.category && (
                   <span className="px-2 py-0.5 rounded-full bg-secondary text-muted-foreground text-[10px] font-medium">{topic.category}</span>
                 )}
                 {flag && <span className="text-sm">{flag}</span>}
-                {/* Lifecycle badge */}
                 <span
                   className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider"
                   style={{ background: `hsl(${lifecycle.color} / 0.1)`, color: `hsl(${lifecycle.color})` }}
@@ -201,107 +230,72 @@ const TopicPage = () => {
                   {lifecycle.icon} {en ? lifecycle.labelEn : lifecycle.label}
                 </span>
               </div>
-              <h1 className="text-[24px] md:text-[32px] lg:text-[38px] font-bold tracking-tight leading-[1.15] text-foreground">
+              <h1 className="text-[24px] md:text-[32px] lg:text-[40px] font-bold tracking-[-0.02em] leading-[1.1] text-foreground">
                 {topicTitle}
               </h1>
               {topic?.description && (
                 <p className="text-muted-foreground text-[14px] md:text-[15px] leading-relaxed max-w-2xl">{topic.description}</p>
               )}
-            </div>
-
-            <div className="flex items-center gap-2 shrink-0">
-              <button onClick={handleShare} className="flex items-center gap-1.5 px-3.5 py-2 rounded-full bg-secondary/60 text-muted-foreground text-[11px] font-medium hover:bg-secondary hover:text-foreground transition-all">
-                <Share2 className="w-3 h-3" />
-                {en ? "Share" : "Compartilhar"}
-              </button>
-              {topic?.sourceUrl && (
-                <a href={topic.sourceUrl} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 px-3.5 py-2 rounded-full bg-foreground text-background text-[11px] font-semibold hover:opacity-90 transition-all">
-                  <ExternalLink className="w-3 h-3" />
-                  {en ? "Source" : "Fonte"}
-                </a>
-              )}
+              <div className="flex items-center gap-2 pt-1">
+                <button onClick={handleShare} className="compact-btn flex items-center gap-1.5 px-3.5 py-2 rounded-full bg-secondary/60 text-muted-foreground text-[11px] font-medium hover:bg-secondary hover:text-foreground transition-all">
+                  <Share2 className="w-3 h-3" />
+                  {en ? "Share" : "Compartilhar"}
+                </button>
+                {topic?.sourceUrl && (
+                  <a href={topic.sourceUrl} target="_blank" rel="noopener noreferrer" className="compact-btn flex items-center gap-1.5 px-3.5 py-2 rounded-full bg-foreground text-background text-[11px] font-semibold hover:opacity-90 transition-all">
+                    <ExternalLink className="w-3 h-3" />
+                    {en ? "Source" : "Fonte"}
+                  </a>
+                )}
+              </div>
             </div>
           </div>
         </motion.header>
 
-        {/* ─── SIGNAL INTELLIGENCE PANEL ─── */}
-        <motion.div custom={1} variants={fadeUp} initial="hidden" animate="visible" className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-5 gap-3 mb-8">
-          {/* TVI Score */}
-          <div className="rounded-xl border border-border/60 bg-card p-4 space-y-2">
-            <div className="flex items-center gap-1.5">
-              <Zap className="w-3.5 h-3.5 text-muted-foreground" />
-              <span className="text-[10px] text-muted-foreground uppercase tracking-wider font-medium">TVI Score</span>
-            </div>
-            <div className="flex items-end gap-2">
-              <p className="text-[28px] font-bold leading-none" style={{ color: `hsl(${tviTier.color})` }}>{tvi}</p>
-              <span className="text-[10px] font-semibold uppercase mb-1" style={{ color: `hsl(${tviTier.color})` }}>{tviTier.label}</span>
-            </div>
-            <div className="w-full h-[3px] rounded-full bg-secondary overflow-hidden">
-              <div className="h-full rounded-full transition-all duration-700" style={{ width: `${tvi}%`, background: `hsl(${tviTier.color})` }} />
-            </div>
-          </div>
-
-          {/* Volume */}
-          <div className="rounded-xl border border-border/60 bg-card p-4 space-y-1">
-            <div className="flex items-center gap-1.5">
-              <BarChart3 className="w-3.5 h-3.5 text-muted-foreground" />
-              <span className="text-[10px] text-muted-foreground uppercase tracking-wider font-medium">{en ? "Volume" : "Volume"}</span>
-            </div>
-            <p className="text-[22px] font-bold leading-none text-foreground">{topic?.volume || "—"}</p>
-          </div>
-
-          {/* Change */}
-          <div className="rounded-xl border border-border/60 bg-card p-4 space-y-1">
-            <div className="flex items-center gap-1.5">
-              <TrendingUp className="w-3.5 h-3.5 text-muted-foreground" />
-              <span className="text-[10px] text-muted-foreground uppercase tracking-wider font-medium">{en ? "Change" : "Variação"}</span>
-            </div>
-            <p className={cn("text-[22px] font-bold leading-none", isPositive ? "text-[hsl(var(--color-positive))]" : "text-[hsl(var(--color-critical))]")}>
-              {topic?.change ? `${isPositive ? "+" : ""}${topic.change}` : "—"}
-            </p>
-          </div>
-
-          {/* Region */}
-          <div className="rounded-xl border border-border/60 bg-card p-4 space-y-1">
-            <div className="flex items-center gap-1.5">
-              <Globe className="w-3.5 h-3.5 text-muted-foreground" />
-              <span className="text-[10px] text-muted-foreground uppercase tracking-wider font-medium">{en ? "Region" : "Região"}</span>
-            </div>
-            <p className="text-[22px] font-bold leading-none text-foreground">{topic?.countryCode?.toUpperCase() || "Global"}</p>
-          </div>
-
-          {/* Lifecycle */}
-          <div className="col-span-2 sm:col-span-4 lg:col-span-1 rounded-xl border border-border/60 bg-card p-4 space-y-1">
-            <div className="flex items-center gap-1.5">
-              <Activity className="w-3.5 h-3.5 text-muted-foreground" />
-              <span className="text-[10px] text-muted-foreground uppercase tracking-wider font-medium">{en ? "Stage" : "Fase"}</span>
-            </div>
-            <p className="text-[15px] font-bold leading-snug" style={{ color: `hsl(${lifecycle.color})` }}>
-              {lifecycle.icon} {en ? lifecycle.labelEn : lifecycle.label}
-            </p>
-            <p className="text-[10px] text-muted-foreground leading-relaxed">{en ? lifecycle.descEn : lifecycle.desc}</p>
-          </div>
+        {/* ═══════════════════ SIGNAL METRICS STRIP ═══════════════════ */}
+        <motion.div custom={1} variants={fadeUp} initial="hidden" animate="visible" className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-10">
+          {[
+            { icon: BarChart3, label: en ? "Volume" : "Volume", value: topic?.volume || "—", color: null },
+            { icon: TrendingUp, label: en ? "Change" : "Variação", value: topic?.change ? `${isPositive ? "+" : ""}${topic.change}` : "—", color: isPositive ? "var(--color-positive)" : "var(--color-critical)" },
+            { icon: Globe, label: en ? "Region" : "Região", value: topic?.countryCode?.toUpperCase() || "Global", color: null },
+            { icon: Activity, label: en ? "Stage" : "Fase", value: `${lifecycle.icon} ${en ? lifecycle.labelEn : lifecycle.label}`, color: lifecycle.color },
+          ].map((metric) => {
+            const Icon = metric.icon;
+            return (
+              <div key={metric.label} className="intelligence-module p-4 space-y-1.5">
+                <div className="flex items-center gap-1.5">
+                  <Icon className="w-3.5 h-3.5 text-muted-foreground/60" />
+                  <span className="text-[10px] text-muted-foreground uppercase tracking-wider font-medium">{metric.label}</span>
+                </div>
+                <p className={cn("text-[20px] sm:text-[22px] font-bold leading-none tabular-nums", !metric.color && "text-foreground")}
+                  style={metric.color ? { color: `hsl(${metric.color})` } : undefined}
+                >
+                  {metric.value}
+                </p>
+              </div>
+            );
+          })}
         </motion.div>
 
-        {/* ─── EVOLUTION CHART ─── */}
+        {/* ═══════════════════ EVOLUTION CHART ═══════════════════ */}
         {topic?.historicalData && topic.historicalData.length > 0 && (
-          <motion.section custom={2} variants={fadeUp} initial="hidden" animate="visible" className="rounded-xl border border-border/60 bg-card p-5 md:p-6 mb-8">
+          <motion.section custom={2} variants={fadeUp} initial="hidden" animate="visible" className="intelligence-module p-5 md:p-6 mb-10">
             <h2 className="text-[13px] font-semibold text-foreground mb-4 uppercase tracking-wider">
               {en ? "24h Signal Evolution" : "Evolução do Sinal 24h"}
             </h2>
-            <div className="h-[220px] md:h-[280px]">
+            <div className="h-[220px] md:h-[300px]">
               <ResponsiveContainer width="100%" height="100%">
                 <AreaChart data={topic.historicalData} margin={{ top: 5, right: 5, bottom: 5, left: 0 }}>
                   <defs>
                     <linearGradient id="topicGrad" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="0%" stopColor="hsl(var(--primary))" stopOpacity={0.2} />
+                      <stop offset="0%" stopColor="hsl(var(--primary))" stopOpacity={0.15} />
                       <stop offset="100%" stopColor="hsl(var(--primary))" stopOpacity={0} />
                     </linearGradient>
                   </defs>
-                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" opacity={0.5} />
+                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" opacity={0.3} />
                   <XAxis dataKey="hour" tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }} axisLine={false} tickLine={false} />
                   <YAxis tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }} axisLine={false} tickLine={false} width={35} />
-                  <Tooltip contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: 8, fontSize: 11 }} />
+                  <Tooltip contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: 10, fontSize: 11, boxShadow: "var(--shadow-md)" }} />
                   <Area type="monotone" dataKey="value" stroke="hsl(var(--primary))" strokeWidth={2} fill="url(#topicGrad)" />
                 </AreaChart>
               </ResponsiveContainer>
@@ -309,12 +303,11 @@ const TopicPage = () => {
           </motion.section>
         )}
 
-        {/* ─── MOMENTUM + CROSS-PLATFORM ─── */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-          {/* Momentum Sparkline */}
+        {/* ═══════════════════ MOMENTUM + CROSS-PLATFORM ═══════════════════ */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-10">
           {topic?.sparkData && topic.sparkData.length > 0 && (
-            <motion.section custom={3} variants={fadeUp} initial="hidden" animate="visible" className="rounded-xl border border-border/60 bg-card p-5">
-              <h2 className="text-[13px] font-semibold text-foreground mb-3 uppercase tracking-wider">
+            <motion.section custom={3} variants={fadeUp} initial="hidden" animate="visible" className="intelligence-module p-5">
+              <h2 className="text-[13px] font-semibold text-foreground mb-4 uppercase tracking-wider">
                 {en ? "Momentum Indicator" : "Indicador de Momentum"}
               </h2>
               <div className="h-[80px]">
@@ -325,34 +318,39 @@ const TopicPage = () => {
                   width={500}
                 />
               </div>
+              <p className="text-[10px] text-muted-foreground/60 mt-3 leading-relaxed">
+                {en ? lifecycle.descEn : lifecycle.desc}
+              </p>
             </motion.section>
           )}
 
-          {/* Cross-platform signals */}
           {crossPlatformSignals.length > 0 && (
-            <motion.section custom={4} variants={fadeUp} initial="hidden" animate="visible" className="rounded-xl border border-border/60 bg-card p-5">
-              <div className="flex items-center gap-2 mb-3">
+            <motion.section custom={4} variants={fadeUp} initial="hidden" animate="visible" className="intelligence-module p-5">
+              <div className="flex items-center gap-2 mb-4">
                 <Layers className="w-3.5 h-3.5 text-muted-foreground" />
                 <h2 className="text-[13px] font-semibold text-foreground uppercase tracking-wider">
                   {en ? "Cross-Platform Signals" : "Sinais Cross-Platform"}
                 </h2>
               </div>
-              <div className="space-y-2">
+              <div className="space-y-1">
                 {crossPlatformSignals.map((sig, i) => (
                   <Link
                     key={i}
                     to={`/topic?title=${encodeURIComponent(sig.title)}&platform=${encodeURIComponent(sig.platform)}`}
-                    className="flex items-center justify-between py-2 border-b border-border/30 last:border-0 hover:bg-secondary/20 -mx-2 px-2 rounded transition-colors"
+                    className="compact-link flex items-center justify-between py-2.5 border-b border-border/20 last:border-0 hover:bg-secondary/20 -mx-2 px-2 rounded-lg transition-colors group"
                   >
                     <div className="flex items-center gap-2 min-w-0 flex-1">
                       <span className="text-[10px] font-semibold text-primary shrink-0">{sig.platform}</span>
                       <span className="text-[11px] text-foreground truncate">{sig.title}</span>
                     </div>
-                    {sig.change && (
-                      <span className={cn("text-[10px] font-semibold shrink-0 ml-2", sig.changePositive ? "text-[hsl(var(--color-positive))]" : "text-[hsl(var(--color-critical))]")}>
-                        {sig.changePositive ? "+" : ""}{sig.change}
-                      </span>
-                    )}
+                    <div className="flex items-center gap-1.5 shrink-0 ml-2">
+                      {sig.change && (
+                        <span className={cn("text-[10px] font-semibold tabular-nums", sig.changePositive ? "text-[hsl(var(--color-positive))]" : "text-[hsl(var(--color-critical))]")}>
+                          {sig.changePositive ? "+" : ""}{sig.change}
+                        </span>
+                      )}
+                      <ArrowUpRight className="w-3 h-3 text-muted-foreground/30 group-hover:text-primary transition-colors" />
+                    </div>
                   </Link>
                 ))}
               </div>
@@ -360,9 +358,9 @@ const TopicPage = () => {
           )}
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
-          {/* ─── GEOGRAPHIC DISTRIBUTION ─── */}
-          <motion.section custom={5} variants={fadeUp} initial="hidden" animate="visible" className="lg:col-span-1 rounded-xl border border-border/60 bg-card p-5">
+        {/* ═══════════════════ GEO + RELATED ═══════════════════ */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-10">
+          <motion.section custom={5} variants={fadeUp} initial="hidden" animate="visible" className="lg:col-span-1 intelligence-module p-5">
             <div className="flex items-center gap-2 mb-4">
               <MapPin className="w-3.5 h-3.5 text-muted-foreground" />
               <h2 className="text-[13px] font-semibold text-foreground uppercase tracking-wider">
@@ -370,21 +368,21 @@ const TopicPage = () => {
               </h2>
             </div>
             {geoDistribution.length > 0 ? (
-              <div className="space-y-2.5">
+              <div className="space-y-3">
                 {geoDistribution.map((geo) => {
                   const maxCount = geoDistribution[0]?.count || 1;
                   const pct = Math.round((geo.count / maxCount) * 100);
                   return (
-                    <div key={geo.code} className="space-y-1">
+                    <div key={geo.code} className="space-y-1.5">
                       <div className="flex items-center justify-between">
                         <span className="text-[12px] font-medium text-foreground flex items-center gap-1.5">
                           <span>{countryCodeToFlag(geo.code)}</span>
                           {geo.code.toUpperCase()}
                         </span>
-                        <span className="text-[10px] text-muted-foreground">{geo.count} {en ? "signals" : "sinais"}</span>
+                        <span className="text-[10px] text-muted-foreground tabular-nums">{geo.count} {en ? "signals" : "sinais"}</span>
                       </div>
                       <div className="h-1.5 bg-secondary/60 rounded-full overflow-hidden">
-                        <motion.div initial={{ width: 0 }} animate={{ width: `${pct}%` }} transition={{ duration: 0.6, delay: 0.2 }} className="h-full bg-primary/60 rounded-full" />
+                        <motion.div initial={{ width: 0 }} animate={{ width: `${pct}%` }} transition={{ duration: 0.6, delay: 0.2 }} className="h-full bg-primary/50 rounded-full" />
                       </div>
                     </div>
                   );
@@ -395,8 +393,7 @@ const TopicPage = () => {
             )}
           </motion.section>
 
-          {/* ─── RELATED TOPICS ─── */}
-          <motion.section custom={6} variants={fadeUp} initial="hidden" animate="visible" className="lg:col-span-2 rounded-xl border border-border/60 bg-card p-5">
+          <motion.section custom={6} variants={fadeUp} initial="hidden" animate="visible" className="lg:col-span-2 intelligence-module p-5">
             <div className="flex items-center gap-2 mb-4">
               <Layers className="w-3.5 h-3.5 text-muted-foreground" />
               <h2 className="text-[13px] font-semibold text-foreground uppercase tracking-wider">
@@ -409,7 +406,7 @@ const TopicPage = () => {
                   <Link
                     key={i}
                     to={`/topic?title=${encodeURIComponent(rt.title)}&platform=${encodeURIComponent(rt.platform)}`}
-                    className="group flex items-start gap-3 p-3 rounded-lg border border-border/40 hover:border-border hover:bg-secondary/20 transition-all"
+                    className="compact-link group flex items-start gap-3 p-3 rounded-lg border border-border/30 hover:border-border/60 hover:bg-secondary/20 transition-all"
                   >
                     <div className="flex-1 min-w-0">
                       <p className="text-[12px] font-semibold text-foreground leading-snug line-clamp-2 group-hover:text-primary transition-colors">{rt.title}</p>
@@ -418,13 +415,13 @@ const TopicPage = () => {
                         {rt.volume && (
                           <>
                             <span className="w-0.5 h-0.5 rounded-full bg-border" />
-                            <span className="text-[10px] text-muted-foreground">{rt.volume}</span>
+                            <span className="text-[10px] text-muted-foreground tabular-nums">{rt.volume}</span>
                           </>
                         )}
                       </div>
                     </div>
                     {rt.sparkData && rt.sparkData.length > 0 && (
-                      <div className="w-[48px] h-[24px] shrink-0 opacity-50">
+                      <div className="w-[48px] h-[24px] shrink-0 opacity-40 group-hover:opacity-70 transition-opacity">
                         <SparklineArea data={rt.sparkData} color={rt.changePositive ? "hsl(var(--color-positive))" : "hsl(var(--color-critical))"} height={24} width={48} />
                       </div>
                     )}
@@ -437,15 +434,15 @@ const TopicPage = () => {
           </motion.section>
         </div>
 
-        {/* ─── ANALYTICAL CONTEXT ─── */}
-        <motion.section custom={7} variants={fadeUp} initial="hidden" animate="visible" className="rounded-xl border border-border/60 bg-card p-5 md:p-6 mb-8">
+        {/* ═══════════════════ ANALYTICAL CONTEXT ═══════════════════ */}
+        <motion.section custom={7} variants={fadeUp} initial="hidden" animate="visible" className="intelligence-module p-5 md:p-6 mb-10">
           <div className="flex items-center gap-2 mb-3">
-            <AlertTriangle className="w-3.5 h-3.5 text-muted-foreground" />
+            <AlertTriangle className="w-3.5 h-3.5 text-muted-foreground/60" />
             <h2 className="text-[13px] font-semibold text-foreground uppercase tracking-wider">
               {en ? "Analytical Context" : "Contexto Analítico"}
             </h2>
           </div>
-          <div className="prose prose-sm max-w-none text-muted-foreground text-[13px] leading-relaxed space-y-3">
+          <div className="text-muted-foreground text-[13px] leading-relaxed space-y-3 max-w-3xl">
             {topic?.details ? (
               <p>{topic.details}</p>
             ) : (
@@ -456,8 +453,8 @@ const TopicPage = () => {
               </p>
             )}
           </div>
-          <div className="mt-4 pt-3 border-t border-border/30">
-            <p className="text-[10px] text-muted-foreground/60 leading-relaxed">
+          <div className="mt-4 pt-3 border-t border-border/20">
+            <p className="text-[10px] text-muted-foreground/40 leading-relaxed">
               {en
                 ? "⚠️ This analysis is generated from public data signals and does not constitute a recommendation. Always verify with primary sources."
                 : "⚠️ Esta análise é gerada a partir de sinais de dados públicos e não constitui uma recomendação. Sempre verifique com fontes primárias."}
@@ -466,10 +463,11 @@ const TopicPage = () => {
         </motion.section>
       </main>
 
-      <footer className="border-t border-border/40 px-4 sm:px-6 md:px-8 lg:px-12 py-6 max-w-[1200px] mx-auto w-full">
-        <p className="text-[11px] text-muted-foreground/60 text-center">
-          © {new Date().getFullYear()} Global Talk Trend
-        </p>
+      <footer className="border-t border-border/30 px-4 sm:px-6 md:px-8 lg:px-12 py-6 max-w-[1200px] mx-auto w-full">
+        <div className="flex items-center justify-between">
+          <p className="text-[11px] text-muted-foreground/40">© {new Date().getFullYear()} Global Talk Trend</p>
+          <Link to="/metodologia" className="compact-link text-[10px] text-muted-foreground/40 hover:text-foreground transition-colors">{en ? "Methodology" : "Metodologia"}</Link>
+        </div>
       </footer>
     </div>
   );
