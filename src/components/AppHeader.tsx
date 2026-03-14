@@ -95,7 +95,7 @@ const AppHeader = ({ minimal = false }: AppHeaderProps) => {
 
   return (
     <>
-      <header className="sticky top-0 z-50 h-[56px] flex items-center px-4 md:px-6 bg-background/80 backdrop-blur-xl border-b border-border/40">
+      <header className="sticky top-0 z-50 h-[56px] flex items-center px-4 md:px-6 bg-background/80 backdrop-blur-xl border-b border-border/40" role="banner">
         <div className="w-full flex items-center justify-between">
 
           {/* ─── LEFT: Logo ─── */}
