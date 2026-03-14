@@ -1,46 +1,42 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { Lock } from "lucide-react";
 
 const STORAGE_KEY = "gtt_privacy_accepted";
 
-const copy: Record<string, { headline: string; subtext: string; items: string[]; button: string; link: string }> = {
+const copy: Record<string, { headline: string; items: string[]; button: string; link: string }> = {
   pt: {
-    headline: "Bem-vindo ao GlobalTalk",
-    subtext: "Monitoramento global de tendências em tempo real.",
+    headline: "🔒 Seus dados são seus",
     items: [
-      "Sem coleta de dados pessoais",
-      "Navegação anônima",
-      "Código aberto e transparente",
+      "Mesmo quando logado, o GTT não coleta, armazena ou compartilha nenhuma informação pessoal.",
+      "Seus alertas, cards salvos e preferências são armazenados localmente no seu navegador.",
+      "Seu histórico, suas configurações, suas escolhas: tudo fica sob seu controle.",
     ],
-    button: "Continuar",
+    button: "Entendido",
     link: "Política de Privacidade",
   },
   en: {
-    headline: "Welcome to GlobalTalk",
-    subtext: "Real-time global trend monitoring.",
+    headline: "🔒 Your data is yours",
     items: [
-      "No personal data collection",
-      "Anonymous browsing",
-      "Open source and transparent",
+      "Even when logged in, GTT does not collect, store or share any personal information.",
+      "Your alerts, saved cards and preferences are stored locally in your browser.",
+      "Your history, your settings, your choices: everything stays under your control.",
     ],
-    button: "Continue",
+    button: "Got it",
     link: "Privacy Policy",
   },
   es: {
-    headline: "Bienvenido a GlobalTalk",
-    subtext: "Monitoreo global de tendencias en tiempo real.",
+    headline: "🔒 Tus datos son tuyos",
     items: [
-      "Sin recopilación de datos personales",
-      "Navegación anónima",
-      "Código abierto y transparente",
+      "Incluso cuando inicias sesión, GTT no recopila, almacena ni comparte ninguna información personal.",
+      "Tus alertas, tarjetas guardadas y preferencias se almacenan localmente en tu navegador.",
+      "Tu historial, tu configuración, tus elecciones: todo permanece bajo tu control.",
     ],
-    button: "Continuar",
+    button: "Entendido",
     link: "Política de Privacidad",
   },
 };
-
-const dotColors = ["#00C896", "#4285F4", "#F5A623"];
 
 export default function PrivacyPopup() {
   const [visible, setVisible] = useState(false);
@@ -68,49 +64,40 @@ export default function PrivacyPopup() {
           exit={{ opacity: 0 }}
           transition={{ duration: 0.2 }}
           className="fixed inset-0 z-[9999] flex items-center justify-center px-4"
-          style={{ background: 'rgba(0,0,0,0.4)', backdropFilter: 'blur(4px)' }}
+          style={{ background: 'rgba(0,0,0,0.45)', backdropFilter: 'blur(8px)' }}
         >
           <motion.div
             initial={{ opacity: 0, scale: 0.95, y: 16 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: 16 }}
             transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
-            className="bg-background dark:bg-[#0F172A] rounded-[20px] w-full overflow-hidden"
-            style={{ maxWidth: '380px', padding: '32px 28px', boxShadow: '0 25px 50px rgba(0,0,0,0.15)' }}
+            className="bg-background dark:bg-card rounded-2xl w-full overflow-hidden border border-border/30"
+            style={{ maxWidth: '400px', padding: '32px 28px', boxShadow: '0 25px 60px rgba(0,0,0,0.2)' }}
           >
-            {/* Logo mark */}
-            <div className="text-2xl font-bold text-foreground select-none" style={{ fontSize: '24px' }}>G</div>
-
             {/* Headline */}
-            <h2 className="text-foreground font-bold tracking-tight" style={{ fontSize: '20px', marginTop: '16px' }}>
+            <h2 className="text-foreground font-bold tracking-tight text-[18px]">
               {t.headline}
             </h2>
 
-            {/* Subtext */}
-            <p className="text-muted-foreground" style={{ fontSize: '13px', marginTop: '4px' }}>
-              {t.subtext}
-            </p>
-
-            {/* Privacy items — simple rows */}
-            <div className="space-y-0" style={{ marginTop: '20px' }}>
+            {/* Privacy items */}
+            <div className="space-y-3 mt-5">
               {t.items.map((item, i) => (
-                <div key={i} className="flex items-center gap-2.5" style={{ height: '32px' }}>
-                  <span className="w-1.5 h-1.5 rounded-full flex-shrink-0" style={{ background: dotColors[i] }} />
-                  <span className="text-muted-foreground" style={{ fontSize: '13px' }}>{item}</span>
-                </div>
+                <p key={i} className="text-muted-foreground text-[13px] leading-relaxed">
+                  {item}
+                </p>
               ))}
             </div>
 
             {/* CTA */}
             <button
               onClick={handleAccept}
-              className="w-full text-white font-semibold hover:brightness-110 transition-all"
+              className="w-full font-semibold hover:brightness-110 transition-all mt-6"
               style={{
-                background: '#2563EB',
+                background: 'hsl(var(--primary))',
+                color: 'hsl(var(--primary-foreground))',
                 height: '44px',
                 borderRadius: '12px',
                 fontSize: '14px',
-                marginTop: '24px',
                 border: 'none',
                 cursor: 'pointer',
               }}
@@ -119,8 +106,8 @@ export default function PrivacyPopup() {
             </button>
 
             {/* Policy link */}
-            <p className="text-center" style={{ marginTop: '12px' }}>
-              <a href="/privacidade" className="text-muted-foreground hover:underline" style={{ fontSize: '12px' }}>
+            <p className="text-center mt-3">
+              <a href="/privacidade" className="text-muted-foreground hover:underline text-[11px]">
                 {t.link}
               </a>
             </p>
