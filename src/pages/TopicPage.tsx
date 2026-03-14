@@ -399,10 +399,11 @@ const TopicPage = () => {
                       </div>
                       {rt.sparkData && rt.sparkData.length > 0 && (
                         <div className="w-[48px] h-[24px] shrink-0 opacity-50">
-                          <SparklineArea
+                        <SparklineArea
                             data={rt.sparkData}
                             color={rt.changePositive ? "hsl(var(--color-positive))" : "hsl(var(--color-critical))"}
                             height={24}
+                            width={48}
                           />
                         </div>
                       )}
