@@ -697,6 +697,11 @@
     top: 4px !important;
     right: 4px !important;
   }
+  /* Fix horizontal overflow on mobile */
+  main, section, article, .grid {
+    max-width: 100vw;
+    overflow-x: hidden;
+  }
 }
 @media (max-width: 375px) {
   .glass-header h1 { font-size: 13px; }
@@ -714,6 +719,15 @@
     background: hsl(var(--secondary)) !important;
     transform: scale(0.98) !important;
   }
+}
+
+/* ─── PAGE TRANSITION ─── */
+@keyframes pageEnter {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.page-enter {
+  animation: pageEnter 0.35s cubic-bezier(0.25, 0.46, 0.45, 0.94) both;
 }
 
 /* Highlight animation for anomaly click */
