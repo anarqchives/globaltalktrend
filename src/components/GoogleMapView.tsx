@@ -601,3 +601,213 @@ const GoogleMapView = ({
               onClick={onClose}
               className="w-7 h-7 rounded-lg flex items-center justify-center bg-transparent text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-colors pointer-events-auto ml-1"
               title
+                           title={t("mapCloseMap")}
+            >
+              <X className="w-3.5 h-3.5" strokeWidth={2.5} />
+            </button>
+          )}
+        </div>
+      </div>
+
+      {/* Update notification */}
+      <AnimatePresence>
+        {updateNotif && <UpdateNotification countriesUpdated={updateNotif.countries} newTrends={updateNotif.trends} onDismiss={() => setUpdateNotif(null)} />}
+      </AnimatePresence>
+
+      {/* Map container */}
+      <div ref={mapRef} className="absolute inset-0 z-0" />
+
+      {/* Custom zoom controls */}
+      {mapLoaded && (
+        <div className={`absolute z-20 flex flex-col gap-1 ${isMobile ? 'bottom-24 right-2' : 'bottom-[100px] right-3'}`}>
+          <button
+            onClick={() => googleMapRef.current?.setZoom((googleMapRef.current?.getZoom() || 3) + 1)}
+            className={`${isMobile ? 'w-11 h-11' : 'w-9 h-9'} rounded-lg bg-white/90 dark:bg-card/90 backdrop-blur-xl border border-border/30 shadow-sm flex items-center justify-center text-foreground hover:bg-white dark:hover:bg-card transition-colors`}
+            aria-label="Zoom in"
+          >
+            <Plus className="w-4 h-4" />
+          </button>
+          <button
+            onClick={() => googleMapRef.current?.setZoom((googleMapRef.current?.getZoom() || 3) - 1)}
+            className={`${isMobile ? 'w-11 h-11' : 'w-9 h-9'} rounded-lg bg-white/90 dark:bg-card/90 backdrop-blur-xl border border-border/30 shadow-sm flex items-center justify-center text-foreground hover:bg-white dark:hover:bg-card transition-colors`}
+            aria-label="Zoom out"
+          >
+            <Minus className="w-4 h-4" />
+          </button>
+        </div>
+      )}
+
+      {/* Mode transition fade overlay */}
+      <AnimatePresence>
+        {modeTransitioning && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.15, ease: "easeInOut" }}
+            className="absolute inset-0 z-[3] bg-background/20 backdrop-blur-[2px] pointer-events-none"
+          />
+        )}
+      </AnimatePresence>
+
+      {/* Loading state */}
+      {!mapLoaded && !mapError && (
+        <div className="absolute inset-0 flex items-center justify-center bg-background/50 backdrop-blur-sm">
+          <div className="flex items-center gap-3 text-muted-foreground text-sm">
+            <div className="w-5 h-5 border-2 border-primary/30 border-t-primary rounded-full animate-spin" />
+            <span className="font-medium">{t("mapLoadingMap")}</span>
+          </div>
+        </div>
+      )}
+
+      {/* Error fallback */}
+      {mapError && (
+        <div className="absolute inset-0 flex items-center justify-center bg-background/30 backdrop-blur-sm">
+          <div className="text-center p-6 bg-card/80 backdrop-blur-xl rounded-2xl border border-border/30 shadow-lg max-w-xs">
+            <div className="text-3xl mb-3">🗺️</div>
+            <p className="text-sm font-medium text-foreground mb-1">{mapError}</p>
+            <p className="text-xs text-muted-foreground/60 mb-4">{t("mapReconnectMsg")}</p>
+            <button onClick={retryMap} className="px-4 py-2 rounded-full bg-primary hover:bg-primary/90 text-primary-foreground text-xs font-semibold transition-colors shadow-sm">
+              🔄 {t("mapRetry")}
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Active trend indicator */}
+      {activeTrend && (
+        <div
+          className="absolute bottom-4 left-1/2 -translate-x-1/2 bg-white/95 dark:bg-card/95 backdrop-blur-[12px] border border-white/50 dark:border-white/10 rounded-2xl shadow-[0_8px_24px_rgba(0,0,0,0.08)] dark:shadow-[0_8px_24px_rgba(0,0,0,0.3)] px-4 py-2 max-w-xs animate-in fade-in slide-in-from-bottom-4 duration-300 cursor-pointer z-10"
+          onClick={onDismissTrend}
+        >
+          <p className="text-[11px] font-medium text-foreground truncate">{activeTrend.title}</p>
+          <p className="text-[9px] text-muted-foreground mt-0.5">{activeTrend.platform} · {activeTrend.volume} · {t("clickToClose")}</p>
+        </div>
+      )}
+
+      {/* Dynamic legend */}
+      <AnimatePresence mode="wait">
+        {mapMode === "heatmap" && (
+          <motion.div
+            key="legend-heatmap"
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 10 }}
+            transition={{ duration: 0.25, ease: "easeOut" }}
+            className={`absolute z-20 bg-white/90 dark:bg-card/90 backdrop-blur-xl border border-border/15 shadow-[0_2px_12px_rgba(0,0,0,0.06)] dark:shadow-[0_2px_12px_rgba(0,0,0,0.2)] ${
+              isMobile ? 'bottom-2 left-2 right-2 rounded-lg px-2.5 py-1.5' : 'bottom-[30px] right-5 rounded-xl px-2.5 py-2 max-w-[180px]'
+            }`}
+          >
+            {isMobile ? (
+              <div className="flex items-center gap-2">
+                <div className="flex-1">
+                  <div className="relative h-2 rounded-full overflow-hidden">
+                    <div className="w-full h-full" style={{ background: "linear-gradient(90deg, #00a6ff, #00ff9d, #ffff00, #ffaa00, #ff3300)" }} />
+                  </div>
+                  <div className="flex justify-between text-[7px] text-muted-foreground uppercase tracking-wider mt-0.5">
+                    <span>{t("low")}</span><span>{t("critical")}</span>
+                  </div>
+                </div>
+                <div className="flex gap-2 text-center flex-shrink-0">
+                  <div><span className="text-[10px] font-semibold text-foreground tabular-nums">{activeCountries}</span><span className="text-[7px] text-muted-foreground block">{t("countries")}</span></div>
+                  <div><span className="text-[10px] font-semibold text-foreground tabular-nums">{totalTrends}</span><span className="text-[7px] text-muted-foreground block">Trends</span></div>
+                </div>
+              </div>
+            ) : (
+              <>
+                <p className="text-[9px] font-semibold text-foreground mb-1 tracking-wide flex items-center gap-1">🌡️ {t("heatmapDensity")}</p>
+                <div className="relative h-3 rounded-md overflow-hidden mb-1">
+                  <div className="w-full h-full" style={{ background: "linear-gradient(90deg, #00a6ff, #00ff9d, #ffff00, #ffaa00, #ff3300)" }} />
+                  <motion.div className="absolute top-[-1px] w-0.5 h-[14px] bg-white border border-foreground/60 rounded-sm" style={{ left: `${currentMaxIntensity * 100}%` }} animate={{ left: `${currentMaxIntensity * 100}%` }} transition={{ type: "spring", stiffness: 200, damping: 20 }} />
+                </div>
+                <div className="flex justify-between text-[7px] text-muted-foreground uppercase tracking-wider mb-1.5">
+                  <span>{t("low")}</span><span>{t("high")}</span><span>{t("critical")}</span>
+                </div>
+                <div className="flex justify-between pt-1.5 border-t border-border/20 text-center">
+                  <div><span className="text-[7px] text-muted-foreground uppercase block">Max</span><span className="text-[10px] font-medium text-foreground">{maxCount}</span></div>
+                  <div><span className="text-[7px] text-muted-foreground uppercase block">{t("countries")}</span><span className="text-[10px] font-medium text-foreground">{activeCountries}</span></div>
+                  <div><span className="text-[7px] text-muted-foreground uppercase block">Total</span><span className="text-[10px] font-medium text-foreground">{totalTrends}</span></div>
+                </div>
+              </>
+            )}
+          </motion.div>
+        )}
+
+        {mapMode === "flow" && (
+          <motion.div
+            key="legend-flow"
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 10 }}
+            transition={{ duration: 0.25, ease: "easeOut" }}
+            className={`absolute z-20 bg-white/90 dark:bg-card/90 backdrop-blur-xl border border-border/15 shadow-[0_2px_12px_rgba(0,0,0,0.06)] dark:shadow-[0_2px_12px_rgba(0,0,0,0.2)] ${
+              isMobile ? 'bottom-2 left-2 right-2 rounded-lg px-2.5 py-1.5' : 'bottom-[30px] right-5 rounded-xl px-2.5 py-2 max-w-[160px]'
+            }`}
+          >
+            <p className="text-[9px] font-semibold text-foreground mb-1.5 tracking-wide flex items-center gap-1">
+              🌐 {t("mapFlowLegendTitle")}
+            </p>
+            <div className="flex flex-col gap-1.5 mb-2">
+              {(["positive", "negative", "mixed", "neutral"] as Sentiment[]).map(s => (
+                <div key={s} className="flex items-center gap-2">
+                  <div className="w-5 h-[3px] rounded-full" style={{ background: sentimentColors[s] }} />
+                  <span className="text-[9px] text-muted-foreground">{t(`mapSent${s.charAt(0).toUpperCase() + s.slice(1)}` as any)}</span>
+                </div>
+              ))}
+            </div>
+            <div className="flex items-center gap-2 text-[9px] text-muted-foreground">
+              <div className="w-5 h-[2px] rounded-full bg-foreground/20" />
+              <span>{t("mapThinLowVol")}</span>
+            </div>
+            <div className="flex items-center gap-2 text-[9px] text-muted-foreground mt-0.5">
+              <div className="w-5 h-[5px] rounded-full bg-foreground/40" />
+              <span>{t("mapThickHighVol")}</span>
+            </div>
+            <div className="mt-2 pt-2 border-t border-border/30 text-[10px] text-muted-foreground">
+              {flowArcs.length} {t("mapPropArcs")}
+            </div>
+          </motion.div>
+        )}
+
+        {mapMode === "sentiment" && (
+          <motion.div
+            key="legend-sentiment"
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 10 }}
+            transition={{ duration: 0.25, ease: "easeOut" }}
+            className={`absolute z-20 bg-white/90 dark:bg-card/90 backdrop-blur-xl border border-border/15 shadow-[0_2px_12px_rgba(0,0,0,0.06)] dark:shadow-[0_2px_12px_rgba(0,0,0,0.2)] ${
+              isMobile ? 'bottom-2 left-2 right-2 rounded-lg px-2.5 py-1.5' : 'bottom-[30px] right-5 rounded-xl px-2.5 py-2 max-w-[160px]'
+            }`}
+          >
+            <p className="text-[9px] font-semibold text-foreground mb-1.5 tracking-wide flex items-center gap-1">
+              💭 {t("mapSentLegendTitle")}
+            </p>
+            <div className="flex flex-col gap-1.5 mb-2">
+              {(["positive", "negative", "mixed", "neutral"] as Sentiment[]).map(s => (
+                <div key={s} className="flex items-center gap-2">
+                  <div className="w-3 h-3 rounded-full" style={{ background: sentimentColors[s], opacity: 0.7 }} />
+                  <span className="text-[9px] text-muted-foreground">{t(`mapSent${s.charAt(0).toUpperCase() + s.slice(1)}` as any)}</span>
+                </div>
+              ))}
+            </div>
+            <div className="flex items-center gap-2 text-[9px] text-muted-foreground mb-1">
+              <div className="w-2 h-2 rounded-full bg-foreground/20" />
+              <span>→</span>
+              <div className="w-4 h-4 rounded-full bg-foreground/20" />
+              <span>{t("mapSizeVolume")}</span>
+            </div>
+            <div className="text-[9px] text-muted-foreground italic">
+              {t("mapFastPulse")}
+            </div>
+            <div className="mt-2 pt-2 border-t border-border/30 text-[10px] text-muted-foreground">
+              {sentimentBubbles.length} {t("countries")}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+};
+
+export default React.memo(GoogleMapView); 
