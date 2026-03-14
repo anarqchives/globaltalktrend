@@ -37,8 +37,9 @@
     --sidebar-ring: 220 70% 50%;
 
     /* ─── GLASS ─── */
-    --glass-bg: 0 0% 100% / 0.85;
+    --glass-bg: 0 0% 100% / 0.72;
     --glass-border: 220 13% 91%;
+    --glass-blur: 20px;
 
     /* ─── ELEVATION ─── */
     --shadow-xs: 0 1px 2px 0 rgba(0,0,0,0.03);
@@ -47,8 +48,10 @@
     --shadow-lg: 0 8px 24px -4px rgba(0,0,0,0.1), 0 4px 8px -4px rgba(0,0,0,0.06);
     --shadow-xl: 0 16px 48px -8px rgba(0,0,0,0.12), 0 8px 16px -8px rgba(0,0,0,0.08);
     --shadow-focus: 0 0 0 3px hsl(220 70% 50% / 0.2);
+    --shadow-glow-lime: 0 0 20px rgba(163, 230, 53, 0.15);
+    --shadow-glow-blue: 0 0 20px rgba(59, 130, 246, 0.12);
 
-    /* ─── ACCENT PALETTE (reference-inspired) ─── */
+    /* ─── ACCENT PALETTE ─── */
     --accent-lime: #A3E635;
     --accent-amber: #F5A623;
     --accent-coral: #FF4D6A;
@@ -61,6 +64,8 @@
     --gradient-brand: linear-gradient(135deg, hsl(220 70% 50%), hsl(220 70% 40%));
     --gradient-surface: linear-gradient(180deg, hsl(0 0% 100%) 0%, hsl(220 14% 98%) 100%);
     --gradient-editorial: linear-gradient(160deg, hsl(220 14% 98%) 0%, hsl(0 0% 100%) 50%, hsl(220 14% 97%) 100%);
+    --gradient-glass: linear-gradient(135deg, rgba(255,255,255,0.9) 0%, rgba(255,255,255,0.6) 100%);
+    --gradient-dark-card: linear-gradient(135deg, hsl(220 15% 12%) 0%, hsl(220 15% 8%) 100%);
 
     /* ─── STATUS TOKENS ─── */
     --warning-bg: 45 93% 94%;
@@ -154,14 +159,18 @@
     --input: 222 12% 18%;
     --ring: 217 91% 60%;
 
+    --glass-bg: 222 16% 10% / 0.75;
+    --glass-blur: 24px;
+
     --shadow-xs: 0 1px 2px 0 rgba(0,0,0,0.15);
     --shadow-sm: 0 1px 3px 0 rgba(0,0,0,0.2), 0 1px 2px -1px rgba(0,0,0,0.15);
     --shadow-md: 0 4px 12px -2px rgba(0,0,0,0.3), 0 2px 4px -2px rgba(0,0,0,0.2);
     --shadow-lg: 0 8px 24px -4px rgba(0,0,0,0.4), 0 4px 8px -4px rgba(0,0,0,0.25);
     --shadow-xl: 0 16px 48px -8px rgba(0,0,0,0.5), 0 8px 16px -8px rgba(0,0,0,0.3);
     --shadow-focus: 0 0 0 3px hsl(217 91% 60% / 0.3);
+    --shadow-glow-lime: 0 0 24px rgba(190, 242, 100, 0.1);
+    --shadow-glow-blue: 0 0 24px rgba(96, 165, 250, 0.1);
 
-    /* Dark accent palette — slightly brighter */
     --accent-lime: #BEF264;
     --accent-amber: #FBBF24;
     --accent-coral: #FF6B8A;
@@ -172,6 +181,8 @@
 
     --gradient-surface: linear-gradient(180deg, hsl(222 16% 10%) 0%, hsl(222 20% 8%) 100%);
     --gradient-editorial: linear-gradient(160deg, hsl(222 20% 8%) 0%, hsl(222 16% 10%) 50%, hsl(222 20% 9%) 100%);
+    --gradient-glass: linear-gradient(135deg, rgba(30,30,40,0.8) 0%, rgba(20,20,30,0.6) 100%);
+    --gradient-dark-card: linear-gradient(135deg, hsl(222 16% 14%) 0%, hsl(222 16% 10%) 100%);
 
     --warning-bg: 40 70% 15%;
     --warning-fg: 45 90% 68%;
@@ -276,6 +287,24 @@
 }
 
 @layer components {
+  /* ─── GLASS PANELS (reference-inspired) ─── */
+  .glass-panel {
+    background: hsl(var(--glass-bg));
+    backdrop-filter: blur(var(--glass-blur));
+    -webkit-backdrop-filter: blur(var(--glass-blur));
+    border: 1px solid hsl(var(--border) / 0.3);
+    border-radius: 1.25rem;
+    box-shadow: var(--shadow-md);
+  }
+  .glass-panel-sm {
+    background: hsl(var(--glass-bg));
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid hsl(var(--border) / 0.2);
+    border-radius: 1rem;
+    box-shadow: var(--shadow-sm);
+  }
+
   /* ─── GLASS HEADER ─── */
   .glass-header {
     background: hsl(var(--glass-bg));
@@ -317,26 +346,63 @@
 
   /* ─── SECTION TYPOGRAPHY ─── */
   .section-overline {
-    @apply text-[10px] uppercase tracking-wider font-semibold mb-2;
+    @apply text-[10px] uppercase tracking-[0.12em] font-semibold mb-2;
     color: var(--accent-neutral);
   }
   .section-title {
-    @apply font-bold tracking-tight text-foreground;
-    font-size: clamp(1.5rem, 3vw, 2rem);
+    @apply font-bold tracking-[-0.03em] text-foreground leading-[1.1];
+    font-size: clamp(1.5rem, 3vw, 2.25rem);
   }
 
-  /* ─── STAT BLOCKS (metric-first) ─── */
+  /* ─── DARK ACCENT CARD (Salesforce/VR reference) ─── */
+  .dark-accent-card {
+    background: var(--gradient-dark-card);
+    border-radius: 1.25rem;
+    color: white;
+    position: relative;
+    overflow: hidden;
+  }
+  .dark-accent-card::after {
+    content: '';
+    position: absolute;
+    bottom: -30%;
+    right: -20%;
+    width: 60%;
+    height: 60%;
+    border-radius: 50%;
+    background: var(--accent-lime);
+    opacity: 0.06;
+    filter: blur(40px);
+    pointer-events: none;
+  }
+
+  /* ─── STAT BLOCKS (metric-first, reference-inspired) ─── */
   .stat-block {
     @apply space-y-1;
   }
   .stat-value {
-    @apply font-bold text-foreground tracking-tight leading-none tabular-nums;
-    font-size: clamp(1.75rem, 4vw, 2.5rem);
+    @apply font-bold text-foreground tracking-[-0.04em] leading-none tabular-nums;
+    font-size: clamp(2rem, 5vw, 3rem);
   }
   .stat-label {
-    @apply text-[10px] uppercase tracking-wider font-medium;
+    @apply text-[10px] uppercase tracking-[0.1em] font-medium;
     color: var(--accent-neutral);
     opacity: 0.6;
+  }
+
+  /* ─── STAT GLASS CARD ─── */
+  .stat-glass-card {
+    @apply rounded-2xl p-5;
+    background: hsl(var(--glass-bg));
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid hsl(var(--border) / 0.2);
+    box-shadow: var(--shadow-sm);
+    transition: box-shadow 0.25s ease, transform 0.25s ease;
+  }
+  .stat-glass-card:hover {
+    box-shadow: var(--shadow-md);
+    transform: translateY(-1px);
   }
 
   /* ─── LIVE BADGE ─── */
@@ -349,14 +415,17 @@
   .cta-primary {
     @apply bg-foreground text-background;
     box-shadow: var(--shadow-md);
+    transition: all 0.2s ease;
   }
   .cta-primary:hover {
     opacity: 0.9;
     box-shadow: var(--shadow-lg);
+    transform: translateY(-1px);
   }
   .cta-secondary {
     @apply border text-foreground;
     border-color: hsl(var(--border) / 0.4);
+    transition: all 0.2s ease;
   }
   .cta-secondary:hover {
     @apply bg-secondary/30;
@@ -412,10 +481,11 @@
     @apply text-body text-muted-foreground mt-2;
   }
 
-  /* ─── SIGNAL CARD SYSTEM (replaces editorial-card) ─── */
+  /* ─── SIGNAL CARD SYSTEM ─── */
   .signal-card {
-    @apply bg-card rounded-2xl;
-    border: 1px solid hsl(var(--border) / 0.2);
+    @apply bg-card;
+    border-radius: 1.25rem;
+    border: 1px solid hsl(var(--border) / 0.15);
     box-shadow: var(--shadow-xs);
     transition: box-shadow 0.3s ease, border-color 0.3s ease, transform 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
     overflow: hidden;
@@ -423,19 +493,28 @@
   }
   .signal-card:hover {
     box-shadow: var(--shadow-lg);
-    border-color: hsl(var(--border) / 0.5);
-    transform: translateY(-2px);
+    border-color: hsl(var(--border) / 0.4);
+    transform: translateY(-3px);
   }
   .signal-card-hero {
-    min-height: 320px;
+    min-height: 340px;
     background: var(--gradient-editorial);
   }
   .signal-card-hero:hover {
     box-shadow: var(--shadow-xl);
-    transform: translateY(-3px);
+    transform: translateY(-4px);
   }
   .signal-card-featured {
     min-height: 280px;
+  }
+  .signal-card-quote {
+    background: hsl(var(--foreground));
+    color: hsl(var(--background));
+    border-color: transparent;
+  }
+  .signal-card-quote:hover {
+    transform: translateY(-3px);
+    box-shadow: var(--shadow-xl);
   }
 
   /* ─── SIGNAL PLATFORM BADGE ─── */
@@ -445,34 +524,50 @@
     color: var(--accent, var(--accent-neutral));
   }
 
-  /* ─── FEATURE CARD ─── */
+  /* ─── FEATURE CARD (enhanced with glass) ─── */
   .feature-card {
-    @apply p-6 rounded-2xl bg-card;
-    border: 1px solid hsl(var(--border) / 0.2);
+    @apply p-6 bg-card;
+    border-radius: 1.25rem;
+    border: 1px solid hsl(var(--border) / 0.15);
     box-shadow: var(--shadow-xs);
-    transition: box-shadow 0.25s ease, border-color 0.25s ease, transform 0.25s ease;
+    transition: box-shadow 0.3s ease, border-color 0.3s ease, transform 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    position: relative;
+    overflow: hidden;
+  }
+  .feature-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 2px;
+    opacity: 0;
+    transition: opacity 0.3s ease;
   }
   .feature-card:hover {
-    box-shadow: var(--shadow-md);
-    border-color: hsl(var(--border) / 0.5);
-    transform: translateY(-2px);
+    box-shadow: var(--shadow-lg);
+    border-color: hsl(var(--border) / 0.4);
+    transform: translateY(-3px);
+  }
+  .feature-card:hover::before {
+    opacity: 1;
   }
 
   /* ─── CAPABILITY ITEM ─── */
   .capability-item {
-    transition: background-color 0.15s ease;
+    transition: background-color 0.15s ease, padding-left 0.15s ease;
   }
   .capability-item:hover {
     background: hsl(var(--secondary) / 0.3);
-    border-radius: 8px;
+    border-radius: 12px;
+    padding-left: 8px;
   }
 
-  /* Legacy editorial-card alias */
+  /* Legacy aliases */
   .editorial-card { @apply signal-card; }
   .editorial-card-hero { @apply signal-card-hero; }
   .editorial-card-featured { @apply signal-card-featured; }
 
-  /* Editorial card category overlays */
   .editorial-card-cat-politica { background: linear-gradient(160deg, hsl(220 70% 50% / 0.03) 0%, transparent 60%); }
   .editorial-card-cat-tecnologia { background: linear-gradient(160deg, hsl(270 60% 50% / 0.03) 0%, transparent 60%); }
   .editorial-card-cat-ciencia { background: linear-gradient(160deg, hsl(162 100% 39% / 0.03) 0%, transparent 60%); }
@@ -483,7 +578,8 @@
 
   /* ─── INSIGHT ROW ─── */
   .insight-row {
-    @apply col-span-4 sm:col-span-6 lg:col-span-12 rounded-2xl p-5 sm:p-6;
+    @apply col-span-4 sm:col-span-6 lg:col-span-12 p-5 sm:p-6;
+    border-radius: 1.25rem;
     background: var(--gradient-editorial);
     border: 1px solid hsl(var(--border) / 0.15);
     position: relative;
@@ -548,6 +644,13 @@
     right: 0;
     height: 1px;
     background: linear-gradient(90deg, transparent 0%, hsl(var(--border) / 0.5) 20%, hsl(var(--border) / 0.5) 80%, transparent 100%);
+  }
+
+  /* ─── NUMBER TAG (Entkunstung reference) ─── */
+  .number-tag {
+    @apply inline-flex items-center justify-center w-6 h-6 rounded-full text-[10px] font-bold;
+    background: hsl(var(--foreground));
+    color: hsl(var(--background));
   }
 
   /* ─── TIMELINE MASONRY CARD SYSTEM ─── */
@@ -837,6 +940,17 @@
   }
   .tvi-gauge svg {
     transform: rotate(-90deg);
+  }
+
+  /* ─── PROGRESS BAR (Salesforce reference) ─── */
+  .progress-bar-track {
+    @apply w-full h-2 rounded-full;
+    background: hsl(var(--secondary));
+  }
+  .progress-bar-fill {
+    @apply h-full rounded-full;
+    background: var(--accent-lime);
+    transition: width 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94);
   }
 
   @media (prefers-reduced-motion: reduce) {

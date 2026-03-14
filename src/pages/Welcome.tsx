@@ -18,10 +18,10 @@ import { cn } from "@/lib/utils";
 
 /* ─── ANIMATION VARIANTS ─── */
 const fadeUp = {
-  hidden: { opacity: 0, y: 20 },
+  hidden: { opacity: 0, y: 24 },
   visible: (i: number) => ({
     opacity: 1, y: 0,
-    transition: { delay: i * 0.08, duration: 0.5, ease: [0.25, 0.46, 0.45, 0.94] as [number, number, number, number] },
+    transition: { delay: i * 0.08, duration: 0.55, ease: [0.25, 0.46, 0.45, 0.94] as [number, number, number, number] },
   }),
 };
 
@@ -78,10 +78,10 @@ const FEATURES = [
 
 /* ─── STATS ─── */
 const STATS = [
-  { value: "21+", labelPt: "Fontes de sinais", labelEn: "Signal sources" },
-  { value: "50+", labelPt: "Países monitorados", labelEn: "Countries monitored" },
-  { value: "12", labelPt: "Categorias analíticas", labelEn: "Analytical categories" },
-  { value: "~15min", labelPt: "Ciclo de atualização", labelEn: "Refresh cycle" },
+  { value: "21+", labelPt: "Fontes de sinais", labelEn: "Signal sources", accent: "var(--accent-blue)" },
+  { value: "50+", labelPt: "Países monitorados", labelEn: "Countries monitored", accent: "var(--accent-cyan)" },
+  { value: "12", labelPt: "Categorias analíticas", labelEn: "Analytical categories", accent: "var(--accent-purple)" },
+  { value: "~15min", labelPt: "Ciclo de atualização", labelEn: "Refresh cycle", accent: "var(--accent-lime)" },
 ];
 
 /* ─── PLATFORM COLORS ─── */
@@ -126,7 +126,7 @@ const SignalPreviewCard = ({ trend, index, en }: { trend: any; index: number; en
       custom={index + 1}
       className={cn(
         "signal-card group relative flex flex-col overflow-hidden",
-        isLead ? "sm:col-span-2 lg:col-span-2" : ""
+        isLead ? "sm:col-span-2 lg:col-span-2 sm:row-span-2" : ""
       )}
     >
       {/* Accent strip */}
@@ -149,21 +149,21 @@ const SignalPreviewCard = ({ trend, index, en }: { trend: any; index: number; en
         
         {/* Title */}
         <h3 className={cn(
-          "font-bold leading-[1.1] tracking-[-0.02em] text-foreground line-clamp-3",
+          "font-bold leading-[1.08] tracking-[-0.02em] text-foreground line-clamp-3",
           isLead ? "text-lg sm:text-xl" : "text-sm"
         )}>
           {trend.title}
         </h3>
         
         {isLead && trend.description && (
-          <p className="text-[13px] text-muted-foreground/60 leading-relaxed line-clamp-2">{trend.description}</p>
+          <p className="text-[13px] text-muted-foreground/50 leading-relaxed line-clamp-2">{trend.description}</p>
         )}
         
         <div className="mt-auto" />
         
         {/* Sparkline */}
         {trend.sparkData?.length > 2 && (
-          <SparklineArea data={trend.sparkData} color={accent} height={isLead ? 44 : 32} width={isLead ? 180 : 120} />
+          <SparklineArea data={trend.sparkData} color={accent} height={isLead ? 48 : 32} width={isLead ? 200 : 120} />
         )}
       </div>
       
@@ -202,7 +202,7 @@ const Welcome = () => {
         seen.add(key);
         return true;
       })
-      .slice(0, 5);
+      .slice(0, 6);
   }, [translatedTrends]);
 
   useEffect(() => {
@@ -215,17 +215,18 @@ const Welcome = () => {
 
       {/* ═══════════════════ HERO ═══════════════════ */}
       <section className="relative overflow-hidden">
-        {/* Gradient orbs */}
+        {/* Background orbs */}
         <div className="absolute inset-0 pointer-events-none" aria-hidden>
           <div className="absolute -top-40 left-[5%] w-[600px] h-[600px] rounded-full opacity-[0.04]" style={{ background: 'var(--accent-blue)' }} />
           <div className="absolute bottom-[-80px] right-[10%] w-[400px] h-[400px] rounded-full opacity-[0.03]" style={{ background: 'var(--accent-lime)' }} />
+          <div className="absolute top-[20%] right-[30%] w-[200px] h-[200px] rounded-full opacity-[0.02]" style={{ background: 'var(--accent-purple)' }} />
         </div>
 
-        <div className="relative max-w-6xl mx-auto px-4 md:px-8 pt-20 sm:pt-28 lg:pt-36 pb-12 sm:pb-16">
+        <div className="relative max-w-6xl mx-auto px-4 md:px-8 pt-20 sm:pt-28 lg:pt-36 pb-16 sm:pb-20">
           <motion.div initial="hidden" animate="visible" variants={staggerContainer} className="max-w-4xl">
             {/* Live badge */}
             <motion.div variants={fadeUp} custom={0}>
-              <span className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-8 live-badge">
+              <span className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-[10px] font-semibold text-muted-foreground uppercase tracking-[0.1em] mb-8 live-badge">
                 <span className="relative flex items-center justify-center w-1.5 h-1.5">
                   <span className="absolute w-full h-full rounded-full bg-[var(--accent-lime)] animate-ping opacity-60" />
                   <span className="relative w-1.5 h-1.5 rounded-full bg-[var(--accent-lime)]" />
@@ -237,20 +238,20 @@ const Welcome = () => {
             {/* Headline */}
             <motion.h1
               variants={fadeUp} custom={1}
-              className="font-bold tracking-[-0.04em] leading-[1.02] text-foreground"
-              style={{ fontSize: 'clamp(2.25rem, 6vw + 0.5rem, 4.25rem)' }}
+              className="font-bold tracking-[-0.045em] leading-[0.98] text-foreground"
+              style={{ fontSize: 'clamp(2.5rem, 7vw + 0.5rem, 5rem)' }}
             >
               {en ? (
-                <>Understand the world's<br className="hidden sm:block" /> signals, <span className="text-muted-foreground/40">before everyone else.</span></>
+                <>Understand the<br className="hidden sm:block" /> world's signals.</>
               ) : (
-                <>Compreenda os sinais<br className="hidden sm:block" /> do mundo, <span className="text-muted-foreground/40">antes de todos.</span></>
+                <>Compreenda os<br className="hidden sm:block" /> sinais do mundo.</>
               )}
             </motion.h1>
 
             {/* Subheadline */}
             <motion.p
               variants={fadeUp} custom={2}
-              className="mt-6 text-muted-foreground/60 leading-relaxed max-w-2xl"
+              className="mt-6 text-muted-foreground/50 leading-relaxed max-w-xl"
               style={{ fontSize: 'clamp(0.9375rem, 1.5vw + 0.25rem, 1.125rem)' }}
             >
               {en
@@ -263,29 +264,36 @@ const Welcome = () => {
             <motion.div variants={fadeUp} custom={3} className="mt-10 flex items-center gap-3 flex-wrap">
               <Link
                 to="/"
-                className="cta-primary inline-flex items-center gap-2.5 px-7 py-3.5 rounded-xl text-[14px] font-semibold transition-all duration-200"
+                className="cta-primary inline-flex items-center gap-2.5 px-7 py-3.5 rounded-xl text-[14px] font-semibold"
               >
                 {en ? "Start exploring" : "Começar a explorar"}
                 <ArrowRight className="w-4 h-4" />
               </Link>
               <Link
                 to="/metodologia"
-                className="cta-secondary inline-flex items-center gap-2 px-6 py-3.5 rounded-xl text-[14px] font-medium transition-all"
+                className="cta-secondary inline-flex items-center gap-2 px-6 py-3.5 rounded-xl text-[14px] font-medium"
               >
                 {en ? "Our methodology" : "Nossa metodologia"}
               </Link>
             </motion.div>
           </motion.div>
 
-          {/* Stats strip — metric-first style */}
+          {/* Stats — glassmorphic cards */}
           <motion.div
             initial="hidden" animate="visible" variants={staggerContainer}
-            className="mt-16 sm:mt-20 grid grid-cols-2 sm:grid-cols-4 gap-6 sm:gap-10 max-w-3xl"
+            className="mt-16 sm:mt-24 grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4 max-w-4xl"
           >
             {STATS.map((s, i) => (
-              <motion.div key={s.value} variants={fadeUp} custom={i + 4} className="stat-block">
-                <p className="stat-value">{s.value}</p>
-                <p className="stat-label">{en ? s.labelEn : s.labelPt}</p>
+              <motion.div key={s.value} variants={fadeUp} custom={i + 4} className="stat-glass-card group">
+                <div className="flex items-start justify-between mb-2">
+                  <p className="font-bold text-foreground tracking-[-0.04em] leading-none tabular-nums" style={{ fontSize: 'clamp(1.75rem, 4vw, 2.75rem)' }}>
+                    {s.value}
+                  </p>
+                  <div className="w-2 h-2 rounded-full mt-1 opacity-60 group-hover:opacity-100 transition-opacity" style={{ background: s.accent }} />
+                </div>
+                <p className="text-[10px] uppercase tracking-[0.1em] font-medium text-muted-foreground/40">
+                  {en ? s.labelEn : s.labelPt}
+                </p>
               </motion.div>
             ))}
           </motion.div>
@@ -295,7 +303,7 @@ const Welcome = () => {
       {/* ═══════════════════ LIVE SIGNAL PREVIEW ═══════════════════ */}
       {previewSignals.length > 0 && (
         <section className="section-divider">
-          <div className="max-w-6xl mx-auto px-4 md:px-8 py-14 sm:py-18">
+          <div className="max-w-6xl mx-auto px-4 md:px-8 py-14 sm:py-20">
             <AnimatedSection>
               <motion.div variants={fadeUp} custom={0} className="flex items-end justify-between mb-8">
                 <div>
@@ -340,12 +348,12 @@ const Welcome = () => {
       <section className="section-divider">
         <div className="max-w-6xl mx-auto px-4 md:px-8 py-16 sm:py-24">
           <AnimatedSection>
-            <motion.div variants={fadeUp} custom={0} className="mb-10">
+            <motion.div variants={fadeUp} custom={0} className="mb-12">
               <p className="section-overline">{en ? "Capabilities" : "Capacidades"}</p>
               <h2 className="section-title">
                 {en ? "Platform capabilities" : "Capacidades da plataforma"}
               </h2>
-              <p className="mt-2.5 text-[14px] text-muted-foreground/50 max-w-xl leading-relaxed">
+              <p className="mt-3 text-[14px] text-muted-foreground/40 max-w-xl leading-relaxed">
                 {en
                   ? "Every module designed for speed, clarity and analytical depth."
                   : "Cada módulo projetado para velocidade, clareza e profundidade analítica."
@@ -362,23 +370,25 @@ const Welcome = () => {
                     variants={fadeUp}
                     custom={i + 1}
                     className="feature-card group"
+                    style={{ '--accent-card': f.accent } as React.CSSProperties}
                   >
+                    <style>{`.feature-card:nth-child(${i + 1})::before { background: ${f.accent}; }`}</style>
                     <div className="flex items-start justify-between mb-5">
                       <div
-                        className="w-10 h-10 rounded-xl flex items-center justify-center"
+                        className="w-11 h-11 rounded-xl flex items-center justify-center"
                         style={{ background: `color-mix(in srgb, ${f.accent} 12%, transparent)`, color: f.accent }}
                       >
                         <Icon className="w-5 h-5" />
                       </div>
                       <div className="text-right">
-                        <p className="text-[24px] font-bold text-foreground leading-none tabular-nums">{f.metric}</p>
-                        <p className="text-[9px] text-muted-foreground/40 uppercase tracking-wider font-medium">{f.metricLabel}</p>
+                        <p className="text-[28px] font-bold text-foreground leading-none tabular-nums tracking-[-0.03em]">{f.metric}</p>
+                        <p className="text-[9px] text-muted-foreground/35 uppercase tracking-[0.1em] font-medium">{f.metricLabel}</p>
                       </div>
                     </div>
-                    <h3 className="text-[15px] font-semibold text-foreground mb-2 tracking-tight">
+                    <h3 className="text-[15px] font-semibold text-foreground mb-2 tracking-[-0.01em]">
                       {en ? f.titleEn : f.titlePt}
                     </h3>
-                    <p className="text-[13px] text-muted-foreground/50 leading-relaxed">
+                    <p className="text-[13px] text-muted-foreground/45 leading-relaxed">
                       {en ? f.descEn : f.descPt}
                     </p>
                   </motion.div>
@@ -398,7 +408,7 @@ const Welcome = () => {
               <h2 className="section-title whitespace-pre-line">
                 {en ? "Built for analysts,\nresearchers & strategists" : "Feito para analistas,\npesquisadores e estrategistas"}
               </h2>
-              <p className="mt-4 text-[14px] text-muted-foreground/50 leading-relaxed max-w-md">
+              <p className="mt-4 text-[14px] text-muted-foreground/45 leading-relaxed max-w-md">
                 {en
                   ? "From early signal detection to deep analytical reports. Every feature designed for professional intelligence workflows."
                   : "Da detecção precoce de sinais a relatórios analíticos profundos. Cada recurso projetado para fluxos de inteligência profissionais."
@@ -430,13 +440,11 @@ const Welcome = () => {
                     custom={i + 1}
                     className="capability-item flex items-center gap-4 py-4 border-b border-border/15 last:border-0"
                   >
-                    <div className="w-9 h-9 rounded-lg bg-secondary/40 flex items-center justify-center text-muted-foreground/40 shrink-0">
-                      <Icon className="w-4 h-4" />
-                    </div>
-                    <span className="text-[14px] font-medium text-foreground/80">
+                    <span className="number-tag shrink-0">{String(i + 1).padStart(2, '0')}</span>
+                    <span className="text-[14px] font-medium text-foreground/80 flex-1">
                       {en ? cap.labelEn : cap.labelPt}
                     </span>
-                    <ChevronRight className="w-3.5 h-3.5 text-muted-foreground/15 ml-auto" />
+                    <ChevronRight className="w-3.5 h-3.5 text-muted-foreground/15 shrink-0" />
                   </motion.div>
                 );
               })}
@@ -447,12 +455,12 @@ const Welcome = () => {
 
       {/* ═══════════════════ CTA SECTION ═══════════════════ */}
       <section className="section-divider">
-        <div className="max-w-4xl mx-auto px-4 md:px-8 py-16 sm:py-24 text-center">
+        <div className="max-w-4xl mx-auto px-4 md:px-8 py-20 sm:py-28 text-center">
           <AnimatedSection>
             <motion.h2 variants={fadeUp} custom={0} className="section-title">
               {en ? "Start exploring global signals" : "Comece a explorar sinais globais"}
             </motion.h2>
-            <motion.p variants={fadeUp} custom={1} className="mt-3 text-[14px] text-muted-foreground/40 max-w-lg mx-auto">
+            <motion.p variants={fadeUp} custom={1} className="mt-3 text-[14px] text-muted-foreground/35 max-w-lg mx-auto">
               {en
                 ? "Free, open and transparent. No account required to start."
                 : "Gratuito, aberto e transparente. Nenhuma conta necessária para começar."
@@ -461,7 +469,7 @@ const Welcome = () => {
             <motion.div variants={fadeUp} custom={2} className="mt-8">
               <Link
                 to="/"
-                className="cta-primary inline-flex items-center gap-2.5 px-8 py-4 rounded-xl text-[15px] font-semibold transition-all"
+                className="cta-primary inline-flex items-center gap-2.5 px-8 py-4 rounded-xl text-[15px] font-semibold"
               >
                 {en ? "Enter the platform" : "Entrar na plataforma"}
                 <ArrowRight className="w-4.5 h-4.5" />
@@ -474,7 +482,7 @@ const Welcome = () => {
       {/* ═══════════════════ FOOTER ═══════════════════ */}
       <footer className="border-t border-border/10">
         <div className="max-w-4xl mx-auto px-4 md:px-8 py-8 space-y-4 text-center">
-          <p className="text-[11px] text-muted-foreground/30 leading-relaxed max-w-2xl mx-auto">
+          <p className="text-[11px] text-muted-foreground/25 leading-relaxed max-w-2xl mx-auto">
             {en
               ? "Global Talk Trend is a free and transparent monitoring platform. It does not produce editorial content, does not make recommendations and does not store personal data. All data comes from public APIs and is documented in our methodology."
               : "O Global Talk Trend é uma plataforma gratuita e transparente de monitoramento. Não produz conteúdo editorial, não faz recomendações e não armazena dados pessoais. Todos os dados provêm de APIs públicas e são documentados na nossa metodologia."
