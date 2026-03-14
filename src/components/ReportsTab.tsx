@@ -156,8 +156,7 @@ export default function ReportsTab({ userId }: ReportsTabProps) {
   const saveReport = async (reportData: ReportData, data: SnapshotRow[]) => {
     try {
       const periodLabel = periodOptions.find(p => p.value === period)?.label || period;
-      const modeLabel = reportMode === "academic" ? "Acadêmico" : "Executivo";
-      const title = `[${modeLabel}] ${t("reportTitle")} ${periodLabel} — ${countryLabel(country)} — ${format(new Date(), "dd/MM/yyyy HH:mm")}`;
+      const title = `${t("reportTitle")} ${periodLabel} — ${countryLabel(country)} — ${format(new Date(), "dd/MM/yyyy HH:mm")}`;
       await supabase.from("report_history").insert({
         user_id: userId, title, filters: { period, country, category, mediaType, reportMode },
         report_data: reportData as any, stats: reportData.stats as any, snapshot_count: data.length,
