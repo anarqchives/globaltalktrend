@@ -1,7 +1,7 @@
 import { useState, useRef, useCallback, useEffect, useMemo, lazy, Suspense, type ElementRef } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { useTimelineColumns } from "@/hooks/use-timeline-columns";
-import TrendHeader from "@/components/TrendHeader";
+import AppHeader from "@/components/AppHeader";
 import FilterBar, { FilterState, countries } from "@/components/FilterBar";
 import TimelineCard from "@/components/TimelineCard";
 import TrendCardSkeleton from "@/components/TrendCardSkeleton";
