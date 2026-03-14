@@ -91,7 +91,7 @@ export default function ReportsTab({ userId }: ReportsTabProps) {
   const [report, setReport] = useState<ReportData | null>(null);
   const [rawData, setRawData] = useState<SnapshotRow[]>([]);
   const [generatedAt, setGeneratedAt] = useState<Date | null>(null);
-  const [reportMode, setReportMode] = useState<"executive" | "academic">("executive");
+  const reportMode = "executive"; // Single comprehensive report type
 
   const [compareMode, setCompareMode] = useState(false);
   const [comparePeriod, setComparePeriod] = useState("7d");
@@ -156,8 +156,7 @@ export default function ReportsTab({ userId }: ReportsTabProps) {
   const saveReport = async (reportData: ReportData, data: SnapshotRow[]) => {
     try {
       const periodLabel = periodOptions.find(p => p.value === period)?.label || period;
-      const modeLabel = reportMode === "academic" ? "Acadêmico" : "Executivo";
-      const title = `[${modeLabel}] ${t("reportTitle")} ${periodLabel} — ${countryLabel(country)} — ${format(new Date(), "dd/MM/yyyy HH:mm")}`;
+      const title = `${t("reportTitle")} ${periodLabel} — ${countryLabel(country)} — ${format(new Date(), "dd/MM/yyyy HH:mm")}`;
       await supabase.from("report_history").insert({
         user_id: userId, title, filters: { period, country, category, mediaType, reportMode },
         report_data: reportData as any, stats: reportData.stats as any, snapshot_count: data.length,
@@ -181,7 +180,7 @@ export default function ReportsTab({ userId }: ReportsTabProps) {
       const idx = categoryValues.indexOf(saved.filters.category || "Todas");
       setCategoryIdx(idx >= 0 ? idx : 0);
       setMediaType(saved.filters.mediaType || "Todas mídias");
-      if (saved.filters.reportMode) setReportMode(saved.filters.reportMode);
+      // reportMode is now fixed as "executive" (comprehensive)
     }
     setShowHistory(false);
     toast({ title: t("reportLoaded"), description: saved.title });
@@ -274,7 +273,7 @@ export default function ReportsTab({ userId }: ReportsTabProps) {
 
       const doc = new jsPDF();
       const periodLbl = periodOptions.find(p => p.value === period)?.label || period;
-      const modeLabel = reportMode === "academic" ? "RELATÓRIO ACADÊMICO" : "RELATÓRIO EXECUTIVO";
+      const modeLabel = "RELATÓRIO DE TENDÊNCIAS";
 
       // Title page
       doc.setFontSize(24); doc.setTextColor(40, 40, 40);
@@ -524,25 +523,6 @@ export default function ReportsTab({ userId }: ReportsTabProps) {
           <FileText className="w-3.5 h-3.5" /> Gerar Relatório
         </h3>
 
-        {/* Report mode selector */}
-        <div className="flex gap-1.5">
-          <button
-            onClick={() => setReportMode("executive")}
-            className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg text-xs font-semibold transition-all border ${
-              reportMode === "executive" ? "bg-primary text-primary-foreground border-primary" : "bg-secondary text-muted-foreground border-border hover:bg-secondary/80"
-            }`}
-          >
-            <Briefcase className="w-3.5 h-3.5" /> Executivo
-          </button>
-          <button
-            onClick={() => setReportMode("academic")}
-            className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg text-xs font-semibold transition-all border ${
-              reportMode === "academic" ? "bg-primary text-primary-foreground border-primary" : "bg-secondary text-muted-foreground border-border hover:bg-secondary/80"
-            }`}
-          >
-            <GraduationCap className="w-3.5 h-3.5" /> Acadêmico
-          </button>
-        </div>
 
         <div className="grid grid-cols-2 gap-2 sm:gap-3">
           <div>
@@ -612,9 +592,9 @@ export default function ReportsTab({ userId }: ReportsTabProps) {
           className="w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 transition-colors disabled:opacity-50"
         >
           {generating === "report" ? (
-            <><div className="w-4 h-4 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full animate-spin" /> Gerando {reportMode === "academic" ? "relatório acadêmico" : "relatório"}…</>
+            <><div className="w-4 h-4 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full animate-spin" /> Gerando relatório…</>
           ) : (
-            <><Sparkles className="w-4 h-4" /> Gerar {reportMode === "academic" ? "Relatório Acadêmico" : "Relatório Executivo"}{compareMode ? " + Comparação" : ""}</>
+            <><Sparkles className="w-4 h-4" /> Gerar Relatório Completo{compareMode ? " + Comparação" : ""}</>
           )}
         </button>
 
@@ -696,8 +676,8 @@ export default function ReportsTab({ userId }: ReportsTabProps) {
           {/* Header */}
           <div className="bg-card rounded-xl border border-border/50 p-3 sm:p-4">
             <div className="flex items-center gap-2 mb-2">
-              {reportMode === "academic" ? <GraduationCap className="w-4 h-4 text-primary" /> : <FileText className="w-4 h-4 text-primary" />}
-              <h2 className="text-sm font-bold text-foreground">{reportMode === "academic" ? "Relatório Acadêmico" : "Relatório Executivo"}</h2>
+              <FileText className="w-4 h-4 text-primary" />
+              <h2 className="text-sm font-bold text-foreground">Relatório de Tendências</h2>
             </div>
             <div className="grid grid-cols-2 gap-1.5 text-[10px] sm:text-[11px] text-muted-foreground">
               <span>📅 {periodOptions.find(p => p.value === period)?.label}</span>
