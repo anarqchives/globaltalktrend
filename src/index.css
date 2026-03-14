@@ -220,16 +220,35 @@
     border-radius: var(--radius);
   }
 
-  /* Ensure touch targets are minimum 44px */
+  /* Ensure touch targets are minimum 44px on coarse pointers */
   @media (pointer: coarse) {
-    button, a, [role="button"], input, select, textarea {
+    button:not(.compact-btn), 
+    a:not(.compact-link), 
+    [role="button"]:not(.compact-btn) {
       min-height: 44px;
       min-width: 44px;
     }
-    /* Exception for inline/tiny controls */
-    .touch-target-sm {
-      min-height: 36px;
-      min-width: 36px;
+    input, select, textarea {
+      min-height: 44px;
+    }
+  }
+
+  /* ─── EDITORIAL GRID SYSTEM ─── */
+  .editorial-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+  }
+  @media (min-width: 640px) {
+    .editorial-grid {
+      grid-template-columns: repeat(6, 1fr);
+      gap: 16px;
+    }
+  }
+  @media (min-width: 1024px) {
+    .editorial-grid {
+      grid-template-columns: repeat(12, 1fr);
+      gap: 16px;
     }
   }
 }
