@@ -3,7 +3,7 @@ import { useSearchParams, Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import {
   ArrowLeft, Globe, TrendingUp, BarChart3, Clock, ExternalLink,
-  Share2, Bookmark, MapPin, Layers, ChevronRight, Zap, Activity, AlertTriangle, ArrowUpRight
+  Share2, MapPin, Layers, ChevronRight, Zap, Activity, AlertTriangle, ArrowUpRight
 } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import AppHeader from "@/components/AppHeader";
@@ -26,10 +26,10 @@ const defaultFilters: FilterState = {
 };
 
 const fadeUp = {
-  hidden: { opacity: 0, y: 20 },
+  hidden: { opacity: 0, y: 16 },
   visible: (i: number) => ({
     opacity: 1, y: 0,
-    transition: { delay: i * 0.08, duration: 0.5, ease: [0.25, 0.46, 0.45, 0.94] as [number, number, number, number] },
+    transition: { delay: i * 0.06, duration: 0.45, ease: [0.25, 0.46, 0.45, 0.94] as [number, number, number, number] },
   }),
 };
 
@@ -77,18 +77,18 @@ const TVIRadialGauge = ({ score, size = 96 }: { score: number; size?: number }) 
   return (
     <div className="tvi-gauge" style={{ width: size, height: size }}>
       <svg width={size} height={size}>
-        <circle cx={size / 2} cy={size / 2} r={radius} fill="none" stroke="hsl(var(--border))" strokeWidth={5} opacity={0.4} />
+        <circle cx={size / 2} cy={size / 2} r={radius} fill="none" stroke="hsl(var(--border))" strokeWidth={4} opacity={0.25} />
         <circle
           cx={size / 2} cy={size / 2} r={radius} fill="none"
-          stroke={`hsl(${tier.color})`} strokeWidth={5}
+          stroke={`hsl(${tier.color})`} strokeWidth={4}
           strokeDasharray={circumference} strokeDashoffset={offset}
           strokeLinecap="round"
           style={{ transition: "stroke-dashoffset 1s cubic-bezier(0.25, 0.46, 0.45, 0.94)" }}
         />
       </svg>
       <div className="absolute flex flex-col items-center">
-        <span className="text-[24px] font-bold tabular-nums leading-none" style={{ color: `hsl(${tier.color})` }}>{score}</span>
-        <span className="text-[9px] font-semibold uppercase tracking-wider mt-0.5" style={{ color: `hsl(${tier.color})` }}>{tier.label}</span>
+        <span className="text-[22px] font-bold tabular-nums leading-none" style={{ color: `hsl(${tier.color})` }}>{score}</span>
+        <span className="text-[8px] font-semibold uppercase tracking-wider mt-0.5" style={{ color: `hsl(${tier.color})` }}>{tier.label}</span>
       </div>
     </div>
   );
@@ -185,9 +185,10 @@ const TopicPage = () => {
     <div className="min-h-screen bg-background flex flex-col page-enter">
       <AppHeader />
 
-      <main className="flex-1 px-4 sm:px-6 md:px-8 lg:px-12 py-6 md:py-10 max-w-[1200px] mx-auto w-full">
+      {/* ═══════════════════ INTELLIGENCE BRIEFING HERO ═══════════════════ */}
+      <section className="briefing-header relative px-4 sm:px-6 md:px-8 lg:px-12 pt-6 md:pt-8 pb-8 md:pb-10 max-w-[1200px] mx-auto w-full">
         {/* Breadcrumb */}
-        <motion.nav initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex items-center gap-1.5 text-[11px] text-muted-foreground mb-6">
+        <motion.nav initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex items-center gap-1.5 text-[11px] text-muted-foreground/60 mb-6">
           <Link to="/" className="hover:text-foreground transition-colors compact-link">{en ? "Explore" : "Descobrir"}</Link>
           <ChevronRight className="w-3 h-3" />
           {topic?.category && (
@@ -196,48 +197,47 @@ const TopicPage = () => {
               <ChevronRight className="w-3 h-3" />
             </>
           )}
-          <span className="text-foreground font-medium truncate max-w-[200px]">{topicTitle}</span>
+          <span className="text-foreground/80 font-medium truncate max-w-[200px]">{topicTitle}</span>
         </motion.nav>
 
-        {/* ═══════════════════ HEADER + TVI GAUGE ═══════════════════ */}
-        <motion.header custom={0} variants={fadeUp} initial="hidden" animate="visible" className="mb-10">
-          <Link to="/" className="compact-link inline-flex items-center gap-1.5 text-[12px] text-muted-foreground hover:text-foreground transition-colors mb-5">
+        <motion.div custom={0} variants={fadeUp} initial="hidden" animate="visible">
+          <Link to="/" className="compact-link inline-flex items-center gap-1.5 text-[12px] text-muted-foreground/60 hover:text-foreground transition-colors mb-6">
             <ArrowLeft className="w-3.5 h-3.5" />
             {en ? "Back to Explore" : "Voltar à Descoberta"}
           </Link>
 
-          <div className="flex flex-col md:flex-row md:items-start gap-6 md:gap-8">
-            {/* TVI Gauge — primary visual */}
-            <div className="shrink-0 flex flex-col items-center gap-2">
-              <TVIRadialGauge score={tvi} size={100} />
-              <span className="text-[9px] text-muted-foreground uppercase tracking-wider font-medium">Trend Velocity Index</span>
+          <div className="flex flex-col md:flex-row md:items-start gap-8 md:gap-10">
+            {/* TVI Gauge — dominant visual */}
+            <div className="shrink-0 flex flex-col items-center gap-2.5">
+              <TVIRadialGauge score={tvi} size={108} />
+              <span className="text-[9px] text-muted-foreground/50 uppercase tracking-widest font-semibold">Trend Velocity Index</span>
             </div>
 
             {/* Title + meta */}
-            <div className="space-y-3 flex-1 min-w-0">
+            <div className="space-y-4 flex-1 min-w-0">
               <div className="flex items-center gap-2 flex-wrap">
-                <span className="px-2.5 py-0.5 rounded-full bg-primary/10 text-primary text-[10px] font-semibold uppercase tracking-wider">
+                <span className="px-2.5 py-0.5 rounded-full bg-primary/8 text-primary text-[10px] font-semibold uppercase tracking-wider">
                   {topic?.platform || topicPlatform}
                 </span>
                 {topic?.category && (
-                  <span className="px-2 py-0.5 rounded-full bg-secondary text-muted-foreground text-[10px] font-medium">{topic.category}</span>
+                  <span className="px-2 py-0.5 rounded-full bg-secondary/80 text-muted-foreground/70 text-[10px] font-medium">{topic.category}</span>
                 )}
                 {flag && <span className="text-sm">{flag}</span>}
                 <span
-                  className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider"
-                  style={{ background: `hsl(${lifecycle.color} / 0.1)`, color: `hsl(${lifecycle.color})` }}
+                  className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-widest"
+                  style={{ background: `hsl(${lifecycle.color} / 0.08)`, color: `hsl(${lifecycle.color})` }}
                 >
                   {lifecycle.icon} {en ? lifecycle.labelEn : lifecycle.label}
                 </span>
               </div>
-              <h1 className="text-[24px] md:text-[32px] lg:text-[40px] font-bold tracking-[-0.02em] leading-[1.1] text-foreground">
+              <h1 className="font-bold tracking-[-0.025em] leading-[1.08] text-foreground" style={{ fontSize: 'clamp(1.5rem, 4vw, 2.75rem)' }}>
                 {topicTitle}
               </h1>
               {topic?.description && (
-                <p className="text-muted-foreground text-[14px] md:text-[15px] leading-relaxed max-w-2xl">{topic.description}</p>
+                <p className="text-muted-foreground/70 text-[14px] md:text-[15px] leading-relaxed max-w-2xl">{topic.description}</p>
               )}
               <div className="flex items-center gap-2 pt-1">
-                <button onClick={handleShare} className="compact-btn flex items-center gap-1.5 px-3.5 py-2 rounded-full bg-secondary/60 text-muted-foreground text-[11px] font-medium hover:bg-secondary hover:text-foreground transition-all">
+                <button onClick={handleShare} className="compact-btn flex items-center gap-1.5 px-3.5 py-2 rounded-full bg-secondary/50 text-muted-foreground text-[11px] font-medium hover:bg-secondary hover:text-foreground transition-all">
                   <Share2 className="w-3 h-3" />
                   {en ? "Share" : "Compartilhar"}
                 </button>
@@ -250,10 +250,12 @@ const TopicPage = () => {
               </div>
             </div>
           </div>
-        </motion.header>
+        </motion.div>
+      </section>
 
+      <main className="flex-1 px-4 sm:px-6 md:px-8 lg:px-12 pb-10 max-w-[1200px] mx-auto w-full space-y-6 md:space-y-8">
         {/* ═══════════════════ SIGNAL METRICS STRIP ═══════════════════ */}
-        <motion.div custom={1} variants={fadeUp} initial="hidden" animate="visible" className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-10">
+        <motion.div custom={1} variants={fadeUp} initial="hidden" animate="visible" className="grid grid-cols-2 sm:grid-cols-4 gap-3">
           {[
             { icon: BarChart3, label: en ? "Volume" : "Volume", value: topic?.volume || "—", color: null },
             { icon: TrendingUp, label: en ? "Change" : "Variação", value: topic?.change ? `${isPositive ? "+" : ""}${topic.change}` : "—", color: isPositive ? "var(--color-positive)" : "var(--color-critical)" },
@@ -264,10 +266,10 @@ const TopicPage = () => {
             return (
               <div key={metric.label} className="intelligence-module p-4 space-y-1.5">
                 <div className="flex items-center gap-1.5">
-                  <Icon className="w-3.5 h-3.5 text-muted-foreground/60" />
-                  <span className="text-[10px] text-muted-foreground uppercase tracking-wider font-medium">{metric.label}</span>
+                  <Icon className="w-3.5 h-3.5 text-muted-foreground/40" />
+                  <span className="text-[10px] text-muted-foreground/60 uppercase tracking-wider font-medium">{metric.label}</span>
                 </div>
-                <p className={cn("text-[20px] sm:text-[22px] font-bold leading-none tabular-nums", !metric.color && "text-foreground")}
+                <p className={cn("text-[20px] sm:text-[24px] font-bold leading-none tabular-nums", !metric.color && "text-foreground")}
                   style={metric.color ? { color: `hsl(${metric.color})` } : undefined}
                 >
                   {metric.value}
@@ -279,20 +281,21 @@ const TopicPage = () => {
 
         {/* ═══════════════════ EVOLUTION CHART ═══════════════════ */}
         {topic?.historicalData && topic.historicalData.length > 0 && (
-          <motion.section custom={2} variants={fadeUp} initial="hidden" animate="visible" className="intelligence-module p-5 md:p-6 mb-10">
-            <h2 className="text-[13px] font-semibold text-foreground mb-4 uppercase tracking-wider">
+          <motion.section custom={2} variants={fadeUp} initial="hidden" animate="visible" className="intelligence-module p-5 md:p-6">
+            <h2 className="text-[13px] font-semibold text-foreground mb-5 uppercase tracking-wider flex items-center gap-2">
+              <Clock className="w-3.5 h-3.5 text-muted-foreground/50" />
               {en ? "24h Signal Evolution" : "Evolução do Sinal 24h"}
             </h2>
-            <div className="h-[220px] md:h-[300px]">
+            <div className="h-[200px] md:h-[280px]">
               <ResponsiveContainer width="100%" height="100%">
                 <AreaChart data={topic.historicalData} margin={{ top: 5, right: 5, bottom: 5, left: 0 }}>
                   <defs>
                     <linearGradient id="topicGrad" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="0%" stopColor="hsl(var(--primary))" stopOpacity={0.15} />
+                      <stop offset="0%" stopColor="hsl(var(--primary))" stopOpacity={0.12} />
                       <stop offset="100%" stopColor="hsl(var(--primary))" stopOpacity={0} />
                     </linearGradient>
                   </defs>
-                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" opacity={0.3} />
+                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" opacity={0.2} />
                   <XAxis dataKey="hour" tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }} axisLine={false} tickLine={false} />
                   <YAxis tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }} axisLine={false} tickLine={false} width={35} />
                   <Tooltip contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: 10, fontSize: 11, boxShadow: "var(--shadow-md)" }} />
@@ -304,10 +307,11 @@ const TopicPage = () => {
         )}
 
         {/* ═══════════════════ MOMENTUM + CROSS-PLATFORM ═══════════════════ */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-10">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
           {topic?.sparkData && topic.sparkData.length > 0 && (
             <motion.section custom={3} variants={fadeUp} initial="hidden" animate="visible" className="intelligence-module p-5">
-              <h2 className="text-[13px] font-semibold text-foreground mb-4 uppercase tracking-wider">
+              <h2 className="text-[13px] font-semibold text-foreground mb-4 uppercase tracking-wider flex items-center gap-2">
+                <TrendingUp className="w-3.5 h-3.5 text-muted-foreground/50" />
                 {en ? "Momentum Indicator" : "Indicador de Momentum"}
               </h2>
               <div className="h-[80px]">
@@ -318,7 +322,7 @@ const TopicPage = () => {
                   width={500}
                 />
               </div>
-              <p className="text-[10px] text-muted-foreground/60 mt-3 leading-relaxed">
+              <p className="text-[11px] text-muted-foreground/50 mt-3 leading-relaxed">
                 {en ? lifecycle.descEn : lifecycle.desc}
               </p>
             </motion.section>
@@ -327,21 +331,21 @@ const TopicPage = () => {
           {crossPlatformSignals.length > 0 && (
             <motion.section custom={4} variants={fadeUp} initial="hidden" animate="visible" className="intelligence-module p-5">
               <div className="flex items-center gap-2 mb-4">
-                <Layers className="w-3.5 h-3.5 text-muted-foreground" />
+                <Layers className="w-3.5 h-3.5 text-muted-foreground/50" />
                 <h2 className="text-[13px] font-semibold text-foreground uppercase tracking-wider">
                   {en ? "Cross-Platform Signals" : "Sinais Cross-Platform"}
                 </h2>
               </div>
-              <div className="space-y-1">
+              <div className="space-y-0.5">
                 {crossPlatformSignals.map((sig, i) => (
                   <Link
                     key={i}
                     to={`/topic?title=${encodeURIComponent(sig.title)}&platform=${encodeURIComponent(sig.platform)}`}
-                    className="compact-link flex items-center justify-between py-2.5 border-b border-border/20 last:border-0 hover:bg-secondary/20 -mx-2 px-2 rounded-lg transition-colors group"
+                    className="compact-link flex items-center justify-between py-2.5 border-b border-border/15 last:border-0 hover:bg-secondary/20 -mx-2 px-2 rounded-lg transition-colors group"
                   >
                     <div className="flex items-center gap-2 min-w-0 flex-1">
-                      <span className="text-[10px] font-semibold text-primary shrink-0">{sig.platform}</span>
-                      <span className="text-[11px] text-foreground truncate">{sig.title}</span>
+                      <span className="text-[10px] font-semibold text-primary/80 shrink-0">{sig.platform}</span>
+                      <span className="text-[11px] text-foreground/80 truncate">{sig.title}</span>
                     </div>
                     <div className="flex items-center gap-1.5 shrink-0 ml-2">
                       {sig.change && (
@@ -349,7 +353,7 @@ const TopicPage = () => {
                           {sig.changePositive ? "+" : ""}{sig.change}
                         </span>
                       )}
-                      <ArrowUpRight className="w-3 h-3 text-muted-foreground/30 group-hover:text-primary transition-colors" />
+                      <ArrowUpRight className="w-3 h-3 text-muted-foreground/20 group-hover:text-primary transition-colors" />
                     </div>
                   </Link>
                 ))}
@@ -359,10 +363,10 @@ const TopicPage = () => {
         </div>
 
         {/* ═══════════════════ GEO + RELATED ═══════════════════ */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-10">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
           <motion.section custom={5} variants={fadeUp} initial="hidden" animate="visible" className="lg:col-span-1 intelligence-module p-5">
             <div className="flex items-center gap-2 mb-4">
-              <MapPin className="w-3.5 h-3.5 text-muted-foreground" />
+              <MapPin className="w-3.5 h-3.5 text-muted-foreground/50" />
               <h2 className="text-[13px] font-semibold text-foreground uppercase tracking-wider">
                 {en ? "Geographic Distribution" : "Distribuição Geográfica"}
               </h2>
@@ -375,27 +379,27 @@ const TopicPage = () => {
                   return (
                     <div key={geo.code} className="space-y-1.5">
                       <div className="flex items-center justify-between">
-                        <span className="text-[12px] font-medium text-foreground flex items-center gap-1.5">
+                        <span className="text-[12px] font-medium text-foreground/80 flex items-center gap-1.5">
                           <span>{countryCodeToFlag(geo.code)}</span>
                           {geo.code.toUpperCase()}
                         </span>
-                        <span className="text-[10px] text-muted-foreground tabular-nums">{geo.count} {en ? "signals" : "sinais"}</span>
+                        <span className="text-[10px] text-muted-foreground/50 tabular-nums">{geo.count} {en ? "signals" : "sinais"}</span>
                       </div>
-                      <div className="h-1.5 bg-secondary/60 rounded-full overflow-hidden">
-                        <motion.div initial={{ width: 0 }} animate={{ width: `${pct}%` }} transition={{ duration: 0.6, delay: 0.2 }} className="h-full bg-primary/50 rounded-full" />
+                      <div className="h-1.5 bg-secondary/50 rounded-full overflow-hidden">
+                        <motion.div initial={{ width: 0 }} animate={{ width: `${pct}%` }} transition={{ duration: 0.6, delay: 0.2 }} className="h-full bg-primary/40 rounded-full" />
                       </div>
                     </div>
                   );
                 })}
               </div>
             ) : (
-              <p className="text-[12px] text-muted-foreground">{en ? "No geographic data available" : "Sem dados geográficos disponíveis"}</p>
+              <p className="text-[12px] text-muted-foreground/50">{en ? "No geographic data available" : "Sem dados geográficos disponíveis"}</p>
             )}
           </motion.section>
 
           <motion.section custom={6} variants={fadeUp} initial="hidden" animate="visible" className="lg:col-span-2 intelligence-module p-5">
             <div className="flex items-center gap-2 mb-4">
-              <Layers className="w-3.5 h-3.5 text-muted-foreground" />
+              <Layers className="w-3.5 h-3.5 text-muted-foreground/50" />
               <h2 className="text-[13px] font-semibold text-foreground uppercase tracking-wider">
                 {en ? "Related Topic Clusters" : "Clusters de Tópicos Relacionados"}
               </h2>
@@ -406,22 +410,22 @@ const TopicPage = () => {
                   <Link
                     key={i}
                     to={`/topic?title=${encodeURIComponent(rt.title)}&platform=${encodeURIComponent(rt.platform)}`}
-                    className="compact-link group flex items-start gap-3 p-3 rounded-lg border border-border/30 hover:border-border/60 hover:bg-secondary/20 transition-all"
+                    className="compact-link group flex items-start gap-3 p-3 rounded-lg border border-border/20 hover:border-border/50 hover:bg-secondary/15 transition-all"
                   >
                     <div className="flex-1 min-w-0">
-                      <p className="text-[12px] font-semibold text-foreground leading-snug line-clamp-2 group-hover:text-primary transition-colors">{rt.title}</p>
+                      <p className="text-[12px] font-semibold text-foreground/80 leading-snug line-clamp-2 group-hover:text-primary transition-colors">{rt.title}</p>
                       <div className="flex items-center gap-2 mt-1.5">
-                        <span className="text-[10px] text-primary font-medium">{rt.platform}</span>
+                        <span className="text-[10px] text-primary/70 font-medium">{rt.platform}</span>
                         {rt.volume && (
                           <>
-                            <span className="w-0.5 h-0.5 rounded-full bg-border" />
-                            <span className="text-[10px] text-muted-foreground tabular-nums">{rt.volume}</span>
+                            <span className="w-0.5 h-0.5 rounded-full bg-border/50" />
+                            <span className="text-[10px] text-muted-foreground/50 tabular-nums">{rt.volume}</span>
                           </>
                         )}
                       </div>
                     </div>
                     {rt.sparkData && rt.sparkData.length > 0 && (
-                      <div className="w-[48px] h-[24px] shrink-0 opacity-40 group-hover:opacity-70 transition-opacity">
+                      <div className="w-[48px] h-[24px] shrink-0 opacity-30 group-hover:opacity-60 transition-opacity">
                         <SparklineArea data={rt.sparkData} color={rt.changePositive ? "hsl(var(--color-positive))" : "hsl(var(--color-critical))"} height={24} width={48} />
                       </div>
                     )}
@@ -429,20 +433,20 @@ const TopicPage = () => {
                 ))}
               </div>
             ) : (
-              <p className="text-[12px] text-muted-foreground">{en ? "No related topics found" : "Nenhum tópico relacionado encontrado"}</p>
+              <p className="text-[12px] text-muted-foreground/50">{en ? "No related topics found" : "Nenhum tópico relacionado encontrado"}</p>
             )}
           </motion.section>
         </div>
 
         {/* ═══════════════════ ANALYTICAL CONTEXT ═══════════════════ */}
-        <motion.section custom={7} variants={fadeUp} initial="hidden" animate="visible" className="intelligence-module p-5 md:p-6 mb-10">
+        <motion.section custom={7} variants={fadeUp} initial="hidden" animate="visible" className="intelligence-module p-5 md:p-6">
           <div className="flex items-center gap-2 mb-3">
-            <AlertTriangle className="w-3.5 h-3.5 text-muted-foreground/60" />
+            <AlertTriangle className="w-3.5 h-3.5 text-muted-foreground/40" />
             <h2 className="text-[13px] font-semibold text-foreground uppercase tracking-wider">
               {en ? "Analytical Context" : "Contexto Analítico"}
             </h2>
           </div>
-          <div className="text-muted-foreground text-[13px] leading-relaxed space-y-3 max-w-3xl">
+          <div className="text-muted-foreground/70 text-[13px] leading-relaxed space-y-3 max-w-3xl">
             {topic?.details ? (
               <p>{topic.details}</p>
             ) : (
@@ -453,8 +457,8 @@ const TopicPage = () => {
               </p>
             )}
           </div>
-          <div className="mt-4 pt-3 border-t border-border/20">
-            <p className="text-[10px] text-muted-foreground/40 leading-relaxed">
+          <div className="mt-4 pt-3 border-t border-border/15">
+            <p className="text-[10px] text-muted-foreground/30 leading-relaxed">
               {en
                 ? "⚠️ This analysis is generated from public data signals and does not constitute a recommendation. Always verify with primary sources."
                 : "⚠️ Esta análise é gerada a partir de sinais de dados públicos e não constitui uma recomendação. Sempre verifique com fontes primárias."}
@@ -463,10 +467,10 @@ const TopicPage = () => {
         </motion.section>
       </main>
 
-      <footer className="border-t border-border/30 px-4 sm:px-6 md:px-8 lg:px-12 py-6 max-w-[1200px] mx-auto w-full">
+      <footer className="border-t border-border/20 px-4 sm:px-6 md:px-8 lg:px-12 py-6 max-w-[1200px] mx-auto w-full">
         <div className="flex items-center justify-between">
-          <p className="text-[11px] text-muted-foreground/40">© {new Date().getFullYear()} Global Talk Trend</p>
-          <Link to="/metodologia" className="compact-link text-[10px] text-muted-foreground/40 hover:text-foreground transition-colors">{en ? "Methodology" : "Metodologia"}</Link>
+          <p className="text-[11px] text-muted-foreground/30">© {new Date().getFullYear()} Global Talk Trend</p>
+          <Link to="/metodologia" className="compact-link text-[10px] text-muted-foreground/30 hover:text-foreground transition-colors">{en ? "Methodology" : "Metodologia"}</Link>
         </div>
       </footer>
     </div>
