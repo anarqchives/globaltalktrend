@@ -297,13 +297,13 @@ const Discover = () => {
       <AppHeader />
 
       {/* ─── HERO SECTION ─── */}
-      <section className="px-4 md:px-8 lg:px-12 pt-8 md:pt-12 pb-6 md:pb-8 max-w-[1400px] mx-auto w-full">
+      <section className="px-4 md:px-8 lg:px-12 pt-6 md:pt-10 pb-4 md:pb-6 max-w-[1400px] mx-auto w-full">
         <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-4">
-          <div className="space-y-2">
-            <h1 className="text-[28px] md:text-[36px] lg:text-[42px] font-bold tracking-tight leading-[1.1] text-foreground">
+          <div className="space-y-1.5">
+            <h1 className="text-foreground font-bold tracking-tight leading-[1.1]" style={{ fontSize: 'clamp(1.5rem, 4vw, 2.625rem)' }}>
               {lang === "en" ? "Discover" : "Descobrir"}
             </h1>
-            <p className="text-muted-foreground text-[14px] md:text-[15px] leading-relaxed max-w-xl">
+            <p className="text-muted-foreground leading-relaxed max-w-xl" style={{ fontSize: 'clamp(0.8125rem, 1.5vw, 0.9375rem)' }}>
               {lang === "en"
                 ? "Explore global trends, signals and emerging conversations across platforms."
                 : "Explore tendências globais, sinais e conversas emergentes em múltiplas plataformas."}
