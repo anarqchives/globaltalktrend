@@ -1,7 +1,7 @@
 import { useState, useRef, useCallback, useEffect, useMemo, lazy, Suspense, type ElementRef } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { useTimelineColumns } from "@/hooks/use-timeline-columns";
-import TrendHeader from "@/components/TrendHeader";
+import AppHeader from "@/components/AppHeader";
 import FilterBar, { FilterState, countries } from "@/components/FilterBar";
 import TimelineCard from "@/components/TimelineCard";
 import TrendCardSkeleton from "@/components/TrendCardSkeleton";
@@ -754,19 +754,8 @@ const Index = () => {
   return (
     <div className="h-screen flex flex-col bg-background overflow-hidden w-full max-w-[100vw]">
       {/* Fixed Header */}
-      <TrendHeader
-        totalTrends={filteredTrends.length}
-        countriesCount={countriesCount}
-        onRefresh={handleRefresh}
-        refreshing={refreshing}
-        filters={filters}
-        onApplyFilter={setFilters}
-        anomalyCount={anomalyCount}
-        anomalies={anomalies}
-        onDismissAnomaly={dismissAnomaly}
-        onOpenTransparency={() => setTransparencyOpen(true)}
-        onAnomalyClick={handleAnomalyClick}
-      />
+      {/* Fixed Header */}
+      <AppHeader />
 
       {/* Fixed Filters */}
       <FilterBar

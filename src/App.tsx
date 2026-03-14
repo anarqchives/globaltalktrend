@@ -13,7 +13,8 @@ import { ErrorBoundary, OfflineBanner } from "./components/ErrorBoundary";
 import Index from "./pages/Index";
 import PrivacyPopup from "./components/PrivacyPopup";
 
-// Lazy-load secondary pages to reduce initial bundle / FCP
+// Lazy-load secondary pages
+const Welcome = lazy(() => import("./pages/Welcome"));
 const Methodology = lazy(() => import("./pages/Methodology"));
 const History = lazy(() => import("./pages/History"));
 const Profile = lazy(() => import("./pages/Profile"));
@@ -26,7 +27,6 @@ const Privacidade = lazy(() => import("./pages/Privacidade"));
 
 const queryClient = new QueryClient({ defaultOptions: { queries: { retry: 1 } } });
 
-// Minimal inline fallback — avoids layout shift while lazy chunks load
 const PageLoader = () => (
   <div className="flex items-center justify-center min-h-screen bg-background">
     <div className="w-6 h-6 border-2 border-primary/30 border-t-primary rounded-full animate-spin" />
@@ -55,10 +55,7 @@ const App = () => {
     };
 
     window.addEventListener("unhandledrejection", handleUnhandledRejection);
-
-    return () => {
-      window.removeEventListener("unhandledrejection", handleUnhandledRejection);
-    };
+    return () => window.removeEventListener("unhandledrejection", handleUnhandledRejection);
   }, []);
 
   return (
@@ -75,6 +72,9 @@ const App = () => {
               <Suspense fallback={<PageLoader />}>
                 <Routes>
                   <Route path="/" element={<Index />} />
+                  <Route path="/welcome" element={<Welcome />} />
+                  <Route path="/dashboard" element={<Index />} />
+                  <Route path="/mapa" element={<Index />} />
                   <Route path="/auth/callback" element={<AuthCallback />} />
                   <Route path="/metodologia" element={<Methodology />} />
                   <Route path="/historico" element={<History />} />
