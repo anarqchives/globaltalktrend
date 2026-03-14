@@ -754,19 +754,8 @@ const Index = () => {
   return (
     <div className="h-screen flex flex-col bg-background overflow-hidden w-full max-w-[100vw]">
       {/* Fixed Header */}
-      <TrendHeader
-        totalTrends={filteredTrends.length}
-        countriesCount={countriesCount}
-        onRefresh={handleRefresh}
-        refreshing={refreshing}
-        filters={filters}
-        onApplyFilter={setFilters}
-        anomalyCount={anomalyCount}
-        anomalies={anomalies}
-        onDismissAnomaly={dismissAnomaly}
-        onOpenTransparency={() => setTransparencyOpen(true)}
-        onAnomalyClick={handleAnomalyClick}
-      />
+      {/* Fixed Header */}
+      <AppHeader />
 
       {/* Fixed Filters */}
       <FilterBar
