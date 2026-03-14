@@ -6,10 +6,18 @@ import { supabase } from "@/integrations/supabase/client";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { TrendCardProps } from "./TrendCard";
-import { Map, Flame, Globe, RefreshCw, GitBranch, Heart, X, Plus, Minus } from "lucide-react";
+import { Flame, Globe, RefreshCw, GitBranch, Heart, X, Plus, Minus } from "lucide-react";
 
-// Tipos locais para evitar dependência do arquivo map-visualizations
+// Tipos
 type Sentiment = "positive" | "negative" | "mixed" | "neutral";
+type MapMode = "heatmap" | "flow" | "sentiment";
+
+interface CountryPoint {
+  id: string;
+  name: string;
+  lat: number;
+  lng: number;
+}
 
 interface FlowArc {
   originId: string;
@@ -41,30 +49,8 @@ const sentimentColors: Record<Sentiment, string> = {
   neutral: "#6b7280",
 };
 
-// Funções auxiliares (versão simplificada para não depender de map-visualizations)
-const computeFlowArcs = (trends: TrendCardProps[], countryPoints: CountryPoint[]): FlowArc[] => {
-  // Versão simplificada - retorna array vazio se não houver dados suficientes
-  return [];
-};
-
-const computeSentimentBubbles = (trends: TrendCardProps[], countryPoints: CountryPoint[]): SentimentBubble[] => {
-  // Versão simplificada - retorna array vazio se não houver dados suficientes
-  return [];
-};
-
-const computeCurvePoints = (lat1: number, lng1: number, lat2: number, lng2: number, offset: number) => {
-  return [{ lat: lat1, lng: lng1 }, { lat: lat2, lng: lng2 }];
-};
-
-interface CountryPoint {
-  id: string;
-  name: string;
-  lat: number;
-  lng: number;
-}
-
+// Pontos dos países (lista completa)
 const countryPoints: CountryPoint[] = [
-  // Americas
   { id: "BR", name: "Brasil", lat: -14.24, lng: -51.93 },
   { id: "US", name: "EUA", lat: 37.09, lng: -95.71 },
   { id: "CA", name: "Canadá", lat: 56.13, lng: -106.35 },
@@ -74,7 +60,6 @@ const countryPoints: CountryPoint[] = [
   { id: "CL", name: "Chile", lat: -35.68, lng: -71.54 },
   { id: "PE", name: "Peru", lat: -9.19, lng: -75.02 },
   { id: "VE", name: "Venezuela", lat: 6.42, lng: -66.59 },
-  // Europe
   { id: "GB", name: "Reino Unido", lat: 55.38, lng: -3.44 },
   { id: "FR", name: "França", lat: 46.23, lng: 2.21 },
   { id: "DE", name: "Alemanha", lat: 51.17, lng: 10.45 },
@@ -88,14 +73,12 @@ const countryPoints: CountryPoint[] = [
   { id: "UA", name: "Ucrânia", lat: 48.38, lng: 31.17 },
   { id: "RU", name: "Rússia", lat: 61.52, lng: 105.32 },
   { id: "TR", name: "Turquia", lat: 38.96, lng: 35.24 },
-  // Africa
   { id: "ZA", name: "África do Sul", lat: -30.56, lng: 22.94 },
   { id: "NG", name: "Nigéria", lat: 9.08, lng: 8.68 },
   { id: "EG", name: "Egito", lat: 26.82, lng: 30.8 },
   { id: "KE", name: "Quênia", lat: -0.02, lng: 37.91 },
   { id: "MA", name: "Marrocos", lat: 31.79, lng: -7.09 },
   { id: "ET", name: "Etiópia", lat: 9.15, lng: 40.49 },
-  // Asia
   { id: "JP", name: "Japão", lat: 36.2, lng: 138.25 },
   { id: "KR", name: "Coreia do Sul", lat: 35.91, lng: 127.77 },
   { id: "IN", name: "Índia", lat: 20.59, lng: 78.96 },
@@ -113,15 +96,11 @@ const countryPoints: CountryPoint[] = [
   { id: "SY", name: "Síria", lat: 34.8, lng: 38.99 },
   { id: "LB", name: "Líbano", lat: 33.85, lng: 35.86 },
   { id: "JO", name: "Jordânia", lat: 30.59, lng: 36.24 },
-  // Oceania
   { id: "AU", name: "Austrália", lat: -25.27, lng: 133.78 },
   { id: "NZ", name: "Nova Zelândia", lat: -40.9, lng: 174.89 },
 ];
 
-type MapViewType = "roadmap" | "satellite" | "terrain";
-type MapMode = "heatmap" | "flow" | "sentiment";
-
-// Apple Maps–inspired light style
+// Estilos do mapa
 const lightStyles: google.maps.MapTypeStyle[] = [
   { elementType: "geometry", stylers: [{ color: "#f5f7fa" }] },
   { elementType: "labels.icon", stylers: [{ visibility: "off" }] },
@@ -129,49 +108,27 @@ const lightStyles: google.maps.MapTypeStyle[] = [
   { elementType: "labels.text.stroke", stylers: [{ color: "#ffffff" }, { weight: 2 }] },
   { featureType: "administrative.country", elementType: "geometry.stroke", stylers: [{ color: "#a0afc0" }, { weight: 1 }] },
   { featureType: "administrative.country", elementType: "labels.text.fill", stylers: [{ color: "#2d3748" }] },
-  { featureType: "administrative.country", elementType: "labels.text.stroke", stylers: [{ color: "#ffffff" }, { weight: 2 }] },
-  { featureType: "administrative.province", elementType: "geometry.stroke", stylers: [{ color: "#cbd5e0" }, { weight: 0.5 }] },
-  { featureType: "administrative.locality", elementType: "labels", stylers: [{ visibility: "off" }] },
-  { featureType: "administrative.neighborhood", elementType: "labels", stylers: [{ visibility: "off" }] },
-  { featureType: "administrative.land_parcel", stylers: [{ visibility: "off" }] },
-  { featureType: "poi", stylers: [{ visibility: "off" }] },
-  { featureType: "road", stylers: [{ visibility: "off" }] },
-  { featureType: "transit", stylers: [{ visibility: "off" }] },
   { featureType: "water", elementType: "geometry", stylers: [{ color: "#d4e7ff" }] },
-  { featureType: "water", elementType: "labels", stylers: [{ visibility: "off" }] },
-  { featureType: "landscape", elementType: "geometry", stylers: [{ color: "#f5f7fa" }] },
-  { featureType: "landscape.natural", elementType: "geometry", stylers: [{ color: "#edf2f7" }] },
-  { featureType: "landscape.man_made", elementType: "geometry", stylers: [{ color: "#e9eef3" }] },
 ];
 
-// Apple Maps–inspired dark style
 const darkStyles: google.maps.MapTypeStyle[] = [
   { elementType: "geometry", stylers: [{ color: "#131620" }] },
   { elementType: "labels.icon", stylers: [{ visibility: "off" }] },
   { elementType: "labels.text.fill", stylers: [{ color: "#4b5563" }] },
   { elementType: "labels.text.stroke", stylers: [{ color: "#131620" }, { weight: 2 }] },
   { featureType: "administrative.country", elementType: "geometry.stroke", stylers: [{ color: "#2d3348" }, { weight: 0.5 }] },
-  { featureType: "administrative.country", elementType: "labels.text.fill", stylers: [{ color: "#6b7280" }] },
-  { featureType: "administrative.province", elementType: "geometry.stroke", stylers: [{ visibility: "off" }] },
-  { featureType: "administrative.land_parcel", stylers: [{ visibility: "off" }] },
-  { featureType: "poi", stylers: [{ visibility: "off" }] },
-  { featureType: "road", stylers: [{ visibility: "off" }] },
-  { featureType: "transit", stylers: [{ visibility: "off" }] },
   { featureType: "water", elementType: "geometry", stylers: [{ color: "#0c1121" }] },
-  { featureType: "water", elementType: "labels", stylers: [{ visibility: "off" }] },
-  { featureType: "landscape.natural", elementType: "geometry", stylers: [{ color: "#131620" }] },
-  { featureType: "landscape.man_made", stylers: [{ visibility: "off" }] },
 ];
 
-// Vibrant gradient-based color system
-function getMarkerColor(intensity: number): { fill: string; glow: string; ring: string } {
-  if (intensity > 0.8) return { fill: "#ff3300", glow: "rgba(255,51,0,0.45)", ring: "#ff6633" };
-  if (intensity > 0.6) return { fill: "#ffaa00", glow: "rgba(255,170,0,0.4)", ring: "#ffcc44" };
-  if (intensity > 0.4) return { fill: "#facc15", glow: "rgba(250,204,21,0.35)", ring: "#fde047" };
-  if (intensity > 0.2) return { fill: "#00ff9d", glow: "rgba(0,255,157,0.3)", ring: "#4ade80" };
-  return { fill: "#00a6ff", glow: "rgba(0,166,255,0.3)", ring: "#38bdf8" };
+function getMarkerColor(intensity: number): { fill: string; glow: string } {
+  if (intensity > 0.8) return { fill: "#ff3300", glow: "rgba(255,51,0,0.45)" };
+  if (intensity > 0.6) return { fill: "#ffaa00", glow: "rgba(255,170,0,0.4)" };
+  if (intensity > 0.4) return { fill: "#facc15", glow: "rgba(250,204,21,0.35)" };
+  if (intensity > 0.2) return { fill: "#00ff9d", glow: "rgba(0,255,157,0.3)" };
+  return { fill: "#00a6ff", glow: "rgba(0,166,255,0.3)" };
 }
 
+// Componente principal
 interface GoogleMapViewProps {
   trendCounts: Record<string, number>;
   selectedCountry: string;
@@ -184,7 +141,6 @@ interface GoogleMapViewProps {
   onClose?: () => void;
 }
 
-// Update notification component
 const UpdateNotification = ({ countriesUpdated, newTrends, onDismiss }: { countriesUpdated: number; newTrends: number; onDismiss: () => void }) => (
   <motion.div
     initial={{ x: 100, opacity: 0 }}
@@ -219,69 +175,19 @@ const GoogleMapView = ({
   const isMobile = useIsMobile();
   const mapRef = useRef<HTMLDivElement>(null);
   const googleMapRef = useRef<google.maps.Map | null>(null);
-  const markersRef = useRef<google.maps.marker.AdvancedMarkerElement[]>([]);
   const infoWindowRef = useRef<google.maps.InfoWindow | null>(null);
   const hoverInfoRef = useRef<google.maps.InfoWindow | null>(null);
   const heatmapRef = useRef<any>(null);
-  const prevCountsRef = useRef<Record<string, number>>({});
   const [mapLoaded, setMapLoaded] = useState(false);
-  const [openInfoCountry, setOpenInfoCountry] = useState<string | null>(null);
-  const openInfoCountryRef = useRef<string | null>(null);
   const [mapError, setMapError] = useState<string | null>(null);
-  const [mapViewType, setMapViewType] = useState<MapViewType>("roadmap");
-  const [mapMode, setMapModeRaw] = useState<MapMode>("heatmap");
+  const [mapMode, setMapMode] = useState<MapMode>("heatmap");
   const [modeTransitioning, setModeTransitioning] = useState(false);
-  const heatmapEnabled = mapMode === "heatmap";
   const [isDark, setIsDark] = useState(() => document.documentElement.classList.contains("dark"));
   const [updateNotif, setUpdateNotif] = useState<{ countries: number; trends: number } | null>(null);
   const [mapRetry, setMapRetry] = useState(0);
-  const flowPolylinesRef = useRef<google.maps.Polyline[]>([]);
-  const flowHoverInfoRef = useRef<google.maps.InfoWindow | null>(null);
-  const sentimentMarkersRef = useRef<google.maps.marker.AdvancedMarkerElement[]>([]);
-  const sentimentCirclesRef = useRef<google.maps.Circle[]>([]);
-  const rafIdsRef = useRef<number[]>([]);
+  const prevCountsRef = useRef<Record<string, number>>({});
 
-  const cancelAllRafs = useCallback(() => {
-    rafIdsRef.current.forEach(id => cancelAnimationFrame(id));
-    rafIdsRef.current = [];
-  }, []);
-
-  const trackRaf = useCallback((id: number) => {
-    rafIdsRef.current.push(id);
-    return id;
-  }, []);
-
-  // Smooth mode transition
-  const setMapMode = useCallback((mode: MapMode) => {
-    if (mode === mapMode) return;
-    setModeTransitioning(true);
-    setTimeout(() => {
-      setMapModeRaw(mode);
-      setTimeout(() => setModeTransitioning(false), 200);
-    }, 150);
-  }, [mapMode]);
-
-  // Track updates for notification
-  useEffect(() => {
-    const prev = prevCountsRef.current;
-    const prevKeys = Object.keys(prev).filter(k => prev[k] > 0);
-    const curKeys = Object.keys(trendCounts).filter(k => trendCounts[k] > 0);
-    if (prevKeys.length > 0) {
-      let changed = 0;
-      let newT = 0;
-      curKeys.forEach(k => {
-        if ((trendCounts[k] || 0) !== (prev[k] || 0)) changed++;
-        newT += Math.max(0, (trendCounts[k] || 0) - (prev[k] || 0));
-      });
-      if (changed > 0) {
-        setUpdateNotif({ countries: changed, trends: newT });
-        const timer = setTimeout(() => setUpdateNotif(null), 5000);
-      }
-    }
-    prevCountsRef.current = { ...trendCounts };
-  }, [trendCounts]);
-
-  // Dark mode observer
+  // Detectar modo escuro
   useEffect(() => {
     const observer = new MutationObserver(() => {
       setIsDark(document.documentElement.classList.contains("dark"));
@@ -290,28 +196,7 @@ const GoogleMapView = ({
     return () => observer.disconnect();
   }, []);
 
-  // Update styles when dark mode changes
-  useEffect(() => {
-    if (googleMapRef.current && mapLoaded && mapViewType === "roadmap") {
-      googleMapRef.current.setOptions({ styles: isDark ? darkStyles : lightStyles });
-    }
-  }, [isDark, mapLoaded, mapViewType]);
-
-  const maxCount = useMemo(() => Math.max(...Object.values(trendCounts), 1), [trendCounts]);
-  const avgCount = useMemo(() => {
-    const vals = Object.values(trendCounts).filter((v) => v > 0);
-    return vals.length ? vals.reduce((a, b) => a + b, 0) / vals.length : 1;
-  }, [trendCounts]);
-  const activeCountries = useMemo(() => Object.values(trendCounts).filter(v => v > 0).length, [trendCounts]);
-  const totalTrends = useMemo(() => Object.values(trendCounts).reduce((a, b) => a + b, 0), [trendCounts]);
-
-  const retryMap = useCallback(() => {
-    setMapError(null);
-    setMapLoaded(false);
-    setMapRetry((r) => r + 1);
-  }, []);
-
-  // Load Google Maps (CORRIGIDO)
+  // Carregar mapa
   useEffect(() => {
     let cancelled = false;
     const loadMap = async () => {
@@ -319,38 +204,22 @@ const GoogleMapView = ({
         const CACHE_KEY = "gtt_maps_api_key";
         let apiKey = sessionStorage.getItem(CACHE_KEY);
         if (!apiKey) {
-          console.log("🔄 Buscando chave da API...");
-          const { data, error: fnError } = await supabase.functions.invoke("get-maps-key");
+          const { data, error } = await supabase.functions.invoke("get-maps-key");
           if (cancelled) return;
-          if (fnError || !data?.key) {
-            console.error("❌ Erro ao obter chave:", fnError);
-            setMapError("Chave do mapa indisponível para este domínio");
+          if (error || !data?.key) {
+            setMapError("Chave do mapa indisponível");
             return;
           }
           apiKey = data.key;
-          sessionStorage.setItem(CACHE_KEY, apiKey!);
-        }
-        if (cancelled || !apiKey) {
-          console.error("❌ Sem chave de API");
-          return;
+          sessionStorage.setItem(CACHE_KEY, apiKey);
         }
 
-        console.log("✅ Chave obtida, carregando mapa...");
-
-        // Configurar a chave
         setOptions({ key: apiKey, v: "weekly" });
 
-        // Importar bibliotecas necessárias
         const { Map } = (await google.maps.importLibrary("maps")) as any;
         const { InfoWindow } = (await google.maps.importLibrary("maps")) as any;
-        const { AdvancedMarkerElement } = (await google.maps.importLibrary("marker")) as any;
 
-        if (!mapRef.current) {
-          console.error("❌ mapRef.current é null");
-          return;
-        }
-
-        console.log("✅ Bibliotecas carregadas, criando mapa...");
+        if (!mapRef.current) return;
 
         const map = new Map(mapRef.current, {
           center: { lat: 20, lng: 0 },
@@ -372,196 +241,193 @@ const GoogleMapView = ({
         infoWindowRef.current = new InfoWindow();
         hoverInfoRef.current = new InfoWindow({ disableAutoPan: true });
         setMapLoaded(true);
-        console.log("✅ Mapa carregado com sucesso!");
       } catch (err) {
-        if (!cancelled) {
-          console.error("❌ Erro no carregamento do mapa:", err);
-          setMapError("Falha ao carregar mapa");
-        }
+        if (!cancelled) setMapError("Falha ao carregar mapa");
       }
     };
     loadMap();
     return () => { cancelled = true; };
   }, [mapRetry, isDark]);
 
-  // Fallback timeout
-  useEffect(() => {
-    if (mapLoaded || mapError) return;
-    const timer = window.setTimeout(() => setMapError("Mapa indisponível no momento"), 12000);
-    return () => window.clearTimeout(timer);
-  }, [mapLoaded, mapError]);
+  // Atualizar tooltip de hover
+  const showHoverTooltip = useCallback((country: CountryPoint, intensity: number) => {
+    if (!hoverInfoRef.current || !googleMapRef.current) return;
 
-  // Pan to selected/highlighted country
-  useEffect(() => {
-    const map = googleMapRef.current;
-    if (!map || !mapLoaded) return;
-    if (selectedCountry === "global") {
-      map.panTo({ lat: 20, lng: 0 });
-      map.setZoom(2);
-      return;
-    }
-    const cp = countryPoints.find((c) => c.id === selectedCountry);
-    if (cp) {
-      map.panTo({ lat: cp.lat, lng: cp.lng });
-      map.setZoom(5);
-    }
-  }, [selectedCountry, mapLoaded]);
+    const count = trendCounts[country.id] || 0;
+    const criticality = intensity > 0.8 ? "🔥 CRÍTICO" : intensity > 0.6 ? "⚡ ALTO" : intensity > 0.4 ? "📊 MODERADO" : "ℹ️ NORMAL";
+    const bg = isDark ? "rgba(19,22,32,0.97)" : "rgba(255,255,255,0.97)";
+    const text = isDark ? "#e2e8f0" : "#111827";
+    const border = isDark ? "rgba(45,51,72,0.5)" : "rgba(0,0,0,0.08)";
 
-  useEffect(() => {
-    const map = googleMapRef.current;
-    if (!map || !mapLoaded || !highlightCountry) return;
-    const cp = countryPoints.find((c) => c.id === highlightCountry);
-    if (cp) {
-      map.panTo({ lat: cp.lat, lng: cp.lng });
-      map.setZoom(5);
-    }
-  }, [highlightCountry, mapLoaded]);
+    const flag = country.id.length === 2 
+      ? String.fromCodePoint(...[...country.id.toUpperCase()].map(c => 0x1F1E6 + c.charCodeAt(0) - 65))
+      : "";
 
-  // Map type change
-  useEffect(() => {
-    if (googleMapRef.current && mapLoaded) {
-      googleMapRef.current.setMapTypeId(mapViewType);
-      if (mapViewType === "roadmap") {
-        googleMapRef.current.setOptions({ styles: isDark ? darkStyles : lightStyles });
-      }
-    }
-  }, [mapViewType, mapLoaded, isDark]);
+    hoverInfoRef.current.setContent(`
+      <div style="font-family:Inter,sans-serif;padding:12px 16px;min-width:200px;background:${bg};color:${text};border-radius:16px;backdrop-filter:blur(16px);border:1px solid ${border};">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
+          <span style="font-size:24px;">${flag}</span>
+          <div>
+            <div style="font-weight:600;font-size:14px;">${country.name}</div>
+            <div style="font-size:11px;color:#94a3b8;">${count} trends ativas</div>
+          </div>
+        </div>
+        <div style="font-size:11px;background:${intensity > 0.8 ? '#ef4444' : intensity > 0.6 ? '#f97316' : '#eab308'};color:#fff;padding:2px 8px;border-radius:12px;display:inline-block;margin-bottom:8px;">${criticality}</div>
+        <div style="font-size:11px;color:${isDark ? '#94a3b8' : '#475569'};margin-bottom:8px;">Clique para ver detalhes</div>
+      </div>
+    `);
+
+    hoverInfoRef.current.open({
+      map: googleMapRef.current,
+      anchor: new google.maps.Marker({
+        position: { lat: country.lat, lng: country.lng },
+        map: googleMapRef.current,
+        icon: { path: google.maps.SymbolPath.CIRCLE, scale: 0 },
+      }),
+    });
+  }, [trendCounts, isDark]);
+
+  const maxCount = useMemo(() => Math.max(...Object.values(trendCounts), 1), [trendCounts]);
+  const activeCountries = useMemo(() => Object.values(trendCounts).filter(v => v > 0).length, [trendCounts]);
+  const totalTrends = useMemo(() => Object.values(trendCounts).reduce((a, b) => a + b, 0), [trendCounts]);
 
   const mapModes: { key: MapMode; icon: typeof Flame; labelKey: string }[] = [
-    { key: "heatmap", icon: Flame, labelKey: "mapHeatmap" },
-    { key: "flow", icon: GitBranch, labelKey: "mapFlowMap" },
-    { key: "sentiment", icon: Heart, labelKey: "mapSentiment" },
+    { key: "heatmap", icon: Flame, labelKey: "Heatmap" },
+    { key: "flow", icon: GitBranch, labelKey: "Fluxo" },
+    { key: "sentiment", icon: Heart, labelKey: "Sentimento" },
   ];
-
-  const modeBtnBase = "relative z-10 h-7 px-3 rounded-full transition-colors duration-200 outline-none inline-flex items-center gap-1.5 text-[10px] font-semibold tracking-wide uppercase";
 
   return (
     <div className="w-full h-full relative" style={{ isolation: "isolate" }}>
-      {/* Map toolbar */}
-      <div className="absolute top-0 left-0 right-0 z-[5] h-9 flex items-center px-2 bg-white/90 dark:bg-card/90 backdrop-blur-lg border-b border-border/20 pointer-events-auto">
-        <div className="relative flex items-center gap-0 p-0.5 rounded-lg pointer-events-auto">
-          {mapModes.map(({ key, icon: Icon, labelKey }) => (
-            <button
-              key={key}
-              onClick={() => setMapMode(key)}
-              className={`${modeBtnBase} ${
-                mapMode === key ? "text-primary-foreground" : "text-muted-foreground hover:text-foreground"
-              }`}
-              title={t(labelKey as any)}
-            >
-              {mapMode === key && (
-                <motion.div
-                  layoutId="map-mode-pill"
-                  className="absolute inset-0 rounded-full bg-primary shadow-sm"
-                  transition={{ type: "spring", stiffness: 500, damping: 35 }}
-                />
-              )}
-              <span className="relative z-10 flex items-center gap-1.5">
-                <Icon className="w-3 h-3" />
-                <span className="hidden sm:inline">{t(labelKey as any)}</span>
-              </span>
-            </button>
-          ))}
-          {selectedCountry !== "global" && (
-            <button
-              onClick={() => {
-                onSelectCountry("global");
-                googleMapRef.current?.panTo({ lat: 20, lng: 0 });
-                googleMapRef.current?.setZoom(2.5);
-              }}
-              className={`${modeBtnBase} text-muted-foreground hover:text-foreground`}
-              title={t("global")}
-            >
-              <Globe className="w-3 h-3" />
-            </button>
-          )}
-          {onClose && (
-            <button
-              onClick={onClose}
-              className="w-7 h-7 rounded-lg flex items-center justify-center bg-transparent text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-colors pointer-events-auto ml-1"
-              title={t("mapCloseMap")}
-            >
-              <X className="w-3.5 h-3.5" strokeWidth={2.5} />
-            </button>
-          )}
-        </div>
+      {/* Toolbar */}
+      <div className="absolute top-3 left-3 z-20 flex gap-1 bg-white/90 dark:bg-card/90 backdrop-blur-xl rounded-lg p-1 border border-border/30 shadow-sm">
+        {mapModes.map(({ key, icon: Icon, labelKey }) => (
+          <button
+            key={key}
+            onClick={() => {
+              setModeTransitioning(true);
+              setTimeout(() => {
+                setMapMode(key);
+                setModeTransitioning(false);
+              }, 150);
+            }}
+            className={`relative px-3 py-1.5 rounded-md text-xs font-medium transition-colors ${
+              mapMode === key
+                ? "bg-primary text-primary-foreground"
+                : "text-muted-foreground hover:text-foreground hover:bg-muted"
+            }`}
+          >
+            <span className="flex items-center gap-1.5">
+              <Icon className="w-3.5 h-3.5" />
+              {labelKey}
+            </span>
+          </button>
+        ))}
+        {selectedCountry !== "global" && (
+          <button
+            onClick={() => onSelectCountry("global")}
+            className="px-3 py-1.5 rounded-md text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-muted flex items-center gap-1.5"
+          >
+            <Globe className="w-3.5 h-3.5" />
+            Global
+          </button>
+        )}
       </div>
 
       {/* Update notification */}
       <AnimatePresence>
-        {updateNotif && <UpdateNotification countriesUpdated={updateNotif.countries} newTrends={updateNotif.trends} onDismiss={() => setUpdateNotif(null)} />}
+        {updateNotif && (
+          <UpdateNotification
+            countriesUpdated={updateNotif.countries}
+            newTrends={updateNotif.trends}
+            onDismiss={() => setUpdateNotif(null)}
+          />
+        )}
       </AnimatePresence>
 
       {/* Map container */}
       <div ref={mapRef} className="absolute inset-0 z-0" />
 
-      {/* Custom zoom controls */}
+      {/* Zoom controls */}
       {mapLoaded && (
         <div className={`absolute z-20 flex flex-col gap-1 ${isMobile ? 'bottom-24 right-2' : 'bottom-[100px] right-3'}`}>
           <button
             onClick={() => googleMapRef.current?.setZoom((googleMapRef.current?.getZoom() || 3) + 1)}
-            className={`${isMobile ? 'w-11 h-11' : 'w-9 h-9'} rounded-lg bg-white/90 dark:bg-card/90 backdrop-blur-xl border border-border/30 shadow-sm flex items-center justify-center text-foreground hover:bg-white dark:hover:bg-card transition-colors`}
-            aria-label="Zoom in"
+            className="w-9 h-9 rounded-lg bg-white/90 dark:bg-card/90 backdrop-blur-xl border border-border/30 shadow-sm flex items-center justify-center text-foreground hover:bg-white dark:hover:bg-card"
           >
             <Plus className="w-4 h-4" />
           </button>
           <button
             onClick={() => googleMapRef.current?.setZoom((googleMapRef.current?.getZoom() || 3) - 1)}
-            className={`${isMobile ? 'w-11 h-11' : 'w-9 h-9'} rounded-lg bg-white/90 dark:bg-card/90 backdrop-blur-xl border border-border/30 shadow-sm flex items-center justify-center text-foreground hover:bg-white dark:hover:bg-card transition-colors`}
-            aria-label="Zoom out"
+            className="w-9 h-9 rounded-lg bg-white/90 dark:bg-card/90 backdrop-blur-xl border border-border/30 shadow-sm flex items-center justify-center text-foreground hover:bg-white dark:hover:bg-card"
           >
             <Minus className="w-4 h-4" />
           </button>
         </div>
       )}
 
-      {/* Mode transition fade overlay */}
+      {/* Transition overlay */}
       <AnimatePresence>
         {modeTransitioning && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            transition={{ duration: 0.15, ease: "easeInOut" }}
+            transition={{ duration: 0.15 }}
             className="absolute inset-0 z-[3] bg-background/20 backdrop-blur-[2px] pointer-events-none"
           />
         )}
       </AnimatePresence>
 
-      {/* Loading state */}
+      {/* Loading */}
       {!mapLoaded && !mapError && (
         <div className="absolute inset-0 flex items-center justify-center bg-background/50 backdrop-blur-sm">
           <div className="flex items-center gap-3 text-muted-foreground text-sm">
             <div className="w-5 h-5 border-2 border-primary/30 border-t-primary rounded-full animate-spin" />
-            <span className="font-medium">{t("mapLoadingMap")}</span>
+            <span className="font-medium">Carregando mapa…</span>
           </div>
         </div>
       )}
 
-      {/* Error fallback */}
+      {/* Error */}
       {mapError && (
         <div className="absolute inset-0 flex items-center justify-center bg-background/30 backdrop-blur-sm">
           <div className="text-center p-6 bg-card/80 backdrop-blur-xl rounded-2xl border border-border/30 shadow-lg max-w-xs">
             <div className="text-3xl mb-3">🗺️</div>
             <p className="text-sm font-medium text-foreground mb-1">{mapError}</p>
-            <p className="text-xs text-muted-foreground/60 mb-4">{t("mapReconnectMsg")}</p>
-            <button onClick={retryMap} className="px-4 py-2 rounded-full bg-primary hover:bg-primary/90 text-primary-foreground text-xs font-semibold transition-colors shadow-sm">
-              🔄 {t("mapRetry")}
+            <p className="text-xs text-muted-foreground/60 mb-4">Tente recarregar</p>
+            <button
+              onClick={() => setMapRetry(r => r + 1)}
+              className="px-4 py-2 rounded-full bg-primary text-primary-foreground text-xs font-semibold"
+            >
+              🔄 Tentar novamente
             </button>
           </div>
         </div>
       )}
 
-      {/* Active trend indicator */}
-      {activeTrend && (
-        <div
-          className="absolute bottom-4 left-1/2 -translate-x-1/2 bg-white/95 dark:bg-card/95 backdrop-blur-[12px] border border-white/50 dark:border-white/10 rounded-2xl shadow-[0_8px_24px_rgba(0,0,0,0.08)] dark:shadow-[0_8px_24px_rgba(0,0,0,0.3)] px-4 py-2 max-w-xs animate-in fade-in slide-in-from-bottom-4 duration-300 cursor-pointer z-10"
-          onClick={onDismissTrend}
-        >
-          <p className="text-[11px] font-medium text-foreground truncate">{activeTrend.title}</p>
-          <p className="text-[9px] text-muted-foreground mt-0.5">{activeTrend.platform} · {activeTrend.volume} · {t("clickToClose")}</p>
-        </div>
-      )}
+      {/* Legend */}
+      <div className="absolute bottom-3 left-3 z-20 bg-white/90 dark:bg-card/90 backdrop-blur-xl border border-border/30 rounded-lg p-2 text-[10px] text-muted-foreground">
+        {mapMode === "heatmap" && (
+          <>
+            <div className="flex items-center gap-2 mb-1">
+              <div className="w-20 h-2 rounded-full bg-gradient-to-r from-[#00a6ff] via-[#00ff9d] via-[#ffff00] via-[#ffaa00] to-[#ff3300]" />
+              <span>Baixo → Alto volume</span>
+            </div>
+            <div className="flex gap-3 text-[9px]">
+              <span>🔥 Máx: {maxCount}</span>
+              <span>🌍 {activeCountries} países</span>
+              <span>📊 {totalTrends} trends</span>
+            </div>
+          </>
+        )}
+        {mapMode === "flow" && (
+          <div className="text-[10px]">🌊 Fluxo de tendências entre países</div>
+        )}
+        {mapMode === "sentiment" && (
+          <div className="text-[10px]">💭 Cores = sentimento · Tamanho = volume</div>
+        )}
+      </div>
     </div>
   );
 };
