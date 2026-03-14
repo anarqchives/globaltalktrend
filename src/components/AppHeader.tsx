@@ -3,7 +3,8 @@ import { Link, useLocation } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Sun, Moon, LogOut, LogIn, Info, ChevronDown, User, FileText,
-  Star, BookOpen, Users, Loader2, Compass, BarChart3, Map, Menu, X
+  Star, BookOpen, Users, Loader2, Compass, BarChart3, Map, Menu, X,
+  Bookmark, TrendingUp
 } from "lucide-react";
 import { useLanguage, languages } from "@/contexts/LanguageContext";
 import { lovable } from "@/integrations/lovable/index";
