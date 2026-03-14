@@ -465,8 +465,15 @@ const Discover = () => {
         )}
       </main>
 
-      {/* ─── FOOTER ─── */}
+      {/* ─── FOOTER WITH DISCLAIMER ─── */}
       <footer className="border-t border-border/40 px-4 md:px-8 lg:px-12 py-6 max-w-[1400px] mx-auto w-full">
+        <div className="mb-4">
+          <p className="text-[10px] text-muted-foreground/70 leading-relaxed max-w-2xl mx-auto text-center">
+            {lang === "en"
+              ? "⚠️ Insights represent analytical signals derived from public data sources. They do not constitute recommendations or predictions. Always verify with primary sources."
+              : "⚠️ Os insights representam sinais analíticos derivados de fontes públicas. Não constituem recomendações ou previsões. Sempre verifique com fontes primárias."}
+          </p>
+        </div>
         <div className="flex flex-col sm:flex-row items-center justify-between gap-3">
           <p className="text-[11px] text-muted-foreground">
             © {new Date().getFullYear()} Global Talk Trend — {lang === "en" ? "Trend Intelligence Platform" : "Plataforma de Inteligência de Tendências"}
