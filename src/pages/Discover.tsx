@@ -293,7 +293,7 @@ const Discover = () => {
   const getCatLabel = (cat: typeof CATEGORIES[0]) => lang === "en" ? cat.labelEn : cat.labelPt;
 
   return (
-    <div className="min-h-screen bg-background flex flex-col">
+    <div className="min-h-screen bg-background flex flex-col page-enter">
       <AppHeader />
 
       {/* ─── HERO SECTION ─── */}
