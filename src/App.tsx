@@ -75,6 +75,7 @@ const App = () => {
             <Toaster />
             <Sonner />
             <PrivacyPopup />
+            <IntroductionModal />
             <BrowserRouter>
               <Suspense fallback={<PageLoader />}>
                 <Routes>
