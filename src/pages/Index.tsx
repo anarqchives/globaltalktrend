@@ -248,20 +248,50 @@ const Index = () => {
     "Google Trends": 99,
   };
 
-  // Diversify: sort by priority then interleave to cap Google Trends dominance
+  // Relevance-based scoring + Google Trends interleaving
   const diversifiedTrends = useMemo(() => {
     const isGT = (t: TrendCardProps) => t.platform?.toLowerCase().includes("google trends");
+    const now = Date.now();
+    const ONE_HOUR = 3600000;
 
-    // Sort all trends by source priority first
-    const sorted = [...filteredTrends].sort((a, b) => {
-      const pa = SOURCE_PRIORITY[a.platform] || 4;
-      const pb = SOURCE_PRIORITY[b.platform] || 4;
-      return pa - pb;
-    });
+    const getAge = (t: TrendCardProps): number => {
+      if (t.publishedAt) return (now - new Date(t.publishedAt).getTime()) / ONE_HOUR;
+      if (t.firstSeenAt) return (now - new Date(t.firstSeenAt).getTime()) / ONE_HOUR;
+      const m = t.time?.match?.(/(\d+)\s*(min|h|hora)/i);
+      if (m) {
+        const val = parseInt(m[1]);
+        const unit = m[2].toLowerCase();
+        return unit === "min" || unit === "m" ? val / 60 : val;
+      }
+      return 12;
+    };
+
+    const getScore = (t: TrendCardProps): number => {
+      const volStr = (t.volume || "0").toLowerCase();
+      let vol = parseFloat(volStr.replace(/[^0-9.]/g, "")) || 0;
+      if (volStr.includes("m")) vol *= 1_000_000;
+      else if (volStr.includes("k")) vol *= 1_000;
+      const volNorm = Math.min(vol / 10000, 100);
+
+      const ch = Math.abs(parseFloat(t.change?.replace(/[^0-9.\-]/g, "") || "0"));
+      const growthNorm = Math.min(ch, 100);
+
+      const normalizedKey = t.title.toLowerCase().normalize("NFD").replace(/\p{Diacritic}/gu, "").replace(/[^a-z0-9\s]/g, "").trim().slice(0, 50);
+      const isMulti = multiplatformTitles.has(normalizedKey);
+      const criticalBonus = ch > 200 ? 200 : 0;
+      const multiBonus = isMulti ? 150 : 0;
+      const agePenalty = getAge(t) * 10;
+
+      return (volNorm * 0.3) + (growthNorm * 0.3) + criticalBonus + multiBonus - agePenalty;
+    };
+
+    // Score and sort
+    const scored = filteredTrends.map(t => ({ t, score: getScore(t) }));
+    scored.sort((a, b) => b.score - a.score);
 
     // Separate non-GT and GT
-    const nonGT = sorted.filter(t => !isGT(t));
-    const gt = sorted.filter(t => isGT(t));
+    const nonGT = scored.filter(s => !isGT(s.t)).map(s => s.t);
+    const gt = scored.filter(s => isGT(s.t)).map(s => s.t);
 
     // Interleave: for every 4 non-GT cards, allow 1 GT card
     const result: TrendCardProps[] = [];
@@ -275,13 +305,12 @@ const Index = () => {
         result.push(gt[gtIdx++]);
       }
     }
-    // Append remaining GT at the end
     while (gtIdx < gt.length) {
       result.push(gt[gtIdx++]);
     }
 
     return result;
-  }, [filteredTrends]);
+  }, [filteredTrends, multiplatformTitles]);
 
   const visibleTrends = diversifiedTrends.slice(0, visibleCount);
   const hasMore = visibleCount < diversifiedTrends.length;
