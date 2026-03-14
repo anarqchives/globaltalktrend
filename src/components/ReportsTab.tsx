@@ -273,7 +273,7 @@ export default function ReportsTab({ userId }: ReportsTabProps) {
 
       const doc = new jsPDF();
       const periodLbl = periodOptions.find(p => p.value === period)?.label || period;
-      const modeLabel = reportMode === "academic" ? "RELATÓRIO ACADÊMICO" : "RELATÓRIO EXECUTIVO";
+      const modeLabel = "RELATÓRIO DE TENDÊNCIAS";
 
       // Title page
       doc.setFontSize(24); doc.setTextColor(40, 40, 40);
