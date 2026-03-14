@@ -524,25 +524,6 @@ export default function ReportsTab({ userId }: ReportsTabProps) {
           <FileText className="w-3.5 h-3.5" /> Gerar Relatório
         </h3>
 
-        {/* Report mode selector */}
-        <div className="flex gap-1.5">
-          <button
-            onClick={() => setReportMode("executive")}
-            className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg text-xs font-semibold transition-all border ${
-              reportMode === "executive" ? "bg-primary text-primary-foreground border-primary" : "bg-secondary text-muted-foreground border-border hover:bg-secondary/80"
-            }`}
-          >
-            <Briefcase className="w-3.5 h-3.5" /> Executivo
-          </button>
-          <button
-            onClick={() => setReportMode("academic")}
-            className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg text-xs font-semibold transition-all border ${
-              reportMode === "academic" ? "bg-primary text-primary-foreground border-primary" : "bg-secondary text-muted-foreground border-border hover:bg-secondary/80"
-            }`}
-          >
-            <GraduationCap className="w-3.5 h-3.5" /> Acadêmico
-          </button>
-        </div>
 
         <div className="grid grid-cols-2 gap-2 sm:gap-3">
           <div>
