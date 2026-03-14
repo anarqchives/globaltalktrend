@@ -77,12 +77,14 @@ const Index = () => {
   const [allCollapsed, setAllCollapsed] = useState(false);
   // Panel visibility for collapsible sections
   const [panelVisibility, setPanelVisibility] = useState(() => {
-    // Map starts collapsed by default
+    // Map starts open by default on desktop
     try {
       const saved = localStorage.getItem("map-panel-open");
-      return { radar: true, timeline: true, map: saved === "true" };
+      const isMobileInit = window.innerWidth < 768;
+      if (saved !== null) return { radar: true, timeline: true, map: saved === "true" };
+      return { radar: true, timeline: true, map: !isMobileInit };
     } catch {
-      return { radar: true, timeline: true, map: false };
+      return { radar: true, timeline: true, map: true };
     }
   });
   const togglePanel = (panel: "radar" | "timeline" | "map") => {
@@ -478,11 +480,16 @@ const Index = () => {
     setFilters(f => ({ ...f, [key]: defaultFilters[key] }));
   };
 
-  const masonryStyle = useMemo(() => ({
-    columnCount: isMobile ? 1 : Math.max(gridColumns, 2),
-    columnGap: 0,
-    columnFill: isMobile ? 'auto' as const : 'balance' as const,
-  }), [gridColumns, isMobile]);
+  const masonryStyle = useMemo(() => {
+    // When map visible: 2 cols max; when hidden: 3 cols on wide screens
+    const maxCols = panelVisibility.map ? 2 : 3;
+    const cols = isMobile ? 1 : Math.min(Math.max(gridColumns, 2), maxCols);
+    return {
+      columnCount: cols,
+      columnGap: 0,
+      columnFill: isMobile ? 'auto' as const : 'balance' as const,
+    };
+  }, [gridColumns, isMobile, panelVisibility.map]);
 
   const renderTimeline = () => (
     <div ref={(el) => { (scrollRef as any).current = el; (gridRef as any).current = el; }} className={`flex flex-col gap-0.5 p-1 sm:p-2 h-full overflow-y-auto overflow-x-hidden scrollbar-thin relative transition-opacity duration-200 w-full max-w-full box-border ${filterTransitioning ? 'opacity-60' : 'opacity-100'}`} style={{ maxWidth: '100vw' }}>
