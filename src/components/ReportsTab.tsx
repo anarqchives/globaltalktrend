@@ -676,8 +676,8 @@ export default function ReportsTab({ userId }: ReportsTabProps) {
           {/* Header */}
           <div className="bg-card rounded-xl border border-border/50 p-3 sm:p-4">
             <div className="flex items-center gap-2 mb-2">
-              {reportMode === "academic" ? <GraduationCap className="w-4 h-4 text-primary" /> : <FileText className="w-4 h-4 text-primary" />}
-              <h2 className="text-sm font-bold text-foreground">{reportMode === "academic" ? "Relatório Acadêmico" : "Relatório Executivo"}</h2>
+              <FileText className="w-4 h-4 text-primary" />
+              <h2 className="text-sm font-bold text-foreground">Relatório de Tendências</h2>
             </div>
             <div className="grid grid-cols-2 gap-1.5 text-[10px] sm:text-[11px] text-muted-foreground">
               <span>📅 {periodOptions.find(p => p.value === period)?.label}</span>
