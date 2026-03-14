@@ -769,21 +769,13 @@ const Index = () => {
   );
 
   const renderMap = () => {
-    console.log("🟢 renderMap foi chamada");
-    return (
-      <Suspense fallback={<MapFallback />}>
-        <GoogleMapView
-          trendCounts={trendCounts}
-          selectedCountry={filters.country}
-          onSelectCountry={handleMapClick}
-          trends={allTrends}
-          onSelectTrend={handleSelectTrend}
-          highlightCountry={expandedTrendCountry}
-          onClose={!isMobile ? () => togglePanel("map") : undefined}
-        />
-      </Suspense>
-    );
-  };
+  console.log("🟢 renderMap foi chamada");
+  return (
+    <div style={{ width: '100%', height: '100%', backgroundColor: 'lightblue', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+      <h3>Teste — Mapa deveria estar aqui</h3>
+    </div>
+  );
+};
 
   // Count closed panels
   const closedPanelsList = (["radar", "timeline", "map"] as const).filter(p => !panelVisibility[p]);
