@@ -83,6 +83,9 @@ const App = () => {
                   <Route path="/welcome" element={<Welcome />} />
                   <Route path="/dashboard" element={<Index />} />
                   <Route path="/mapa" element={<Index />} />
+                  <Route path="/topic" element={<TopicPage />} />
+                  <Route path="/reports" element={<Reports />} />
+                  <Route path="/collections" element={<Collections />} />
                   <Route path="/auth/callback" element={<AuthCallback />} />
                   <Route path="/metodologia" element={<Methodology />} />
                   <Route path="/historico" element={<History />} />
