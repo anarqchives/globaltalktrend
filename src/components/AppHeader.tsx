@@ -20,11 +20,11 @@ import {
 import { cn } from "@/lib/utils";
 
 const NAV_ITEMS = [
-  { key: "discover", path: "/", icon: Compass, labelPt: "Descobrir", labelEn: "Discover" },
-  { key: "dashboard", path: "/dashboard", icon: BarChart3, labelPt: "Dashboard", labelEn: "Dashboard" },
-  { key: "map", path: "/mapa", icon: Map, labelPt: "Mapa", labelEn: "Map" },
-  { key: "reports", path: "/perfil?tab=reports", icon: FileText, labelPt: "Relatórios", labelEn: "Reports" },
-  { key: "methodology", path: "/metodologia", icon: BookOpen, labelPt: "Metodologia", labelEn: "Methodology" },
+  { key: "discover", path: "/", icon: Compass, labelPt: "Explorar", labelEn: "Explore" },
+  { key: "dashboard", path: "/dashboard", icon: TrendingUp, labelPt: "Tendências", labelEn: "Trends" },
+  { key: "map", path: "/mapa", icon: Map, labelPt: "Mapa", labelEn: "Maps" },
+  { key: "reports", path: "/reports", icon: FileText, labelPt: "Relatórios", labelEn: "Reports" },
+  { key: "collections", path: "/collections", icon: Bookmark, labelPt: "Coleções", labelEn: "Collections" },
 ];
 
 interface AppHeaderProps {
