@@ -222,11 +222,27 @@ const defaultFilters: FilterState = {
 
 const Discover = () => {
   const { t, lang } = useLanguage();
+  const navigate = useNavigate();
   const isMobile = useIsMobile();
   const [activeCategory, setActiveCategory] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [searchOpen, setSearchOpen] = useState(false);
   const searchRef = useRef<HTMLInputElement>(null);
+
+  // First-visit redirect to /welcome
+  useEffect(() => {
+    const hasVisited = localStorage.getItem("gtt-has-visited");
+    if (!hasVisited) {
+      supabase.auth.getSession().then(({ data: { session } }) => {
+        if (!session?.user) {
+          localStorage.setItem("gtt-has-visited", "true");
+          navigate("/welcome", { replace: true });
+        } else {
+          localStorage.setItem("gtt-has-visited", "true");
+        }
+      });
+    }
+  }, [navigate]);
 
   const [, setTrendCounts] = useState<Record<string, number>>({});
   const { filteredTrends: rawTrends, loading, isFirstLoad } = useTrends(defaultFilters, setTrendCounts, lang);
