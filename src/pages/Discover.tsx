@@ -27,13 +27,13 @@ const CATEGORIES = [
 ];
 
 /* ─── EDITORIAL GRID — asymmetric rhythm ─── */
-type CardVariant = "hero" | "featured" | "standard" | "wide" | "compact";
+type CardVariant = "hero" | "featured" | "standard" | "wide" | "compact" | "quote";
 
 const getCardVariant = (index: number): CardVariant => {
   const pattern: CardVariant[] = [
     "hero", "featured", "standard",
     "standard", "wide", "compact", "compact",
-    "featured", "standard", "standard",
+    "featured", "standard", "quote",
     "wide", "compact", "standard", "featured",
     "standard", "compact", "standard", "standard",
     "hero", "standard",
@@ -47,6 +47,7 @@ const gridSpans: Record<CardVariant, string> = {
   wide: "col-span-4 sm:col-span-6 lg:col-span-8",
   standard: "col-span-4 sm:col-span-3 lg:col-span-4",
   compact: "col-span-2 sm:col-span-3 lg:col-span-4",
+  quote: "col-span-4 sm:col-span-3 lg:col-span-4 row-span-2",
 };
 
 /* ─── PLATFORM COLOR MAP ─── */
@@ -125,7 +126,7 @@ const TVIGauge = ({ score, size = 40 }: { score: number; size?: number }) => {
   return (
     <div className="tvi-gauge" style={{ width: size, height: size }}>
       <svg width={size} height={size}>
-        <circle cx={size / 2} cy={size / 2} r={radius} fill="none" stroke="hsl(var(--border))" strokeWidth={3} opacity={0.2} />
+        <circle cx={size / 2} cy={size / 2} r={radius} fill="none" stroke="hsl(var(--border))" strokeWidth={3} opacity={0.15} />
         <circle
           cx={size / 2} cy={size / 2} r={radius} fill="none"
           stroke={color} strokeWidth={3}
@@ -173,7 +174,7 @@ const InsightRow = React.memo(({ trends, lang }: { trends: TrendCardProps[]; lan
           <Zap className="w-5 h-5" style={{ color: 'var(--accent-lime)' }} />
         </div>
         <div>
-          <p className="text-[10px] text-muted-foreground/40 uppercase tracking-wider font-semibold">
+          <p className="text-[10px] text-muted-foreground/35 uppercase tracking-[0.1em] font-semibold">
             {en ? "Signal Briefing" : "Briefing de Sinais"}
           </p>
           <p className="text-[15px] font-bold text-foreground leading-tight">
@@ -182,7 +183,7 @@ const InsightRow = React.memo(({ trends, lang }: { trends: TrendCardProps[]; lan
         </div>
       </div>
       <div className="hidden sm:block w-px h-8 bg-border/20" />
-      <p className="text-[13px] text-muted-foreground/50 leading-relaxed flex-1">
+      <p className="text-[13px] text-muted-foreground/45 leading-relaxed flex-1">
         {en
           ? `Monitoring ${trends.length} active signals across ${platforms} platforms. Top signal: "${decodeEntities(topTrend.title).slice(0, 60)}…"`
           : `Monitorando ${trends.length} sinais ativos em ${platforms} plataformas. Sinal principal: "${decodeEntities(topTrend.title).slice(0, 60)}…"`
@@ -227,7 +228,8 @@ const DiscoveryCard = React.memo(({ trend, variant, index, lang }: DiscoveryCard
   const isFeatured = variant === "featured";
   const isWide = variant === "wide";
   const isCompact = variant === "compact";
-  const showDescription = isHero || isFeatured || isWide;
+  const isQuote = variant === "quote";
+  const showDescription = isHero || isFeatured || isWide || isQuote;
   const showSparkline = isHero || isFeatured || variant === "standard";
   const showLifecycle = isHero || isFeatured || isWide;
 
@@ -239,21 +241,25 @@ const DiscoveryCard = React.memo(({ trend, variant, index, lang }: DiscoveryCard
       transition={{ duration: 0.4, delay: Math.min(index * 0.03, 0.4), ease: [0.25, 0.46, 0.45, 0.94] }}
       onClick={handleClick}
       className={cn(
-        "signal-card group relative flex flex-col cursor-pointer",
+        "group relative flex flex-col cursor-pointer",
+        isQuote ? "signal-card-quote" : "signal-card",
         gridSpans[variant],
         isHero && "signal-card-hero",
         isFeatured && "signal-card-featured",
         isWide && "min-h-[160px] sm:min-h-[180px]",
         variant === "standard" && "min-h-[200px] sm:min-h-[260px]",
         isCompact && "min-h-[160px] sm:min-h-[220px]",
+        isQuote && "min-h-[280px]",
       )}
     >
       {/* Accent indicator */}
-      {isHero ? (
-        <div className="absolute top-0 left-0 bottom-0 w-[3px] rounded-l-2xl" style={{ background: accent }} />
+      {isQuote ? (
+        <div className="absolute top-0 left-0 right-0 h-[3px] rounded-t-[1.25rem]" style={{ background: accent }} />
+      ) : isHero ? (
+        <div className="absolute top-0 left-0 bottom-0 w-[3px] rounded-l-[1.25rem]" style={{ background: accent }} />
       ) : (
         <div
-          className="absolute top-0 left-0 right-0 h-[2px] opacity-40 group-hover:opacity-80 transition-opacity duration-300"
+          className="absolute top-0 left-0 right-0 h-[2px] opacity-30 group-hover:opacity-70 transition-opacity duration-300"
           style={{ background: accent }}
         />
       )}
@@ -261,21 +267,21 @@ const DiscoveryCard = React.memo(({ trend, variant, index, lang }: DiscoveryCard
       {/* Content */}
       <div className={cn(
         "relative flex flex-col flex-1",
-        isHero ? "p-6 sm:p-8 gap-3.5" : isFeatured ? "p-5 sm:p-6 gap-3" : isWide ? "p-4 sm:p-5 gap-2.5" : "p-4 gap-2"
+        isHero ? "p-6 sm:p-8 gap-3.5" : isFeatured ? "p-5 sm:p-6 gap-3" : isQuote ? "p-6 gap-4" : isWide ? "p-4 sm:p-5 gap-2.5" : "p-4 gap-2"
       )}>
         {/* Meta row */}
         <div className="flex items-center justify-between gap-2">
           <div className="flex items-center gap-2 min-w-0">
-            <span className="signal-platform-badge" style={{ '--accent': accent } as React.CSSProperties}>
+            <span className={cn("signal-platform-badge", isQuote && "bg-white/10 text-white/80")} style={{ '--accent': accent } as React.CSSProperties}>
               {trend.icon} {trend.platform}
             </span>
             {trend.category && trend.category !== "Geral" && (
-              <span className="text-[10px] text-muted-foreground/40 font-medium truncate">{trend.category}</span>
+              <span className={cn("text-[10px] font-medium truncate", isQuote ? "text-white/40" : "text-muted-foreground/40")}>{trend.category}</span>
             )}
           </div>
           <div className="flex items-center gap-1.5 shrink-0">
             {flag && <span className="text-xs">{flag}</span>}
-            <span className="text-[10px] text-muted-foreground/30 flex items-center gap-0.5">
+            <span className={cn("text-[10px] flex items-center gap-0.5", isQuote ? "text-white/30" : "text-muted-foreground/30")}>
               <Clock className="w-2.5 h-2.5" />
               {trend.time}
             </span>
@@ -283,10 +289,10 @@ const DiscoveryCard = React.memo(({ trend, variant, index, lang }: DiscoveryCard
         </div>
 
         {/* Lifecycle badge + TVI */}
-        {showLifecycle && (
+        {showLifecycle && !isQuote && (
           <div className="flex items-center gap-2.5">
             <span
-              className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-widest"
+              className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-[0.08em]"
               style={{ background: `color-mix(in srgb, ${lifecycle.color} 10%, transparent)`, color: lifecycle.color }}
             >
               {lifecycle.icon} {en ? lifecycle.labelEn : lifecycle.label}
@@ -297,21 +303,25 @@ const DiscoveryCard = React.memo(({ trend, variant, index, lang }: DiscoveryCard
 
         {/* Title */}
         <h3 className={cn(
-          "font-bold leading-[1.1] tracking-[-0.02em] text-foreground group-hover:text-primary transition-colors duration-200",
+          "font-bold leading-[1.08] tracking-[-0.02em] transition-colors duration-200",
+          isQuote ? "text-white group-hover:text-white/90" : "text-foreground group-hover:text-primary",
           isHero ? "text-xl sm:text-2xl md:text-[28px] lg:text-[32px] line-clamp-3" :
           isFeatured ? "text-base sm:text-lg line-clamp-3" :
+          isQuote ? "text-lg sm:text-xl line-clamp-4" :
           isWide ? "text-sm sm:text-base line-clamp-2" :
           isCompact ? "text-[13px] sm:text-sm line-clamp-3" :
           "text-sm line-clamp-3"
         )}>
-          {title}
+          {isQuote ? `"${title}"` : title}
         </h3>
 
         {/* Description */}
         {showDescription && description && (
           <p className={cn(
-            "text-muted-foreground/50 leading-relaxed",
-            isHero ? "text-[13px] sm:text-[14px] line-clamp-3 max-w-2xl" : "text-[12px] line-clamp-2"
+            "leading-relaxed",
+            isQuote ? "text-white/40 text-[13px] line-clamp-3" :
+            isHero ? "text-muted-foreground/45 text-[13px] sm:text-[14px] line-clamp-3 max-w-2xl" :
+            "text-muted-foreground/45 text-[12px] line-clamp-2"
           )}>
             {decodeEntities(description)}
           </p>
@@ -319,7 +329,7 @@ const DiscoveryCard = React.memo(({ trend, variant, index, lang }: DiscoveryCard
 
         {/* Sparkline */}
         <div className="mt-auto" />
-        {showSparkline && trend.sparkData?.length > 2 && (
+        {showSparkline && !isQuote && trend.sparkData?.length > 2 && (
           <div className="pt-2">
             <SparklineArea
               data={trend.sparkData}
@@ -333,12 +343,13 @@ const DiscoveryCard = React.memo(({ trend, variant, index, lang }: DiscoveryCard
 
       {/* Footer metrics */}
       <div className={cn(
-        "flex items-center justify-between border-t border-border/10 mt-auto",
-        isHero ? "px-6 sm:px-8 pb-4 pt-3" : "px-4 pb-3 pt-2"
+        "flex items-center justify-between mt-auto",
+        isQuote ? "border-t border-white/10 px-6 pb-4 pt-3" : "border-t border-border/10",
+        isHero ? "px-6 sm:px-8 pb-4 pt-3" : !isQuote ? "px-4 pb-3 pt-2" : ""
       )}>
         <div className="flex items-center gap-3">
           {trend.volume && (
-            <span className={cn("font-medium text-muted-foreground/50 tabular-nums", isCompact ? "text-[10px]" : "text-[11px]")}>
+            <span className={cn("font-medium tabular-nums", isCompact ? "text-[10px]" : "text-[11px]", isQuote ? "text-white/40" : "text-muted-foreground/40")}>
               {trend.volume}
             </span>
           )}
@@ -351,11 +362,12 @@ const DiscoveryCard = React.memo(({ trend, variant, index, lang }: DiscoveryCard
               {trend.changePositive ? "+" : ""}{trend.change}
             </span>
           )}
-          {!showLifecycle && <TVIMiniBar score={tvi} />}
+          {!showLifecycle && !isQuote && <TVIMiniBar score={tvi} />}
         </div>
         <ArrowUpRight className={cn(
-          "text-muted-foreground/10 group-hover:text-primary group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-all duration-200",
-          isCompact ? "w-3 h-3" : "w-3.5 h-3.5"
+          "transition-all duration-200 group-hover:translate-x-0.5 group-hover:-translate-y-0.5",
+          isCompact ? "w-3 h-3" : "w-3.5 h-3.5",
+          isQuote ? "text-white/15 group-hover:text-white/50" : "text-muted-foreground/10 group-hover:text-primary"
         )} />
       </div>
     </motion.article>
@@ -460,7 +472,7 @@ const Discover = () => {
         <div className="flex items-center justify-between gap-4 pb-4">
           <div className="flex items-center gap-4 min-w-0">
             <div>
-              <div className="flex items-center gap-2.5 text-[10px] text-muted-foreground/35 uppercase tracking-wider font-medium mb-1">
+              <div className="flex items-center gap-2.5 text-[10px] text-muted-foreground/30 uppercase tracking-[0.1em] font-medium mb-1">
                 <span className="flex items-center gap-1.5">
                   <span className="relative flex items-center justify-center w-1.5 h-1.5">
                     <span className="absolute w-full h-full rounded-full bg-[var(--accent-lime)] animate-ping opacity-60" />
@@ -468,9 +480,9 @@ const Discover = () => {
                   </span>
                   {en ? "Live" : "Ao vivo"}
                 </span>
-                <span className="w-px h-2.5 bg-border/20" />
+                <span className="w-px h-2.5 bg-border/15" />
                 <span className="capitalize">{dateStr}</span>
-                <span className="w-px h-2.5 bg-border/20" />
+                <span className="w-px h-2.5 bg-border/15" />
                 <span className="tabular-nums">{timeStr}</span>
               </div>
               <h1 className="text-foreground font-bold tracking-[-0.03em] leading-none" style={{ fontSize: 'clamp(1.25rem, 3vw, 1.75rem)' }}>
@@ -480,19 +492,21 @@ const Discover = () => {
           </div>
 
           {/* Signal stats */}
-          <div className="hidden sm:flex items-center gap-6 shrink-0">
+          <div className="hidden sm:flex items-center gap-5 shrink-0">
             {[
-              { value: stats.totalTrends, labelEn: "Signals", labelPt: "Sinais", icon: Activity },
-              { value: stats.platforms, labelEn: "Sources", labelPt: "Fontes", icon: Layers },
-              { value: stats.countries, labelEn: "Countries", labelPt: "Países", icon: Globe },
+              { value: stats.totalTrends, labelEn: "Signals", labelPt: "Sinais", icon: Activity, accent: "var(--accent-lime)" },
+              { value: stats.platforms, labelEn: "Sources", labelPt: "Fontes", icon: Layers, accent: "var(--accent-blue)" },
+              { value: stats.countries, labelEn: "Countries", labelPt: "Países", icon: Globe, accent: "var(--accent-cyan)" },
             ].map((stat) => {
               const Icon = stat.icon;
               return (
-                <div key={stat.labelEn} className="flex items-center gap-2">
-                  <Icon className="w-3 h-3 text-muted-foreground/20" />
+                <div key={stat.labelEn} className="flex items-center gap-2.5">
+                  <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ background: `color-mix(in srgb, ${stat.accent} 8%, transparent)` }}>
+                    <Icon className="w-3.5 h-3.5" style={{ color: stat.accent, opacity: 0.7 }} />
+                  </div>
                   <div>
-                    <p className="text-[18px] md:text-[22px] font-bold text-foreground leading-none tabular-nums">{stat.value}</p>
-                    <p className="text-[9px] text-muted-foreground/30 uppercase tracking-wider font-medium">
+                    <p className="text-[20px] md:text-[24px] font-bold text-foreground leading-none tabular-nums tracking-[-0.03em]">{stat.value}</p>
+                    <p className="text-[9px] text-muted-foreground/25 uppercase tracking-[0.1em] font-medium">
                       {en ? stat.labelEn : stat.labelPt}
                     </p>
                   </div>
@@ -519,7 +533,7 @@ const Discover = () => {
                   "compact-btn inline-flex items-center gap-1.5 px-3.5 py-2 rounded-full text-[11px] font-medium whitespace-nowrap transition-all duration-150 shrink-0",
                   active
                     ? "bg-foreground text-background shadow-sm"
-                    : "bg-secondary/30 text-muted-foreground/60 hover:bg-secondary/60 hover:text-foreground"
+                    : "bg-secondary/30 text-muted-foreground/50 hover:bg-secondary/60 hover:text-foreground"
                 )}
               >
                 <Icon className="w-3 h-3" />
@@ -557,7 +571,7 @@ const Discover = () => {
             ) : (
               <button
                 onClick={() => setSearchOpen(true)}
-                className="compact-btn flex items-center justify-center w-9 h-9 rounded-full bg-secondary/30 text-muted-foreground/50 hover:bg-secondary/60 hover:text-foreground transition-all shrink-0"
+                className="compact-btn flex items-center justify-center w-9 h-9 rounded-full bg-secondary/30 text-muted-foreground/40 hover:bg-secondary/60 hover:text-foreground transition-all shrink-0"
                 aria-label={en ? "Search" : "Buscar"}
               >
                 <Search className="w-3.5 h-3.5" />
@@ -577,10 +591,11 @@ const Discover = () => {
                 <div
                   key={i}
                   className={cn(
-                    "rounded-2xl bg-secondary/10 animate-pulse",
+                    "rounded-[1.25rem] bg-secondary/10 animate-pulse",
                     gridSpans[v],
-                    v === "hero" ? "min-h-[320px]" :
+                    v === "hero" ? "min-h-[340px]" :
                     v === "featured" ? "min-h-[280px]" :
+                    v === "quote" ? "min-h-[280px]" :
                     v === "wide" ? "min-h-[160px]" :
                     v === "compact" ? "min-h-[160px]" : "min-h-[200px]"
                   )}
@@ -650,7 +665,7 @@ const Discover = () => {
 
         {displayTrends.length > 40 && (
           <div className="flex justify-center pt-14">
-            <button className="px-8 py-3 rounded-full border border-border/30 text-sm font-medium text-muted-foreground/60 hover:text-foreground hover:border-foreground/30 transition-all">
+            <button className="px-8 py-3 rounded-full border border-border/30 text-sm font-medium text-muted-foreground/50 hover:text-foreground hover:border-foreground/30 transition-all">
               {en ? "Load more signals" : "Carregar mais sinais"}
             </button>
           </div>
@@ -660,14 +675,14 @@ const Discover = () => {
       {/* ═══════════════════ FOOTER ═══════════════════ */}
       <footer className="border-t border-border/10 px-4 sm:px-6 md:px-8 lg:px-12 py-6 max-w-[var(--editorial-max-width)] mx-auto w-full">
         <div className="mb-4">
-          <p className="text-[10px] text-muted-foreground/30 leading-relaxed max-w-2xl mx-auto text-center">
+          <p className="text-[10px] text-muted-foreground/25 leading-relaxed max-w-2xl mx-auto text-center">
             {en
               ? "⚠️ Insights represent analytical signals derived from public data sources. They do not constitute recommendations or predictions. Always verify with primary sources."
               : "⚠️ Os insights representam sinais analíticos derivados de fontes públicas. Não constituem recomendações ou previsões. Sempre verifique com fontes primárias."}
           </p>
         </div>
         <div className="flex flex-col sm:flex-row items-center justify-between gap-3">
-          <p className="text-[11px] text-muted-foreground/30">
+          <p className="text-[11px] text-muted-foreground/25">
             © {new Date().getFullYear()} Global Talk Trend
           </p>
           <div className="flex items-center gap-4 text-[10px] text-muted-foreground/25">
@@ -684,7 +699,7 @@ const Discover = () => {
                 <span className="absolute w-full h-full rounded-full bg-[var(--accent-lime)] animate-ping opacity-60" />
                 <span className="relative w-1.5 h-1.5 rounded-full bg-[var(--accent-lime)]" />
               </span>
-              <span className="font-medium uppercase tracking-wider">{en ? "Live data" : "Dados ao vivo"}</span>
+              <span className="font-medium uppercase tracking-[0.1em]">{en ? "Live data" : "Dados ao vivo"}</span>
             </div>
           </div>
         </div>
