@@ -26,11 +26,10 @@ const CATEGORIES = [
   { key: "Saúde", labelPt: "Saúde", labelEn: "Health", icon: Zap },
 ];
 
-/* ─── EDITORIAL GRID LAYOUT — 12-col CSS Grid ─── */
+/* ─── EDITORIAL GRID LAYOUT ─── */
 type CardVariant = "hero" | "featured" | "standard" | "wide" | "compact";
 
 const getCardVariant = (index: number): CardVariant => {
-  // Editorial rhythm: hero → standard cluster → featured → wide → standards → repeat
   const pattern: CardVariant[] = [
     "hero", "standard", "standard", "featured",
     "wide", "standard", "compact", "compact",
@@ -41,7 +40,6 @@ const getCardVariant = (index: number): CardVariant => {
   return pattern[index % pattern.length];
 };
 
-// CSS grid column spans for each variant
 const gridSpans: Record<CardVariant, string> = {
   hero: "col-span-4 sm:col-span-6 lg:col-span-8 row-span-2",
   featured: "col-span-4 sm:col-span-6 lg:col-span-4 row-span-2",
@@ -69,7 +67,45 @@ const platformAccent: Record<string, string> = {
 
 const getAccentColor = (platform: string) => platformAccent[platform] || "220 15% 40%";
 
-/* ─── CATEGORY GRADIENT BACKGROUNDS ─── */
+/* ─── SIGNAL INTELLIGENCE HELPERS ─── */
+
+/** Compute a simple TVI (Trend Velocity Index) 0-100 from available data */
+function computeTVI(trend: TrendCardProps): number {
+  const vol = parseVolume(trend.volume);
+  const change = Math.abs(parseChange(trend.change));
+  const sourceBonus = (trend.sources?.length || 1) * 5;
+  const raw = Math.min(100, Math.round(vol / 500 + change * 1.2 + sourceBonus));
+  return Math.max(0, Math.min(100, raw));
+}
+
+/** Determine lifecycle stage from change rate and sparkData trajectory */
+function getLifecycleStage(trend: TrendCardProps): { label: string; labelEn: string; color: string; icon: string } {
+  const change = parseChange(trend.change);
+  const spark = trend.sparkData || [];
+  
+  if (spark.length >= 4) {
+    const last = spark[spark.length - 1];
+    const mid = spark[Math.floor(spark.length / 2)];
+    const first = spark[0];
+    
+    if (last > mid && mid > first && change > 20) {
+      return { label: "Acelerando", labelEn: "Accelerating", color: "var(--color-high)", icon: "🚀" };
+    }
+    if (last >= mid * 0.95 && change > 5) {
+      return { label: "Pico", labelEn: "Peaking", color: "var(--color-critical)", icon: "🔥" };
+    }
+    if (last < mid && last < first * 0.8) {
+      return { label: "Declínio", labelEn: "Declining", color: "var(--color-neutral)", icon: "📉" };
+    }
+  }
+  
+  if (change > 40) return { label: "Acelerando", labelEn: "Accelerating", color: "var(--color-high)", icon: "🚀" };
+  if (change > 10) return { label: "Emergente", labelEn: "Emerging", color: "var(--color-positive)", icon: "🌱" };
+  if (change > 0) return { label: "Estável", labelEn: "Stable", color: "var(--color-neutral)", icon: "➡️" };
+  return { label: "Declínio", labelEn: "Declining", color: "var(--color-neutral)", icon: "📉" };
+}
+
+/* ─── CATEGORY VISUALS ─── */
 const categoryVisual: Record<string, { gradient: string; emoji: string }> = {
   "Política": { gradient: "from-blue-500/5 to-transparent", emoji: "🏛" },
   "Tecnologia": { gradient: "from-violet-500/5 to-transparent", emoji: "⚡" },
@@ -102,14 +138,33 @@ const decodeEntities = (text: string): string => {
   } catch { return text; }
 };
 
+/* ─── TVI MINI BAR ─── */
+const TVIMiniBar = ({ score }: { score: number }) => {
+  const color = score >= 80 ? "var(--color-critical)" : score >= 50 ? "var(--color-high)" : score >= 25 ? "var(--color-moderate)" : "var(--color-neutral)";
+  return (
+    <div className="flex items-center gap-1.5">
+      <div className="w-[32px] h-[3px] rounded-full bg-secondary overflow-hidden">
+        <div
+          className="h-full rounded-full transition-all duration-500"
+          style={{ width: `${score}%`, background: `hsl(${color})` }}
+        />
+      </div>
+      <span className="text-[9px] font-semibold tabular-nums" style={{ color: `hsl(${color})` }}>
+        {score}
+      </span>
+    </div>
+  );
+};
+
 /* ─── DISCOVERY CARD ─── */
 interface DiscoveryCardProps {
   trend: TrendCardProps;
   variant: CardVariant;
   index: number;
+  lang: string;
 }
 
-const DiscoveryCard = React.memo(({ trend, variant, index }: DiscoveryCardProps) => {
+const DiscoveryCard = React.memo(({ trend, variant, index, lang }: DiscoveryCardProps) => {
   const navigate = useNavigate();
   const accent = getAccentColor(trend.platform);
   const flag = trend.countryCode ? countryCodeToFlag(trend.countryCode) : null;
@@ -117,6 +172,9 @@ const DiscoveryCard = React.memo(({ trend, variant, index }: DiscoveryCardProps)
   const title = decodeEntities(trend.title);
   const description = trend.description || trend.details || "";
   const catVisual = categoryVisual[trend.category || ""] || null;
+  const tvi = computeTVI(trend);
+  const lifecycle = getLifecycleStage(trend);
+  const en = lang === "en";
 
   const handleClick = () => {
     navigate(`/topic?title=${encodeURIComponent(trend.title)}&platform=${encodeURIComponent(trend.platform)}`);
@@ -128,6 +186,8 @@ const DiscoveryCard = React.memo(({ trend, variant, index }: DiscoveryCardProps)
   const isCompact = variant === "compact";
   const showDescription = isHero || isFeatured || isWide;
   const showSparkline = isHero || isFeatured || variant === "standard";
+  const showLifecycle = isHero || isFeatured || isWide;
+  const showTVI = !isCompact;
 
   return (
     <motion.article
@@ -147,7 +207,7 @@ const DiscoveryCard = React.memo(({ trend, variant, index }: DiscoveryCardProps)
         isCompact && "min-h-[160px] sm:min-h-[200px]",
       )}
     >
-      {/* Category gradient background for hero/featured */}
+      {/* Category gradient background */}
       {(isHero || isFeatured) && catVisual && (
         <div className={cn("absolute inset-0 bg-gradient-to-br pointer-events-none", catVisual.gradient)} />
       )}
@@ -160,25 +220,20 @@ const DiscoveryCard = React.memo(({ trend, variant, index }: DiscoveryCardProps)
 
       {/* Content */}
       <div className={cn(
-        "relative flex flex-col gap-3 flex-1",
-        isHero ? "p-6 sm:p-8 gap-4" : isFeatured ? "p-5 sm:p-6 gap-3" : "p-4 sm:p-5 gap-2.5"
+        "relative flex flex-col gap-2.5 flex-1",
+        isHero ? "p-6 sm:p-8 gap-3.5" : isFeatured ? "p-5 sm:p-6 gap-3" : "p-4 sm:p-5 gap-2"
       )}>
         {/* Meta row */}
         <div className="flex items-center justify-between gap-2">
           <div className="flex items-center gap-2 min-w-0">
             <span
               className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold uppercase tracking-wider shrink-0"
-              style={{
-                background: `hsl(${accent} / 0.08)`,
-                color: `hsl(${accent})`,
-              }}
+              style={{ background: `hsl(${accent} / 0.08)`, color: `hsl(${accent})` }}
             >
               {trend.icon} {trend.platform}
             </span>
             {trend.category && trend.category !== "Geral" && (
-              <span className="text-[10px] text-muted-foreground font-medium truncate">
-                {trend.category}
-              </span>
+              <span className="text-[10px] text-muted-foreground font-medium truncate">{trend.category}</span>
             )}
           </div>
           <div className="flex items-center gap-1.5 shrink-0">
@@ -186,6 +241,19 @@ const DiscoveryCard = React.memo(({ trend, variant, index }: DiscoveryCardProps)
             <span className="text-[10px] text-muted-foreground">{trend.time}</span>
           </div>
         </div>
+
+        {/* Lifecycle badge — hero/featured/wide */}
+        {showLifecycle && (
+          <div className="flex items-center gap-2">
+            <span
+              className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-widest"
+              style={{ background: `hsl(${lifecycle.color} / 0.08)`, color: `hsl(${lifecycle.color})` }}
+            >
+              {lifecycle.icon} {en ? lifecycle.labelEn : lifecycle.label}
+            </span>
+            {showTVI && <TVIMiniBar score={tvi} />}
+          </div>
+        )}
 
         {/* Title */}
         <h3 className={cn(
@@ -209,7 +277,7 @@ const DiscoveryCard = React.memo(({ trend, variant, index }: DiscoveryCardProps)
           </p>
         )}
 
-        {/* Category visual hint for hero */}
+        {/* Category emoji watermark for hero */}
         {isHero && catVisual && (
           <span className="text-[48px] sm:text-[64px] absolute bottom-6 right-6 opacity-[0.04] group-hover:opacity-[0.07] transition-opacity pointer-events-none select-none">
             {catVisual.emoji}
@@ -249,6 +317,8 @@ const DiscoveryCard = React.memo(({ trend, variant, index }: DiscoveryCardProps)
               {trend.changePositive ? "+" : ""}{trend.change}
             </span>
           )}
+          {/* TVI on standard cards (not shown in lifecycle row) */}
+          {!showLifecycle && showTVI && <TVIMiniBar score={tvi} />}
         </div>
         <ArrowUpRight className={cn(
           "text-muted-foreground/30 group-hover:text-primary group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-all duration-200",
@@ -277,7 +347,6 @@ const Discover = () => {
   const [searchOpen, setSearchOpen] = useState(false);
   const searchRef = useRef<HTMLInputElement>(null);
 
-  // First-visit redirect to /welcome
   useEffect(() => {
     const hasVisited = localStorage.getItem("gtt-has-visited");
     if (!hasVisited) {
@@ -296,7 +365,6 @@ const Discover = () => {
   const { filteredTrends: rawTrends, loading, isFirstLoad } = useTrends(defaultFilters, setTrendCounts, lang);
   const { translatedTrends } = useTranslatedTrends(rawTrends, lang);
 
-  // Filter by category & search
   const displayTrends = useMemo(() => {
     let trends = translatedTrends;
 
@@ -317,7 +385,6 @@ const Discover = () => {
       );
     }
 
-    // Deduplicate by normalized title
     const seen = new Set<string>();
     return trends.filter(t => {
       const key = t.title.toLowerCase().normalize("NFD").replace(/\p{Diacritic}/gu, "").replace(/[^a-z0-9]/g, "").slice(0, 40);
@@ -327,7 +394,6 @@ const Discover = () => {
     });
   }, [translatedTrends, activeCategory, searchQuery]);
 
-  // Stats
   const stats = useMemo(() => {
     const platforms = new Set(translatedTrends.map(t => t.platform));
     const countries = new Set(translatedTrends.map(t => t.countryCode).filter(Boolean));
@@ -343,26 +409,26 @@ const Discover = () => {
   }, [searchOpen]);
 
   const getCatLabel = (cat: typeof CATEGORIES[0]) => lang === "en" ? cat.labelEn : cat.labelPt;
+  const en = lang === "en";
 
   return (
     <div className="min-h-screen bg-background flex flex-col page-enter">
       <AppHeader />
 
-      {/* ─── HERO SECTION ─── */}
+      {/* ─── HERO ─── */}
       <section className="px-4 sm:px-6 md:px-8 lg:px-12 pt-8 sm:pt-12 md:pt-14 pb-6 md:pb-8 max-w-[1440px] mx-auto w-full">
         <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-6">
           <div className="space-y-2 max-w-2xl">
             <h1 className="text-foreground font-bold tracking-[-0.02em] leading-[1.08]" style={{ fontSize: 'clamp(1.75rem, 4.5vw, 3rem)' }}>
-              {lang === "en" ? "Discover" : "Descobrir"}
+              {en ? "Discover" : "Descobrir"}
             </h1>
             <p className="text-muted-foreground leading-relaxed" style={{ fontSize: 'clamp(0.8125rem, 1.5vw, 0.9375rem)' }}>
-              {lang === "en"
-                ? "Explore global trends, signals and emerging conversations across platforms."
-                : "Explore tendências globais, sinais e conversas emergentes em múltiplas plataformas."}
+              {en
+                ? "Explore global trends, emerging signals and cross-platform conversations in real time."
+                : "Explore tendências globais, sinais emergentes e conversas cross-platform em tempo real."}
             </p>
           </div>
 
-          {/* Live stats */}
           <div className="flex items-center gap-5 md:gap-6">
             {[
               { value: stats.totalTrends, labelEn: "Signals", labelPt: "Sinais" },
@@ -374,7 +440,7 @@ const Discover = () => {
                 <div className="text-right">
                   <p className="text-[24px] md:text-[28px] font-bold text-foreground leading-none tracking-tight">{stat.value}</p>
                   <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-medium mt-0.5">
-                    {lang === "en" ? stat.labelEn : stat.labelPt}
+                    {en ? stat.labelEn : stat.labelPt}
                   </p>
                 </div>
               </React.Fragment>
@@ -384,7 +450,7 @@ const Discover = () => {
       </section>
 
       {/* ─── FILTER BAR ─── */}
-      <div className="sticky top-[56px] z-30 bg-background/80 backdrop-blur-xl border-b border-border/40">
+      <div className="sticky top-[52px] sm:top-[56px] z-30 bg-background/80 backdrop-blur-xl border-b border-border/40">
         <div className="px-4 sm:px-6 md:px-8 lg:px-12 max-w-[1440px] mx-auto w-full flex items-center gap-1.5 py-2.5 overflow-x-auto scrollbar-none" role="tablist" aria-label="Category filters">
           {CATEGORIES.map((cat) => {
             const Icon = cat.icon;
@@ -394,7 +460,7 @@ const Discover = () => {
                 key={cat.key}
                 onClick={() => setActiveCategory(cat.key)}
                 role="tab"
-                aria-selected={activeCategory === cat.key}
+                aria-selected={active}
                 className={cn(
                   "inline-flex items-center gap-1.5 px-3.5 py-2 rounded-full text-[11px] font-medium whitespace-nowrap transition-all duration-150 shrink-0",
                   active
@@ -410,7 +476,6 @@ const Discover = () => {
 
           <div className="flex-1" />
 
-          {/* Search */}
           <AnimatePresence>
             {searchOpen ? (
               <motion.div
@@ -425,7 +490,7 @@ const Discover = () => {
                   type="text"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder={lang === "en" ? "Search…" : "Buscar…"}
+                  placeholder={en ? "Search…" : "Buscar…"}
                   className="w-full h-9 pl-3.5 pr-8 rounded-full bg-secondary/60 border border-border/50 text-[12px] text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary/20"
                 />
                 <button
@@ -439,7 +504,7 @@ const Discover = () => {
               <button
                 onClick={() => setSearchOpen(true)}
                 className="flex items-center justify-center w-9 h-9 rounded-full bg-secondary/60 text-muted-foreground hover:bg-secondary hover:text-foreground transition-all shrink-0"
-                aria-label={lang === "en" ? "Search" : "Buscar"}
+                aria-label={en ? "Search" : "Buscar"}
               >
                 <Search className="w-3.5 h-3.5" />
               </button>
@@ -451,7 +516,6 @@ const Discover = () => {
       {/* ─── EDITORIAL GRID ─── */}
       <main className="flex-1 px-4 sm:px-6 md:px-8 lg:px-12 py-6 md:py-10 max-w-[1440px] mx-auto w-full">
         {loading && isFirstLoad ? (
-          /* Skeleton grid */
           <div className="grid grid-cols-4 sm:grid-cols-6 lg:grid-cols-12 gap-3 sm:gap-4 auto-rows-[minmax(100px,auto)]">
             {Array.from({ length: 12 }).map((_, i) => {
               const v = getCardVariant(i);
@@ -474,19 +538,17 @@ const Discover = () => {
           <div className="flex flex-col items-center justify-center py-24 gap-4 text-center">
             <span className="text-5xl">🔍</span>
             <p className="text-base font-semibold text-foreground">
-              {lang === "en" ? "No signals found" : "Nenhum sinal encontrado"}
+              {en ? "No signals found" : "Nenhum sinal encontrado"}
             </p>
             <p className="text-sm text-muted-foreground max-w-xs">
-              {lang === "en"
-                ? "Try changing the category or search term."
-                : "Tente mudar a categoria ou o termo de busca."}
+              {en ? "Try changing the category or search term." : "Tente mudar a categoria ou o termo de busca."}
             </p>
             {(activeCategory !== "all" || searchQuery) && (
               <button
                 onClick={() => { setActiveCategory("all"); setSearchQuery(""); }}
                 className="mt-2 px-5 py-2 rounded-full bg-foreground text-background text-xs font-semibold hover:opacity-90 transition-opacity"
               >
-                {lang === "en" ? "Clear filters" : "Limpar filtros"}
+                {en ? "Clear filters" : "Limpar filtros"}
               </button>
             )}
           </div>
@@ -502,17 +564,17 @@ const Discover = () => {
                   trend={trend}
                   variant={getCardVariant(i)}
                   index={i}
+                  lang={lang}
                 />
               ))}
             </AnimatePresence>
           </motion.div>
         )}
 
-        {/* Load more */}
         {displayTrends.length > 40 && (
           <div className="flex justify-center pt-10">
             <button className="px-8 py-3 rounded-full border border-border text-sm font-medium text-muted-foreground hover:text-foreground hover:border-foreground/30 transition-all">
-              {lang === "en" ? "Load more" : "Carregar mais"}
+              {en ? "Load more" : "Carregar mais"}
             </button>
           </div>
         )}
@@ -522,7 +584,7 @@ const Discover = () => {
       <footer className="border-t border-border/40 px-4 sm:px-6 md:px-8 lg:px-12 py-6 max-w-[1440px] mx-auto w-full">
         <div className="mb-4">
           <p className="text-[10px] text-muted-foreground/60 leading-relaxed max-w-2xl mx-auto text-center">
-            {lang === "en"
+            {en
               ? "⚠️ Insights represent analytical signals derived from public data sources. They do not constitute recommendations or predictions. Always verify with primary sources."
               : "⚠️ Os insights representam sinais analíticos derivados de fontes públicas. Não constituem recomendações ou previsões. Sempre verifique com fontes primárias."}
           </p>
@@ -537,7 +599,7 @@ const Discover = () => {
               <span className="relative w-1.5 h-1.5 rounded-full bg-[hsl(var(--color-positive))]" />
             </span>
             <span className="text-[10px] text-muted-foreground/60 font-medium uppercase tracking-wider">
-              {lang === "en" ? "Live data" : "Dados ao vivo"}
+              {en ? "Live data" : "Dados ao vivo"}
             </span>
           </div>
         </div>
