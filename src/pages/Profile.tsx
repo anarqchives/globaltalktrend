@@ -36,9 +36,6 @@ const tabs = [
   { key: "filters", label: "Filtros", icon: Star },
   { key: "alerts", label: "Alertas", icon: Bell },
   { key: "history", label: "Histórico", icon: Clock },
-  { key: "stats", label: "Estatísticas", icon: BarChart3 },
-  { key: "privacy", label: "Privacidade", icon: Shield },
-  { key: "settings", label: "Config", icon: Settings },
 ] as const;
 
 type TabKey = typeof tabs[number]["key"];
