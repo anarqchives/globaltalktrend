@@ -219,7 +219,6 @@ const GoogleMapView = ({
 
         const { Map } = (await google.maps.importLibrary("maps")) as any;
         const { InfoWindow } = (await google.maps.importLibrary("maps")) as any;
-        const { HeatmapLayer } = (await google.maps.importLibrary("visualization")) as any;
 
         if (!mapRef.current) return;
 
@@ -250,6 +249,10 @@ const GoogleMapView = ({
     loadMap();
     return () => { cancelled = true; };
   }, [mapRetry, isDark]);
+
+  const maxCount = useMemo(() => Math.max(...Object.values(trendCounts), 1), [trendCounts]);
+  const activeCountries = useMemo(() => Object.values(trendCounts).filter(v => v > 0).length, [trendCounts]);
+  const totalTrends = useMemo(() => Object.values(trendCounts).reduce((a, b) => a + b, 0), [trendCounts]);
 
   // Atualizar tooltip de hover
   const showHoverTooltip = useCallback((country: CountryPoint, intensity: number) => {
@@ -291,28 +294,7 @@ const GoogleMapView = ({
     });
   }, [trendCounts, isDark]);
 
-  // Renderizar visualizações do mapa
-  useEffect(() => {
-    if (!mapLoaded || !googleMapRef.current) return;
-
-    // Limpar marcadores antigos
-    markersRef.current.forEach(marker => marker.setMap(null));
-    markersRef.current = [];
-
-    if (heatmapRef.current) {
-      heatmapRef.current.setMap(null);
-      heatmapRef.current = null;
-    }
-
-    if (mapMode === "heatmap") {
-      renderHeatmap();
-    } else if (mapMode === "sentiment") {
-      renderSentimentMarkers();
-    } else if (mapMode === "flow") {
-      renderFlowArcs();
-    }
-  }, [mapMode, mapLoaded, trendCounts]);
-
+  // Renderizar heatmap
   const renderHeatmap = useCallback(async () => {
     if (!googleMapRef.current) return;
 
@@ -325,7 +307,6 @@ const GoogleMapView = ({
         .flatMap(country => {
           const count = trendCounts[country.id];
           const intensity = Math.min(count / maxCount, 1);
-          // Criar múltiplos pontos ponderados pela intensidade
           return Array(Math.max(1, Math.round(intensity * 10)))
             .fill(null)
             .map(() => ({
@@ -334,6 +315,10 @@ const GoogleMapView = ({
             }));
         });
 
+      if (heatmapRef.current) {
+        heatmapRef.current.setMap(null);
+      }
+
       heatmapRef.current = new HeatmapLayer({
         data: heatmapData,
         map: googleMapRef.current,
@@ -341,7 +326,7 @@ const GoogleMapView = ({
         opacity: 0.7,
       });
 
-      // Adicionar marcadores customizados
+      // Adicionar marcadores
       countryPoints.forEach(country => {
         const count = trendCounts[country.id] || 0;
         if (count === 0) return;
@@ -374,6 +359,7 @@ const GoogleMapView = ({
     }
   }, [trendCounts, maxCount, onSelectCountry, showHoverTooltip]);
 
+  // Renderizar sentimentos
   const renderSentimentMarkers = useCallback(() => {
     if (!googleMapRef.current) return;
 
@@ -382,7 +368,6 @@ const GoogleMapView = ({
       if (count === 0) return;
 
       const intensity = Math.min(count / maxCount, 1);
-      // Placeholder: usar sentimento neutro por padrão
       const sentiment: Sentiment = "neutral";
       const color = sentimentColors[sentiment];
 
@@ -408,10 +393,10 @@ const GoogleMapView = ({
     });
   }, [trendCounts, maxCount, onSelectCountry, showHoverTooltip]);
 
+  // Renderizar fluxos
   const renderFlowArcs = useCallback(() => {
     if (!googleMapRef.current) return;
 
-    // Placeholder: renderizar marcadores simples por enquanto
     countryPoints.forEach(country => {
       const count = trendCounts[country.id] || 0;
       if (count === 0) return;
@@ -440,9 +425,29 @@ const GoogleMapView = ({
     });
   }, [trendCounts, maxCount, onSelectCountry, showHoverTooltip]);
 
-  const maxCount = useMemo(() => Math.max(...Object.values(trendCounts), 1), [trendCounts]);
-  const activeCountries = useMemo(() => Object.values(trendCounts).filter(v => v > 0).length, [trendCounts]);
-  const totalTrends = useMemo(() => Object.values(trendCounts).reduce((a, b) => a + b, 0), [trendCounts]);
+  // Renderizar visualizações quando o modo muda
+  useEffect(() => {
+    if (!mapLoaded || !googleMapRef.current) return;
+
+    // Limpar marcadores antigos
+    markersRef.current.forEach(marker => marker.setMap(null));
+    markersRef.current = [];
+
+    // Limpar heatmap
+    if (heatmapRef.current) {
+      heatmapRef.current.setMap(null);
+      heatmapRef.current = null;
+    }
+
+    // Renderizar novo modo
+    if (mapMode === "heatmap") {
+      renderHeatmap();
+    } else if (mapMode === "sentiment") {
+      renderSentimentMarkers();
+    } else if (mapMode === "flow") {
+      renderFlowArcs();
+    }
+  }, [mapMode, mapLoaded, renderHeatmap, renderSentimentMarkers, renderFlowArcs]);
 
   const mapModes: { key: MapMode; icon: typeof Flame; labelKey: string }[] = [
     { key: "heatmap", icon: Flame, labelKey: "Heatmap" },
