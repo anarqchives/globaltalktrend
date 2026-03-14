@@ -10,11 +10,11 @@ import { toast } from "@/hooks/use-toast";
 import { ErrorBoundary, OfflineBanner } from "./components/ErrorBoundary";
 
 // Eagerly load the main pages (critical path)
-import Discover from "./pages/Discover";
+import Index from "./pages/Index";
 import PrivacyPopup from "./components/PrivacyPopup";
 
-// Lazy-load the dashboard (heavy)
-const Index = lazy(() => import("./pages/Index"));
+// Lazy-load secondary pages
+const Discover = lazy(() => import("./pages/Discover"));
 
 // Lazy-load secondary pages
 const Welcome = lazy(() => import("./pages/Welcome"));
