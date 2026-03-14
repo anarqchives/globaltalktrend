@@ -180,7 +180,7 @@ export default function ReportsTab({ userId }: ReportsTabProps) {
       const idx = categoryValues.indexOf(saved.filters.category || "Todas");
       setCategoryIdx(idx >= 0 ? idx : 0);
       setMediaType(saved.filters.mediaType || "Todas mídias");
-      if (saved.filters.reportMode) setReportMode(saved.filters.reportMode);
+      // reportMode is now fixed as "executive" (comprehensive)
     }
     setShowHistory(false);
     toast({ title: t("reportLoaded"), description: saved.title });
