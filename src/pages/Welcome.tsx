@@ -117,7 +117,7 @@ const Welcome = () => {
   }, []);
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background page-enter">
       <AppHeader minimal />
 
       {/* ═══════════════════ HERO ═══════════════════ */}
