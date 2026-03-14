@@ -293,17 +293,17 @@ const Discover = () => {
   const getCatLabel = (cat: typeof CATEGORIES[0]) => lang === "en" ? cat.labelEn : cat.labelPt;
 
   return (
-    <div className="min-h-screen bg-background flex flex-col">
+    <div className="min-h-screen bg-background flex flex-col page-enter">
       <AppHeader />
 
       {/* ─── HERO SECTION ─── */}
-      <section className="px-4 md:px-8 lg:px-12 pt-8 md:pt-12 pb-6 md:pb-8 max-w-[1400px] mx-auto w-full">
+      <section className="px-4 md:px-8 lg:px-12 pt-6 md:pt-10 pb-4 md:pb-6 max-w-[1400px] mx-auto w-full">
         <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-4">
-          <div className="space-y-2">
-            <h1 className="text-[28px] md:text-[36px] lg:text-[42px] font-bold tracking-tight leading-[1.1] text-foreground">
+          <div className="space-y-1.5">
+            <h1 className="text-foreground font-bold tracking-tight leading-[1.1]" style={{ fontSize: 'clamp(1.5rem, 4vw, 2.625rem)' }}>
               {lang === "en" ? "Discover" : "Descobrir"}
             </h1>
-            <p className="text-muted-foreground text-[14px] md:text-[15px] leading-relaxed max-w-xl">
+            <p className="text-muted-foreground leading-relaxed max-w-xl" style={{ fontSize: 'clamp(0.8125rem, 1.5vw, 0.9375rem)' }}>
               {lang === "en"
                 ? "Explore global trends, signals and emerging conversations across platforms."
                 : "Explore tendências globais, sinais e conversas emergentes em múltiplas plataformas."}
@@ -338,7 +338,7 @@ const Discover = () => {
 
       {/* ─── FILTER BAR ─── */}
       <div className="sticky top-[56px] z-30 bg-background/80 backdrop-blur-xl border-b border-border/40">
-        <div className="px-4 md:px-8 lg:px-12 max-w-[1400px] mx-auto w-full flex items-center gap-2 py-2.5 overflow-x-auto scrollbar-none">
+        <div className="px-4 md:px-8 lg:px-12 max-w-[1400px] mx-auto w-full flex items-center gap-1.5 py-2 overflow-x-auto scrollbar-none" role="tablist" aria-label="Category filters">
           {/* Categories */}
           {CATEGORIES.map((cat) => {
             const Icon = cat.icon;
@@ -347,8 +347,10 @@ const Discover = () => {
               <button
                 key={cat.key}
                 onClick={() => setActiveCategory(cat.key)}
+                role="tab"
+                aria-selected={activeCategory === cat.key}
                 className={cn(
-                  "inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[12px] font-medium whitespace-nowrap transition-all duration-150 shrink-0",
+                  "inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-medium whitespace-nowrap transition-all duration-150 shrink-0 touch-target-sm",
                   active
                     ? "bg-foreground text-background"
                     : "bg-secondary/60 text-muted-foreground hover:bg-secondary hover:text-foreground"
@@ -463,8 +465,15 @@ const Discover = () => {
         )}
       </main>
 
-      {/* ─── FOOTER ─── */}
+      {/* ─── FOOTER WITH DISCLAIMER ─── */}
       <footer className="border-t border-border/40 px-4 md:px-8 lg:px-12 py-6 max-w-[1400px] mx-auto w-full">
+        <div className="mb-4">
+          <p className="text-[10px] text-muted-foreground/70 leading-relaxed max-w-2xl mx-auto text-center">
+            {lang === "en"
+              ? "⚠️ Insights represent analytical signals derived from public data sources. They do not constitute recommendations or predictions. Always verify with primary sources."
+              : "⚠️ Os insights representam sinais analíticos derivados de fontes públicas. Não constituem recomendações ou previsões. Sempre verifique com fontes primárias."}
+          </p>
+        </div>
         <div className="flex flex-col sm:flex-row items-center justify-between gap-3">
           <p className="text-[11px] text-muted-foreground">
             © {new Date().getFullYear()} Global Talk Trend — {lang === "en" ? "Trend Intelligence Platform" : "Plataforma de Inteligência de Tendências"}

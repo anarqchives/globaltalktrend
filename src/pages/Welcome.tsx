@@ -117,7 +117,7 @@ const Welcome = () => {
   }, []);
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background page-enter">
       <AppHeader minimal />
 
       {/* ═══════════════════ HERO ═══════════════════ */}
@@ -144,7 +144,8 @@ const Welcome = () => {
             {/* Headline */}
             <motion.h1
               variants={fadeUp} custom={1}
-              className="text-[36px] sm:text-[48px] lg:text-[60px] font-bold tracking-[-0.03em] leading-[1.05] text-foreground"
+              className="font-bold tracking-[-0.03em] leading-[1.05] text-foreground"
+              style={{ fontSize: 'clamp(2rem, 5vw + 0.5rem, 3.75rem)' }}
             >
               {en ? (
                 <>Understand the world's<br className="hidden sm:block" /> signals, <span className="text-muted-foreground">before everyone else.</span></>

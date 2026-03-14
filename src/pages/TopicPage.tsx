@@ -114,7 +114,7 @@ const TopicPage = () => {
   const flag = topic?.countryCode ? countryCodeToFlag(topic.countryCode) : null;
 
   return (
-    <div className="min-h-screen bg-background flex flex-col">
+    <div className="min-h-screen bg-background flex flex-col page-enter">
       <AppHeader />
 
       <main className="flex-1 px-4 md:px-8 lg:px-12 py-6 md:py-10 max-w-[1200px] mx-auto w-full">

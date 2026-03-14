@@ -95,7 +95,7 @@ const AppHeader = ({ minimal = false }: AppHeaderProps) => {
 
   return (
     <>
-      <header className="sticky top-0 z-50 h-[56px] flex items-center px-4 md:px-6 bg-background/80 backdrop-blur-xl border-b border-border/40">
+      <header className="sticky top-0 z-50 h-[56px] flex items-center px-4 md:px-6 bg-background/80 backdrop-blur-xl border-b border-border/40" role="banner">
         <div className="w-full flex items-center justify-between">
 
           {/* ─── LEFT: Logo ─── */}
@@ -115,7 +115,7 @@ const AppHeader = ({ minimal = false }: AppHeaderProps) => {
 
           {/* ─── CENTER: Navigation ─── */}
           {!minimal && (
-            <nav className="hidden md:flex items-center gap-1">
+            <nav className="hidden md:flex items-center gap-0.5" aria-label="Main navigation">
               {NAV_ITEMS.map((item) => {
                 const Icon = item.icon;
                 const active = isActive(item.path);
@@ -123,8 +123,9 @@ const AppHeader = ({ minimal = false }: AppHeaderProps) => {
                   <Link
                     key={item.key}
                     to={item.path}
+                    aria-current={active ? "page" : undefined}
                     className={cn(
-                      "relative flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[13px] font-medium transition-all duration-150",
+                      "relative flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[12px] font-medium transition-all duration-150 touch-target-sm",
                       active
                         ? "text-foreground bg-secondary/80"
                         : "text-muted-foreground hover:text-foreground hover:bg-secondary/50"
