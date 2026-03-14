@@ -26,7 +26,6 @@ import ArchiveDrawer from "@/components/ArchiveDrawer";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import TagLegend from "@/components/TagLegend";
 
-
 import { useUserActivity } from "@/hooks/use-user-activity";
 import {
   ResizablePanelGroup,
@@ -81,8 +80,8 @@ const Index = () => {
     try {
       const saved = localStorage.getItem("map-panel-open");
       const isMobileInit = window.innerWidth < 768;
-      if (saved !== null) return { radar: true, timeline: true, map: saved === "true" };
-      return { radar: true, timeline: true, map: !isMobileInit };
+      // FORÇAR MAPA COMO TRUE PARA TESTE
+      return { radar: true, timeline: true, map: true };
     } catch {
       return { radar: true, timeline: true, map: true };
     }
@@ -597,7 +596,7 @@ const Index = () => {
           {breadcrumbs.map((seg, i) => (
             <span key={seg.key} className="inline-flex items-center gap-0.5">
               {i > 0 && <ChevronRight className="w-2 h-2 text-muted-foreground/30" />}
-              <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded bg-primary/10 text-primary font-medium">
+              <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 bg-primary/10 text-primary font-medium">
                 {seg.label}
                 <button onClick={() => clearBreadcrumb(seg.key)} className="ml-0.5 hover:text-destructive transition-colors">
                   <X className="w-2 h-2" />
@@ -769,19 +768,22 @@ const Index = () => {
     </div>
   );
 
-  const renderMap = () => (
-    <Suspense fallback={<MapFallback />}>
-      <GoogleMapView
-        trendCounts={trendCounts}
-        selectedCountry={filters.country}
-        onSelectCountry={handleMapClick}
-        trends={allTrends}
-        onSelectTrend={handleSelectTrend}
-        highlightCountry={expandedTrendCountry}
-        onClose={!isMobile ? () => togglePanel("map") : undefined}
-      />
-    </Suspense>
-  );
+  const renderMap = () => {
+    console.log("🟢 renderMap foi chamada");
+    return (
+      <Suspense fallback={<MapFallback />}>
+        <GoogleMapView
+          trendCounts={trendCounts}
+          selectedCountry={filters.country}
+          onSelectCountry={handleMapClick}
+          trends={allTrends}
+          onSelectTrend={handleSelectTrend}
+          highlightCountry={expandedTrendCountry}
+          onClose={!isMobile ? () => togglePanel("map") : undefined}
+        />
+      </Suspense>
+    );
+  };
 
   // Count closed panels
   const closedPanelsList = (["radar", "timeline", "map"] as const).filter(p => !panelVisibility[p]);
