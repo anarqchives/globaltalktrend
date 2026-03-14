@@ -487,38 +487,33 @@ const Discover = () => {
     <div className="min-h-screen bg-background flex flex-col page-enter">
       <AppHeader />
 
-      {/* ═══════════════════ INTELLIGENCE BRIEFING HEADER ═══════════════════ */}
-      <section className="briefing-header px-4 sm:px-6 md:px-8 lg:px-12 pt-10 sm:pt-14 md:pt-16 pb-0 max-w-[1440px] mx-auto w-full">
-        <div className="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-6 pb-8 md:pb-10">
-          {/* Left: Briefing context */}
-          <div className="space-y-4 max-w-2xl">
-            {/* Date + time stamp */}
-            <div className="flex items-center gap-3 text-[11px] text-muted-foreground/50 uppercase tracking-wider font-medium">
-              <span className="flex items-center gap-1.5">
-                <span className="relative flex items-center justify-center w-1.5 h-1.5">
-                  <span className="absolute w-full h-full rounded-full bg-[hsl(var(--color-positive))] animate-ping opacity-60" />
-                  <span className="relative w-1.5 h-1.5 rounded-full bg-[hsl(var(--color-positive))]" />
+      {/* ═══════════════════ COMPACT INTELLIGENCE HEADER ═══════════════════ */}
+      <section className="briefing-header px-4 sm:px-6 md:px-8 lg:px-12 pt-6 sm:pt-8 pb-0 max-w-[1440px] mx-auto w-full">
+        <div className="flex items-center justify-between gap-4 pb-5">
+          {/* Left: Orientation */}
+          <div className="flex items-center gap-4 min-w-0">
+            <div>
+              <div className="flex items-center gap-2.5 text-[10px] text-muted-foreground/50 uppercase tracking-wider font-medium mb-1">
+                <span className="flex items-center gap-1.5">
+                  <span className="relative flex items-center justify-center w-1.5 h-1.5">
+                    <span className="absolute w-full h-full rounded-full bg-[hsl(var(--color-positive))] animate-ping opacity-60" />
+                    <span className="relative w-1.5 h-1.5 rounded-full bg-[hsl(var(--color-positive))]" />
+                  </span>
+                  {en ? "Live" : "Ao vivo"}
                 </span>
-                {en ? "Live Intelligence" : "Inteligência ao vivo"}
-              </span>
-              <span className="w-px h-3 bg-border/50" />
-              <span className="capitalize">{dateStr}</span>
-              <span className="w-px h-3 bg-border/50" />
-              <span className="tabular-nums">{timeStr}</span>
+                <span className="w-px h-2.5 bg-border/40" />
+                <span className="capitalize">{dateStr}</span>
+                <span className="w-px h-2.5 bg-border/40" />
+                <span className="tabular-nums">{timeStr}</span>
+              </div>
+              <h1 className="text-foreground font-bold tracking-[-0.03em] leading-none" style={{ fontSize: 'clamp(1.25rem, 3vw, 1.75rem)' }}>
+                {en ? "Signal Explorer" : "Explorador de Sinais"}
+              </h1>
             </div>
-
-            <h1 className="text-foreground font-bold tracking-[-0.035em] leading-[1.02]" style={{ fontSize: 'clamp(1.875rem, 5vw, 3.25rem)' }}>
-              {en ? "Global Signal Explorer" : "Explorador de Sinais Globais"}
-            </h1>
-            <p className="text-muted-foreground/70 leading-relaxed max-w-xl" style={{ fontSize: 'clamp(0.8125rem, 1.5vw, 0.9375rem)' }}>
-              {en
-                ? "Emerging trends, cross-platform conversations and cultural signals detected in real time across 21+ sources."
-                : "Tendências emergentes, conversas cross-platform e sinais culturais detectados em tempo real em 21+ fontes."}
-            </p>
           </div>
 
-          {/* Right: Signal stats */}
-          <div className="flex items-center gap-8 md:gap-10 shrink-0">
+          {/* Right: Signal stats — compact */}
+          <div className="hidden sm:flex items-center gap-6 shrink-0">
             {[
               { value: stats.totalTrends, labelEn: "Signals", labelPt: "Sinais", icon: Activity },
               { value: stats.platforms, labelEn: "Sources", labelPt: "Fontes", icon: Layers },
@@ -526,14 +521,14 @@ const Discover = () => {
             ].map((stat) => {
               const Icon = stat.icon;
               return (
-                <div key={stat.labelEn} className="text-right">
-                  <div className="flex items-center justify-end gap-1.5 mb-1">
-                    <Icon className="w-3 h-3 text-muted-foreground/30" />
-                    <p className="text-[10px] text-muted-foreground/50 uppercase tracking-wider font-medium">
+                <div key={stat.labelEn} className="flex items-center gap-2">
+                  <Icon className="w-3 h-3 text-muted-foreground/25" />
+                  <div>
+                    <p className="text-[18px] md:text-[22px] font-bold text-foreground leading-none tabular-nums">{stat.value}</p>
+                    <p className="text-[9px] text-muted-foreground/40 uppercase tracking-wider font-medium">
                       {en ? stat.labelEn : stat.labelPt}
                     </p>
                   </div>
-                  <p className="text-[28px] md:text-[36px] font-bold text-foreground leading-none tracking-tight tabular-nums">{stat.value}</p>
                 </div>
               );
             })}
