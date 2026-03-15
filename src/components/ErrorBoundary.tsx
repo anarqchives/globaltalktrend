@@ -35,7 +35,7 @@ export class ErrorBoundary extends Component<Props, State> {
             {this.props.fallbackTitle || "Algo deu errado nesta seção"}
           </p>
           <p className="text-xs text-muted-foreground max-w-[280px]">
-            Estamos trabalhando para resolver. Tente novamente ou atualize a página.
+            Estamos trabalhando para resolver. / We're working on it. Try refreshing the page.
           </p>
           <button
             onClick={this.handleRetry}
@@ -71,7 +71,7 @@ export function OfflineBanner() {
   return (
     <div className="sticky top-0 z-50 bg-destructive/90 text-destructive-foreground px-4 py-2 text-center text-xs font-medium flex items-center justify-center gap-2 backdrop-blur-sm animate-in slide-in-from-top">
       <WifiOff className="w-3.5 h-3.5" />
-      Você parece estar offline — mostrando dados em cache
+      Você parece estar offline — mostrando dados em cache / You appear to be offline
     </div>
   );
 }
