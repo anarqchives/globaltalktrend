@@ -74,15 +74,14 @@ const Index = () => {
   const [viewMode, setViewMode] = useState<"timeline" | "map">("timeline");
   const [compactMode, setCompactMode] = useState(false);
   const [allExpanded, setAllExpanded] = useState(false);
-  const [allCollapsed, setAllCollapsed] = useState(false);
   // Panel visibility for collapsible sections
   const [panelVisibility, setPanelVisibility] = useState(() => {
-    // Map starts open by default on desktop
+    // Map starts open by default on desktop, closed on mobile
     try {
       const saved = localStorage.getItem("map-panel-open");
       const isMobileInit = window.innerWidth < 768;
-      // FORÇAR MAPA COMO TRUE PARA TESTE
-      return { radar: true, timeline: true, map: true };
+      const mapOpen = saved !== null ? saved === "true" : !isMobileInit;
+      return { radar: true, timeline: true, map: mapOpen };
     } catch {
       return { radar: true, timeline: true, map: true };
     }
@@ -174,8 +173,7 @@ const Index = () => {
         }
       }
     }).catch(() => {});
-  }, [translatedTrends, lang]);
-
+  }, [translatedTrends, lang, trendContexts]);
   const filteredTrends = useMemo(() => {
     const normKey = (title: string) => title.toLowerCase().normalize("NFD").replace(/\p{Diacritic}/gu, "").replace(/[^a-z0-9\s]/g, "").trim().slice(0, 50);
 
@@ -247,7 +245,6 @@ const Index = () => {
     "Wikipedia": 6, "OpenAlex": 6, "World Bank": 6, "IBGE": 6, "FRED": 6,
     "Google Trends": 99,
   };
-
   // Relevance-based scoring + Google Trends interleaving
   const diversifiedTrends = useMemo(() => {
     const isGT = (t: TrendCardProps) => t.platform?.toLowerCase().includes("google trends");
@@ -332,7 +329,6 @@ const Index = () => {
       }
       return now - 12 * ONE_HOUR;
     };
-
     const agora: TrendCardProps[] = [];
     const ultimas2h: TrendCardProps[] = [];
     const ultimas24h: TrendCardProps[] = [];
@@ -392,7 +388,6 @@ const Index = () => {
     setTimeSinceLastFetch(0);
     setUpdatePending(false);
   }, [fetchTrends]);
-
   useEffect(() => {
     const interval = setInterval(() => {
       timeSinceLastFetchRef.current += 10;
@@ -488,7 +483,6 @@ const Index = () => {
     };
     setTimeout(() => tryScroll(0), 200);
   }, [filteredTrends, visibleCount]);
-
   const handleAnomalyClick = useCallback((trendId: string) => {
     setExpandedTrendId(trendId);
     setHighlightedTrendId(trendId);
@@ -544,7 +538,6 @@ const Index = () => {
       columnFill: isMobile ? 'auto' as const : 'balance' as const,
     };
   }, [gridColumns, isMobile, panelVisibility.map]);
-
   const renderTimeline = () => (
     <div ref={(el) => { (scrollRef as any).current = el; (gridRef as any).current = el; }} className={`flex flex-col gap-0.5 p-1 sm:p-2 h-full overflow-y-auto overflow-x-hidden scrollbar-thin relative transition-opacity duration-200 w-full max-w-full box-border ${filterTransitioning ? 'opacity-60' : 'opacity-100'}`} style={{ maxWidth: '100vw' }}>
       {/* Timeline header bar — clear separator */}
@@ -632,7 +625,6 @@ const Index = () => {
           ))}
         </div>
       )}
-
       {(loading && isFirstLoad && filteredTrends.length === 0)
         ? Array.from({ length: 6 }).map((_, i) => <TrendCardSkeleton key={i} index={i} />)
         : (() => {
@@ -640,7 +632,7 @@ const Index = () => {
               const trendId = `${trend.platform}-${trend.title.slice(0, 20)}`;
               const originalTitle = (trend as any)._originalTitle || trend.title;
               const normalizedKey = originalTitle.toLowerCase().normalize("NFD").replace(/\p{Diacritic}/gu, "").replace(/[^a-z0-9\s]/g, "").trim().slice(0, 50);
-              const isMulti = multiplatformTitles.size > 0 && multiplatformTitles.has(normalizedKey);
+              const isMulti = multiplatformTitles.has(normalizedKey);
               const matchingCluster = isMulti ? clusters.find(c => c.trends.some(ct => ct.title.toLowerCase().normalize("NFD").replace(/\p{Diacritic}/gu, "").replace(/[^a-z0-9\s]/g, "").trim().slice(0, 50) === normalizedKey)) || null : null;
               return (
               <div key={`${trendId}-${i}`} id={`trend-card-${trendId}`} className={`timeline-masonry-item ${highlightedTrendId === trendId ? 'animate-highlight-pulse' : ''}`}>
@@ -690,7 +682,6 @@ const Index = () => {
                 </div>
               );
             };
-
             const { agora, ultimas2h, ultimas24h } = groupedTrends;
             let globalIndex = 0;
 
@@ -793,9 +784,7 @@ const Index = () => {
       )}
     </div>
   );
-
   const renderMap = () => {
-  console.log("🟢 renderMap foi chamada");
   return (
     <Suspense fallback={<MapFallback />}>
       <GoogleMapView
@@ -817,7 +806,6 @@ const Index = () => {
 
   return (
     <div className="h-screen flex flex-col bg-background overflow-hidden w-full max-w-[100vw]">
-      {/* Fixed Header */}
       {/* Fixed Header */}
       <AppHeader />
 
