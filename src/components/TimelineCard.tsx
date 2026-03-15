@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useEffect } from "react";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { ChevronUp, ExternalLink, Bell, Bookmark, Flag, Share2, TrendingUp, Info, MoreHorizontal } from "lucide-react";
 import { AreaChart, Area, ResponsiveContainer, XAxis, YAxis, Tooltip as RechartsTooltip, CartesianGrid } from "recharts";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
@@ -133,7 +133,7 @@ const relativeTimeFormats: Record<string, { now: string; min: string; h: string;
   ja: { now: "たった今", min: "{n}分前", h: "{n}時間前", d: "{n}日前" },
   ko: { now: "방금", min: "{n}분 전", h: "{n}시간 전", d: "{n}일 전" },
   ar: { now: "الآن", min: "منذ {n} دقيقة", h: "منذ {n} ساعة", d: "منذ {n} يوم" },
-  hi: { now: "अभी", min: "{n} मिनट पहले", h: "{n} घंटे पहले", d: "{n} दिन पहले" },
+  hi: { now: "अभी", min: "{n} minuto base", h: "{n} horas base", d: "{n} dias base" },
   ru: { now: "сейчас", min: "{n} мин назад", h: "{n}ч назад", d: "{n}д назад" },
 };
 
@@ -492,8 +492,16 @@ const TimelineCard = ({
         )}
 
         {/* ═══ EXPANDED STATE ═══ */}
+        <AnimatePresence>
         {expanded && (
-          <div className={`p-3 overflow-y-auto ${isMobile ? 'max-h-[350px]' : 'max-h-[500px]'}`}>
+          <motion.div 
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: "auto", opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ type: "spring", stiffness: 260, damping: 25 }}
+            className={`overflow-hidden`}
+          >
+            <div className={`p-3 overflow-y-auto ${isMobile ? 'max-h-[350px]' : 'max-h-[500px]'}`}>
             {/* Header + collapse */}
             <div className="flex items-center gap-1.5 mb-1.5 cursor-pointer" onClick={handleToggle}>
               <div className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: brandColor }} />
@@ -655,7 +663,9 @@ const TimelineCard = ({
 
             <TrendFeedback title={title} platform={platform} userId={userId} />
           </div>
+          </motion.div>
         )}
+        </AnimatePresence>
       </div>
 
       <AlertModal open={alertOpen} onClose={() => setAlertOpen(false)} onSubmit={handleCreateAlert} defaultKeyword={title} defaultCategory={category} />
