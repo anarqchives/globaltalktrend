@@ -81,13 +81,13 @@ export default function TemporalHeatmap({ trends }: TemporalHeatmapProps) {
   }, [trends]);
 
   const getCellColor = (value: number): string => {
-    if (value === 0) return "hsl(var(--secondary))";
+    if (value === 0) return "hsl(var(--secondary) / 0.5)";
     const ratio = value / maxVal;
-    if (ratio > 0.8) return "hsl(0 84% 60%)";
-    if (ratio > 0.6) return "hsl(25 100% 50%)";
-    if (ratio > 0.4) return "hsl(40 100% 50%)";
-    if (ratio > 0.2) return "hsl(142 60% 45%)";
-    return "hsl(210 100% 40% / 0.3)";
+    if (ratio > 0.8) return "#FF2D2D"; // Neon Red
+    if (ratio > 0.6) return "#FF6B00"; // Neon Orange
+    if (ratio > 0.4) return "#F5A623"; // Neon Amber
+    if (ratio > 0.2) return "#6366F1"; // Neon Indigo
+    return "hsl(217 91% 65% / 0.2)"; // Muted Blue
   };
 
   const legendDesc = heatmapLegends[lang] || heatmapLegends.en;
@@ -150,8 +150,11 @@ export default function TemporalHeatmap({ trends }: TemporalHeatmapProps) {
                           initial={{ opacity: 0 }}
                           animate={{ opacity: 1 }}
                           transition={{ delay: hi * 0.01 }}
-                          className="flex-1 h-3.5 rounded-[2px] cursor-crosshair transition-all hover:scale-y-150 hover:z-10 hover:ring-1 hover:ring-foreground/20"
-                          style={{ backgroundColor: getCellColor(val) }}
+                          className="flex-1 h-3.5 rounded-[2px] cursor-crosshair transition-all hover:scale-y-150 hover:z-10 hover:ring-1 hover:ring-primary/50"
+                          style={{
+                            backgroundColor: getCellColor(val),
+                            boxShadow: val > 0 ? `0 0 10px ${getCellColor(val)}40` : 'none'
+                          }}
                         />
                       </TooltipTrigger>
                       <TooltipContent side="top" className="text-[10px] p-1.5">
@@ -176,8 +179,8 @@ export default function TemporalHeatmap({ trends }: TemporalHeatmapProps) {
           <div className="flex items-center gap-2 mt-1.5 ml-16">
             <span className="text-[8px] text-muted-foreground">Low</span>
             <div className="flex gap-px">
-              {["hsl(210 100% 40% / 0.3)", "hsl(142 60% 45%)", "hsl(40 100% 50%)", "hsl(25 100% 50%)", "hsl(0 84% 60%)"].map((c, i) => (
-                <div key={i} className="w-4 h-2 rounded-[1px]" style={{ backgroundColor: c }} />
+              {["hsl(217 91% 65% / 0.2)", "#6366F1", "#F5A623", "#FF6B00", "#FF2D2D"].map((c, i) => (
+                <div key={i} className="w-4 h-2 rounded-[1px]" style={{ backgroundColor: c, boxShadow: `0 0 6px ${c}40` }} />
               ))}
             </div>
             <span className="text-[8px] text-muted-foreground">High</span>
