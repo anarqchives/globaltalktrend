@@ -25,6 +25,7 @@ import { ChevronRight, ChevronLeft, X, Map, Newspaper, RefreshCw, ChevronsUp, Ch
 import ArchiveDrawer from "@/components/ArchiveDrawer";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import TagLegend from "@/components/TagLegend";
+import { toast } from "@/hooks/use-toast";
 
 import { useUserActivity } from "@/hooks/use-user-activity";
 import {
@@ -433,6 +434,31 @@ const Index = () => {
     scrollRef.current?.scrollTo({ top: 0, behavior: "smooth" });
   }, []);
 
+  // Resilient Timeline Fallback
+  useEffect(() => {
+    if (!loading && !isFirstLoad && filteredTrends.length === 0) {
+      if (filters.period === "Hoje" || filters.period === "Últimas 24h") {
+        const timer = setTimeout(() => {
+          toast({ 
+            title: lang === "pt" ? "🔭 Resiliência Ativada" : "🔭 Fallback Activated", 
+            description: lang === "pt" ? "Poucos resultados. Ampliando automaticamente a detecção para Última Semana." : "Few results. Automatically expanding search to Last Week."
+          });
+          setFilters(f => ({ ...f, period: "Última semana" }));
+        }, 1200);
+        return () => clearTimeout(timer);
+      } else if (filters.period === "Última semana") {
+        const timer = setTimeout(() => {
+          toast({ 
+            title: lang === "pt" ? "🔭 Resiliência Ativada" : "🔭 Fallback Activated", 
+            description: lang === "pt" ? "Ampliando janela para Últimos 30 dias para garantir inteligência contínua." : "Expanding window to Last 30 Days to ensure continuous intelligence."
+          });
+          setFilters(f => ({ ...f, period: "Últimos 30 dias" }));
+        }, 1200);
+        return () => clearTimeout(timer);
+      }
+    }
+  }, [loading, isFirstLoad, filteredTrends.length, filters.period, lang]);
+
   const handleSelectTrend = useCallback((trend: TrendCardProps) => {
     const trendId = `${trend.platform}-${trend.title.slice(0, 20)}`;
     setExpandedTrendId(trendId);
@@ -614,7 +640,7 @@ const Index = () => {
               const trendId = `${trend.platform}-${trend.title.slice(0, 20)}`;
               const originalTitle = (trend as any)._originalTitle || trend.title;
               const normalizedKey = originalTitle.toLowerCase().normalize("NFD").replace(/\p{Diacritic}/gu, "").replace(/[^a-z0-9\s]/g, "").trim().slice(0, 50);
-              const isMulti = multiplatformTitles.has(normalizedKey);
+              const isMulti = multiplatformTitles.size > 0 && multiplatformTitles.has(normalizedKey);
               const matchingCluster = isMulti ? clusters.find(c => c.trends.some(ct => ct.title.toLowerCase().normalize("NFD").replace(/\p{Diacritic}/gu, "").replace(/[^a-z0-9\s]/g, "").trim().slice(0, 50) === normalizedKey)) || null : null;
               return (
               <div key={`${trendId}-${i}`} id={`trend-card-${trendId}`} className={`timeline-masonry-item ${highlightedTrendId === trendId ? 'animate-highlight-pulse' : ''}`}>
