@@ -6,7 +6,6 @@ import {
   Loader2, Menu, X, BarChart3, BookOpen, RefreshCw
 } from "lucide-react";
 import { useLanguage, languages } from "@/contexts/LanguageContext";
-import { lovable } from "@/integrations/lovable/index";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
@@ -58,13 +57,18 @@ const AppHeader = ({ minimal = false }: AppHeaderProps) => {
     try {
       setLoginLoading(provider);
       const redirectUri = `${window.location.origin}/auth/callback`;
-      const result = await lovable.auth.signInWithOAuth(provider, { redirect_uri: redirectUri });
-      if (result?.error) {
+      
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider,
+        options: {
+          redirectTo: redirectUri,
+        },
+      });
+
+      if (error) {
         toast({ title: "Falha no login", description: "Não foi possível concluir o login.", variant: "destructive" });
         setLoginLoading(null);
-        return;
       }
-      if (!result?.redirected) { setLoginOpen(false); setLoginLoading(null); }
     } catch {
       toast({ title: "Erro inesperado", description: "Houve um problema ao iniciar o login.", variant: "destructive" });
       setLoginLoading(null);
@@ -192,10 +196,10 @@ const AppHeader = ({ minimal = false }: AppHeaderProps) => {
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
-            ) : (
+            )} : (
               <button
                 onClick={() => setLoginOpen(true)}
-                className="flex items-center gap-1.5 h-9 px-4 rounded-full text-[12px] font-semibold transition-all"
+                className="flex items-center gap-1.5 min-w-0 shrink-0 h-9 px-4 rounded-full text-[12px] font-semibold transition-all"
                 style={{ background: 'hsl(var(--foreground))', color: 'hsl(var(--background))' }}
               >
                 <span className="hidden sm:inline">{t("enter")}</span>
@@ -210,7 +214,7 @@ const AppHeader = ({ minimal = false }: AppHeaderProps) => {
                 className="md:hidden flex items-center justify-center w-9 h-9 rounded-lg text-muted-foreground hover:text-foreground hover:bg-secondary/40 transition-all"
                 aria-label={mobileNavOpen ? "Close menu" : "Open menu"}
               >
-                {mobileNavOpen ? <X className="w-4 h-4" /> : <Menu className="w-4 h-4" />}
+                {mobileNavOpen ? <X className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
               </button>
             )}
           </div>
