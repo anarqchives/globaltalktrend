@@ -164,18 +164,17 @@ export default {
   		},
   		fontFamily: {
   			sans: [
+  				'"Inter"',
   				'"Helvetica Neue"',
   				'Helvetica',
   				'Arial',
   				'-apple-system',
   				'BlinkMacSystemFont',
   				'sans-serif',
-  				'Apple Color Emoji',
-  				'Segoe UI Emoji',
-  				'Noto Color Emoji'
   			],
+  			outfit: ['"Outfit"', 'sans-serif'],
   			serif: ['ui-serif', 'Georgia', 'Cambria', 'Times New Roman', 'Times', 'serif'],
-  			mono: ['ui-monospace', 'SFMono-Regular', 'Menlo', 'Monaco', 'Consolas', 'Liberation Mono', 'Courier New', 'monospace']
+  			mono: ['ui-monospace', 'SFMono-Regular', 'Menlo', 'Monaco', 'Consolas', 'monospace']
   		},
   		fontSize: {
   			'hero': ['28px', { lineHeight: '1.1', fontWeight: '700', letterSpacing: '-0.5px' }],

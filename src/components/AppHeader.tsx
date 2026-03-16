@@ -66,7 +66,7 @@ const AppHeader = ({ minimal = false }: AppHeaderProps) => {
       });
 
       if (error) {
-        toast({ title: "Falha no login", description: "N" + String.fromCharCode(227) + "o foi poss" + String.fromCharCode(237) + "vel concluir o login.", variant: "destructive" });
+        toast({ title: "Falha no login", description: "Não foi possível concluir o login.", variant: "destructive" });
         setLoginLoading(null);
       }
     } catch {
@@ -87,8 +87,18 @@ const AppHeader = ({ minimal = false }: AppHeaderProps) => {
         <div className="w-full max-w-[1440px] mx-auto flex items-center justify-between">
 
           {/* ─── LEFT: Logo ─── */}
-          <Link to="/welcome" className="flex items-center gap-1.5 min-w-0 shrink-0" aria-label="Global Talk Trend - Home">
-            <span className="text-[14px] font-bold tracking-tight whitespace-nowrap select-none text-foreground">
+          <Link to="/welcome" className="flex items-center gap-2 min-w-0 shrink-0" aria-label="Global Talk Trend - Home">
+            <img 
+              src="/logo-icon.png" 
+              alt="GTT Logo" 
+              className="h-6 w-auto object-contain dark:invert" 
+              onError={(e) => { 
+                e.currentTarget.style.display = 'none'; 
+                const nextEl = e.currentTarget.nextElementSibling;
+                if(nextEl) nextEl.classList.remove('hidden'); 
+              }} 
+            />
+            <span className="hidden text-[15px] font-black italic tracking-tighter whitespace-nowrap select-none text-foreground uppercase" style={{ fontFamily: '"Outfit", sans-serif' }}>
               <span className="hidden sm:inline">Global Talk Trend</span>
               <span className="sm:hidden">GTT</span>
             </span>
@@ -122,10 +132,10 @@ const AppHeader = ({ minimal = false }: AppHeaderProps) => {
                 <DropdownMenuSeparator />
                 <DropdownMenuItem className="gap-2 text-[11px] text-muted-foreground" onClick={() => {
                   window.dispatchEvent(new Event("trend-refresh"));
-                  toast({ title: lang === "en" ? "Refreshing translations..." : "Atualizando tradu" + String.fromCharCode(231) + String.fromCharCode(245) + "es..." });
+                  toast({ title: lang === "en" ? "Refreshing translations..." : "Atualizando traduções..." });
                 }}>
                   <RefreshCw className="w-3 h-3" />
-                  {lang === "en" ? "Force re-translate" : "For" + String.fromCharCode(231) + "ar retradu" + String.fromCharCode(231) + String.fromCharCode(227) + "o"}
+                  {lang === "en" ? "Force re-translate" : "Forçar retradução"}
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
@@ -166,7 +176,7 @@ const AppHeader = ({ minimal = false }: AppHeaderProps) => {
                 <DropdownMenuTrigger asChild>
                   <button className="flex items-center justify-center w-9 h-9 rounded-full hover:ring-2 hover:ring-primary/20 transition-all" aria-label="User menu">
                     <Avatar className="w-8 h-8">
-                      {userAvatar && <AvatarImage src={userAvatar} alt="User" />}
+                      {userAvatar && <AvatarImage src={userAvatar} alt={userName} />}
                       <AvatarFallback className="text-xs font-bold text-white" style={{ background: 'linear-gradient(135deg, hsl(var(--primary)), hsl(270 60% 50%))' }}>
                         {userInitial}
                       </AvatarFallback>
@@ -182,10 +192,10 @@ const AppHeader = ({ minimal = false }: AppHeaderProps) => {
                     <Link to="/dashboard"><BarChart3 className="w-3.5 h-3.5" /> Dashboard</Link>
                   </DropdownMenuItem>
                   <DropdownMenuItem className="gap-2 text-[13px]" asChild>
-                    <Link to="/reports"><FileText className="w-3.5 h-3.5" /> {lang === "en" ? "Generate Report" : "Gerar Relat" + String.fromCharCode(243) + "rio"}</Link>
+                    <Link to="/reports"><FileText className="w-3.5 h-3.5" /> {lang === "en" ? "Generate Report" : "Gerar Relatório"}</Link>
                   </DropdownMenuItem>
                   <DropdownMenuItem className="gap-2 text-[13px]" asChild>
-                    <Link to="/perfil?tab=stats"><BarChart3 className="w-3.5 h-3.5" /> {lang === "en" ? "Stats" : "Estat" + String.fromCharCode(237) + "sticas"}</Link>
+                    <Link to="/perfil?tab=stats"><BarChart3 className="w-3.5 h-3.5" /> {lang === "en" ? "Stats" : "Estatísticas"}</Link>
                   </DropdownMenuItem>
                   <DropdownMenuItem className="gap-2 text-[13px]" asChild>
                     <Link to="/metodologia"><BookOpen className="w-3.5 h-3.5" /> {lang === "en" ? "Methodology" : "Metodologia"}</Link>
@@ -236,7 +246,7 @@ const AppHeader = ({ minimal = false }: AppHeaderProps) => {
               { path: "/", labelPt: "Explorar", labelEn: "Explore" },
               { path: "/dashboard", labelPt: "Dashboard", labelEn: "Dashboard" },
               { path: "/mapa", labelPt: "Mapa", labelEn: "Maps" },
-              { path: "/reports", labelPt: "Relat" + String.fromCharCode(243) + "rios", labelEn: "Reports" },
+              { path: "/reports", labelPt: "Relatórios", labelEn: "Reports" },
               { path: "/perfil", labelPt: "Perfil", labelEn: "Profile" },
             ].map((item) => {
               const active = item.path === "/" ? location.pathname === "/" : location.pathname.startsWith(item.path);
@@ -277,7 +287,7 @@ const AppHeader = ({ minimal = false }: AppHeaderProps) => {
                 {lang === "en" ? "Sign in to Global Talk Trend" : "Entrar no Global Talk Trend"}
               </DialogTitle>
               <DialogDescription className="text-[13px] text-muted-foreground">
-                {lang === "en" ? "Save trends, create alerts and track your history" : "Salve trends, crie alertas e acompanhe seu hist" + String.fromCharCode(243) + "rico"}
+                {lang === "en" ? "Save trends, create alerts and track your history" : "Salve trends, crie alertas e acompanhe seu histórico"}
               </DialogDescription>
             </DialogHeader>
             <div className="space-y-3">

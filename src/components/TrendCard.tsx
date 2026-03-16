@@ -124,7 +124,7 @@ const TrendCard = ({
         </button>
       </div>
 
-      <h3 className="text-base font-semibold mb-1 line-clamp-2">{title}</h3>
+      <h3 className="text-[17px] font-bold font-outfit tracking-tight mb-1.5 line-clamp-2 leading-snug">{title}</h3>
 
       <div className="flex gap-3 text-xs text-muted-foreground mb-3">
         <span>{category}</span>
