@@ -6,7 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { TrendCardProps } from "./TrendCard";
-import { Flame, Globe, RefreshCw, GitBranch, Heart, Plus, Minus } from "lucide-react";
+import { Flame, Globe, RefreshCw, GitBranch, Heart, Plus, Minus, Map as MapIcon } from "lucide-react";
 import { 
   computeFlowArcs, 
   computeSentimentBubbles, 
@@ -18,7 +18,7 @@ import {
   type SentimentBubble
 } from "@/lib/map-visualizations";
 
-type MapMode = "heatmap" | "flow" | "sentiment";
+type MapMode = "heatmap" | "flow" | "sentiment" | "choropleth";
 
 interface CountryPoint {
   id: string;
@@ -307,6 +307,7 @@ const GoogleMapView = ({
   const markersRef = useRef<google.maps.Marker[]>([]);
   const polylinesRef = useRef<google.maps.Polyline[]>([]);
   const particleAnimationsRef = useRef<number[]>([]);
+  const geoJsonLoadedRef = useRef(false);
 
   const [mapLoaded, setMapLoaded] = useState(false);
   const [mapError, setMapError] = useState<string | null>(null);
@@ -403,6 +404,7 @@ const GoogleMapView = ({
     markersRef.current.forEach(m => m.setMap(null));
     markersRef.current = [];
     if (heatmapRef.current) heatmapRef.current.setMap(null);
+    if (googleMapRef.current && geoJsonLoadedRef.current) googleMapRef.current.data.setStyle({ visible: false });
 
     try {
       const { HeatmapLayer } = (await google.maps.importLibrary("visualization")) as any;
@@ -499,6 +501,7 @@ const GoogleMapView = ({
 
     markersRef.current.forEach(m => m.setMap(null));
     markersRef.current = [];
+    if (googleMapRef.current && geoJsonLoadedRef.current) googleMapRef.current.data.setStyle({ visible: false });
 
     sentimentBubbles.forEach((bubble) => {
       const c = countryPoints.find(p => p.id === bubble.countryId);
@@ -556,6 +559,7 @@ const GoogleMapView = ({
     polylinesRef.current = [];
     particleAnimationsRef.current.forEach(id => cancelAnimationFrame(id));
     particleAnimationsRef.current = [];
+    if (googleMapRef.current && geoJsonLoadedRef.current) googleMapRef.current.data.setStyle({ visible: false });
 
     // Renderizar arcos
     flowArcs.forEach((arc) => {
@@ -656,6 +660,88 @@ const GoogleMapView = ({
     });
   }, [flowArcs, trendCounts, maxCount, onSelectCountry, showTooltip, isDark]);
 
+  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  // CHOROPLETH RENDERING
+  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  const renderChoropleth = useCallback(() => {
+    if (!googleMapRef.current) return;
+    const map = googleMapRef.current;
+
+    markersRef.current.forEach(m => m.setMap(null));
+    markersRef.current = [];
+    polylinesRef.current.forEach(p => p.setMap(null));
+    polylinesRef.current = [];
+    particleAnimationsRef.current.forEach(id => cancelAnimationFrame(id));
+    particleAnimationsRef.current = [];
+    if (heatmapRef.current) heatmapRef.current.setMap(null);
+
+    if (!geoJsonLoadedRef.current) {
+      map.data.loadGeoJson("https://raw.githubusercontent.com/datasets/geo-countries/master/data/countries.geojson");
+      geoJsonLoadedRef.current = true;
+
+      map.data.addListener("mouseover", (event: any) => {
+        map.data.revertStyle();
+        map.data.overrideStyle(event.feature, { strokeWeight: 2, strokeColor: isDark ? "#ffffff" : "#000000", zIndex: 10 });
+        
+        const isoA2 = event.feature.getProperty("ISO_A2");
+        const count = trendCounts[isoA2] || 0;
+        const countryName = event.feature.getProperty("ADMIN") || isoA2;
+        
+        if (count > 0 && isoA2 !== "-99") {
+          const lat = event.latLng.lat();
+          const lng = event.latLng.lng();
+          const intensity = Math.min(count / maxCount, 1);
+          
+          showTooltip(
+            <HeatmapTooltip country={{id: isoA2, name: countryName, lat, lng}} count={count} intensity={intensity} isDark={isDark} />,
+            { lat, lng }
+          );
+        }
+      });
+      
+      map.data.addListener("mouseout", () => {
+        map.data.revertStyle();
+        hoverInfoRef.current?.close();
+      });
+
+      map.data.addListener("click", (event: any) => {
+        const isoA2 = event.feature.getProperty("ISO_A2");
+        if (trendCounts[isoA2] > 0 && isoA2 !== "-99") {
+           onSelectCountry(isoA2);
+        }
+      });
+    }
+
+    map.data.setStyle((feature) => {
+      const isoA2 = feature.getProperty("ISO_A2");
+      if (isoA2 === "-99" || !isoA2) return { visible: false };
+
+      const count = trendCounts[isoA2] || 0;
+      const intensity = Math.min(count / maxCount, 1);
+
+      if (count > 0) {
+        return {
+          fillColor: intensity > 0.85 ? "#ff3300" : intensity > 0.7 ? "#ffaa00" : intensity > 0.55 ? "#ffff00" : "#00a6ff",
+          fillOpacity: 0.5 + intensity * 0.4,
+          strokeColor: isDark ? "#0f1419" : "#f8fafb",
+          strokeWeight: 1,
+          visible: true,
+          zIndex: 1
+        };
+      } else {
+        return {
+          fillColor: isDark ? "#1e293b" : "#e2e8f0",
+          fillOpacity: 0.15,
+          strokeColor: isDark ? "#0f1419" : "#f8fafb",
+          strokeWeight: 0.5,
+          visible: true,
+          zIndex: 0
+        };
+      }
+    });
+
+  }, [trendCounts, maxCount, showTooltip, onSelectCountry, isDark]);
+
   // Renderizar quando modo muda
   useEffect(() => {
     if (!mapLoaded || !googleMapRef.current) return;
@@ -666,10 +752,13 @@ const GoogleMapView = ({
       renderSentimentMarkers();
     } else if (mapMode === "flow") {
       renderFlowArcs();
+    } else if (mapMode === "choropleth") {
+      renderChoropleth();
     }
-  }, [mapMode, mapLoaded, renderHeatmap, renderSentimentMarkers, renderFlowArcs]);
+  }, [mapMode, mapLoaded, renderHeatmap, renderSentimentMarkers, renderFlowArcs, renderChoropleth]);
 
   const mapModes: { key: MapMode; icon: typeof Flame; labelKey: string }[] = [
+    { key: "choropleth", icon: MapIcon, labelKey: "Coroplético" },
     { key: "heatmap", icon: Flame, labelKey: "Heatmap" },
     { key: "flow", icon: GitBranch, labelKey: "Fluxo" },
     { key: "sentiment", icon: Heart, labelKey: "Sentimento" },
