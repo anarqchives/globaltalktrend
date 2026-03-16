@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ChevronUp, ExternalLink, Bell, Bookmark, Flag, Share2, TrendingUp, Info, MoreHorizontal } from "lucide-react";
+import { ChevronUp, ExternalLink, Bell, Bookmark, Flag, Share2, TrendingUp, Info, MoreHorizontal, Sparkles } from "lucide-react";
 import { AreaChart, Area, ResponsiveContainer, XAxis, YAxis, Tooltip as RechartsTooltip, CartesianGrid } from "recharts";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { toast } from "@/hooks/use-toast";
@@ -133,7 +133,7 @@ const relativeTimeFormats: Record<string, { now: string; min: string; h: string;
   ja: { now: "たった今", min: "{n}分前", h: "{n}時間前", d: "{n}日前" },
   ko: { now: "방금", min: "{n}분 전", h: "{n}시간 전", d: "{n}일 전" },
   ar: { now: "الآن", min: "منذ {n} دقيقة", h: "منذ {n} ساعة", d: "منذ {n} يوم" },
-  hi: { now: "अभी", min: "{n} minuto base", h: "{n} horas base", d: "{n} dias base" },
+  hi: { now: "अभी", min: "{n} मिनट पहले", h: "{n} घंटे पहले", d: "{n} दिन पहले" },
   ru: { now: "сейчас", min: "{n} мин назад", h: "{n}ч назад", d: "{n}д назад" },
 };
 
@@ -532,8 +532,19 @@ const TimelineCard = ({
             </div>
 
             {/* ── CONTEXT SECTION ── */}
-            <div className="rounded-lg p-2.5 mb-3" style={{ background: 'hsl(var(--secondary))', borderLeft: `3px solid ${brandColor}` }}>
-              <p className={`text-[12px] text-foreground/80 leading-relaxed ${isMobile ? 'line-clamp-3' : ''}`}>
+            <div 
+              className={`rounded-lg p-3 mb-3 relative overflow-hidden ${aiContext ? 'bg-primary/5 ring-1 ring-primary/20 bg-gradient-to-br from-primary/10 to-transparent' : 'bg-secondary/70 border-l-[3px]'}`}
+              style={{ borderLeftColor: aiContext ? undefined : brandColor }}
+            >
+              {aiContext && (
+                <div className="flex items-center gap-1.5 mb-1.5">
+                  <Sparkles className="w-3.5 h-3.5 text-primary" />
+                  <span className="text-[10px] font-bold text-primary uppercase tracking-wider font-outfit">
+                    {lang === "pt" ? "Resumo por IA" : "AI Insight"}
+                  </span>
+                </div>
+              )}
+              <p className={`text-[12px] leading-relaxed relative z-10 ${aiContext ? 'text-foreground/90 font-medium' : 'text-foreground/80'} ${isMobile && !aiContext ? 'line-clamp-3' : ''}`}>
                 {decodeEntities(expandedContext)}
               </p>
             </div>
