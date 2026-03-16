@@ -1,4 +1,4 @@
-import React, { useMemo } from "react";
+import { useMemo } from "react";
 import { motion } from "framer-motion";
 import { Clock, Info } from "lucide-react";
 import { TrendCardProps } from "./TrendCard";
@@ -32,7 +32,7 @@ const heatmapLegends: Record<string, string> = {
   es: "Este mapa muestra cuándo se detectaron nuevas tendencias en cada región durante las últimas 24 horas.",
 };
 
-const TemporalHeatmap = React.memo(({ trends }: TemporalHeatmapProps) => {
+export default function TemporalHeatmap({ trends }: TemporalHeatmapProps) {
   const { lang } = useLanguage();
 
   const { grid, maxVal, hours, totalSignals } = useMemo(() => {
@@ -189,6 +189,4 @@ const TemporalHeatmap = React.memo(({ trends }: TemporalHeatmapProps) => {
       </div>
     </div>
   );
-});
-
-export default TemporalHeatmap;
+}

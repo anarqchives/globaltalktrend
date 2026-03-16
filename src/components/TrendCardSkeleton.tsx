@@ -6,12 +6,12 @@ const shimmerClass =
 const TrendCardSkeleton = ({ index = 0 }: { index?: number }) => (
   <motion.div
     className="timeline-card"
-    style={{ minHeight: 140 }}
+    style={{ minHeight: 72 }}
     initial={{ opacity: 0, y: 10 }}
     animate={{ opacity: 1, y: 0 }}
     transition={{ duration: 0.3, delay: index * 0.08 }}
   >
-    <div className="flex items-start gap-3 w-full">
+    <div className="flex items-start gap-3">
       <div className={`w-8 h-8 rounded-full bg-muted ${shimmerClass} flex-shrink-0`} />
       <div className="flex-1 min-w-0 space-y-2.5">
         <div className="flex items-center gap-2">
@@ -25,7 +25,7 @@ const TrendCardSkeleton = ({ index = 0 }: { index?: number }) => (
           </div>
           <div className={`w-16 h-12 rounded-lg bg-muted ${shimmerClass} flex-shrink-0`} />
         </div>
-        <div className="flex gap-2 pt-1 w-full">
+        <div className="flex gap-2 pt-1">
           <div className={`h-3 w-14 rounded-full bg-muted ${shimmerClass}`} />
           <div className={`h-3 w-10 rounded-full bg-muted/60 ${shimmerClass}`} />
           <div className={`h-3 w-12 rounded-full bg-muted/60 ${shimmerClass}`} />
