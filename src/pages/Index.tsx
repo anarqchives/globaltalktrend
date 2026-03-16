@@ -38,7 +38,7 @@ import {
 const GoogleMapView = lazy(() => import("@/components/GoogleMapView"));
 
 const MapFallback = () => (
-  <div className="h-full flex items-center justify-center bg-secondary/10">
+  <div className="h-[400px] md:h-full w-full flex items-center justify-center bg-secondary/10">
     <div className="flex items-center gap-3 text-muted-foreground text-sm">
       <div className="w-5 h-5 border-2 border-primary/30 border-t-primary rounded-full animate-spin" />
       <span className="font-medium">Carregando mapa…</span>
@@ -51,6 +51,17 @@ const defaultFilters: FilterState = {
   period: "Hoje",
   category: "Todas",
   type: "Todas mídias",
+  query: "",
+};
+
+// Moved out of component to avoid recreation on every render
+const SOURCE_PRIORITY: Record<string, number> = {
+  "The Guardian": 1, "NPR": 1, "NewsAPI": 2, "GNews": 2, "Bing News": 2, "NewsData": 2,
+  "The News API": 2, "TheNewsAPI": 2,
+  "Reddit": 3, "Bluesky": 3, "Mastodon": 3, "X (Twitter)": 3, "YouTube": 4,
+  "Hacker News": 5, "Stack Overflow": 5, "GitHub": 5,
+  "Wikipedia": 6, "OpenAlex": 6, "World Bank": 6, "IBGE": 6, "FRED": 6,
+  "Google Trends": 99,
 };
 
 const INITIAL_COUNT = 20;
@@ -64,6 +75,7 @@ function getInitialFilters(): FilterState {
     period: params.get("period") || defaultFilters.period,
     category: params.get("category") || defaultFilters.category,
     type: params.get("type") || defaultFilters.type,
+    query: params.get("query") || defaultFilters.query,
   };
 }
 
@@ -72,6 +84,7 @@ const Index = () => {
   const [filters, setFilters] = useState<FilterState>(getInitialFilters);
   const [user, setUser] = useState<any>(null);
   const [viewMode, setViewMode] = useState<"timeline" | "map">("timeline");
+  const [workspaceMode, setWorkspaceMode] = useState<"explorer" | "analyst">("analyst");
   const [compactMode, setCompactMode] = useState(false);
   const [allExpanded, setAllExpanded] = useState(false);
   // Panel visibility for collapsible sections
@@ -95,6 +108,16 @@ const Index = () => {
       return next;
     });
   };
+  
+  useEffect(() => {
+    if (workspaceMode === "explorer") {
+      setPanelVisibility({ radar: false, map: false, timeline: true });
+      setCompactMode(false);
+    } else {
+      setPanelVisibility({ radar: true, map: true, timeline: true });
+    }
+  }, [workspaceMode]);
+
   const timelinePanelRef = useRef<HTMLDivElement>(null);
   const radarPanelRef = useRef<ElementRef<typeof ResizablePanel>>(null);
   const [radarCollapsed, setRadarCollapsed] = useState(() => {
@@ -173,54 +196,63 @@ const Index = () => {
         }
       }
     }).catch(() => {});
-  }, [translatedTrends, lang, trendContexts]);
+  // NOTE: trendContexts intentionally omitted from deps — contextFetchedRef tracks
+  // which trends have been fetched, preventing loops. Including trendContexts would
+  // create an infinite loop: fetch → setTrendContexts → effect → fetch → ...
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [translatedTrends, lang]);
+
   const filteredTrends = useMemo(() => {
     const normKey = (title: string) => title.toLowerCase().normalize("NFD").replace(/\p{Diacritic}/gu, "").replace(/[^a-z0-9\s]/g, "").trim().slice(0, 50);
+
+    let baseTrends = translatedTrends;
 
     if (filters.type === "Multiplataforma") {
       const getOriginalKey = (t: TranslatedTrendCardProps) => normKey((t as any)._originalTitle || t.title);
 
       if (multiplatformTitles.size > 0) {
-        const result = translatedTrends.filter(t => {
+        baseTrends = translatedTrends.filter(t => {
           const key = getOriginalKey(t);
           return multiplatformTitles.has(key);
         });
-        if (result.length > 0) return result;
-      }
-
-      const allNormTitles = allTrends.map(t => ({
-        norm: normKey(t.title),
-        platform: t.platform,
-      }));
-      const multiKeys = new Set<string>();
-      for (let i = 0; i < allNormTitles.length; i++) {
-        const platforms = new Set<string>();
-        platforms.add(allNormTitles[i].platform);
-        const wordsI = new Set(allNormTitles[i].norm.split(/\s+/).filter(w => w.length > 3));
-        for (let j = 0; j < allNormTitles.length; j++) {
-          if (i === j) continue;
-          const wordsJ = new Set(allNormTitles[j].norm.split(/\s+/).filter(w => w.length > 3));
-          let common = 0;
-          for (const w of wordsI) if (wordsJ.has(w)) common++;
-          if (wordsI.size > 0 && common / Math.max(wordsI.size, wordsJ.size) > 0.4) {
-            platforms.add(allNormTitles[j].platform);
+      } else {
+        const allNormTitles = allTrends.map(t => ({
+          norm: normKey(t.title),
+          platform: t.platform,
+        }));
+        const multiKeys = new Set<string>();
+        for (let i = 0; i < allNormTitles.length; i++) {
+          const platforms = new Set<string>();
+          platforms.add(allNormTitles[i].platform);
+          const wordsI = new Set(allNormTitles[i].norm.split(/\s+/).filter(w => w.length > 3));
+          for (let j = 0; j < allNormTitles.length; j++) {
+            if (i === j) continue;
+            const wordsJ = new Set(allNormTitles[j].norm.split(/\s+/).filter(w => w.length > 3));
+            let common = 0;
+            for (const w of wordsI) if (wordsJ.has(w)) common++;
+            if (wordsI.size > 0 && common / Math.max(wordsI.size, wordsJ.size) > 0.4) {
+              platforms.add(allNormTitles[j].platform);
+            }
           }
+          if (platforms.size >= 2) multiKeys.add(allNormTitles[i].norm);
         }
-        if (platforms.size >= 2) multiKeys.add(allNormTitles[i].norm);
-      }
 
-      if (multiKeys.size > 0) {
-        const result = translatedTrends.filter(t => {
-          const key = getOriginalKey(t);
-          return multiKeys.has(key);
-        });
-        if (result.length > 0) return result;
+        if (multiKeys.size > 0) {
+          baseTrends = translatedTrends.filter(t => {
+            const key = getOriginalKey(t);
+            return multiKeys.has(key);
+          });
+        }
       }
-
-      return translatedTrends;
     }
-    return translatedTrends;
-  }, [translatedTrends, filters.type, multiplatformTitles, allTrends]);
+
+    if (filters.query) {
+      const q = filters.query.toLowerCase();
+      return baseTrends.filter(t => t.title.toLowerCase().includes(q) || (t.description && t.description.toLowerCase().includes(q)));
+    }
+    
+    return baseTrends;
+  }, [translatedTrends, filters.type, filters.query, multiplatformTitles, allTrends]);
 
   useEffect(() => {
     const params = new URLSearchParams();
@@ -228,6 +260,7 @@ const Index = () => {
     if (filters.period !== defaultFilters.period) params.set("period", filters.period);
     if (filters.category !== defaultFilters.category) params.set("category", filters.category);
     if (filters.type !== defaultFilters.type) params.set("type", filters.type);
+    if (filters.query !== defaultFilters.query && filters.query) params.set("query", filters.query);
     const search = params.toString();
     const newUrl = search ? `${window.location.pathname}?${search}` : window.location.pathname;
     window.history.replaceState(null, "", newUrl);
@@ -237,14 +270,6 @@ const Index = () => {
     setVisibleCount(INITIAL_COUNT);
   }, [filters]);
 
-  const SOURCE_PRIORITY: Record<string, number> = {
-    "The Guardian": 1, "NPR": 1, "NewsAPI": 2, "GNews": 2, "Bing News": 2, "NewsData": 2,
-    "The News API": 2, "TheNewsAPI": 2,
-    "Reddit": 3, "Bluesky": 3, "Mastodon": 3, "X (Twitter)": 3, "YouTube": 4,
-    "Hacker News": 5, "Stack Overflow": 5, "GitHub": 5,
-    "Wikipedia": 6, "OpenAlex": 6, "World Bank": 6, "IBGE": 6, "FRED": 6,
-    "Google Trends": 99,
-  };
   // Relevance-based scoring + Google Trends interleaving
   const diversifiedTrends = useMemo(() => {
     const isGT = (t: TrendCardProps) => t.platform?.toLowerCase().includes("google trends");
@@ -329,6 +354,7 @@ const Index = () => {
       }
       return now - 12 * ONE_HOUR;
     };
+
     const agora: TrendCardProps[] = [];
     const ultimas2h: TrendCardProps[] = [];
     const ultimas24h: TrendCardProps[] = [];
@@ -347,7 +373,8 @@ const Index = () => {
   const [filterTransitioning, setFilterTransitioning] = useState(false);
   const prevFiltersRef = useRef(filters);
   useEffect(() => {
-    if (JSON.stringify(prevFiltersRef.current) !== JSON.stringify(filters)) {
+    const f = filters, p = prevFiltersRef.current;
+    if (f.country !== p.country || f.period !== p.period || f.category !== p.category || f.type !== p.type) {
       setFilterTransitioning(true);
       const timer = setTimeout(() => setFilterTransitioning(false), 300);
       prevFiltersRef.current = filters;
@@ -370,9 +397,9 @@ const Index = () => {
     return () => observer.disconnect();
   }, [hasMore, loading, diversifiedTrends.length]);
 
-  const handleMapClick = (code: string) => {
+  const handleMapClick = useCallback((code: string) => {
     setFilters((f) => ({ ...f, country: code }));
-  };
+  }, []);
 
   const [refreshing, setRefreshing] = useState(false);
   const [timeSinceLastFetch, setTimeSinceLastFetch] = useState(0);
@@ -388,6 +415,7 @@ const Index = () => {
     setTimeSinceLastFetch(0);
     setUpdatePending(false);
   }, [fetchTrends]);
+
   useEffect(() => {
     const interval = setInterval(() => {
       timeSinceLastFetchRef.current += 10;
@@ -483,6 +511,7 @@ const Index = () => {
     };
     setTimeout(() => tryScroll(0), 200);
   }, [filteredTrends, visibleCount]);
+
   const handleAnomalyClick = useCallback((trendId: string) => {
     setExpandedTrendId(trendId);
     setHighlightedTrendId(trendId);
@@ -524,9 +553,9 @@ const Index = () => {
     return segments;
   }, [filters]);
 
-  const clearBreadcrumb = (key: keyof FilterState) => {
+  const clearBreadcrumb = useCallback((key: keyof FilterState) => {
     setFilters(f => ({ ...f, [key]: defaultFilters[key] }));
-  };
+  }, []);
 
   const masonryStyle = useMemo(() => {
     // When map visible: 2 cols max; when hidden: 3 cols on wide screens
@@ -538,6 +567,7 @@ const Index = () => {
       columnFill: isMobile ? 'auto' as const : 'balance' as const,
     };
   }, [gridColumns, isMobile, panelVisibility.map]);
+
   const renderTimeline = () => (
     <div ref={(el) => { (scrollRef as any).current = el; (gridRef as any).current = el; }} className={`flex flex-col gap-0.5 p-1 sm:p-2 h-full overflow-y-auto overflow-x-hidden scrollbar-thin relative transition-opacity duration-200 w-full max-w-full box-border ${filterTransitioning ? 'opacity-60' : 'opacity-100'}`} style={{ maxWidth: '100vw' }}>
       {/* Timeline header bar — clear separator */}
@@ -625,6 +655,7 @@ const Index = () => {
           ))}
         </div>
       )}
+
       {(loading && isFirstLoad && filteredTrends.length === 0)
         ? Array.from({ length: 6 }).map((_, i) => <TrendCardSkeleton key={i} index={i} />)
         : (() => {
@@ -682,6 +713,7 @@ const Index = () => {
                 </div>
               );
             };
+
             const { agora, ultimas2h, ultimas24h } = groupedTrends;
             let globalIndex = 0;
 
@@ -784,6 +816,7 @@ const Index = () => {
       )}
     </div>
   );
+
   const renderMap = () => {
   return (
     <Suspense fallback={<MapFallback />}>
@@ -821,6 +854,8 @@ const Index = () => {
             saveFilter(name.trim(), filters);
           }
         }}
+        workspaceMode={workspaceMode}
+        onChangeWorkspaceMode={setWorkspaceMode}
       />
 
       {/* Main workspace */}

@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect, useCallback } from "react";
 import { createPortal } from "react-dom";
-import { Globe, Calendar, LayoutGrid, Layers, ChevronDown, X, Bell, RotateCcw } from "lucide-react";
+import { Globe, Calendar, LayoutGrid, Layers, ChevronDown, X, Bell, RotateCcw, BarChart3, Search } from "lucide-react";
 import { useLanguage, LangCode } from "@/contexts/LanguageContext";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { AnimatePresence, motion } from "framer-motion";
@@ -9,7 +9,8 @@ const defaultFilters: FilterState = {
   country: "global",
   period: "Hoje",
   category: "Todas",
-  type: "Todas mídias"
+  type: "Todas mídias",
+  query: "",
 };
 
 export interface FilterState {
@@ -17,6 +18,7 @@ export interface FilterState {
   period: string;
   category: string;
   type: string;
+  query: string;
 }
 
 interface FilterBarProps {
@@ -28,6 +30,8 @@ interface FilterBarProps {
   activeView?: string;
   onViewChange?: (view: string) => void;
   viewCounts?: Record<string, number>;
+  workspaceMode?: "explorer" | "analyst";
+  onChangeWorkspaceMode?: (mode: "explorer" | "analyst") => void;
 }
 
 export const countries = [
@@ -205,7 +209,7 @@ function ChipDropdown({ chipLabel, value, options, isActive, icon, onChange, onC
   );
 }
 
-const FilterBar = ({ filters, onChange, onForceReset, onSaveFilter, isLoggedIn }: FilterBarProps) => {
+const FilterBar = ({ filters, onChange, onForceReset, onSaveFilter, isLoggedIn, workspaceMode, onChangeWorkspaceMode }: FilterBarProps) => {
   const { t, lang } = useLanguage();
 
   const update = (key: keyof FilterState, value: string) => {
@@ -215,7 +219,8 @@ const FilterBar = ({ filters, onChange, onForceReset, onSaveFilter, isLoggedIn }
   const isFiltered = filters.country !== defaultFilters.country ||
     filters.period !== defaultFilters.period ||
     filters.category !== defaultFilters.category ||
-    filters.type !== defaultFilters.type;
+    filters.type !== defaultFilters.type ||
+    filters.query !== defaultFilters.query;
 
   const healthLabel: Record<string, string> = { pt: "Saúde", en: "Health", es: "Salud", fr: "Santé", de: "Gesundheit", it: "Salute", zh: "健康", ja: "健康", ko: "건강", ar: "صحة", hi: "स्वास्थ्य", ru: "Здоровье" };
 
@@ -256,10 +261,30 @@ const FilterBar = ({ filters, onChange, onForceReset, onSaveFilter, isLoggedIn }
   if (filters.period !== defaultFilters.period) activeFilterLabels.push(filters.period);
   if (filters.category !== defaultFilters.category) activeFilterLabels.push(filters.category);
   if (filters.type !== defaultFilters.type) activeFilterLabels.push(filters.type);
+  if (filters.query) activeFilterLabels.push(`"${filters.query}"`);
 
   return (
     <div className="sticky top-[52px] z-40 bg-card dark:bg-card border-b-2 border-border shadow-sm" style={{ minHeight: 44 }}>
       <div className="h-full px-2 sm:px-4 py-1 flex items-center gap-1 sm:gap-2 flex-wrap">
+        {/* Search Input */}
+        <div className="relative flex items-center h-[28px] sm:h-[32px] w-[140px] sm:w-[180px]">
+          <Search className="absolute left-2 text-muted-foreground w-3 h-3 sm:w-3.5 sm:h-3.5" />
+          <input
+            type="text"
+            placeholder={lang === "pt" ? "Buscar..." : "Search..."}
+            value={filters.query || ""}
+            onChange={(e) => update("query", e.target.value)}
+            className="w-full h-full pl-6 sm:pl-7 pr-2 rounded-lg border border-border bg-card text-[11px] sm:text-xs text-foreground placeholder:text-muted-foreground outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/20 transition-all"
+          />
+          {filters.query && (
+            <button
+              onClick={() => update("query", "")}
+              className="absolute right-2 text-muted-foreground hover:text-foreground"
+            >
+              <X className="w-3 h-3" />
+            </button>
+          )}
+        </div>
         <ChipDropdown
           chipLabel="Global"
           value={filters.country}
@@ -326,6 +351,33 @@ const FilterBar = ({ filters, onChange, onForceReset, onSaveFilter, isLoggedIn }
           <span className="hidden sm:inline text-[10px] text-muted-foreground flex-shrink-0 whitespace-nowrap ml-1">
             {lang === "pt" ? "Filtrando" : "Filtering"}: <span className="font-medium text-foreground/70">{activeFilterLabels.join(" · ")}</span>
           </span>
+        )}
+
+        {/* Spacer to push toggle to the right */}
+        <div className="flex-1 min-w-4" />
+
+        {/* Workspace Mode Toggle */}
+        {workspaceMode && onChangeWorkspaceMode && (
+          <div className="hidden sm:flex bg-secondary/30 p-0.5 rounded-lg border border-border/40">
+            <button
+              onClick={() => onChangeWorkspaceMode("explorer")}
+              className={`px-3 py-1.5 flex items-center gap-1.5 text-xs font-semibold rounded-md transition-all ${
+                workspaceMode === "explorer" ? "bg-background shadow-sm text-foreground border border-border/50" : "text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              <LayoutGrid size={13} />
+              <span>{lang === "pt" ? "Explorador" : "Explorer"}</span>
+            </button>
+            <button
+              onClick={() => onChangeWorkspaceMode("analyst")}
+              className={`px-3 py-1.5 flex items-center gap-1.5 text-xs font-semibold rounded-md transition-all ${
+                workspaceMode === "analyst" ? "bg-background shadow-sm text-foreground border border-border/50" : "text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              <BarChart3 size={13} />
+              <span>{lang === "pt" ? "Analista" : "Analyst"}</span>
+            </button>
+          </div>
         )}
       </div>
     </div>
