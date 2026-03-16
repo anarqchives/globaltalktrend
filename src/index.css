@@ -764,14 +764,27 @@
   }
 
   .trend-card-base {
-    @apply bg-card p-4 cursor-pointer;
+    @apply bg-card p-4 cursor-pointer relative overflow-hidden;
     border: none;
     border-bottom: 1px solid hsl(var(--border) / 0.15);
     border-radius: 0;
-    transition: background-color 0.15s ease;
+    transition: all 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+  }
+  .trend-card-base::before {
+    content: '';
+    position: absolute;
+    top: 0; left: -100%;
+    width: 30%; height: 100%;
+    background: linear-gradient(90deg, transparent, hsl(var(--foreground)/0.03), transparent);
+    transition: left 0.6s ease;
+    pointer-events: none;
   }
   .trend-card-base:hover {
-    background: hsl(var(--secondary) / 0.5);
+    background: hsl(var(--secondary) / 0.7);
+    border-bottom-color: hsl(var(--primary) / 0.4);
+  }
+  .trend-card-base:hover::before {
+    left: 100%;
   }
 
   /* ─── METRIC CARDS ─── */
