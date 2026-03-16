@@ -508,7 +508,7 @@ function AnomaliesPredictive({ anomalies, lang, onAnomalyClick }: {
 }
 
 // ─── MAIN COMPONENT ─────────────────────────────────────────────────────
-export default function TrendRadar({ trends, allTrends, criticalMoments, anomalies = [], onSelectTrend, onFilterCountry, onAnomalyClick, onClose, isCollapsed: externalCollapsed, onToggleCollapse }: TrendRadarProps) {
+const TrendRadar = ({ trends, allTrends, criticalMoments, anomalies = [], onSelectTrend, onFilterCountry, onAnomalyClick, onClose, isCollapsed: externalCollapsed, onToggleCollapse }: TrendRadarProps) => {
   const { lang } = useLanguage();
   const [tab, setTab] = useState("signals");
   const [internalCollapsed, setInternalCollapsed] = useState(() => {

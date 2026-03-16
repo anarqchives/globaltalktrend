@@ -30,9 +30,12 @@ const AuthCallback = () => {
   }, [navigate]);
 
   return (
-    <div className="flex min-h-screen items-center justify-center">
-      <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
-    </div>
+    <main className="min-h-screen bg-background text-foreground flex items-center justify-center px-4">
+      <section className="w-full max-w-sm rounded-2xl border border-border bg-card p-6 text-center shadow-sm">
+        <p className="text-sm font-medium">Concluindo login…</p>
+        <p className="mt-2 text-xs text-muted-foreground">Você será redirecionado automaticamente.</p>
+      </section>
+    </main>
   );
 };
 

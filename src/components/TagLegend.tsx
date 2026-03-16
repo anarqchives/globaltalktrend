@@ -1,4 +1,4 @@
-import { useState } from "react";
+import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { HelpCircle, X } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -90,7 +90,7 @@ const legendTranslations: Record<string, Record<string, string>> = {
   },
 };
 
-export default function TagLegend() {
+const TagLegend = React.memo(() => {
   const [open, setOpen] = useState(false);
   const { lang } = useLanguage();
   const tr = legendTranslations[lang] || legendTranslations.en;
@@ -184,4 +184,6 @@ export default function TagLegend() {
       </AnimatePresence>
     </div>
   );
-}
+});
+
+export default TagLegend;
