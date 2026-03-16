@@ -36,6 +36,7 @@ import {
 
 // Lazy load the heavy map component
 const GoogleMapView = lazy(() => import("@/components/GoogleMapView"));
+import { SavedCollectionsSheet } from "@/components/SavedCollectionsSheet";
 
 const MapFallback = () => (
   <div className="h-[400px] md:h-full w-full flex items-center justify-center bg-secondary/10">
@@ -134,7 +135,8 @@ const Index = () => {
 
   const { trackView } = useHistory(user?.id ?? null);
   const { trackAction } = useGamification(user?.id ?? null);
-  const { saveCard } = useSavedCards(user?.id ?? null);
+  const { cards: savedCards, removeCard, saveCard } = useSavedCards(user?.id ?? null);
+  const [collectionsOpen, setCollectionsOpen] = useState(false);
   const { saveFilter } = useSavedFilters(user?.id ?? null);
   const [trendCounts, setTrendCounts] = useState<Record<string, number>>({});
   const [expandedTrendId, setExpandedTrendId] = useState<string | null>(null);
@@ -856,6 +858,7 @@ const Index = () => {
         }}
         workspaceMode={workspaceMode}
         onChangeWorkspaceMode={setWorkspaceMode}
+        onOpenSavedCollections={() => setCollectionsOpen(true)}
       />
 
       {/* Main workspace */}
@@ -1013,6 +1016,13 @@ const Index = () => {
         sourcesStatus={sourcesStatus}
         lastUpdated={lastUpdated}
         totalTrends={filteredTrends.length}
+      />
+
+      <SavedCollectionsSheet
+        open={collectionsOpen}
+        onOpenChange={setCollectionsOpen}
+        cards={savedCards}
+        removeCard={removeCard}
       />
 
     </div>

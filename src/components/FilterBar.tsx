@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect, useCallback } from "react";
 import { createPortal } from "react-dom";
-import { Globe, Calendar, LayoutGrid, Layers, ChevronDown, X, Bell, RotateCcw, BarChart3, Search } from "lucide-react";
+import { Globe, Calendar, LayoutGrid, Layers, ChevronDown, X, Bell, RotateCcw, BarChart3, Search, Bookmark } from "lucide-react";
 import { useLanguage, LangCode } from "@/contexts/LanguageContext";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { AnimatePresence, motion } from "framer-motion";
@@ -32,6 +32,7 @@ interface FilterBarProps {
   viewCounts?: Record<string, number>;
   workspaceMode?: "explorer" | "analyst";
   onChangeWorkspaceMode?: (mode: "explorer" | "analyst") => void;
+  onOpenSavedCollections?: () => void;
 }
 
 export const countries = [
@@ -209,7 +210,7 @@ function ChipDropdown({ chipLabel, value, options, isActive, icon, onChange, onC
   );
 }
 
-const FilterBar = ({ filters, onChange, onForceReset, onSaveFilter, isLoggedIn, workspaceMode, onChangeWorkspaceMode }: FilterBarProps) => {
+const FilterBar = ({ filters, onChange, onForceReset, onSaveFilter, isLoggedIn, workspaceMode, onChangeWorkspaceMode, onOpenSavedCollections }: FilterBarProps) => {
   const { t, lang } = useLanguage();
 
   const update = (key: keyof FilterState, value: string) => {
@@ -344,6 +345,16 @@ const FilterBar = ({ filters, onChange, onForceReset, onSaveFilter, isLoggedIn, 
           title={lang === "pt" ? "Criar alerta" : "Create alert"}
         >
           <Bell size={12} />
+        </button>
+
+        {/* Saved Collections */}
+        <button
+          onClick={() => onOpenSavedCollections?.()}
+          className="flex items-center justify-center w-[28px] h-[28px] sm:w-[32px] sm:h-[32px] flex-shrink-0 rounded-lg border border-border bg-card text-muted-foreground hover:border-primary/40 hover:bg-accent hover:text-foreground transition-all duration-150"
+          aria-label={lang === "pt" ? "Coleções Salvas" : "Saved Collections"}
+          title={lang === "pt" ? "Coleções Salvas" : "Saved Collections"}
+        >
+          <Bookmark size={12} />
         </button>
 
         {/* Active filter summary — hidden on mobile to save space */}
