@@ -1,5 +1,5 @@
 # Project info
 
-**URL**: www.globaltalktrend.com
+**URL**: www.gttmonitor.com
 
 **TYPE**: personal

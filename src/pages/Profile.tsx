@@ -771,7 +771,7 @@ function SettingsTab({ lang, setLang, dark, setDark, user }: { lang: LangCode; s
       </SectionCard>
 
       <SectionCard title="Zona de perigo">
-        <button onClick={() => toast({ title: "⚠️ Exclusão de conta", description: "Entre em contato: talk@globaltalktrend.com" })} className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium text-destructive hover:bg-destructive/10 transition-colors">
+        <button onClick={() => toast({ title: "⚠️ Exclusão de conta", description: "Entre em contato: gtt@vila.ind.br" })} className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium text-destructive hover:bg-destructive/10 transition-colors">
           <AlertTriangle className="w-3.5 h-3.5" /> Excluir minha conta
         </button>
       </SectionCard>

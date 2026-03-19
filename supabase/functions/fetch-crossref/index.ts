@@ -36,7 +36,7 @@ async function fetchCrossrefTopic(query: string, rows: number): Promise<any[]> {
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), 6000);
     const res = await fetch(url, {
-      headers: { "User-Agent": "GlobalTalk/1.0 (mailto:contato@globaltalktrend.com)" },
+      headers: { "User-Agent": "GTTMonitor/1.0 (mailto:gtt@vila.ind.br)" },
       signal: controller.signal,
     });
     clearTimeout(timeout);
