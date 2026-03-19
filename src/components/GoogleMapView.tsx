@@ -387,8 +387,10 @@ const GoogleMapView = ({
     if (!hoverInfoRef.current || !googleMapRef.current) return;
 
     const div = document.createElement("div");
-    const root = ReactDOM.createRoot(div);
-    root.render(content);
+    import("react-dom/client").then(({ createRoot }) => {
+      const root = createRoot(div);
+      root.render(content);
+    });
 
     hoverInfoRef.current.setContent(div);
     hoverInfoRef.current.setPosition(position);
@@ -527,7 +529,7 @@ const GoogleMapView = ({
         zIndex: Math.floor(intensity * 1000),
       });
 
-      const el = marker.getDiv() as HTMLElement;
+      const el = (marker as any).getDiv?.() as HTMLElement | undefined;
       if (el) {
         el.style.animation = `pulse-bubble ${pulseSpeed}s cubic-bezier(0.25, 0.1, 0.25, 1) infinite`;
       }
@@ -716,7 +718,7 @@ const GoogleMapView = ({
       const isoA2 = feature.getProperty("ISO_A2");
       if (isoA2 === "-99" || !isoA2) return { visible: false };
 
-      const count = trendCounts[isoA2] || 0;
+      const count = trendCounts[isoA2 as string] || 0;
       const intensity = Math.min(count / maxCount, 1);
 
       if (count > 0) {
