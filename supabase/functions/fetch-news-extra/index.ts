@@ -241,7 +241,7 @@ async function fetchNPR(): Promise<TrendItem[]> {
       try {
         const res = await fetch(feed.url, {
           signal: controller.signal,
-          headers: { "User-Agent": "Mozilla/5.0 (compatible; GlobalTalkTrend/1.0)" },
+          headers: { "User-Agent": "Mozilla/5.0 (compatible; GTTMonitor/1.0)" },
         });
         if (!res.ok) continue;
         const xml = await res.text();
@@ -480,7 +480,7 @@ async function fetchRSSFeeds(): Promise<TrendItem[]> {
     try {
       const res = await fetch(feed.url, {
         signal: controller.signal,
-        headers: { "User-Agent": "Mozilla/5.0 (compatible; GlobalTalkTrend/1.0)" },
+        headers: { "User-Agent": "Mozilla/5.0 (compatible; GTTMonitor/1.0)" },
       });
       if (!res.ok) return [];
       const xml = await res.text();

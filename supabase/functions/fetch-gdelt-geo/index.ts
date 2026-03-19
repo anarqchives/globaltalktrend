@@ -38,7 +38,7 @@ serve(async (req) => {
     const timeout = setTimeout(() => controller.abort(), 8000);
 
     const response = await fetch(url, {
-      headers: { "User-Agent": "GlobalTalkTrend/1.0" },
+      headers: { "User-Agent": "GTTMonitor/1.0" },
       signal: controller.signal,
     });
     clearTimeout(timeout);

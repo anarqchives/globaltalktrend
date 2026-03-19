@@ -86,7 +86,7 @@ async function fetchWikipediaPageviews(): Promise<TrendItem[]> {
       try {
         const res = await fetch(
           `https://wikimedia.org/api/rest_v1/metrics/pageviews/top/${p.wiki}/all-access/${dateStr}`,
-          { headers: { "User-Agent": "GlobalTalkTrending/1.0 (globaltalk@lovable.app)" } }
+          { headers: { "User-Agent": "GTTMonitor/1.0 (gtt@vila.ind.br)" } }
         );
         if (!res.ok) continue;
         const data = await res.json();
@@ -371,7 +371,7 @@ async function fetchNOAA(): Promise<TrendItem[]> {
   // NOAA weather alerts API is actually open (no key needed for alerts)
   try {
     const res = await fetch("https://api.weather.gov/alerts/active?status=actual&severity=Extreme,Severe&limit=8", {
-      headers: { "User-Agent": "GlobalTalkTrending/1.0 (globaltalk@lovable.app)" },
+      headers: { "User-Agent": "GTTMonitor/1.0 (gtt@vila.ind.br)" },
     });
     if (!res.ok) {
       console.log("NOAA alerts error:", res.status);
