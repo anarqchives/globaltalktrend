@@ -2,8 +2,8 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 
 const ALLOWED_ORIGINS = [
   'https://globaltalktrend.lovable.app',
-  'https://globaltalktrend.com',
-  'https://www.globaltalktrend.com',
+  'https://gttmonitor.com',
+  'https://www.gttmonitor.com',
   'http://localhost:8080',
   'http://localhost:5173',
 ];
