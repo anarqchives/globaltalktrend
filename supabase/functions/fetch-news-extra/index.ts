@@ -2,8 +2,8 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 
 const ALLOWED_ORIGINS = [
   'https://globaltalktrend.lovable.app',
-  'https://globaltalktrend.com',
-  'https://www.globaltalktrend.com',
+  'https://gttmonitor.com',
+  'https://www.gttmonitor.com',
   'http://localhost:8080',
   'http://localhost:5173',
 ];
@@ -241,7 +241,7 @@ async function fetchNPR(): Promise<TrendItem[]> {
       try {
         const res = await fetch(feed.url, {
           signal: controller.signal,
-          headers: { "User-Agent": "Mozilla/5.0 (compatible; GlobalTalkTrend/1.0)" },
+          headers: { "User-Agent": "Mozilla/5.0 (compatible; GTTMonitor/1.0)" },
         });
         if (!res.ok) continue;
         const xml = await res.text();
@@ -480,7 +480,7 @@ async function fetchRSSFeeds(): Promise<TrendItem[]> {
     try {
       const res = await fetch(feed.url, {
         signal: controller.signal,
-        headers: { "User-Agent": "Mozilla/5.0 (compatible; GlobalTalkTrend/1.0)" },
+        headers: { "User-Agent": "Mozilla/5.0 (compatible; GTTMonitor/1.0)" },
       });
       if (!res.ok) return [];
       const xml = await res.text();

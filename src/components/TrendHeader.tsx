@@ -100,7 +100,7 @@ const TrendHeader = ({ totalTrends = 0, countriesCount = 0, onRefresh, refreshin
     if (message.length < 10 || message.length > 2000) { toast({ title: "Mensagem inválida", description: "A mensagem deve ter entre 10 e 2000 caracteres.", variant: "destructive" }); return; }
     const subject = encodeURIComponent(`[Contato Global Talk] ${name}`);
     const body = encodeURIComponent(`Nome: ${name}\nEmail: ${email}\n\nMensagem:\n${message}`);
-    window.location.href = `mailto:talk@globaltalktrend.com?subject=${subject}&body=${body}`;
+    window.location.href = `mailto:gtt@vila.ind.br?subject=${subject}&body=${body}`;
     toast({ title: "Abrindo seu email", description: "Revise e envie sua mensagem no app de email." });
   };
 

@@ -46,7 +46,7 @@ const sections = [
   {
     title: "9. Contato",
     content:
-      "Para dúvidas sobre esta política ou sobre o tratamento dos seus dados, entre em contato através do formulário disponível na plataforma ou envie um e-mail para o endereço indicado na seção 'Sobre' do Global Talk Trend.",
+      "Para dúvidas sobre esta política ou sobre o tratamento dos seus dados, entre em contato através do formulário disponível na plataforma ou envie um e-mail para gtt@vila.ind.br.",
   },
 ];
 

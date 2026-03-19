@@ -2,8 +2,8 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 
 const ALLOWED_ORIGINS = [
   'https://globaltalktrend.lovable.app',
-  'https://globaltalktrend.com',
-  'https://www.globaltalktrend.com',
+  'https://gttmonitor.com',
+  'https://www.gttmonitor.com',
   'http://localhost:8080',
   'http://localhost:5173',
 ];
@@ -36,7 +36,7 @@ async function fetchCrossrefTopic(query: string, rows: number): Promise<any[]> {
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), 6000);
     const res = await fetch(url, {
-      headers: { "User-Agent": "GlobalTalk/1.0 (mailto:contato@globaltalktrend.com)" },
+      headers: { "User-Agent": "GTTMonitor/1.0 (mailto:gtt@vila.ind.br)" },
       signal: controller.signal,
     });
     clearTimeout(timeout);
