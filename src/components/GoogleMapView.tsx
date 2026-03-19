@@ -387,8 +387,10 @@ const GoogleMapView = ({
     if (!hoverInfoRef.current || !googleMapRef.current) return;
 
     const div = document.createElement("div");
-    const root = ReactDOM.createRoot(div);
-    root.render(content);
+    import("react-dom/client").then(({ createRoot }) => {
+      const root = createRoot(div);
+      root.render(content);
+    });
 
     hoverInfoRef.current.setContent(div);
     hoverInfoRef.current.setPosition(position);
