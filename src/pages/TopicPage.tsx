@@ -23,6 +23,7 @@ const defaultFilters: FilterState = {
   period: "Hoje",
   category: "Todas",
   type: "Todas mídias",
+  query: "",
 };
 
 const fadeUp = {
