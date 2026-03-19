@@ -7,6 +7,7 @@ import {
 } from "lucide-react";
 import { useLanguage, languages } from "@/contexts/LanguageContext";
 import { supabase } from "@/integrations/supabase/client";
+import { lovable } from "@/integrations/lovable/index";
 import { toast } from "@/hooks/use-toast";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import {
@@ -57,15 +58,8 @@ const AppHeader = ({ minimal = false }: AppHeaderProps) => {
     try {
       setLoginLoading(provider);
       const redirectUri = `${window.location.origin}/auth/callback`;
-      
-      const { error } = await supabase.auth.signInWithOAuth({
-        provider,
-        options: {
-          redirectTo: redirectUri,
-        },
-      });
-
-      if (error) {
+      const result = await lovable.auth.signInWithOAuth(provider, { redirect_uri: redirectUri });
+      if (result?.error) {
         toast({ title: "Falha no login", description: "Não foi possível concluir o login.", variant: "destructive" });
         setLoginLoading(null);
       }
