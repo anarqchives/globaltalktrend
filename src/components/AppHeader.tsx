@@ -59,12 +59,12 @@ const AppHeader = ({ minimal = false }: AppHeaderProps) => {
       setLoginLoading(provider);
       const redirectUri = `${window.location.origin}/auth/callback`;
       
-      const { error } = await supabase.auth.signInWithOAuth({
-        provider,
-        options: {
-          redirectTo: redirectUri,
-        },
-      });
+      const result = await lovable.auth.signInWithOAuth(provider, { redirect_uri: redirectUri });
+
+      if (result?.error) {
+        toast({ title: "Falha no login", description: "Não foi possível concluir o login.", variant: "destructive" });
+        setLoginLoading(null);
+      }
 
       if (error) {
         toast({ title: "Falha no login", description: "Não foi possível concluir o login.", variant: "destructive" });
