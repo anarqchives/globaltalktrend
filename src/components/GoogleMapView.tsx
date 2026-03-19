@@ -718,7 +718,7 @@ const GoogleMapView = ({
       const isoA2 = feature.getProperty("ISO_A2");
       if (isoA2 === "-99" || !isoA2) return { visible: false };
 
-      const count = trendCounts[isoA2] || 0;
+      const count = trendCounts[isoA2 as string] || 0;
       const intensity = Math.min(count / maxCount, 1);
 
       if (count > 0) {
