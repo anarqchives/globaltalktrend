@@ -58,18 +58,11 @@ const AppHeader = ({ minimal = false }: AppHeaderProps) => {
     try {
       setLoginLoading(provider);
       const redirectUri = `${window.location.origin}/auth/callback`;
-      
       const result = await lovable.auth.signInWithOAuth(provider, { redirect_uri: redirectUri });
-
       if (result?.error) {
         toast({ title: "Falha no login", description: "Não foi possível concluir o login.", variant: "destructive" });
         setLoginLoading(null);
       }
-
-    } catch {
-      toast({ title: "Erro inesperado", description: "Houve um problema ao iniciar o login.", variant: "destructive" });
-      setLoginLoading(null);
-    }
     } catch {
       toast({ title: "Erro inesperado", description: "Houve um problema ao iniciar o login.", variant: "destructive" });
       setLoginLoading(null);
