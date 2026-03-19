@@ -529,7 +529,7 @@ const GoogleMapView = ({
         zIndex: Math.floor(intensity * 1000),
       });
 
-      const el = marker.getDiv() as HTMLElement;
+      const el = (marker as any).getDiv?.() as HTMLElement | undefined;
       if (el) {
         el.style.animation = `pulse-bubble ${pulseSpeed}s cubic-bezier(0.25, 0.1, 0.25, 1) infinite`;
       }
