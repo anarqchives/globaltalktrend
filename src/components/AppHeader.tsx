@@ -66,10 +66,10 @@ const AppHeader = ({ minimal = false }: AppHeaderProps) => {
         setLoginLoading(null);
       }
 
-      if (error) {
-        toast({ title: "Falha no login", description: "Não foi possível concluir o login.", variant: "destructive" });
-        setLoginLoading(null);
-      }
+    } catch {
+      toast({ title: "Erro inesperado", description: "Houve um problema ao iniciar o login.", variant: "destructive" });
+      setLoginLoading(null);
+    }
     } catch {
       toast({ title: "Erro inesperado", description: "Houve um problema ao iniciar o login.", variant: "destructive" });
       setLoginLoading(null);
