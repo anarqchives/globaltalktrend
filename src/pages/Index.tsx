@@ -551,7 +551,7 @@ const Index = () => {
                     </>
                   )}
                   {panelVisibility.map && (
-                    <ResizablePanel defaultSize={panelVisibility.timeline ? 35 : 100} minSize={15} maxSize={panelVisibility.timeline ? 60 : 100}>
+                    <ResizablePanel defaultSize={panelVisibility.timeline ? 58 : 100} minSize={15} maxSize={panelVisibility.timeline ? 75 : 100}>
                       <div className="h-full relative">{renderMap()}</div>
                     </ResizablePanel>
                   )}
