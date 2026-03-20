@@ -131,8 +131,8 @@ interface GoogleMapViewProps {
   onClose?: () => void;
 }
 
-/* keep a module-level ref to avoid double-loading */
-let loaderInstance: Loader | null = null;
+/* module-level flag to avoid double-loading */
+let optionsSet = false;
 
 const GoogleMapView = ({
   trendCounts, selectedCountry, onSelectCountry, trends = [], onSelectTrend, highlightCountry, onClose,
