@@ -573,9 +573,9 @@ export default function TrendRadar({ trends, allTrends, criticalMoments, anomali
       pulse: false,
     },
     {
-      value: "weekly",
+      value: "REMOVED_WEEKLY",
       icon: Activity,
-      label: lang === "pt" ? "Semana" : "Weekly",
+      label: "SKIP",
       activeColor: "sky",
       dot: null,
       badge: null,
