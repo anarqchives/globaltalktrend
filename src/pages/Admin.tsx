@@ -202,6 +202,7 @@ export default function Admin() {
   useEffect(() => {
     runDiagnostic();
     checkLiveAPIs();
+    setAggDiag(getAggregatorDiagnostics());
   }, []);
 
   const stats = useMemo(() => {
