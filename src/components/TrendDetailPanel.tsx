@@ -135,7 +135,7 @@ const TrendDetailPanel: React.FC<TrendDetailPanelProps> = ({
 
         {/* Header */}
         <div className="sticky top-0 z-10 bg-card/95 backdrop-blur-md border-b border-border px-5 py-3 flex items-center gap-2">
-          <button onClick={onClose} className="p-1.5 rounded-xl hover:bg-muted transition-colors text-muted-foreground">
+          <button onClick={onClose} className="p-1.5 rounded-lg hover:bg-muted transition-colors text-muted-foreground">
             <X className="w-4 h-4" />
           </button>
           <span className="text-[10px] uppercase tracking-[0.08em] font-semibold text-muted-foreground">
