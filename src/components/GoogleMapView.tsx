@@ -608,9 +608,9 @@ const GoogleMapView = ({
           )}
           {activeTab === "sentiment" && (
             <div className="flex items-center gap-2">
-              <span className="flex items-center gap-0.5 text-[7px]"><span className="w-2 h-2 rounded-full bg-emerald-500" />+</span>
-              <span className="flex items-center gap-0.5 text-[7px]"><span className="w-2 h-2 rounded-full bg-slate-400" />~</span>
-              <span className="flex items-center gap-0.5 text-[7px]"><span className="w-2 h-2 rounded-full bg-[#E03C31]" />-</span>
+              <span className="flex items-center gap-0.5 text-[7px]"><span className="w-2 h-2 rounded-full bg-[#34C759]" />+</span>
+              <span className="flex items-center gap-0.5 text-[7px]"><span className="w-2 h-2 rounded-full bg-[#8E8E93]" />~</span>
+              <span className="flex items-center gap-0.5 text-[7px]"><span className="w-2 h-2 rounded-full bg-[#FF3B30]" />-</span>
             </div>
           )}
           {activeTab === "verification" && (
