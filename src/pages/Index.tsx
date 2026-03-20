@@ -1,12 +1,12 @@
-import { useState, useRef, useCallback, useEffect, useMemo, lazy, Suspense, type ElementRef } from "react";
-import { AnimatePresence, motion } from "framer-motion";
-import { useTimelineColumns } from "@/hooks/use-timeline-columns";
+import { useState, useRef, useCallback, useEffect, useMemo, lazy, Suspense } from "react";
+import { AnimatePresence } from "framer-motion";
+import { useVirtualizer } from "@tanstack/react-virtual";
 import AppHeader from "@/components/AppHeader";
 import FilterBar, { FilterState, countries } from "@/components/FilterBar";
 import TimelineCard from "@/components/TimelineCard";
 import TrendCardSkeleton from "@/components/TrendCardSkeleton";
 import TransparencyPanel from "@/components/TransparencyPanel";
-import TemporalHeatmap from "@/components/TemporalHeatmap";
+import TrendDetailPanel from "@/components/TrendDetailPanel";
 import { TrendCardProps } from "@/components/TrendCard";
 import { useTrends } from "@/hooks/use-trends";
 import { useTranslatedTrends, TranslatedTrendCardProps } from "@/hooks/use-translated-trends";
@@ -20,12 +20,11 @@ import { useGamification } from "@/hooks/use-gamification";
 import { useSavedCards } from "@/hooks/use-saved-cards";
 import { useSavedFilters } from "@/hooks/use-saved-filters";
 import { supabase } from "@/integrations/supabase/client";
-import { ChevronRight, ChevronLeft, X, Map, Newspaper, RefreshCw, ChevronsUp, ChevronsDown, MapPin, FileText, LayoutGrid, List } from "lucide-react";
+import { ChevronRight, X, Map, Newspaper, RefreshCw, FileText, LayoutGrid, List } from "lucide-react";
 import ArchiveDrawer from "@/components/ArchiveDrawer";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import TagLegend from "@/components/TagLegend";
 import { toast } from "@/hooks/use-toast";
-
 import { useUserActivity } from "@/hooks/use-user-activity";
 import {
   ResizablePanelGroup,
@@ -33,12 +32,11 @@ import {
   ResizableHandle,
 } from "@/components/ui/resizable";
 
-// Lazy load the heavy map component
 const GoogleMapView = lazy(() => import("@/components/GoogleMapView"));
 import { SavedCollectionsSheet } from "@/components/SavedCollectionsSheet";
 
 const MapFallback = () => (
-  <div className="h-[400px] md:h-full w-full flex items-center justify-center bg-secondary/10">
+  <div className="h-[400px] md:h-full w-full flex items-center justify-center bg-muted/30 rounded-2xl">
     <div className="flex items-center gap-3 text-muted-foreground text-sm">
       <div className="w-5 h-5 border-2 border-primary/30 border-t-primary rounded-full animate-spin" />
       <span className="font-medium">Carregando mapa…</span>
@@ -54,7 +52,6 @@ const defaultFilters: FilterState = {
   query: "",
 };
 
-// Moved out of component to avoid recreation on every render
 const SOURCE_PRIORITY: Record<string, number> = {
   "The Guardian": 1, "NPR": 1, "NewsAPI": 2, "GNews": 2, "Bing News": 2, "NewsData": 2,
   "The News API": 2, "TheNewsAPI": 2,
@@ -63,9 +60,6 @@ const SOURCE_PRIORITY: Record<string, number> = {
   "Wikipedia": 6, "OpenAlex": 6, "World Bank": 6, "IBGE": 6, "FRED": 6,
   "Google Trends": 99,
 };
-
-const INITIAL_COUNT = 20;
-const LOAD_MORE_COUNT = 10;
 
 function getInitialFilters(): FilterState {
   if (typeof window === "undefined") return defaultFilters;
@@ -86,8 +80,6 @@ const Index = () => {
   const [viewMode, setViewMode] = useState<"timeline" | "map">("timeline");
   const [workspaceMode, setWorkspaceMode] = useState<"explorer" | "analyst">("analyst");
   const [compactMode, setCompactMode] = useState(false);
-  const [allExpanded, setAllExpanded] = useState(false);
-  // Panel visibility for collapsible sections
   const [panelVisibility, setPanelVisibility] = useState(() => {
     try {
       const saved = localStorage.getItem("map-panel-open");
@@ -107,7 +99,7 @@ const Index = () => {
       return next;
     });
   };
-  
+
   useEffect(() => {
     if (workspaceMode === "explorer") {
       setPanelVisibility({ map: false, timeline: true });
@@ -116,8 +108,6 @@ const Index = () => {
       setPanelVisibility({ map: true, timeline: true });
     }
   }, [workspaceMode]);
-
-  const { timelineRef: gridRef, columns: gridColumns } = useTimelineColumns();
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => setUser(session?.user ?? null));
@@ -131,32 +121,21 @@ const Index = () => {
   const [collectionsOpen, setCollectionsOpen] = useState(false);
   const { saveFilter } = useSavedFilters(user?.id ?? null);
   const [trendCounts, setTrendCounts] = useState<Record<string, number>>({});
-  const [expandedTrendId, setExpandedTrendId] = useState<string | null>(null);
-  const [highlightedTrendId, setHighlightedTrendId] = useState<string | null>(null);
-  const [visibleCount, setVisibleCount] = useState(INITIAL_COUNT);
+  const [selectedCardIndex, setSelectedCardIndex] = useState<number | null>(null);
   const isMobile = useIsMobile();
   const scrollRef = useRef<HTMLDivElement>(null);
-  const sentinelRef = useRef<HTMLDivElement>(null);
 
   const { filteredTrends: rawFilteredTrends, allTrends, loading, isFirstLoad, fetchTrends, countriesCount, lastUpdated, sourcesStatus } = useTrends(filters, setTrendCounts, lang);
   const criticalMoments = useCriticalMoments(rawFilteredTrends.length > 5 ? rawFilteredTrends : allTrends);
   const { anomalies, totalCount: anomalyCount, dismiss: dismissAnomaly } = useAnomalyAlerts(allTrends);
   const { multiplatformTitles, clusters } = useCrossPlatform(allTrends);
   const [transparencyOpen, setTransparencyOpen] = useState(false);
-  const [criticalDismissed, setCriticalDismissed] = useState(false);
-  const [emergingDismissed, setEmergingDismissed] = useState(false);
-  const [heatmapDismissed, setHeatmapDismissed] = useState(false);
-  
+
   const [trendContexts, setTrendContexts] = useState<Record<string, string>>({});
-
-
-  useEffect(() => {
-    if (criticalMoments.length > 0) setCriticalDismissed(false);
-  }, [criticalMoments.length]);
 
   const { translatedTrends, isTranslating } = useTranslatedTrends(rawFilteredTrends, lang);
 
-  // Lazy context fetching for trends without real descriptions
+  // Lazy context fetching
   const contextFetchedRef = useRef<Set<string>>(new Set());
   useEffect(() => {
     const trendsNeedingContext = translatedTrends
@@ -190,9 +169,6 @@ const Index = () => {
         }
       }
     }).catch(() => {});
-  // NOTE: trendContexts intentionally omitted from deps — contextFetchedRef tracks
-  // which trends have been fetched, preventing loops. Including trendContexts would
-  // create an infinite loop: fetch → setTrendContexts → effect → fetch → ...
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [translatedTrends, lang]);
 
@@ -203,40 +179,8 @@ const Index = () => {
 
     if (filters.type === "Multiplataforma") {
       const getOriginalKey = (t: TranslatedTrendCardProps) => normKey((t as any)._originalTitle || t.title);
-
       if (multiplatformTitles.size > 0) {
-        baseTrends = translatedTrends.filter(t => {
-          const key = getOriginalKey(t);
-          return multiplatformTitles.has(key);
-        });
-      } else {
-        const allNormTitles = allTrends.map(t => ({
-          norm: normKey(t.title),
-          platform: t.platform,
-        }));
-        const multiKeys = new Set<string>();
-        for (let i = 0; i < allNormTitles.length; i++) {
-          const platforms = new Set<string>();
-          platforms.add(allNormTitles[i].platform);
-          const wordsI = new Set(allNormTitles[i].norm.split(/\s+/).filter(w => w.length > 3));
-          for (let j = 0; j < allNormTitles.length; j++) {
-            if (i === j) continue;
-            const wordsJ = new Set(allNormTitles[j].norm.split(/\s+/).filter(w => w.length > 3));
-            let common = 0;
-            for (const w of wordsI) if (wordsJ.has(w)) common++;
-            if (wordsI.size > 0 && common / Math.max(wordsI.size, wordsJ.size) > 0.4) {
-              platforms.add(allNormTitles[j].platform);
-            }
-          }
-          if (platforms.size >= 2) multiKeys.add(allNormTitles[i].norm);
-        }
-
-        if (multiKeys.size > 0) {
-          baseTrends = translatedTrends.filter(t => {
-            const key = getOriginalKey(t);
-            return multiKeys.has(key);
-          });
-        }
+        baseTrends = translatedTrends.filter(t => multiplatformTitles.has(getOriginalKey(t)));
       }
     }
 
@@ -244,27 +188,24 @@ const Index = () => {
       const q = filters.query.toLowerCase();
       return baseTrends.filter(t => t.title.toLowerCase().includes(q) || (t.description && t.description.toLowerCase().includes(q)));
     }
-    
-    return baseTrends;
-  }, [translatedTrends, filters.type, filters.query, multiplatformTitles, allTrends]);
 
+    return baseTrends;
+  }, [translatedTrends, filters.type, filters.query, multiplatformTitles]);
+
+  // URL sync
   useEffect(() => {
     const params = new URLSearchParams();
     if (filters.country !== defaultFilters.country) params.set("country", filters.country);
     if (filters.period !== defaultFilters.period) params.set("period", filters.period);
     if (filters.category !== defaultFilters.category) params.set("category", filters.category);
     if (filters.type !== defaultFilters.type) params.set("type", filters.type);
-    if (filters.query !== defaultFilters.query && filters.query) params.set("query", filters.query);
+    if (filters.query) params.set("query", filters.query);
     const search = params.toString();
     const newUrl = search ? `${window.location.pathname}?${search}` : window.location.pathname;
     window.history.replaceState(null, "", newUrl);
   }, [filters]);
 
-  useEffect(() => {
-    setVisibleCount(INITIAL_COUNT);
-  }, [filters]);
-
-  // Relevance-based scoring + Google Trends interleaving
+  // Relevance scoring + interleaving
   const diversifiedTrends = useMemo(() => {
     const isGT = (t: TrendCardProps) => t.platform?.toLowerCase().includes("google trends");
     const now = Date.now();
@@ -273,12 +214,6 @@ const Index = () => {
     const getAge = (t: TrendCardProps): number => {
       if (t.publishedAt) return (now - new Date(t.publishedAt).getTime()) / ONE_HOUR;
       if (t.firstSeenAt) return (now - new Date(t.firstSeenAt).getTime()) / ONE_HOUR;
-      const m = t.time?.match?.(/(\d+)\s*(min|h|hora)/i);
-      if (m) {
-        const val = parseInt(m[1]);
-        const unit = m[2].toLowerCase();
-        return unit === "min" || unit === "m" ? val / 60 : val;
-      }
       return 12;
     };
 
@@ -288,28 +223,23 @@ const Index = () => {
       if (volStr.includes("m")) vol *= 1_000_000;
       else if (volStr.includes("k")) vol *= 1_000;
       const volNorm = Math.min(vol / 10000, 100);
-
       const ch = Math.abs(parseFloat(t.change?.replace(/[^0-9.\-]/g, "") || "0"));
       const growthNorm = Math.min(ch, 100);
-
       const normalizedKey = t.title.toLowerCase().normalize("NFD").replace(/\p{Diacritic}/gu, "").replace(/[^a-z0-9\s]/g, "").trim().slice(0, 50);
       const isMulti = multiplatformTitles.has(normalizedKey);
-      const criticalBonus = ch > 200 ? 200 : 0;
-      const multiBonus = isMulti ? 150 : 0;
-      const agePenalty = getAge(t) * 10;
 
-      return (volNorm * 0.3) + (growthNorm * 0.3) + criticalBonus + multiBonus - agePenalty;
+      // Filter out zero-volume + zero-growth cards
+      if (vol === 0 && ch === 0) return -1000;
+
+      return (volNorm * 0.3) + (growthNorm * 0.4) + (isMulti ? 150 : 0) + ((t.sources?.length || 1) * 10) - (getAge(t) * 10);
     };
 
-    // Score and sort
-    const scored = filteredTrends.map(t => ({ t, score: getScore(t) }));
+    const scored = filteredTrends.map(t => ({ t, score: getScore(t) })).filter(s => s.score > -500);
     scored.sort((a, b) => b.score - a.score);
 
-    // Separate non-GT and GT
     const nonGT = scored.filter(s => !isGT(s.t)).map(s => s.t);
     const gt = scored.filter(s => isGT(s.t)).map(s => s.t);
 
-    // Interleave: for every 4 non-GT cards, allow 1 GT card
     const result: TrendCardProps[] = [];
     let gtIdx = 0;
     let nonGTCount = 0;
@@ -328,75 +258,19 @@ const Index = () => {
     return result;
   }, [filteredTrends, multiplatformTitles]);
 
-  const visibleTrends = diversifiedTrends.slice(0, visibleCount);
-  const hasMore = visibleCount < diversifiedTrends.length;
-
-  const groupedTrends = useMemo(() => {
-    const now = Date.now();
-    const ONE_HOUR = 60 * 60 * 1000;
-    const TWO_HOURS = 2 * ONE_HOUR;
-
-    const getTimestamp = (trend: TrendCardProps) => {
-      if (trend.publishedAt) return new Date(trend.publishedAt).getTime();
-      if (trend.firstSeenAt) return new Date(trend.firstSeenAt).getTime();
-      const m = trend.time?.match?.(/(\d+)\s*(min|h|hora)/i);
-      if (m) {
-        const val = parseInt(m[1]);
-        const unit = m[2].toLowerCase();
-        if (unit === "min") return now - val * 60 * 1000;
-        return now - val * ONE_HOUR;
-      }
-      return now - 12 * ONE_HOUR;
-    };
-
-    const agora: TrendCardProps[] = [];
-    const ultimas2h: TrendCardProps[] = [];
-    const ultimas24h: TrendCardProps[] = [];
-
-    for (const trend of visibleTrends) {
-      const ts = getTimestamp(trend);
-      const diff = now - ts;
-      if (diff < ONE_HOUR) agora.push(trend);
-      else if (diff < TWO_HOURS) ultimas2h.push(trend);
-      else ultimas24h.push(trend);
-    }
-
-    return { agora, ultimas2h, ultimas24h };
-  }, [visibleTrends]);
-
-  const [filterTransitioning, setFilterTransitioning] = useState(false);
-  const prevFiltersRef = useRef(filters);
-  useEffect(() => {
-    const f = filters, p = prevFiltersRef.current;
-    if (f.country !== p.country || f.period !== p.period || f.category !== p.category || f.type !== p.type) {
-      setFilterTransitioning(true);
-      const timer = setTimeout(() => setFilterTransitioning(false), 300);
-      prevFiltersRef.current = filters;
-      return () => clearTimeout(timer);
-    }
-  }, [filters]);
-
-  useEffect(() => {
-    const sentinel = sentinelRef.current;
-    if (!sentinel) return;
-    const observer = new IntersectionObserver(
-      (entries) => {
-        if (entries[0].isIntersecting && hasMore && !loading) {
-          setVisibleCount((prev) => Math.min(prev + LOAD_MORE_COUNT, diversifiedTrends.length));
-        }
-      },
-      { root: scrollRef.current, rootMargin: "200px", threshold: 0 }
-    );
-    observer.observe(sentinel);
-    return () => observer.disconnect();
-  }, [hasMore, loading, diversifiedTrends.length]);
+  // Virtualizer
+  const rowVirtualizer = useVirtualizer({
+    count: diversifiedTrends.length,
+    getScrollElement: () => scrollRef.current,
+    estimateSize: () => compactMode ? 80 : 180,
+    overscan: 8,
+  });
 
   const handleMapClick = useCallback((code: string) => {
     setFilters((f) => ({ ...f, country: code }));
   }, []);
 
   const [refreshing, setRefreshing] = useState(false);
-  const [timeSinceLastFetch, setTimeSinceLastFetch] = useState(0);
   const [updatePending, setUpdatePending] = useState(false);
   const isActive = useUserActivity(30000);
   const timeSinceLastFetchRef = useRef(0);
@@ -406,70 +280,83 @@ const Index = () => {
     await fetchTrends();
     setRefreshing(false);
     timeSinceLastFetchRef.current = 0;
-    setTimeSinceLastFetch(0);
     setUpdatePending(false);
   }, [fetchTrends]);
 
   useEffect(() => {
     const interval = setInterval(() => {
       timeSinceLastFetchRef.current += 10;
-      // Only trigger state update when reaching the refresh threshold
       if (timeSinceLastFetchRef.current >= 90) {
-        setTimeSinceLastFetch(timeSinceLastFetchRef.current);
+        if (!isActive && selectedCardIndex === null) {
+          fetchTrends().then(() => {
+            timeSinceLastFetchRef.current = 0;
+            setUpdatePending(false);
+          });
+        } else if (!updatePending) {
+          setUpdatePending(true);
+        }
       }
     }, 10000);
     return () => clearInterval(interval);
+  }, [isActive, selectedCardIndex, fetchTrends, updatePending]);
+
+  // Debounced filter change
+  const filterTimeoutRef = useRef<ReturnType<typeof setTimeout>>();
+  const handleFilterChange = useCallback((newFilters: FilterState) => {
+    clearTimeout(filterTimeoutRef.current);
+    filterTimeoutRef.current = setTimeout(() => {
+      setFilters(newFilters);
+    }, 300);
   }, []);
 
-  useEffect(() => {
-    if (timeSinceLastFetch >= 90) {
-      const hasExpandedCard = expandedTrendId !== null;
-      const hasUserScrolled = scrollRef.current && scrollRef.current.scrollTop > 150;
-      if (!isActive && !hasExpandedCard && !hasUserScrolled) {
-        fetchTrends().then(() => {
-          timeSinceLastFetchRef.current = 0;
-          setTimeSinceLastFetch(0);
-          setUpdatePending(false);
-        });
-      } else if (!updatePending) {
-        setUpdatePending(true);
-      }
+  // Side panel navigation
+  const handleCardClick = useCallback((index: number) => {
+    setSelectedCardIndex(index);
+    const trend = diversifiedTrends[index];
+    if (trend) {
+      trackView(trend.title, trend.platform, { volume: trend.volume, category: trend.category, countryCode: trend.countryCode });
     }
-  }, [timeSinceLastFetch, isActive, expandedTrendId, fetchTrends, updatePending]);
+  }, [diversifiedTrends, trackView]);
 
-  const [showScrollTop, setShowScrollTop] = useState(false);
-
-  useEffect(() => {
-    const el = scrollRef.current;
-    if (!el) return;
-    const onScroll = () => setShowScrollTop(el.scrollTop > 400);
-    el.addEventListener("scroll", onScroll, { passive: true });
-    return () => el.removeEventListener("scroll", onScroll);
+  const handlePrevCard = useCallback(() => {
+    setSelectedCardIndex(prev => prev !== null && prev > 0 ? prev - 1 : prev);
   }, []);
+  const handleNextCard = useCallback(() => {
+    setSelectedCardIndex(prev => prev !== null && prev < diversifiedTrends.length - 1 ? prev + 1 : prev);
+  }, [diversifiedTrends.length]);
 
-  const scrollToTop = useCallback(() => {
-    scrollRef.current?.scrollTo({ top: 0, behavior: "smooth" });
-  }, []);
+  const selectedTrend = useMemo(() => {
+    if (selectedCardIndex === null) return null;
+    const trend = diversifiedTrends[selectedCardIndex];
+    if (!trend) return null;
+    const originalTitle = (trend as any)._originalTitle || trend.title;
+    const normalizedKey = originalTitle.toLowerCase().normalize("NFD").replace(/\p{Diacritic}/gu, "").replace(/[^a-z0-9\s]/g, "").trim().slice(0, 50);
+    const isMulti = multiplatformTitles.has(normalizedKey);
+    const cluster = isMulti ? clusters.find(c => c.trends.some(ct => ct.title.toLowerCase().normalize("NFD").replace(/\p{Diacritic}/gu, "").replace(/[^a-z0-9\s]/g, "").trim().slice(0, 50) === normalizedKey)) || null : null;
+    return {
+      ...trend,
+      aiContext: trendContexts[trend.title] || trendContexts[(trend as any)._originalTitle],
+      isMultiplatform: isMulti,
+      crossPlatformCluster: cluster,
+    };
+  }, [selectedCardIndex, diversifiedTrends, multiplatformTitles, clusters, trendContexts]);
 
-  // Resilient Timeline Fallback
+  const expandedTrendCountry = useMemo(() => {
+    if (selectedCardIndex === null) return null;
+    const trend = diversifiedTrends[selectedCardIndex];
+    return trend?.countryCode?.slice(0, 2).toUpperCase() || null;
+  }, [selectedCardIndex, diversifiedTrends]);
+
+  // Resilient fallback
   useEffect(() => {
     if (!loading && !isFirstLoad && filteredTrends.length === 0) {
       if (filters.period === "Hoje" || filters.period === "Últimas 24h") {
         const timer = setTimeout(() => {
-          toast({ 
-            title: lang === "pt" ? "🔭 Resiliência Ativada" : "🔭 Fallback Activated", 
-            description: lang === "pt" ? "Poucos resultados. Ampliando automaticamente a detecção para Última Semana." : "Few results. Automatically expanding search to Last Week."
+          toast({
+            title: lang === "pt" ? "🔭 Resiliência Ativada" : "🔭 Fallback Activated",
+            description: lang === "pt" ? "Poucos resultados. Ampliando para Última Semana." : "Few results. Expanding to Last Week."
           });
           setFilters(f => ({ ...f, period: "Última semana" }));
-        }, 1200);
-        return () => clearTimeout(timer);
-      } else if (filters.period === "Última semana") {
-        const timer = setTimeout(() => {
-          toast({ 
-            title: lang === "pt" ? "🔭 Resiliência Ativada" : "🔭 Fallback Activated", 
-            description: lang === "pt" ? "Ampliando janela para Últimos 30 dias para garantir inteligência contínua." : "Expanding window to Last 30 Days to ensure continuous intelligence."
-          });
-          setFilters(f => ({ ...f, period: "Últimos 30 dias" }));
         }, 1200);
         return () => clearTimeout(timer);
       }
@@ -477,342 +364,123 @@ const Index = () => {
   }, [loading, isFirstLoad, filteredTrends.length, filters.period, lang]);
 
   const handleSelectTrend = useCallback((trend: TrendCardProps) => {
-    const trendId = `${trend.platform}-${trend.title.slice(0, 20)}`;
-    setExpandedTrendId(trendId);
-    setHighlightedTrendId(trendId);
-    setViewMode("timeline");
-
-    // Ensure the trend is within visible count by finding its index
-    const trendIndex = filteredTrends.findIndex(t =>
-      `${t.platform}-${t.title.slice(0, 20)}` === trendId
-    );
-    if (trendIndex >= 0 && trendIndex >= visibleCount) {
-      setVisibleCount(trendIndex + 5);
-    }
-
-    // Retry scrolling with increasing delays to account for DOM rendering
-    const tryScroll = (attempt: number) => {
-      const el = document.getElementById(`trend-card-${trendId}`);
-      if (el) {
-        el.scrollIntoView({ behavior: "smooth", block: "center" });
-      } else if (attempt < 3) {
-        setTimeout(() => tryScroll(attempt + 1), 300);
-        return;
-      } else {
-        scrollRef.current?.scrollTo({ top: 0, behavior: "smooth" });
-      }
-      setTimeout(() => setHighlightedTrendId(null), 2500);
-    };
-    setTimeout(() => tryScroll(0), 200);
-  }, [filteredTrends, visibleCount]);
-
-  const handleAnomalyClick = useCallback((trendId: string) => {
-    setExpandedTrendId(trendId);
-    setHighlightedTrendId(trendId);
-    setTimeout(() => {
-      const el = document.getElementById(`trend-card-${trendId}`);
-      if (el) {
-        el.scrollIntoView({ behavior: "smooth", block: "center" });
-      }
-      setTimeout(() => setHighlightedTrendId(null), 2500);
-    }, 100);
-  }, []);
-
-  const handleCardExpand = useCallback((trend: TrendCardProps) => {
-    const trendId = `${trend.platform}-${trend.title.slice(0, 20)}`;
-    setExpandedTrendId(prev => prev === trendId ? null : trendId);
-  }, []);
-
-  const expandedTrendCountry = useMemo(() => {
-    if (!expandedTrendId) return null;
-    const trend = filteredTrends.find(t => `${t.platform}-${t.title.slice(0, 20)}` === expandedTrendId);
-    return trend?.countryCode?.slice(0, 2).toUpperCase() || null;
-  }, [expandedTrendId, filteredTrends]);
-
-  const breadcrumbs = useMemo(() => {
-    const segments: { label: string; key: keyof FilterState }[] = [];
-    if (filters.country !== "global") {
-      const countryLabel = countries.flatMap(g => g.items).find(c => c.value === filters.country)?.label || filters.country;
-      segments.push({ label: countryLabel, key: "country" });
-    }
-    if (filters.category !== "Todas") {
-      segments.push({ label: filters.category, key: "category" });
-    }
-    if (filters.type !== "Todas mídias") {
-      segments.push({ label: filters.type, key: "type" });
-    }
-    if (filters.period !== "Hoje") {
-      segments.push({ label: filters.period, key: "period" });
-    }
-    return segments;
-  }, [filters]);
-
-  const clearBreadcrumb = useCallback((key: keyof FilterState) => {
-    setFilters(f => ({ ...f, [key]: defaultFilters[key] }));
-  }, []);
-
-  const masonryStyle = useMemo(() => {
-    // When map visible: 2 cols max; when hidden: 3 cols on wide screens
-    const maxCols = panelVisibility.map ? 2 : 3;
-    const cols = isMobile ? 1 : Math.min(Math.max(gridColumns, 2), maxCols);
-    return {
-      columnCount: cols,
-      columnGap: 0,
-      columnFill: isMobile ? 'auto' as const : 'balance' as const,
-    };
-  }, [gridColumns, isMobile, panelVisibility.map]);
+    const idx = diversifiedTrends.findIndex(t => t.platform === trend.platform && t.title === trend.title);
+    if (idx >= 0) setSelectedCardIndex(idx);
+  }, [diversifiedTrends]);
 
   const renderTimeline = () => (
-    <div ref={(el) => { (scrollRef as any).current = el; (gridRef as any).current = el; }} className={`flex flex-col gap-0.5 p-1 sm:p-2 h-full overflow-y-auto overflow-x-hidden scrollbar-thin relative transition-opacity duration-200 w-full max-w-full box-border ${filterTransitioning ? 'opacity-60' : 'opacity-100'}`} style={{ maxWidth: '100vw' }}>
-      {/* Timeline header bar — clear separator */}
-      <div className="px-2 flex items-center justify-between sticky top-0 z-10 bg-muted/50 dark:bg-muted/30 backdrop-blur-sm rounded-md border-y border-border/50" style={{ height: 36 }}>
+    <div ref={scrollRef} className="h-full overflow-y-auto overflow-x-hidden scrollbar-thin">
+      {/* Timeline header */}
+      <div className="px-3 py-2 flex items-center justify-between sticky top-0 z-10 bg-background/80 backdrop-blur-sm border-b border-border/30">
         <div className="flex items-center gap-1.5">
           <FileText className="w-3.5 h-3.5 text-muted-foreground" />
-          <span className="text-[11px] font-bold text-muted-foreground uppercase tracking-widest">
+          <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-widest">
             {t("timeline")}
           </span>
-          <span className="text-[10px] text-muted-foreground/50 font-normal">
-            ({filteredTrends.length})
-          </span>
+          <span className="text-[10px] text-muted-foreground/40">({diversifiedTrends.length})</span>
         </div>
         <div className="flex items-center gap-1.5">
           {updatePending && (
-            <button
-              onClick={handleRefresh}
-              className="flex items-center gap-1 px-2 rounded-md border border-border text-muted-foreground hover:bg-muted hover:border-muted-foreground/30 transition-all"
-              style={{ height: 26, fontSize: 11 }}
-            >
+            <button onClick={handleRefresh} className="flex items-center gap-1 px-2 py-1 rounded-lg text-[11px] text-muted-foreground hover:bg-muted transition-colors">
               <RefreshCw className={`w-3 h-3 ${refreshing ? "animate-spin" : ""}`} />
-              <span>{t("updated") === "Atualizado" ? "Atualizar" : "Update"}</span>
+              {lang === "pt" ? "Atualizar" : "Update"}
             </button>
           )}
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <span className="inline-block">
-                <TagLegend />
-              </span>
-            </TooltipTrigger>
-          </Tooltip>
-          {/* View toggle: Expandido / Compacto */}
-          <div className="flex items-center overflow-hidden rounded-lg border border-border">
-            <button
-              onClick={() => setCompactMode(false)}
-              className={`flex items-center justify-center transition-all duration-150 w-7 h-[26px] ${
-                !compactMode ? "bg-foreground text-background" : "bg-card text-muted-foreground hover:bg-muted"
-              }`}
-              title={lang === "pt" ? "Expandido" : "Expanded"}
-            >
+          <TagLegend />
+          <div className="flex items-center overflow-hidden rounded-lg border border-border/40">
+            <button onClick={() => setCompactMode(false)} className={`flex items-center justify-center w-7 h-[26px] transition-all ${!compactMode ? "bg-foreground text-background" : "bg-card text-muted-foreground hover:bg-muted"}`}>
               <LayoutGrid size={13} />
             </button>
-            <button
-              onClick={() => setCompactMode(true)}
-              className={`flex items-center justify-center transition-all duration-150 w-7 h-[26px] ${
-                compactMode ? "bg-foreground text-background" : "bg-card text-muted-foreground hover:bg-muted"
-              }`}
-              title={lang === "pt" ? "Compacto" : "Compact"}
-            >
+            <button onClick={() => setCompactMode(true)} className={`flex items-center justify-center w-7 h-[26px] transition-all ${compactMode ? "bg-foreground text-background" : "bg-card text-muted-foreground hover:bg-muted"}`}>
               <List size={13} />
             </button>
           </div>
-          {/* Close timeline button */}
           {!isMobile && (
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <button
-                  onClick={() => togglePanel("timeline")}
-                  className="flex items-center justify-center rounded-lg bg-secondary text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-all duration-[120ms]"
-                  style={{ width: 28, height: 28 }}
-                >
-                  <X className="w-3.5 h-3.5" strokeWidth={2.5} />
-                </button>
-              </TooltipTrigger>
-              <TooltipContent side="bottom" className="text-[10px]">{lang === "pt" ? "Fechar Timeline" : "Close Timeline"}</TooltipContent>
-            </Tooltip>
+            <button onClick={() => togglePanel("timeline")} className="flex items-center justify-center rounded-lg bg-muted text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-all w-7 h-7">
+              <X className="w-3.5 h-3.5" />
+            </button>
           )}
         </div>
       </div>
 
-
-      {breadcrumbs.length > 0 && (
-        <div className="px-1.5 py-0.5 flex items-center gap-1 flex-wrap text-[9px]">
-          <span className="text-muted-foreground/50">{t("showing")}:</span>
-          {breadcrumbs.map((seg, i) => (
-            <span key={seg.key} className="inline-flex items-center gap-0.5">
-              {i > 0 && <ChevronRight className="w-2 h-2 text-muted-foreground/30" />}
-              <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 bg-primary/10 text-primary font-medium">
-                {seg.label}
-                <button onClick={() => clearBreadcrumb(seg.key)} className="ml-0.5 hover:text-destructive transition-colors">
-                  <X className="w-2 h-2" />
-                </button>
-              </span>
-            </span>
-          ))}
-        </div>
-      )}
-
-      {(loading && isFirstLoad && filteredTrends.length === 0)
-        ? Array.from({ length: 6 }).map((_, i) => <TrendCardSkeleton key={i} index={i} />)
-        : (() => {
-            const renderCard = (trend: TrendCardProps, i: number) => {
-              const trendId = `${trend.platform}-${trend.title.slice(0, 20)}`;
+      {/* Virtualized card list */}
+      {(loading && isFirstLoad && diversifiedTrends.length === 0)
+        ? <div className="p-3 space-y-3">{Array.from({ length: 6 }).map((_, i) => <TrendCardSkeleton key={i} index={i} />)}</div>
+        : (
+          <div
+            style={{ height: `${rowVirtualizer.getTotalSize()}px`, position: 'relative' }}
+            className="px-2 sm:px-3"
+          >
+            {rowVirtualizer.getVirtualItems().map((virtualRow) => {
+              const trend = diversifiedTrends[virtualRow.index];
+              if (!trend) return null;
               const originalTitle = (trend as any)._originalTitle || trend.title;
               const normalizedKey = originalTitle.toLowerCase().normalize("NFD").replace(/\p{Diacritic}/gu, "").replace(/[^a-z0-9\s]/g, "").trim().slice(0, 50);
               const isMulti = multiplatformTitles.has(normalizedKey);
-              const matchingCluster = isMulti ? clusters.find(c => c.trends.some(ct => ct.title.toLowerCase().normalize("NFD").replace(/\p{Diacritic}/gu, "").replace(/[^a-z0-9\s]/g, "").trim().slice(0, 50) === normalizedKey)) || null : null;
+
               return (
-              <div key={`${trendId}-${i}`} id={`trend-card-${trendId}`} className={`timeline-masonry-item ${highlightedTrendId === trendId ? 'animate-highlight-pulse' : ''}`}>
-                <TimelineCard
-                  {...trend}
-                  compact={compactMode}
-                  staggerIndex={i}
-                  userId={user?.id}
-                  onTrackAction={trackAction}
-                  forceExpanded={allExpanded || expandedTrendId === trendId}
-                  isMultiplatform={isMulti}
-                  crossPlatformCluster={matchingCluster}
-                  onSaveCard={saveCard}
-                  aiContext={trendContexts[trend.title] || trendContexts[(trend as any)._originalTitle]}
-                  onClick={() => {
-                    trackAction("view", 1, { title: trend.title, platform: trend.platform, countryCode: trend.countryCode, category: trend.category });
+                <div
+                  key={virtualRow.key}
+                  style={{
+                    position: 'absolute',
+                    top: 0,
+                    left: 0,
+                    width: '100%',
+                    transform: `translateY(${virtualRow.start}px)`,
+                    padding: '4px 0',
                   }}
-                  onToggleExpand={(isExpanded) => {
-                    setExpandedTrendId(isExpanded ? trendId : null);
-                  }}
-                  onExpand={(title, platform, metadata) => {
-                    trackView(title, platform, metadata);
-                    if (trend.countryCode) {
-                      const cc = trend.countryCode.slice(0, 2).toUpperCase();
-                      window.dispatchEvent(new CustomEvent('trend-expand-country', { detail: cc }));
-                    }
-                  }}
-                  onFilterPlatform={(p) => {
-                    const map: Record<string, string> = {
-                      "Reddit": "Redes sociais",
-                      "Bluesky": "Redes sociais",
-                      "Mastodon": "Redes sociais",
-                      "NewsAPI": "Imprensa",
-                      "NewsData": "Imprensa",
-                      "GNews": "Imprensa",
-                      "Bing News": "Imprensa",
-                      "The Guardian": "Imprensa",
-                      "Google Trends": "Buscas (Google)",
-                      "YouTube": "Todas mídias",
-                      "World Bank": "Dados oficiais",
-                      "IBGE": "Dados oficiais",
-                      "OpenAlex": "Dados oficiais",
-                    };
-                    setFilters((f) => ({ ...f, type: map[p] || "Todas mídias" }));
-                  }}
-                />
+                  ref={rowVirtualizer.measureElement}
+                  data-index={virtualRow.index}
+                >
+                  <TimelineCard
+                    {...trend}
+                    compact={compactMode}
+                    staggerIndex={virtualRow.index < 10 ? virtualRow.index : 0}
+                    isMultiplatform={isMulti}
+                    isSelected={selectedCardIndex === virtualRow.index}
+                    onSaveCard={saveCard}
+                    onClick={() => handleCardClick(virtualRow.index)}
+                    onFilterPlatform={(p) => {
+                      const map: Record<string, string> = {
+                        "Reddit": "Redes sociais", "Bluesky": "Redes sociais", "Mastodon": "Redes sociais",
+                        "NewsAPI": "Imprensa", "NewsData": "Imprensa", "GNews": "Imprensa", "Bing News": "Imprensa", "The Guardian": "Imprensa",
+                        "Google Trends": "Buscas (Google)", "YouTube": "Todas mídias",
+                        "World Bank": "Dados oficiais", "IBGE": "Dados oficiais", "OpenAlex": "Dados oficiais",
+                      };
+                      setFilters((f) => ({ ...f, type: map[p] || "Todas mídias" }));
+                    }}
+                  />
                 </div>
               );
-            };
+            })}
+          </div>
+        )}
 
-            const { agora, ultimas2h, ultimas24h } = groupedTrends;
-            let globalIndex = 0;
-
-            return (
-              <>
-                {agora.length > 0 && (
-                  <>
-                    <div className="feed-section-label flex items-center gap-1.5" style={{ gridColumn: '1 / -1' }}>
-                      <span className="w-1.5 h-1.5 rounded-full bg-destructive animate-pulse" />
-                      🔥 {lang === "pt" ? "AGORA" : "NOW"}
-                      <span className="text-micro font-normal text-muted-foreground ml-1">({agora.length})</span>
-                    </div>
-                    <div style={masonryStyle}>
-                        {agora.map((trend) => renderCard(trend, globalIndex++))}
-                    </div>
-                  </>
-                )}
-                {ultimas2h.length > 0 && (
-                  <>
-                    <div className="feed-section-label flex items-center gap-1.5 text-muted-foreground" style={{ gridColumn: '1 / -1' }}>
-                      ⏳ {lang === "pt" ? "ÚLTIMAS 2H" : "LAST 2H"}
-                      <span className="text-micro font-normal ml-1">({ultimas2h.length})</span>
-                    </div>
-                    <div style={masonryStyle}>
-                        {ultimas2h.map((trend) => renderCard(trend, globalIndex++))}
-                    </div>
-                  </>
-                )}
-                {ultimas24h.length > 0 && (
-                  <>
-                    <div className="feed-section-label flex items-center gap-1.5 text-muted-foreground" style={{ gridColumn: '1 / -1' }}>
-                      📅 24H
-                      <span className="text-micro font-normal ml-1">({ultimas24h.length})</span>
-                    </div>
-                    <div style={masonryStyle}>
-                        {ultimas24h.map((trend) => renderCard(trend, globalIndex++))}
-                    </div>
-                  </>
-                )}
-              </>
-            );
-          })()}
-      {hasMore && (
-        <div ref={sentinelRef} className="h-10" />
+      {!loading && !isFirstLoad && diversifiedTrends.length === 0 && (
+        <div className="flex flex-col items-center justify-center py-12 px-4 text-center gap-2">
+          <span className="text-3xl">🔍</span>
+          <p className="text-xs font-medium text-foreground">{t("noTrends")}</p>
+          <button onClick={() => setFilters(defaultFilters)} className="mt-2 px-3 py-1 rounded-full bg-primary text-primary-foreground text-[10px] font-medium hover:bg-primary/90 transition-colors">
+            {lang === "pt" ? "Limpar filtros" : "Clear filters"}
+          </button>
+        </div>
       )}
-      {!hasMore && filteredTrends.length > 0 && (
-        <div className="flex flex-col items-center py-3 gap-1.5">
-          <span className="text-[10px] text-muted-foreground/40">— {t("noTrends")} —</span>
-          {lastUpdated && (
-            <div className="flex items-center gap-1.5 text-[9px] text-muted-foreground">
-             <span className="w-1 h-1 rounded-full bg-green-500" />
-              {t("lastUpdate")}: {lastUpdated.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}
-            </div>
-          )}
+
+      {diversifiedTrends.length > 0 && lastUpdated && (
+        <div className="flex flex-col items-center py-4 gap-1">
+          <div className="flex items-center gap-1.5 text-[9px] text-muted-foreground">
+            <span className="w-1 h-1 rounded-full bg-green-500" />
+            {t("lastUpdate")}: {lastUpdated.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}
+          </div>
           <button onClick={() => setTransparencyOpen(true)} className="text-[9px] text-primary hover:underline cursor-pointer">
             🔍 {t("viewSourceStatus")}
-          </button>
-        </div>
-      )}
-      {!loading && !isFirstLoad && filteredTrends.length === 0 && (
-        <div className="flex flex-col items-center justify-center py-12 px-4 text-center gap-2 animate-fade-in">
-          <span className="text-3xl">🔍</span>
-          <p className="text-xs font-medium text-foreground">
-            {filters.country !== "global"
-              ? `Nenhuma tendência encontrada para ${countries.flatMap(g => g.items).find(c => c.value === filters.country)?.label?.replace(/^.{2}\s?/, '') || filters.country}`
-              : t("noTrends")}
-          </p>
-          <p className="text-[10px] text-muted-foreground max-w-[260px]">
-            {(() => {
-              const cc = filters.country.toUpperCase();
-              const limitedCountries: Record<string, string> = {
-                CN: "A China possui plataformas próprias (WeChat, Weibo). Mostrando cobertura via SCMP, Xinhua e China Daily.",
-                RU: "A Rússia possui plataformas próprias (VK, Yandex). Mostrando cobertura via TASS, RT e Moscow Times.",
-                KP: "Cobertura extremamente limitada. Fontes: KCNA via agregadores internacionais.",
-                IR: "Cobertura limitada. Mostrando menções em fontes internacionais.",
-              };
-              if (filters.country !== "global" && limitedCountries[cc]) return limitedCountries[cc];
-              if (filters.country !== "global") return "As fontes disponíveis podem não estar cobrindo este país no momento. Tente ampliar o período.";
-              return t("noTrendsCurrentFilters");
-            })()}
-          </p>
-          <button
-            onClick={() => setFilters(defaultFilters)}
-            className="mt-1.5 px-3 py-1 rounded-full bg-primary text-primary-foreground text-[10px] font-medium hover:bg-primary/90 transition-colors"
-          >
-            Limpar filtros
-          </button>
-        </div>
-      )}
-
-      {showScrollTop && (
-        <div className="sticky bottom-3 z-20 flex justify-center">
-          <button
-            onClick={scrollToTop}
-            className="px-3 py-1 rounded-full bg-primary text-primary-foreground text-[10px] font-semibold shadow-lg hover:bg-primary/90 transition-all animate-in fade-in slide-in-from-bottom-2"
-          >
-            ↑ {t("backToTop")}
           </button>
         </div>
       )}
     </div>
   );
 
-  const renderMap = () => {
-  return (
+  const renderMap = () => (
     <Suspense fallback={<MapFallback />}>
       <GoogleMapView
         trendCounts={trendCounts}
@@ -825,71 +493,47 @@ const Index = () => {
       />
     </Suspense>
   );
-};
 
-  // Count closed panels
   const closedPanelsList = (["timeline", "map"] as const).filter(p => !panelVisibility[p]);
 
   return (
     <div className="h-screen flex flex-col bg-background overflow-hidden w-full max-w-[100vw]">
-      {/* Fixed Header */}
       <AppHeader />
-
-      {/* Fixed Filters */}
       <FilterBar
         filters={filters}
-        onChange={setFilters}
+        onChange={handleFilterChange}
         onForceReset={() => setFilters(defaultFilters)}
         isLoggedIn={!!user}
         onSaveFilter={() => {
           const name = prompt("Nome do filtro:");
-          if (name?.trim()) {
-            saveFilter(name.trim(), filters);
-          }
+          if (name?.trim()) saveFilter(name.trim(), filters);
         }}
         workspaceMode={workspaceMode}
         onChangeWorkspaceMode={setWorkspaceMode}
         onOpenSavedCollections={() => setCollectionsOpen(true)}
       />
 
-      {/* Main workspace */}
       <div className="flex-1 overflow-hidden flex flex-col min-h-0">
         {isMobile ? (
-          <>
-            {/* Timeline/Map — full height */}
-            <div className="flex-1 min-h-0 flex flex-col relative">
-              <div className="flex-1 min-h-0 overflow-hidden">
-                {viewMode === "timeline" ? renderTimeline() : (
-                  <div className="h-full">{renderMap()}</div>
-                )}
-              </div>
-              <motion.button
-                onClick={() => setViewMode(v => v === "timeline" ? "map" : "timeline")}
-                className="absolute bottom-4 right-4 z-30 flex items-center gap-2 px-4 py-3 rounded-full bg-foreground text-background text-xs font-semibold shadow-[0_4px_20px_rgba(0,0,0,0.15)] active:scale-95 transition-transform touch-manipulation"
-                whileTap={{ scale: 0.93 }}
-                style={{ minHeight: 48, minWidth: 48 }}
-              >
-                {viewMode === "timeline" ? (
-                  <><Map className="w-4 h-4" /> {t("map")}</>
-                ) : (
-                  <><Newspaper className="w-4 h-4" /> {t("timeline")}</>
-                )}
-              </motion.button>
+          <div className="flex-1 min-h-0 flex flex-col relative">
+            <div className="flex-1 min-h-0 overflow-hidden">
+              {viewMode === "timeline" ? renderTimeline() : <div className="h-full">{renderMap()}</div>}
             </div>
-          </>
+            <button
+              onClick={() => setViewMode(v => v === "timeline" ? "map" : "timeline")}
+              className="absolute bottom-4 right-4 z-30 flex items-center gap-2 px-4 py-3 rounded-full bg-foreground text-background text-xs font-semibold shadow-[0_4px_20px_rgba(0,0,0,0.15)] active:scale-95 transition-transform touch-manipulation"
+              style={{ minHeight: 48, minWidth: 48 }}
+            >
+              {viewMode === "timeline" ? <><Map className="w-4 h-4" /> {t("map")}</> : <><Newspaper className="w-4 h-4" /> {t("timeline")}</>}
+            </button>
+          </div>
         ) : (
           <div className="flex-1 min-h-0 flex">
-            {/* Archive drawer for closed panels */}
-            <ArchiveDrawer
-              closedPanels={closedPanelsList as any}
-              onRestore={(panel: any) => togglePanel(panel)}
-            />
-
-            {/* Main content */}
+            <ArchiveDrawer closedPanels={closedPanelsList as any} onRestore={(panel: any) => togglePanel(panel)} />
             <div className="flex-1 min-h-0 flex flex-col">
               {!panelVisibility.timeline && !panelVisibility.map ? (
                 <div className="flex-1 flex items-center justify-center text-muted-foreground">
-                  <p className="text-sm">{lang === "pt" ? "Todos os painéis foram arquivados. Use o menu lateral para restaurá-los." : "All panels archived. Use the side drawer to restore them."}</p>
+                  <p className="text-sm">{lang === "pt" ? "Todos os painéis foram arquivados." : "All panels archived."}</p>
                 </div>
               ) : (
                 <ResizablePanelGroup direction="horizontal" className="flex-1 min-h-0" key={`h-${panelVisibility.timeline}-${panelVisibility.map}`}>
@@ -905,22 +549,8 @@ const Index = () => {
                   )}
                   {panelVisibility.map && (
                     <ResizablePanel defaultSize={panelVisibility.timeline ? 35 : 100} minSize={15} maxSize={panelVisibility.timeline ? 60 : 100}>
-                      <div className="h-full relative map-panel-enter">
-                        {renderMap()}
-                      </div>
+                      <div className="h-full relative">{renderMap()}</div>
                     </ResizablePanel>
-                  )}
-                  {/* Slim toggle for collapsed map */}
-                  {!panelVisibility.map && (
-                    <div className="h-full flex items-center">
-                      <button
-                        onClick={() => togglePanel("map")}
-                        className="w-8 h-full flex items-center justify-center bg-secondary/30 hover:bg-secondary/60 border-l border-border/50 transition-colors text-muted-foreground hover:text-foreground"
-                        title="Abrir mapa"
-                      >
-                        <ChevronLeft className="w-4 h-4" />
-                      </button>
-                    </div>
                   )}
                 </ResizablePanelGroup>
               )}
@@ -929,7 +559,23 @@ const Index = () => {
         )}
       </div>
 
-      {/* Transparency Panel */}
+      {/* Side panel for card details */}
+      <AnimatePresence>
+        {selectedCardIndex !== null && (
+          <TrendDetailPanel
+            trend={selectedTrend}
+            onClose={() => setSelectedCardIndex(null)}
+            onPrev={handlePrevCard}
+            onNext={handleNextCard}
+            hasPrev={selectedCardIndex > 0}
+            hasNext={selectedCardIndex < diversifiedTrends.length - 1}
+            userId={user?.id}
+            onSaveCard={saveCard}
+            onTrackAction={trackAction}
+          />
+        )}
+      </AnimatePresence>
+
       <TransparencyPanel
         open={transparencyOpen}
         onClose={() => setTransparencyOpen(false)}
@@ -937,14 +583,12 @@ const Index = () => {
         lastUpdated={lastUpdated}
         totalTrends={filteredTrends.length}
       />
-
       <SavedCollectionsSheet
         open={collectionsOpen}
         onOpenChange={setCollectionsOpen}
         cards={savedCards}
         removeCard={removeCard}
       />
-
     </div>
   );
 };

@@ -560,7 +560,7 @@ const GoogleMapView = ({
   }, [sentimentBubbles, maxCount, onSelectCountry, showTooltip, isDark, trends]);
 
   // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-  // FLOW RENDERING
+  // FLOW RENDERING — animated polylines between countries
   // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
   const renderFlowArcs = useCallback(() => {
     if (!googleMapRef.current) return;
@@ -573,85 +573,87 @@ const GoogleMapView = ({
     particleAnimationsRef.current = [];
     if (googleMapRef.current && geoJsonLoadedRef.current) googleMapRef.current.data.setStyle({ visible: false });
 
-    // Renderizar arcos
     flowArcs.forEach((arc) => {
       const origin = countryPoints.find(p => p.id === arc.originId);
       const dest = countryPoints.find(p => p.id === arc.destId);
       if (!origin || !dest) return;
 
-      const curvePoints = computeCurvePoints(origin.lat, origin.lng, dest.lat, dest.lng, 50);
-      const color = sentimentColors[arc.sentiment];
-      const strokeWeight = 1.5 + (arc.volume / maxCount) * 3.5;
+      const isCritical = arc.volume > maxCount * 0.7;
+      const strokeColor = isCritical ? "#E03C31" : "#2557D6";
+      const strokeWeight = 1.5 + (arc.volume / maxCount) * 3;
 
+      // Main line (invisible, path holder)
       const polyline = new google.maps.Polyline({
-        path: curvePoints.map(p => new google.maps.LatLng(p.lat, p.lng)),
-        geodesic: false,
-        strokeColor: color,
-        strokeOpacity: 0.65,
+        path: [
+          { lat: origin.lat, lng: origin.lng },
+          { lat: dest.lat, lng: dest.lng },
+        ],
+        geodesic: true,
+        strokeColor,
+        strokeOpacity: 0,
         strokeWeight,
+        icons: [{
+          icon: {
+            path: google.maps.SymbolPath.FORWARD_CLOSED_ARROW,
+            scale: 3,
+            strokeColor,
+            fillColor: strokeColor,
+            fillOpacity: 0.8,
+          },
+          offset: '0%',
+          repeat: '80px',
+        }],
         map: googleMapRef.current,
         zIndex: 2,
       });
 
+      // Animate icons along the line
+      let count = 0;
+      const animateFlow = () => {
+        count = (count + 1) % 200;
+        const icons = polyline.get('icons');
+        if (icons && icons[0]) {
+          icons[0].offset = (count / 2) + '%';
+          polyline.set('icons', icons);
+        }
+        const id = requestAnimationFrame(animateFlow);
+        particleAnimationsRef.current.push(id);
+      };
+      animateFlow();
+
+      // Dashed line underneath for visibility
+      const dashLine = new google.maps.Polyline({
+        path: [
+          { lat: origin.lat, lng: origin.lng },
+          { lat: dest.lat, lng: dest.lng },
+        ],
+        geodesic: true,
+        strokeColor,
+        strokeOpacity: 0.25,
+        strokeWeight: strokeWeight * 0.6,
+        map: googleMapRef.current,
+        zIndex: 1,
+      });
+
       polyline.addListener("mouseover", () => {
-        polyline.setOptions({ strokeOpacity: 0.9 });
+        dashLine.setOptions({ strokeOpacity: 0.5 });
         showTooltip(
           <FlowTooltip arc={arc} isDark={isDark} />,
           { lat: (origin.lat + dest.lat) / 2, lng: (origin.lng + dest.lng) / 2 }
         );
       });
       polyline.addListener("mouseout", () => {
-        polyline.setOptions({ strokeOpacity: 0.65 });
+        dashLine.setOptions({ strokeOpacity: 0.25 });
         hoverInfoRef.current?.close();
       });
 
-      polylinesRef.current.push(polyline);
-
-      // Partículas fluindo
-      const particleCount = Math.max(2, Math.ceil((arc.volume / maxCount) * 6));
-      const duration = Math.max(2000, 4000 - arc.timeDelta * 100);
-
-      for (let i = 0; i < particleCount; i++) {
-        const particle = new google.maps.Marker({
-          position: { lat: origin.lat, lng: origin.lng },
-          map: googleMapRef.current,
-          icon: {
-            path: google.maps.SymbolPath.CIRCLE,
-            scale: 2.5 + (arc.volume / maxCount) * 2,
-            fillColor: color,
-            fillOpacity: 0.8,
-            strokeColor: "rgba(255,255,255,0.8)",
-            strokeWeight: 1,
-          },
-          zIndex: 10,
-        });
-
-        const delay = i * (duration / particleCount);
-        const animateParticle = (startTime: number) => {
-          const elapsed = Date.now() - startTime;
-          const progress = ((elapsed - delay) % duration) / duration;
-
-          if (progress >= 0 && progress <= 1) {
-            const pointIndex = Math.floor(progress * (curvePoints.length - 1));
-            const point = curvePoints[pointIndex];
-            if (point) {
-              particle.setPosition(new google.maps.LatLng(point.lat, point.lng));
-            }
-          }
-
-          const id = requestAnimationFrame(() => animateParticle(startTime));
-          particleAnimationsRef.current.push(id);
-        };
-
-        animateParticle(Date.now());
-      }
+      polylinesRef.current.push(polyline, dashLine);
     });
 
-    // Marcadores nos países
+    // Country markers
     countryPoints.forEach(c => {
       const count = trendCounts[c.id] || 0;
       if (count === 0) return;
-
       const intensity = Math.min(count / maxCount, 1);
       const marker = new google.maps.Marker({
         position: { lat: c.lat, lng: c.lng },
@@ -659,15 +661,13 @@ const GoogleMapView = ({
         icon: {
           path: google.maps.SymbolPath.CIRCLE,
           scale: 4 + intensity * 6,
-          fillColor: "#3b82f6",
+          fillColor: "#2557D6",
           fillOpacity: 0.7,
           strokeColor: "#ffffff",
           strokeWeight: 1.5,
         },
       });
-
       marker.addListener("click", () => onSelectCountry(c.id));
-
       markersRef.current.push(marker);
     });
   }, [flowArcs, trendCounts, maxCount, onSelectCountry, showTooltip, isDark]);
@@ -732,19 +732,23 @@ const GoogleMapView = ({
       const intensity = Math.min(count / maxCount, 1);
 
       if (count > 0) {
+        // Gradient: #E8E4DC → #C5D3EE → #2557D6
+        const r = Math.round(232 - intensity * (232 - 37));
+        const g = Math.round(228 - intensity * (228 - 87));
+        const b = Math.round(220 - intensity * (220 - 214));
         return {
-          fillColor: intensity > 0.85 ? "#ff3300" : intensity > 0.7 ? "#ffaa00" : intensity > 0.55 ? "#ffff00" : "#00a6ff",
+          fillColor: `rgb(${r},${g},${b})`,
           fillOpacity: 0.5 + intensity * 0.4,
-          strokeColor: isDark ? "#0f1419" : "#f8fafb",
-          strokeWeight: 1,
+          strokeColor: isDark ? "#0f1419" : "#FFFFFF",
+          strokeWeight: 0.5,
           visible: true,
           zIndex: 1
         };
       } else {
         return {
-          fillColor: isDark ? "#1e293b" : "#e2e8f0",
-          fillOpacity: 0.15,
-          strokeColor: isDark ? "#0f1419" : "#f8fafb",
+          fillColor: isDark ? "#1e293b" : "#E8E4DC",
+          fillOpacity: 0.2,
+          strokeColor: isDark ? "#0f1419" : "#FFFFFF",
           strokeWeight: 0.5,
           visible: true,
           zIndex: 0
@@ -922,27 +926,52 @@ const GoogleMapView = ({
       <motion.div
         initial={{ opacity: 0, x: -10 }}
         animate={{ opacity: 1, x: 0 }}
-        className="absolute bottom-3 left-3 z-20 bg-white/90 dark:bg-slate-900/90 backdrop-blur-xl border border-border/30 rounded-lg p-2 text-[10px] text-muted-foreground shadow-md"
+        className="absolute bottom-3 left-3 z-20 bg-white/90 dark:bg-slate-900/90 backdrop-blur-xl border border-border/30 rounded-xl p-3 shadow-md"
       >
+        <div className="text-[10px] uppercase tracking-widest text-muted-foreground font-semibold mb-1.5">
+          {mapMode === "heatmap" && (lang === "pt" ? "Densidade" : "Density")}
+          {mapMode === "flow" && (lang === "pt" ? "Propagação" : "Propagation")}
+          {mapMode === "sentiment" && (lang === "pt" ? "Sentimento" : "Sentiment")}
+          {mapMode === "choropleth" && (lang === "pt" ? "Cobertura" : "Coverage")}
+        </div>
         {mapMode === "heatmap" && (
           <>
             <div className="flex items-center gap-2 mb-1">
-              <div className="w-20 h-2 rounded-full bg-gradient-to-r from-[#00a6ff] via-[#ffff00] to-[#ff3300]" />
-              <span>Baixo → Alto</span>
-            </div>
-            <div className="flex gap-3 text-[9px]">
-              <span>🔥 Máx: {maxCount}</span>
-              <span>🌍 {activeCountries} países</span>
-              <span>📊 {totalTrends} trends</span>
+              <div className="w-20 h-2 rounded-full bg-gradient-to-r from-[#2557D6]/20 via-[#2557D6] to-[#E03C31]" />
+              <span className="text-[10px] text-muted-foreground">{lang === "pt" ? "Baixo → Alto volume" : "Low → High volume"}</span>
             </div>
           </>
         )}
         {mapMode === "flow" && (
-          <div className="text-[10px]">🌊 Propagação entre países</div>
+          <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1">
+              <div className="w-6 h-0.5 bg-[#2557D6]" />
+              <span className="text-[9px] text-muted-foreground">{lang === "pt" ? "Normal" : "Normal"}</span>
+            </div>
+            <div className="flex items-center gap-1">
+              <div className="w-6 h-0.5 bg-[#E03C31]" />
+              <span className="text-[9px] text-muted-foreground">{lang === "pt" ? "Crítico" : "Critical"}</span>
+            </div>
+          </div>
         )}
         {mapMode === "sentiment" && (
-          <div className="text-[10px]">💭 Pulsação = Sentimento</div>
+          <div className="flex items-center gap-3">
+            <span className="flex items-center gap-1 text-[9px]"><span className="w-2.5 h-2.5 rounded-full bg-emerald-500" />{lang === "pt" ? "Positivo" : "Positive"}</span>
+            <span className="flex items-center gap-1 text-[9px]"><span className="w-2.5 h-2.5 rounded-full bg-gray-400" />{lang === "pt" ? "Neutro" : "Neutral"}</span>
+            <span className="flex items-center gap-1 text-[9px]"><span className="w-2.5 h-2.5 rounded-full bg-red-500" />{lang === "pt" ? "Negativo" : "Negative"}</span>
+          </div>
         )}
+        {mapMode === "choropleth" && (
+          <div className="flex items-center gap-2 mb-1">
+            <div className="w-20 h-2 rounded-full bg-gradient-to-r from-[#E8E4DC] via-[#C5D3EE] to-[#2557D6]" />
+            <span className="text-[10px] text-muted-foreground">{lang === "pt" ? "Sem dados → Alto" : "No data → High"}</span>
+          </div>
+        )}
+        <div className="flex gap-3 text-[9px] text-muted-foreground/60 mt-1.5">
+          <span>Máx: {maxCount}</span>
+          <span>· {activeCountries} {lang === "pt" ? "países" : "countries"}</span>
+          <span>· {totalTrends} trends</span>
+        </div>
       </motion.div>
     </div>
   );
