@@ -191,16 +191,14 @@ const GoogleMapView = ({
           sessionStorage.setItem(CACHE_KEY, apiKey!);
         }
 
-        /* Use Loader class directly — more reliable across environments */
-        if (!loaderInstance) {
-          loaderInstance = new Loader({
-            apiKey: apiKey!,
-            version: "weekly",
-            libraries: ["visualization"],
-          });
+        /* Use functional API — setOptions + importLibrary */
+        if (!optionsSet) {
+          setOptions({ key: apiKey!, v: "weekly", libraries: ["visualization"] });
+          optionsSet = true;
         }
 
-        await loaderInstance.load();
+        await importLibrary("maps");
+        await importLibrary("visualization");
 
         if (!mapRef.current || cancelled) return;
         const map = new google.maps.Map(mapRef.current, {
