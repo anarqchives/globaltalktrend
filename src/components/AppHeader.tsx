@@ -1,12 +1,13 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { Sun, Moon, LogOut, LogIn, Loader2 } from "lucide-react";
-import { useLanguage } from "@/contexts/LanguageContext";
+import { Sun, Moon, LogOut, LogIn, Loader2, ChevronDown, Globe2 } from "lucide-react";
+import { useLanguage, languages } from "@/contexts/LanguageContext";
 import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable/index";
 import { toast } from "@/hooks/use-toast";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { motion, AnimatePresence } from "framer-motion";
 
 const AppHeader = () => {
   const { lang, t } = useLanguage();
