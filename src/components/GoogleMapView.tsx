@@ -407,7 +407,7 @@ const GoogleMapView = ({
     });
   }, [sentimentBubbles, maxCount, trends, onSelectCountry, showTooltip, isDark, clearLayers, lang]);
 
-  /* ═══ TAB 3: VERIFICATION — source coverage strength ═══ */
+  /* ═══ TAB 3: VERIFICATION — soft gradient blobs by source coverage ═══ */
   const renderVerification = useCallback(() => {
     if (!googleMapRef.current) return;
     clearLayers();
@@ -426,42 +426,54 @@ const GoogleMapView = ({
       countrySourceTypes.set(cc, entry);
     });
 
+    // Soft organic palettes by coverage strength
+    const coveragePalettes: string[][] = [
+      ["#D0CCC4", "#BEB8AE", "#A8A29E"], // 1 type — warm gray
+      ["#F0D080", "#E8C060", "#D8B040"], // 2 types — amber
+      ["#A8D8B0", "#80C890", "#60B870"], // 3 types — green
+      ["#90C8E8", "#70B0D8", "#50A0D0"], // 4 types — soft blue
+    ];
+
     countrySourceTypes.forEach((data, cc) => {
       const cp = countryPoints.find(c => c.id === cc);
       if (!cp) return;
       const sourceTypesCount = [data.press > 0, data.official > 0, data.academic > 0, data.social > 0].filter(Boolean).length;
-      const coverageColors = ["#8E8E93", "#FF9500", "#34C759", "#007AFF"];
-      const color = coverageColors[Math.min(sourceTypesCount - 1, 3)];
+      const palette = coveragePalettes[Math.min(sourceTypesCount - 1, 3)];
       const intensity = Math.min(data.total / maxCount, 1);
 
-      const marker = new google.maps.Marker({
-        position: { lat: cp.lat, lng: cp.lng }, map: googleMapRef.current,
-        icon: { path: google.maps.SymbolPath.CIRCLE, scale: 6 + intensity * 12, fillColor: color, fillOpacity: 0.65, strokeColor: "#fff", strokeWeight: 1.5 },
-        zIndex: 5,
+      // Triple-layer organic blob
+      [0, 1, 2].forEach((layer) => {
+        const scales = [20 + intensity * 26, 12 + intensity * 16, 6 + intensity * 9];
+        const opacities = [0.06, 0.13, 0.30];
+        const m = new google.maps.Marker({
+          position: { lat: cp.lat, lng: cp.lng },
+          map: googleMapRef.current,
+          icon: { path: google.maps.SymbolPath.CIRCLE, scale: scales[layer], fillColor: palette[layer], fillOpacity: opacities[layer], strokeWeight: 0 },
+          zIndex: layer + 1, clickable: layer === 2,
+        });
+        if (layer === 2) {
+          const strengthLabel = sourceTypesCount >= 3 ? (lang === "pt" ? "Forte" : "Strong") : sourceTypesCount >= 2 ? (lang === "pt" ? "Moderada" : "Moderate") : (lang === "pt" ? "Fraca" : "Weak");
+          m.addListener("mouseover", () => {
+            showTooltip(buildTooltipHtml(`
+              <div style="display:flex;align-items:center;gap:6px;margin-bottom:6px">
+                <span style="font-size:16px">${flagEmoji(cc)}</span>
+                <div><div style="font-weight:700">${cp.name}</div>
+                <div style="opacity:0.5;font-size:9px">${data.total} ${lang === "pt" ? "tendências" : "trends"}</div></div>
+              </div>
+              <div style="font-weight:600;margin-bottom:6px">🛡️ ${lang === "pt" ? "Confirmação" : "Verification"}: <span style="color:${palette[2]}">${strengthLabel}</span></div>
+              <div style="display:flex;flex-direction:column;gap:3px;font-size:9px">
+                ${data.press > 0 ? `<div>📰 ${lang === "pt" ? "Imprensa" : "Press"}: ${data.press}</div>` : ""}
+                ${data.official > 0 ? `<div>🏛️ ${lang === "pt" ? "Oficial" : "Official"}: ${data.official}</div>` : ""}
+                ${data.academic > 0 ? `<div>🔬 ${lang === "pt" ? "Acadêmico" : "Academic"}: ${data.academic}</div>` : ""}
+                ${data.social > 0 ? `<div>💬 Social: ${data.social}</div>` : ""}
+              </div>
+            `, isDark), { lat: cp.lat, lng: cp.lng });
+          });
+          m.addListener("mouseout", () => infoRef.current?.close());
+          m.addListener("click", () => onSelectCountry(cc));
+        }
+        markersRef.current.push(m);
       });
-
-      const strengthLabel = sourceTypesCount >= 3 ? (lang === "pt" ? "Forte" : "Strong") : sourceTypesCount >= 2 ? (lang === "pt" ? "Moderada" : "Moderate") : (lang === "pt" ? "Fraca" : "Weak");
-
-      marker.addListener("mouseover", () => {
-        showTooltip(buildTooltipHtml(`
-          <div style="display:flex;align-items:center;gap:6px;margin-bottom:6px">
-            <span style="font-size:16px">${flagEmoji(cc)}</span>
-            <div><div style="font-weight:700">${cp.name}</div>
-            <div style="opacity:0.5;font-size:9px">${data.total} ${lang === "pt" ? "tendências" : "trends"}</div></div>
-          </div>
-          <div style="font-weight:600;margin-bottom:6px">🛡️ ${lang === "pt" ? "Confirmação" : "Verification"}: <span style="color:${color}">${strengthLabel}</span></div>
-          <div style="display:flex;flex-direction:column;gap:3px;font-size:9px">
-            ${data.press > 0 ? `<div>📰 ${lang === "pt" ? "Imprensa" : "Press"}: ${data.press}</div>` : ""}
-            ${data.official > 0 ? `<div>🏛️ ${lang === "pt" ? "Oficial" : "Official"}: ${data.official}</div>` : ""}
-            ${data.academic > 0 ? `<div>🔬 ${lang === "pt" ? "Acadêmico" : "Academic"}: ${data.academic}</div>` : ""}
-            ${data.social > 0 ? `<div>💬 Social: ${data.social}</div>` : ""}
-          </div>
-          <div style="margin-top:6px;font-size:8px;opacity:0.5">${sourceTypesCount} ${lang === "pt" ? "tipos de fonte" : "source types"}</div>
-        `, isDark), { lat: cp.lat, lng: cp.lng });
-      });
-      marker.addListener("mouseout", () => infoRef.current?.close());
-      marker.addListener("click", () => onSelectCountry(cc));
-      markersRef.current.push(marker);
     });
   }, [trends, maxCount, onSelectCountry, showTooltip, isDark, clearLayers, lang]);
 
