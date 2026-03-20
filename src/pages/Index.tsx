@@ -7,7 +7,7 @@ import { FilterState } from "@/components/FilterBar";
 import TimelineCard from "@/components/TimelineCard";
 import TrendCardSkeleton from "@/components/TrendCardSkeleton";
 import TransparencyPanel from "@/components/TransparencyPanel";
-import RankingStrip from "@/components/RankingStrip";
+
 import { TrendCardProps } from "@/components/TrendCard";
 import { useTrends } from "@/hooks/use-trends";
 import { useTranslatedTrends, TranslatedTrendCardProps } from "@/hooks/use-translated-trends";
