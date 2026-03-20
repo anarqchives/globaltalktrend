@@ -12,36 +12,27 @@ function getCorsHeaders(req: Request) {
     origin.endsWith(".lovable.app");
   return {
     "Access-Control-Allow-Origin": allowed ? origin : ALLOWED_ORIGINS[0],
-    "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+    "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
     "Access-Control-Allow-Methods": "POST, GET, OPTIONS",
   };
 }
 interface TrendItem {
-  icon: string;
-  platform: string;
-  title: string;
-  category: string;
-  time: string;
-  volume: string;
-  change: string;
-  changePositive: boolean;
-  sparkData: number[];
-  details?: string;
-  description?: string;
-  countryCode?: string;
-  sourceUrl?: string;
-  trustBadge?: string;
-  publishedAt?: string;
-  thumbnail?: string;
+  icon: string; platform: string; title: string; category: string;
+  time: string; volume: string; change: string; changePositive: boolean;
+  sparkData: number[]; details?: string; description?: string;
+  countryCode?: string; sourceUrl?: string; trustBadge?: string;
+  publishedAt?: string; thumbnail?: string;
 }
+
 const CACHE_TTL = 5 * 60 * 1000;
 let cached: { data: string; ts: number } | null = null;
+let lastGoodData: string | null = null;
+
 function spark(): number[] {
   return Array.from({ length: 10 }, () => Math.floor(Math.random() * 80) + 20);
 }
 function detectCategory(title: string, desc: string): string {
   const text = `${title} ${desc}`.toLowerCase();
-  // ⚠️ Entertainment FIRST — catches reality shows before "voto"/"eliminação" trigger politics
   if (/bbb|big brother|paredão|sincerão|reality show|reality tv|masterchef|the voice|a fazenda|survivor|american idol|got talent/i.test(text)) return "Entretenimento";
   if (/movie|music|celebrity|entertainment|film|series|netflix|disney|anime|manga|trailer|concert|oscar|grammy|novela|streaming|hbo/i.test(text)) return "Entretenimento";
   if (/tech|ai |artificial|software|crypto|blockchain|apple|google|microsoft|robot|openai|chatgpt/i.test(text)) return "Tecnologia";
@@ -62,6 +53,31 @@ function mapCountry(locale: string | undefined): string {
   };
   return map[locale.toLowerCase().slice(0, 2)] || "GL";
 }
+
+// ─── Retry with backoff ────────────────────────────────────────────
+async function fetchWithRetry(url: string, maxRetries = 1): Promise<Response> {
+  let lastError: Error | null = null;
+  for (let attempt = 0; attempt <= maxRetries; attempt++) {
+    try {
+      const res = await fetch(url, { signal: AbortSignal.timeout(8000) });
+      if (res.status === 429) {
+        const backoff = Math.min(2000 * Math.pow(2, attempt), 8000);
+        console.log(`TheNewsAPI rate limited, retry in ${backoff}ms`);
+        await res.text();
+        await new Promise(r => setTimeout(r, backoff));
+        continue;
+      }
+      return res;
+    } catch (e) {
+      lastError = e as Error;
+      if (attempt < maxRetries) {
+        await new Promise(r => setTimeout(r, 1000 * (attempt + 1)));
+      }
+    }
+  }
+  throw lastError || new Error("TheNewsAPI fetch failed");
+}
+
 serve(async (req) => {
   const cors = getCorsHeaders(req);
   if (req.method === "OPTIONS") return new Response(null, { headers: cors });
@@ -72,10 +88,14 @@ serve(async (req) => {
     const apiKey = Deno.env.get("THENEWSAPI_KEY");
     if (!apiKey) {
       console.error("THENEWSAPI_KEY not configured");
+      // Return last good data if available
+      if (lastGoodData) {
+        console.log("Using last-good cache (no API key)");
+        return new Response(lastGoodData, { headers: { ...cors, "Content-Type": "application/json" } });
+      }
       return new Response(JSON.stringify({ trends: [] }), { headers: { ...cors, "Content-Type": "application/json" } });
     }
     const trends: TrendItem[] = [];
-    // Fetch top stories
     const urls = [
       `https://api.thenewsapi.com/v1/news/top?api_token=${apiKey}&language=en&limit=10`,
       `https://api.thenewsapi.com/v1/news/top?api_token=${apiKey}&language=pt&limit=8`,
@@ -83,10 +103,19 @@ serve(async (req) => {
     ];
     const results = await Promise.allSettled(
       urls.map(async (url) => {
-        const res = await fetch(url, { signal: AbortSignal.timeout(8000) });
-        if (!res.ok) { await res.text(); return []; }
-        const json = await res.json();
-        return json.data || [];
+        try {
+          const res = await fetchWithRetry(url);
+          if (!res.ok) {
+            const errText = await res.text();
+            console.log(`TheNewsAPI error ${res.status}: ${errText.slice(0, 100)}`);
+            return [];
+          }
+          const json = await res.json();
+          return json.data || [];
+        } catch (e) {
+          console.log(`TheNewsAPI fetch failed: ${String(e)}`);
+          return [];
+        }
       })
     );
     for (const r of results) {
@@ -98,30 +127,31 @@ serve(async (req) => {
         const pub = article.published_at || new Date().toISOString();
         const ago = Math.floor((Date.now() - new Date(pub).getTime()) / 3600000);
         trends.push({
-          icon: "📰",
-          platform: "The News API",
-          title,
+          icon: "📰", platform: "The News API", title,
           category: detectCategory(title, desc),
           time: ago < 1 ? "Agora" : `${ago}h atrás`,
-          volume: "Notícia",
-          change: "+novo",
-          changePositive: true,
-          sparkData: spark(),
-          details: desc,
-          description: desc,
+          volume: "Notícia", change: "+novo", changePositive: true,
+          sparkData: spark(), details: desc, description: desc,
           countryCode: mapCountry(article.locale),
-          sourceUrl: article.url,
-          trustBadge: "verified",
-          publishedAt: pub,
-          thumbnail: article.image_url || undefined,
+          sourceUrl: article.url, trustBadge: "verified",
+          publishedAt: pub, thumbnail: article.image_url || undefined,
         });
       }
     }
     const body = JSON.stringify({ trends });
     cached = { data: body, ts: Date.now() };
+    if (trends.length > 0) {
+      lastGoodData = body;
+    }
+    console.log(`TheNewsAPI: ${trends.length} trends returned`);
     return new Response(body, { headers: { ...cors, "Content-Type": "application/json" } });
   } catch (e) {
-    console.error("TheNewsAPI fetch error:", e);
+    console.error("TheNewsAPI handler error:", e);
+    // Fallback to last-good data
+    if (lastGoodData) {
+      console.log("Using last-good fallback after error");
+      return new Response(lastGoodData, { headers: { ...cors, "Content-Type": "application/json" } });
+    }
     return new Response(JSON.stringify({ trends: [] }), { headers: { ...cors, "Content-Type": "application/json" } });
   }
 });
