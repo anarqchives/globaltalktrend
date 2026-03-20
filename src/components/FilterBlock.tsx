@@ -318,7 +318,7 @@ const FilterBlock = ({ filters, onChange, onReset, onSaveFilter }: FilterBlockPr
             onClick={onReset}
             disabled={!hasActive}
             title={lang === "pt" ? "Limpar filtros" : "Reset filters"}
-            className={`flex items-center gap-1 h-[26px] px-2 rounded-full text-[10px] font-medium transition-all ${
+            className={`flex items-center gap-1 h-[26px] px-2 rounded-full text-[10px] font-medium transition-all flex-shrink-0 touch-manipulation ${
               hasActive
                 ? "text-foreground bg-muted hover:bg-destructive/10 hover:text-destructive"
                 : "text-muted-foreground/30 cursor-not-allowed"
