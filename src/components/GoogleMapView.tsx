@@ -739,12 +739,12 @@ const GoogleMapView = ({
           {activeTab === "panorama" && (
             <div className="space-y-1">
               <div className="flex items-center gap-1.5">
-                <div className="w-20 h-1.5 rounded-full bg-gradient-to-r from-[#00C8FF] via-[#FFB800] to-[#FF2828]" />
+                <div className="w-20 h-1.5 rounded-full bg-gradient-to-r from-[#FFE4C8] via-[#E88BA0] to-[#AA82F0]" />
                 <span className="text-[7px] text-muted-foreground">{lang === "pt" ? "Baixo → Alto" : "Low → High"}</span>
               </div>
               <div className="flex items-center gap-2">
-                <div className="flex items-center gap-1"><div className="w-4 h-0.5 bg-[#007AFF]" /><span className="text-[7px] text-muted-foreground">{lang === "pt" ? "Fluxo" : "Flow"}</span></div>
-                <div className="flex items-center gap-1"><div className="w-4 h-0.5 bg-[#FF2D55]" /><span className="text-[7px] text-muted-foreground">{lang === "pt" ? "Crítico" : "Critical"}</span></div>
+                <div className="flex items-center gap-1"><div className="w-4 h-0.5 rounded bg-[#F5A060]/40" /><span className="text-[7px] text-muted-foreground">{lang === "pt" ? "Fluxo" : "Flow"}</span></div>
+                <div className="flex items-center gap-1"><div className="w-4 h-0.5 rounded bg-[#C4A8F0]/50" /><span className="text-[7px] text-muted-foreground">{lang === "pt" ? "Leve" : "Light"}</span></div>
               </div>
             </div>
           )}
