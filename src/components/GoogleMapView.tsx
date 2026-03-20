@@ -682,11 +682,11 @@ const GoogleMapView = ({
             <motion.button key={key} onClick={() => setActiveTab(key)}
               whileHover={{ scale: 1.04 }}
               whileTap={{ scale: 0.96 }}
-              className="relative px-2.5 py-1.5 rounded-xl text-[9px] font-bold uppercase tracking-wider transition-colors"
+              className={`relative px-2.5 py-1.5 rounded-xl text-[9px] font-bold uppercase tracking-wider transition-all ${!isActive ? "backdrop-blur-md bg-white/10 dark:bg-white/5 hover:bg-white/20 dark:hover:bg-white/10" : ""}`}
               style={{
-                background: isActive ? tabGradients[key] : "transparent",
+                background: isActive ? tabGradients[key] : undefined,
                 color: isActive ? tabTextColors[key] : undefined,
-                boxShadow: isActive ? `0 2px 10px rgba(0,0,0,0.08)` : "none",
+                boxShadow: isActive ? `0 2px 10px rgba(0,0,0,0.08)` : !isActive ? "inset 0 1px 0 rgba(255,255,255,0.1)" : "none",
               }}
             >
               {isActive && (
