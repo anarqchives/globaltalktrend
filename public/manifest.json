@@ -1,6 +1,6 @@
 {
-  "name": "Global-Talk-Trending",
-  "short_name": "GlobalTalk",
+  "name": "GTT Monitor",
+  "short_name": "GTT",
   "description": "Monitore tendências globais em tempo real",
   "start_url": "/",
   "display": "standalone",

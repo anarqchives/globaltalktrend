@@ -1,4 +1,4 @@
-const CACHE_NAME = 'globaltalk-v4';
+const CACHE_NAME = 'gttmonitor-v1';
 const STATIC_ASSETS = [
   '/favicon.png',
   '/manifest.json',
