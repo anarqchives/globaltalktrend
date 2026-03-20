@@ -315,33 +315,7 @@ const Index = () => {
     return item?.trend.countryCode?.slice(0, 2).toUpperCase() || null;
   }, [expandedCardIndex, diversifiedTrends]);
 
-  // ═══ WATCHLIST ═══
-  const addToWatchlist = useCallback((card: any) => {
-    setWatchlist(prev => {
-      const exists = prev.find(w => w.title === card.title && w.platform === card.platform);
-      if (exists) {
-        toast({ title: lang === "pt" ? "Já monitorado" : "Already watched", description: card.title.slice(0, 50) });
-        return prev;
-      }
-      const item: WatchlistItem = {
-        title: card.title, platform: card.platform, category: card.category,
-        countryCode: card.countryCode, addedAt: Date.now(),
-        lastScore: undefined, lastVolume: card.volume, lastChange: card.change,
-      };
-      const next = [item, ...prev].slice(0, 50);
-      saveWatchlistStorage(next);
-      toast({ title: lang === "pt" ? "👁 Monitorando" : "👁 Watching", description: card.title.slice(0, 50) });
-      return next;
-    });
-  }, [lang]);
-
-  const removeFromWatchlist = useCallback((title: string, platform: string) => {
-    setWatchlist(prev => {
-      const next = prev.filter(w => !(w.title === title && w.platform === platform));
-      saveWatchlistStorage(next);
-      return next;
-    });
-  }, []);
+  // ═══ WATCHLIST (now via hook) ═══
 
   // Update watchlist with current scores
   const watchlistWithUpdates = useMemo(() => {
