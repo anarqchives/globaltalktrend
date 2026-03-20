@@ -127,7 +127,7 @@ const AppHeader = () => {
             <div ref={langRef} className="relative">
               <button
                 onClick={() => setLangOpen(!langOpen)}
-                className="flex items-center gap-1 h-8 px-2 rounded-lg text-[11px] font-semibold text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+                className="flex items-center gap-0.5 sm:gap-1 h-7 sm:h-8 px-1.5 sm:px-2 rounded-lg text-[10px] sm:text-[11px] font-semibold text-muted-foreground hover:text-foreground hover:bg-muted transition-colors touch-manipulation"
               >
                 <Globe2 className="w-3.5 h-3.5" />
                 <span>{currentLang?.label || "PT"}</span>
