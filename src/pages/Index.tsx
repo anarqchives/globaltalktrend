@@ -7,6 +7,7 @@ import TimelineCard from "@/components/TimelineCard";
 import TrendCardSkeleton from "@/components/TrendCardSkeleton";
 import TransparencyPanel from "@/components/TransparencyPanel";
 import TrendDetailPanel from "@/components/TrendDetailPanel";
+import RankingStrip from "@/components/RankingStrip";
 import { TrendCardProps } from "@/components/TrendCard";
 import { useTrends } from "@/hooks/use-trends";
 import { useTranslatedTrends, TranslatedTrendCardProps } from "@/hooks/use-translated-trends";
@@ -22,7 +23,6 @@ import { useSavedFilters } from "@/hooks/use-saved-filters";
 import { supabase } from "@/integrations/supabase/client";
 import { ChevronRight, X, Map, Newspaper, RefreshCw, FileText, LayoutGrid, List } from "lucide-react";
 import ArchiveDrawer from "@/components/ArchiveDrawer";
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import TagLegend from "@/components/TagLegend";
 import { toast } from "@/hooks/use-toast";
 import { useUserActivity } from "@/hooks/use-user-activity";
@@ -370,11 +370,14 @@ const Index = () => {
 
   const renderTimeline = () => (
     <div ref={scrollRef} className="h-full overflow-y-auto overflow-x-hidden scrollbar-thin">
+      {/* Ranking strip */}
+      <RankingStrip trends={diversifiedTrends} onSelectTrend={handleCardClick} />
+
       {/* Timeline header */}
-      <div className="px-3 py-2 flex items-center justify-between sticky top-0 z-10 bg-background/80 backdrop-blur-sm border-b border-border/30">
+      <div className="px-3 py-2 flex items-center justify-between sticky top-0 z-10 bg-background/80 backdrop-blur-sm border-b border-border">
         <div className="flex items-center gap-1.5">
           <FileText className="w-3.5 h-3.5 text-muted-foreground" />
-          <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-widest">
+          <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-[0.08em]">
             {t("timeline")}
           </span>
           <span className="text-[10px] text-muted-foreground/40">({diversifiedTrends.length})</span>
@@ -387,7 +390,7 @@ const Index = () => {
             </button>
           )}
           <TagLegend />
-          <div className="flex items-center overflow-hidden rounded-lg border border-border/40">
+          <div className="flex items-center overflow-hidden rounded-[10px] border border-border">
             <button onClick={() => setCompactMode(false)} className={`flex items-center justify-center w-7 h-[26px] transition-all ${!compactMode ? "bg-foreground text-background" : "bg-card text-muted-foreground hover:bg-muted"}`}>
               <LayoutGrid size={13} />
             </button>
@@ -396,7 +399,7 @@ const Index = () => {
             </button>
           </div>
           {!isMobile && (
-            <button onClick={() => togglePanel("timeline")} className="flex items-center justify-center rounded-lg bg-muted text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-all w-7 h-7">
+            <button onClick={() => togglePanel("timeline")} className="flex items-center justify-center rounded-[10px] bg-muted text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-all w-7 h-7">
               <X className="w-3.5 h-3.5" />
             </button>
           )}
@@ -497,7 +500,7 @@ const Index = () => {
   const closedPanelsList = (["timeline", "map"] as const).filter(p => !panelVisibility[p]);
 
   return (
-    <div className="h-screen flex flex-col bg-background overflow-hidden w-full max-w-[100vw]">
+    <div className="h-screen flex flex-col bg-background overflow-hidden w-full max-w-[100vw]" style={{ fontFamily: "'DM Sans', sans-serif" }}>
       <AppHeader />
       <FilterBar
         filters={filters}
@@ -539,7 +542,7 @@ const Index = () => {
                 <ResizablePanelGroup direction="horizontal" className="flex-1 min-h-0" key={`h-${panelVisibility.timeline}-${panelVisibility.map}`}>
                   {panelVisibility.timeline && (
                     <>
-                      <ResizablePanel defaultSize={panelVisibility.map ? 65 : 100} minSize={25} maxSize={panelVisibility.map ? 85 : 100}>
+                      <ResizablePanel defaultSize={panelVisibility.map ? 42 : 100} minSize={25} maxSize={panelVisibility.map ? 60 : 100}>
                         <div className="h-full min-h-0 overflow-hidden relative">
                           {renderTimeline()}
                         </div>
@@ -548,7 +551,7 @@ const Index = () => {
                     </>
                   )}
                   {panelVisibility.map && (
-                    <ResizablePanel defaultSize={panelVisibility.timeline ? 35 : 100} minSize={15} maxSize={panelVisibility.timeline ? 60 : 100}>
+                    <ResizablePanel defaultSize={panelVisibility.timeline ? 58 : 100} minSize={15} maxSize={panelVisibility.timeline ? 75 : 100}>
                       <div className="h-full relative">{renderMap()}</div>
                     </ResizablePanel>
                   )}

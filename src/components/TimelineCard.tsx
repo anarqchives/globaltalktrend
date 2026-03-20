@@ -4,36 +4,36 @@ import { Bookmark } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { TrendCardProps } from "./TrendCard";
 
-/* ─── Source brand colors ─── */
-const SOURCE_COLORS: Record<string, string> = {
-  "The Guardian": "#052962", "arXiv": "#B31B1B", "PubMed": "#007CBB",
-  "Google Trends": "#4285F4", "Wikipedia": "#000000", "World Bank": "#009FDA",
-  "IBGE": "#003A6C", "Bluesky": "#0085FF", "GitHub": "#24292E",
-  "Mastodon": "#6364FF", "YouTube": "#FF0000", "Reddit": "#FF4500",
-  "Hacker News": "#FF6600", "X (Twitter)": "#1DA1F2", "NewsAPI": "#2E8B57",
-  "GNews": "#3CB371", "Stack Overflow": "#F48024", "Variety": "#B8860B",
-  "OpenAlex": "#3366CC", "NPR": "#EC1427", "Bing News": "#008373",
-  "NewsData": "#4682B4", "FRED": "#003366", "TheNewsAPI": "#2E8B57",
-};
-
-/* ─── Source type → dot color ─── */
-const SOURCE_TYPE_COLOR: Record<string, string> = {
-  imprensa: "bg-[hsl(var(--cobalt))]",
-  redes_sociais: "bg-violet-500",
-  google_trends: "bg-amber-400",
-  dados_oficiais: "bg-emerald-500",
-  cientifico: "bg-teal-500",
+/* ─── Source type mapping ─── */
+const SOURCE_TYPE_MAP: Record<string, string> = {
+  "the guardian": "imprensa", "npr": "imprensa", "newsapi": "imprensa", "gnews": "imprensa",
+  "bing news": "imprensa", "newsdata": "imprensa", "thenewsapi": "imprensa", "the news api": "imprensa",
+  "variety": "imprensa", "bbc": "imprensa", "reuters": "imprensa", "france 24": "imprensa",
+  "reddit": "redes_sociais", "bluesky": "redes_sociais", "mastodon": "redes_sociais",
+  "x (twitter)": "redes_sociais", "youtube": "redes_sociais", "hacker news": "redes_sociais",
+  "lobsters": "redes_sociais",
+  "google trends": "google_trends",
+  "world bank": "dados_oficiais", "worldbank": "dados_oficiais", "fred": "dados_oficiais",
+  "ibge": "dados_oficiais", "imf": "dados_oficiais", "who": "dados_oficiais",
+  "pubmed": "cientifico", "openal": "cientifico", "arxiv": "cientifico",
+  "crossref": "cientifico", "semantic scholar": "cientifico",
 };
 
 function getSourceType(platform: string): string {
   const p = platform.toLowerCase();
-  if (["the guardian", "npr", "newsapi", "gnews", "bing news", "newsdata", "thenewsapi", "variety"].some(s => p.includes(s))) return "imprensa";
-  if (["reddit", "bluesky", "mastodon", "x (twitter)", "youtube"].some(s => p.includes(s))) return "redes_sociais";
-  if (p.includes("google trends")) return "google_trends";
-  if (["world bank", "ibge", "fred", "imf", "who"].some(s => p.includes(s))) return "dados_oficiais";
-  if (["arxiv", "pubmed", "openal", "crossref", "semantic"].some(s => p.includes(s))) return "cientifico";
+  for (const [key, val] of Object.entries(SOURCE_TYPE_MAP)) {
+    if (p.includes(key)) return val;
+  }
   return "imprensa";
 }
+
+const SOURCE_DOT_COLORS: Record<string, string> = {
+  imprensa: "#2557D6",
+  redes_sociais: "#7C3AED",
+  google_trends: "#D97706",
+  dados_oficiais: "#059669",
+  cientifico: "#0891B2",
+};
 
 const countryCodeToFlag = (code?: string) => {
   if (!code || code.length !== 2) return null;
@@ -57,66 +57,56 @@ const relativeTimeFormats: Record<string, { now: string; min: string; h: string;
 };
 
 /* ─── Tag validation ─── */
-const SPORTS_TERMS = ["esportes", "sports", "jogo", "copa", "game", "nba", "nfl", "fifa", "gol", "match", "futebol", "football", "soccer"];
-const POLITICS_TERMS = ["política", "politics", "eleição", "governo", "election", "trump", "biden", "congress", "senate", "parliament"];
+const SPORTS_TERMS = ["esportes", "sports", "jogo", "copa", "game", "nba", "nfl", "fifa", "gol", "futebol", "football", "soccer"];
+const POLITICS_TERMS = ["política", "politics", "eleição", "governo", "election", "trump", "biden", "congress"];
 
 function validateTag(tagLabel: string, title: string): boolean {
-  const titleLower = title.toLowerCase();
-  const tagLower = tagLabel.toLowerCase();
-  if (SPORTS_TERMS.some(t => tagLower.includes(t)) && !SPORTS_TERMS.some(t => titleLower.includes(t))) return false;
-  if (POLITICS_TERMS.some(t => tagLower.includes(t)) && !POLITICS_TERMS.some(t => titleLower.includes(t))) return false;
+  const tL = title.toLowerCase();
+  const tagL = tagLabel.toLowerCase();
+  if (SPORTS_TERMS.some(t => tagL.includes(t)) && !SPORTS_TERMS.some(t => tL.includes(t))) return false;
+  if (POLITICS_TERMS.some(t => tagL.includes(t)) && !POLITICS_TERMS.some(t => tL.includes(t))) return false;
   return true;
 }
 
-/* ─── Sparkline with gradient fill ─── */
+/* ─── Sparkline ─── */
 const SparklineChart = React.memo(({ data, color }: { data: number[]; color: string }) => {
   const id = useMemo(() => `sp_${Math.random().toString(36).slice(2, 7)}`, []);
   const { pathD, areaD, lastPt } = useMemo(() => {
     if (!data || data.length < 2) return { pathD: "", areaD: "", lastPt: { x: 0, y: 0 } };
     const max = Math.max(...data), min = Math.min(...data), range = max - min || 1;
-    const w = 120, h = 40, pad = 2;
+    const w = 120, h = 28, pad = 2;
     const pts = data.map((v, i) => ({
       x: pad + (i / (data.length - 1)) * (w - pad * 2),
       y: pad + (1 - (v - min) / range) * (h - pad * 2),
     }));
-    const pathD = pts.reduce((acc, p, i) => {
+    const d = pts.reduce((acc, p, i) => {
       if (i === 0) return `M ${p.x} ${p.y}`;
       const prev = pts[i - 1];
       const cpx = (prev.x + p.x) / 2;
       return `${acc} C ${cpx} ${prev.y} ${cpx} ${p.y} ${p.x} ${p.y}`;
     }, "");
-    const areaD = `${pathD} L ${pts[pts.length - 1].x} ${h} L ${pts[0].x} ${h} Z`;
-    return { pathD, areaD, lastPt: pts[pts.length - 1] };
+    return { pathD: d, areaD: `${d} L ${pts[pts.length - 1].x} ${h} L ${pts[0].x} ${h} Z`, lastPt: pts[pts.length - 1] };
   }, [data]);
 
   if (!data || data.length < 2) return (
     <div className="flex items-center justify-center h-full">
-      <span className="text-[9px] text-muted-foreground/40 italic">sem dados</span>
+      <span className="text-[9px] text-muted-foreground/40 italic">—</span>
     </div>
   );
 
   return (
-    <svg width={120} height={40} viewBox="0 0 120 40" className="w-full h-full" style={{ overflow: "visible" }}>
+    <svg width={120} height={28} viewBox="0 0 120 28" className="w-full h-full" style={{ overflow: "visible" }}>
       <defs>
         <linearGradient id={id} x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor={color} stopOpacity={0.2} />
+          <stop offset="0%" stopColor={color} stopOpacity={0.15} />
           <stop offset="100%" stopColor={color} stopOpacity={0} />
         </linearGradient>
       </defs>
       <path d={areaD} fill={`url(#${id})`} />
-      <motion.path
-        d={pathD}
-        stroke={color}
-        strokeWidth={1.5}
-        fill="none"
-        strokeLinecap="round"
-        initial={{ pathLength: 0 }}
-        animate={{ pathLength: 1 }}
-        transition={{ duration: 1.2, ease: "easeInOut" }}
-      />
-      <circle cx={lastPt.x} cy={lastPt.y} r="2.5" fill={color}>
-        <animate attributeName="r" values="2.5;4;2.5" dur="2s" repeatCount="indefinite" />
-        <animate attributeName="opacity" values="1;0.5;1" dur="2s" repeatCount="indefinite" />
+      <motion.path d={pathD} stroke={color} strokeWidth={1.5} fill="none" strokeLinecap="round"
+        initial={{ pathLength: 0 }} animate={{ pathLength: 1 }} transition={{ duration: 1, ease: "easeInOut" }} />
+      <circle cx={lastPt.x} cy={lastPt.y} r="2" fill={color}>
+        <animate attributeName="r" values="2;3;2" dur="2s" repeatCount="indefinite" />
       </circle>
     </svg>
   );
@@ -125,11 +115,8 @@ SparklineChart.displayName = "SparklineChart";
 
 /* ─── Framer variants ─── */
 export const cardVariants = {
-  hidden: { opacity: 0, y: 16, scale: 0.98 },
-  show: {
-    opacity: 1, y: 0, scale: 1,
-    transition: { duration: 0.35, ease: [0.21, 0.47, 0.32, 0.98] as [number, number, number, number] },
-  },
+  hidden: { opacity: 0, y: 12 },
+  show: { opacity: 1, y: 0, transition: { duration: 0.3, ease: [0.21, 0.47, 0.32, 0.98] as [number, number, number, number] } },
 };
 
 /* ─── Props ─── */
@@ -151,12 +138,11 @@ const TimelineCard = ({
   onClick, onFilterPlatform, onSaveCard,
   staggerIndex = 0, compact = false, isSelected = false,
 }: TimelineCardProps) => {
-  const { t, lang } = useLanguage();
+  const { lang } = useLanguage();
 
-  const brandColor = SOURCE_COLORS[platform] || "#666";
-  const flag = countryCodeToFlag(countryCode);
   const sourceType = getSourceType(platform);
-  const dotCls = SOURCE_TYPE_COLOR[sourceType] || "bg-muted-foreground/40";
+  const dotColor = SOURCE_DOT_COLORS[sourceType] || "#6B6560";
+  const flag = countryCodeToFlag(countryCode);
 
   /* Time */
   const formattedTime = useMemo(() => {
@@ -187,24 +173,19 @@ const TimelineCard = ({
   }, [publishedAt, time, lang]);
 
   /* Tags — only real, validated */
-  const trustBadgeKeys: Record<string, { label: string; cls: string }> = {
-    official: { label: lang === "pt" ? "Fonte Oficial" : "Official", cls: "bg-blue-50 text-blue-600 dark:bg-blue-500/10 dark:text-blue-400" },
-    verified: { label: lang === "pt" ? "Verificada" : "Verified", cls: "bg-emerald-50 text-emerald-600 dark:bg-emerald-500/10 dark:text-emerald-400" },
-    scientific: { label: lang === "pt" ? "Científico" : "Scientific", cls: "bg-purple-50 text-purple-600 dark:bg-purple-500/10 dark:text-purple-400" },
-    press: { label: lang === "pt" ? "Imprensa" : "Press", cls: "bg-emerald-50 text-emerald-600 dark:bg-emerald-500/10 dark:text-emerald-400" },
-  };
-
   const tags = useMemo(() => {
-    const result: { label: string; cls: string; verified?: boolean }[] = [];
-    if (trustBadge && trustBadgeKeys[trustBadge]) {
-      result.push({ label: trustBadgeKeys[trustBadge].label, cls: trustBadgeKeys[trustBadge].cls, verified: true });
+    const result: { label: string; color: string; verified?: boolean }[] = [];
+    if (trustBadge === "verified" || trustBadge === "press") {
+      result.push({ label: "✓ " + (lang === "pt" ? "Imprensa" : "Press"), color: dotColor, verified: true });
+    } else if (trustBadge === "scientific") {
+      result.push({ label: "🔬 " + (lang === "pt" ? "Científico" : "Scientific"), color: "#0891B2", verified: true });
     }
     const ch = Math.abs(parseFloat(change?.replace(/[^0-9.\-]/g, "") || "0"));
-    if (ch > 200) result.push({ label: "+trending", cls: "bg-amber-50 text-amber-700 dark:bg-amber-500/10 dark:text-amber-400" });
-    else if (changePositive && ch > 50) result.push({ label: "+popular", cls: "bg-blue-50 text-blue-600 dark:bg-blue-500/10 dark:text-blue-400" });
-    if (isMultiplatform) result.push({ label: "🌐 Multi", cls: "bg-secondary text-muted-foreground" });
+    if (ch > 200) result.push({ label: "+trending", color: "#D97706" });
+    else if (changePositive && ch > 50) result.push({ label: "+popular", color: "#2557D6" });
+    if (isMultiplatform) result.push({ label: "🌐 Multi", color: "#6B6560" });
     return result.filter(tag => validateTag(tag.label, title));
-  }, [trustBadge, change, changePositive, isMultiplatform, title, lang]);
+  }, [trustBadge, change, changePositive, isMultiplatform, title, lang, dotColor]);
 
   /* Sparkline data */
   const sparkData = useMemo(() => {
@@ -213,7 +194,7 @@ const TimelineCard = ({
     return null;
   }, [historicalData, rawSparkData]);
 
-  /* Volume + Growth parsing */
+  /* Volume + Growth */
   const volStr = (volume || "0").toLowerCase();
   let vol = parseFloat(volStr.replace(/[^0-9.]/g, "")) || 0;
   if (volStr.includes("m")) vol *= 1_000_000;
@@ -222,7 +203,7 @@ const TimelineCard = ({
   const changeNum = Math.abs(parseFloat(change?.replace(/[^0-9.\-]/g, "") || "0"));
   const showChange = changeNum > 0;
 
-  /* Context snippet */
+  /* Description snippet */
   const contextSnippet = useMemo(() => {
     const raw = description || details || "";
     const normTitle = title.toLowerCase().trim();
@@ -242,93 +223,91 @@ const TimelineCard = ({
     <motion.div
       variants={cardVariants}
       onClick={onClick}
-      className={`bg-card rounded-2xl p-4 border cursor-pointer transition-all duration-200
+      className={`bg-card rounded-2xl border cursor-pointer mb-2 w-full
+        transition-all duration-[180ms] ease-[cubic-bezier(0.21,0.47,0.32,0.98)]
         ${isSelected
-          ? "border-l-[3px] border-l-[hsl(var(--cobalt))] border-[hsl(var(--cobalt))]/30 shadow-[0_8px_40px_rgba(0,0,0,0.08)]"
-          : "border-border/30 shadow-[0_4px_40px_rgba(0,0,0,0.04)] hover:shadow-[0_8px_40px_rgba(0,0,0,0.08)] hover:scale-[0.985]"}
-        active:scale-[0.97]`}
+          ? "border-l-[3px] border-l-[#2557D6] border-[#2557D6]/20 shadow-[0_6px_24px_rgba(26,24,20,0.10)]"
+          : "border-border shadow-[0_2px_12px_rgba(26,24,20,0.06)] hover:shadow-[0_6px_24px_rgba(26,24,20,0.10)] hover:-translate-y-px hover:border-[#2557D6]/20"}
+        `}
+      style={{ padding: compact ? "10px 14px" : "14px 16px" }}
     >
       {/* ① Source · time · country */}
       <div className="flex items-center gap-1.5 mb-2">
-        <button
-          onClick={(e) => { e.stopPropagation(); onFilterPlatform?.(platform); }}
-          className="flex items-center gap-1.5 flex-shrink-0 hover:opacity-80 transition-opacity"
-        >
-          <div className={`w-2 h-2 rounded-full flex-shrink-0 ${dotCls}`} />
-          <span className="text-[10px] uppercase tracking-widest font-medium" style={{ color: brandColor }}>
+        <button onClick={(e) => { e.stopPropagation(); onFilterPlatform?.(platform); }}
+          className="flex items-center gap-1.5 flex-shrink-0 hover:opacity-80 transition-opacity">
+          <div className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: dotColor }} />
+          <span className="text-[11px] uppercase tracking-[0.08em] font-bold" style={{ color: dotColor }}>
             {platform}
           </span>
         </button>
-        <span className="text-[10px] text-muted-foreground/40">·</span>
-        <span className="text-[10px] uppercase tracking-widest text-muted-foreground">{formattedTime}</span>
+        <span className="text-[11px] text-muted-foreground/40">·</span>
+        <span className="text-[11px] uppercase tracking-[0.06em] text-muted-foreground">{formattedTime}</span>
         {flag && <span className="text-[11px]">{flag}</span>}
         <div className="flex-1" />
-        <button
-          onClick={(e) => {
-            e.stopPropagation();
-            onSaveCard?.({ title, platform, category, country_code: countryCode, source_url: sourceUrl, description: contextSnippet || "" });
-          }}
-          className="p-1 rounded-md text-muted-foreground/30 hover:text-primary hover:bg-primary/10 transition-colors"
-        >
+        <button onClick={(e) => {
+          e.stopPropagation();
+          onSaveCard?.({ title, platform, category, country_code: countryCode, source_url: sourceUrl, description: contextSnippet || "" });
+        }} className="p-1 rounded-md text-muted-foreground/30 hover:text-[#2557D6] transition-colors">
           <Bookmark className="w-3.5 h-3.5" />
         </button>
       </div>
 
       {/* ② Title */}
-      <h3 className={`font-semibold text-foreground leading-snug mb-1.5 break-words ${compact ? "text-xs line-clamp-1" : "text-base line-clamp-2"}`}>
+      <h3 className={`font-semibold text-foreground leading-snug mb-1 break-words ${compact ? "text-[13px] line-clamp-1" : "text-[15px] line-clamp-2"}`}>
         {decodeEntities(title)}
       </h3>
 
-      {/* ③ Context snippet */}
+      {/* ③ Description */}
       {contextSnippet && !compact && (
-        <p className="text-sm text-muted-foreground leading-relaxed line-clamp-2 mb-2">{decodeEntities(contextSnippet)}</p>
+        <p className="text-[13px] text-muted-foreground leading-relaxed line-clamp-1 mb-2">{decodeEntities(contextSnippet)}</p>
       )}
 
-      {/* ④ Tags — only real, validated */}
+      {/* ④ Tags */}
       {tags.length > 0 && (
         <div className="flex items-center gap-1 flex-wrap mb-2">
           {tags.map((tag, i) => (
-            <span key={i} className={`inline-flex items-center gap-0.5 px-1.5 py-px rounded-full text-[10px] font-medium ${tag.cls}`}>
-              {tag.verified && <span>✓</span>}
+            <span key={i} className="inline-flex items-center gap-0.5 px-2 py-0.5 rounded-full text-[10px] font-semibold uppercase tracking-[0.06em]"
+              style={{ backgroundColor: `${tag.color}15`, color: tag.color }}>
               {tag.label}
             </span>
           ))}
         </div>
       )}
 
-      {/* ⑤ Sparkline + Metrics row */}
+      {/* ⑤ Sparkline + Metrics */}
       {!compact && (
         <div className="flex items-end gap-3 mt-1">
-          <div className="flex-1" style={{ height: 40 }}>
+          <div className="flex-1" style={{ height: 28 }}>
             <SparklineChart data={sparkData || []} color={sparkColor} />
           </div>
           <div className="flex items-center gap-3 flex-shrink-0">
+            {showChange && (
+              <span className={`text-[12px] font-bold ${changePositive ? "text-[#059669]" : "text-[#E03C31]"}`}>
+                {changePositive ? "↗" : "↘"} {changePositive ? "+" : ""}{change}
+              </span>
+            )}
             {showVolume && (
               <div className="flex flex-col items-end">
-                <span className="text-[9px] uppercase tracking-widest text-muted-foreground/50">Vol</span>
-                <span className="text-xs font-semibold text-foreground">{volume}</span>
+                <span className="text-[9px] uppercase tracking-[0.08em] text-muted-foreground/50">Vol</span>
+                <span className="text-[12px] font-semibold text-foreground">{volume}</span>
               </div>
             )}
-            {showChange && (
+            {sources && sources.length > 1 && (
               <div className="flex flex-col items-end">
-                <span className="text-[9px] uppercase tracking-widest text-muted-foreground/50">Cresc.</span>
-                <span className={`text-xs font-bold ${changePositive ? "text-emerald-500" : "text-[hsl(var(--coral))]"}`}>
-                  {changePositive ? "+" : ""}{change}
-                </span>
+                <span className="text-[9px] uppercase tracking-[0.08em] text-muted-foreground/50">{lang === "pt" ? "Fontes" : "Src"}</span>
+                <span className="text-[12px] font-semibold text-foreground">{sources.length}</span>
               </div>
             )}
           </div>
         </div>
       )}
 
-      {/* Compact: minimal metrics */}
-      {compact && (
+      {/* Compact metrics */}
+      {compact && (showVolume || showChange) && (
         <div className="flex items-center gap-2 text-[10px] text-muted-foreground mt-1">
           {showVolume && <span className="font-medium">{volume}</span>}
           {showChange && (
-            <span className={`font-bold ${changePositive ? "text-emerald-500" : "text-[hsl(var(--coral))]"}`}>
-              {change}
-            </span>
+            <span className={`font-bold ${changePositive ? "text-[#059669]" : "text-[#E03C31]"}`}>{change}</span>
           )}
         </div>
       )}

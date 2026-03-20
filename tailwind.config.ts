@@ -161,15 +161,7 @@ export default {
   			'slide-in-right': 'slide-in-right 0.3s ease-out',
   		},
   		fontFamily: {
-  			sans: [
-  				'"Helvetica Neue"',
-  				'Helvetica',
-  				'-apple-system',
-  				'BlinkMacSystemFont',
-  				'"Segoe UI"',
-  				'Arial',
-  				'sans-serif',
-  			],
+  			sans: ['"DM Sans"', '-apple-system', 'BlinkMacSystemFont', '"Segoe UI"', 'Arial', 'sans-serif'],
   			serif: ['ui-serif', 'Georgia', 'Cambria', 'Times New Roman', 'Times', 'serif'],
   			mono: ['ui-monospace', 'SFMono-Regular', 'Menlo', 'Monaco', 'Consolas', 'monospace']
   		},
