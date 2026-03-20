@@ -75,6 +75,44 @@ const AppHeader = () => {
 
           {/* Right: Theme + Apoie + Avatar */}
           <div className="flex items-center gap-1.5">
+            {/* Language dropdown */}
+            <div ref={langRef} className="relative">
+              <button
+                onClick={() => setLangOpen(!langOpen)}
+                className="flex items-center gap-1 h-8 px-2 rounded-lg text-[11px] font-semibold text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+              >
+                <Globe2 className="w-3.5 h-3.5" />
+                <span>{currentLang?.label || "PT"}</span>
+                <ChevronDown className={`w-3 h-3 transition-transform ${langOpen ? "rotate-180" : ""}`} />
+              </button>
+              <AnimatePresence>
+                {langOpen && (
+                  <motion.div
+                    initial={{ opacity: 0, y: -4, scale: 0.97 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    exit={{ opacity: 0, y: -4, scale: 0.97 }}
+                    transition={{ duration: 0.15 }}
+                    className="absolute top-full right-0 mt-1.5 z-50 min-w-[140px] max-h-[320px] overflow-y-auto rounded-xl border border-border/50 bg-popover shadow-lg backdrop-blur-xl scrollbar-thin"
+                  >
+                    <div className="p-1">
+                      {languages.map(l => (
+                        <button
+                          key={l.code}
+                          onClick={() => { setLang(l.code); setLangOpen(false); window.dispatchEvent(new Event("trend-refresh")); }}
+                          className={`w-full flex items-center gap-2 px-3 py-1.5 rounded-lg text-[11px] font-medium transition-all ${
+                            lang === l.code ? "bg-primary text-primary-foreground" : "text-foreground hover:bg-muted"
+                          }`}
+                        >
+                          <span className="font-bold">{l.label}</span>
+                          <span className="text-[9px] text-muted-foreground">{l.name}</span>
+                        </button>
+                      ))}
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+
             {/* Dark/Light toggle */}
             <button
               onClick={() => setDark(!dark)}
