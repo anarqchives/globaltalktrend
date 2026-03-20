@@ -6,7 +6,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { TrendCardProps } from "./TrendCard";
-import { Flame, GitBranch, Heart, ShieldCheck, TrendingUp, Plus, Minus, Globe } from "lucide-react";
+import { Flame, GitBranch, Heart, ShieldCheck, TrendingUp, Plus, Minus, Globe, Share2, Bookmark, ThumbsUp, Bug, ExternalLink } from "lucide-react";
+import { toast } from "@/hooks/use-toast";
 import {
   computeFlowArcs,
   computeSentimentBubbles,
