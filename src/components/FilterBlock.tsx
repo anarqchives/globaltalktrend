@@ -1,13 +1,14 @@
 import React, { useState, useMemo, useRef, useEffect } from "react";
-import { X, ChevronDown, Search, MapPin, Clock, Layers, Radio } from "lucide-react";
+import { X, ChevronDown, Search, MapPin, Clock, Layers, Radio, Globe2, RotateCcw, Bookmark } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
-import { useLanguage } from "@/contexts/LanguageContext";
+import { useLanguage, languages } from "@/contexts/LanguageContext";
 import { FilterState, countries } from "@/components/FilterBar";
 
 interface FilterBlockProps {
   filters: FilterState;
   onChange: (filters: FilterState) => void;
   onReset: () => void;
+  onSaveFilter?: () => void;
 }
 
 const CATEGORIES = [
@@ -209,7 +210,6 @@ function CountryDropdown({ value, onSelect }: { value: string; onSelect: (v: str
                   className="w-full h-8 pl-7 pr-2 rounded-lg border border-border bg-background text-[11px] text-foreground placeholder:text-muted-foreground outline-none focus:border-primary/40"
                 />
               </div>
-              {/* Quick picks */}
               <div className="flex flex-wrap gap-1 mt-2">
                 {QUICK_COUNTRIES.map(c => (
                   <button
@@ -249,8 +249,8 @@ function CountryDropdown({ value, onSelect }: { value: string; onSelect: (v: str
   );
 }
 
-const FilterBlock = ({ filters, onChange, onReset }: FilterBlockProps) => {
-  const { lang } = useLanguage();
+const FilterBlock = ({ filters, onChange, onReset, onSaveFilter }: FilterBlockProps) => {
+  const { lang, setLang } = useLanguage();
   const update = (key: keyof FilterState, value: string) => onChange({ ...filters, [key]: value });
 
   const hasActive = filters.country !== defaultFilters.country ||
@@ -271,6 +271,11 @@ const FilterBlock = ({ filters, onChange, onReset }: FilterBlockProps) => {
   const periodOptions = PERIODS.map(p => ({
     value: p.v,
     label: p.l[lang as keyof typeof p.l] || p.l.pt,
+  }));
+
+  const langOptions = languages.map(l => ({
+    value: l.code,
+    label: l.label,
   }));
 
   return (
@@ -306,9 +311,46 @@ const FilterBlock = ({ filters, onChange, onReset }: FilterBlockProps) => {
             onSelect={(v) => update("type", v)}
           />
 
-          {hasActive && (
-            <button onClick={onReset} className="h-8 px-3 rounded-full text-[10px] font-semibold text-destructive hover:bg-destructive/10 border border-destructive/20 transition-all">
-              {lang === "pt" ? "Limpar" : "Clear"}
+          <FilterDropdown
+            icon={Globe2}
+            label={lang === "pt" ? "Idioma" : "Language"}
+            value={lang}
+            defaultValue="pt"
+            options={langOptions}
+            onSelect={(v) => { setLang(v as any); window.dispatchEvent(new Event("trend-refresh")); }}
+            align="right"
+          />
+
+          {/* Separator */}
+          <div className="w-px h-5 bg-border/40 mx-0.5 hidden sm:block" />
+
+          {/* Reset */}
+          <button
+            onClick={onReset}
+            disabled={!hasActive}
+            title={lang === "pt" ? "Limpar filtros" : "Reset filters"}
+            className={`flex items-center justify-center w-8 h-8 rounded-full border transition-all ${
+              hasActive
+                ? "border-destructive/30 text-destructive hover:bg-destructive/10"
+                : "border-border/30 text-muted-foreground/30 cursor-not-allowed"
+            }`}
+          >
+            <RotateCcw className="w-3.5 h-3.5" />
+          </button>
+
+          {/* Save filter */}
+          {onSaveFilter && (
+            <button
+              onClick={onSaveFilter}
+              disabled={!hasActive}
+              title={lang === "pt" ? "Salvar filtro" : "Save filter"}
+              className={`flex items-center justify-center w-8 h-8 rounded-full border transition-all ${
+                hasActive
+                  ? "border-primary/30 text-primary hover:bg-primary/10"
+                  : "border-border/30 text-muted-foreground/30 cursor-not-allowed"
+              }`}
+            >
+              <Bookmark className="w-3.5 h-3.5" />
             </button>
           )}
         </div>
