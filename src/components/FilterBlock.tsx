@@ -311,7 +311,7 @@ const FilterBlock = ({ filters, onChange, onReset, onSaveFilter }: FilterBlockPr
 
 
           {/* Separator */}
-          <div className="w-px h-4 bg-border/40 mx-0.5 hidden sm:block" />
+          <div className="w-px h-4 bg-border/40 mx-0.5 hidden sm:block flex-shrink-0" />
 
           {/* Reset */}
           <button
