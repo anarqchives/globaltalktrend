@@ -164,12 +164,23 @@ async function fetchReddit(): Promise<TrendItem[]> {
 }
 
 // ── Bluesky / AT Protocol ──
+function isBlueskyEnabled(): boolean {
+  // Bluesky public API works without credentials; authenticated mode needs both
+  // Feature flag: always enabled (public API), but logs auth status
+  return true;
+}
+
+function isBlueskyAuthenticated(): boolean {
+  return !!(Deno.env.get("BLUESKY_IDENTIFIER") && Deno.env.get("BLUESKY_APP_PASSWORD"));
+}
+
 let bskySession: { accessJwt: string; did: string; expires: number } | null = null;
 
 async function getBskySession(): Promise<{ accessJwt: string; did: string } | null> {
-  const identifier = Deno.env.get("BLUESKY_IDENTIFIER");
-  const password = Deno.env.get("BLUESKY_APP_PASSWORD");
-  if (!identifier || !password) return null;
+  if (!isBlueskyAuthenticated()) return null;
+
+  const identifier = Deno.env.get("BLUESKY_IDENTIFIER")!;
+  const password = Deno.env.get("BLUESKY_APP_PASSWORD")!;
 
   if (bskySession && Date.now() < bskySession.expires) {
     return { accessJwt: bskySession.accessJwt, did: bskySession.did };
@@ -193,6 +204,8 @@ async function getBskySession(): Promise<{ accessJwt: string; did: string } | nu
 }
 
 async function fetchBluesky(): Promise<TrendItem[]> {
+  const authenticated = isBlueskyAuthenticated();
+  console.log(`🦋 Bluesky mode: ${authenticated ? "authenticated" : "public (no credentials)"}`);
   // Try authenticated first, then fall back to public
   const session = await getBskySession();
   
@@ -245,9 +258,21 @@ async function fetchBluesky(): Promise<TrendItem[]> {
 }
 
 // ── Mastodon API ──
+function isMastodonEnabled(): boolean {
+  // Mastodon public trends API works without credentials on most instances
+  // Feature flag: always enabled via public API, authenticated mode optional
+  return true;
+}
+
+function isMastodonAuthenticated(): boolean {
+  return !!(Deno.env.get("MASTODON_ACCESS_TOKEN"));
+}
+
 async function fetchMastodon(): Promise<TrendItem[]> {
   const baseUrl = Deno.env.get("MASTODON_BASE_URL") || "https://mastodon.social";
   const accessToken = Deno.env.get("MASTODON_ACCESS_TOKEN");
+  const authenticated = isMastodonAuthenticated();
+  console.log(`🐘 Mastodon mode: ${authenticated ? "authenticated" : "public"} (${baseUrl})`);
   
   try {
     const headers: Record<string, string> = {};
@@ -317,16 +342,29 @@ serve(async (req) => {
     }
 
     const redditEnabled = isRedditEnabled();
+    const blueskyEnabled = isBlueskyEnabled();
+    const mastodonEnabled = isMastodonEnabled();
+
     const [redditItems, blueskyItems, mastodonItems] = await Promise.all([
       redditEnabled ? fetchReddit() : Promise.resolve([]),
-      fetchBluesky(),
-      fetchMastodon(),
+      blueskyEnabled ? fetchBluesky() : Promise.resolve([]),
+      mastodonEnabled ? fetchMastodon() : Promise.resolve([]),
     ]);
 
-    console.log(`fetch-reddit-bluesky-mastodon: Reddit ${redditEnabled ? redditItems.length : "DISABLED"}, ${blueskyItems.length} Bluesky, ${mastodonItems.length} Mastodon`);
+    console.log(`fetch-reddit-bluesky-mastodon: Reddit ${redditEnabled ? redditItems.length : "DISABLED"}, Bluesky ${blueskyEnabled ? blueskyItems.length : "DISABLED"}, Mastodon ${mastodonEnabled ? mastodonItems.length : "DISABLED"}`);
 
     const trends = [...redditItems, ...blueskyItems, ...mastodonItems];
-    const body = JSON.stringify({ trends, sources: { reddit: redditEnabled, bluesky: true, mastodon: true } });
+    const body = JSON.stringify({
+      trends,
+      sources: {
+        reddit: redditEnabled,
+        reddit_authenticated: redditEnabled && isRedditEnabled(),
+        bluesky: blueskyEnabled,
+        bluesky_authenticated: isBlueskyAuthenticated(),
+        mastodon: mastodonEnabled,
+        mastodon_authenticated: isMastodonAuthenticated(),
+      },
+    });
     cachedResponse = { data: body, timestamp: Date.now() };
 
     return new Response(body, {
