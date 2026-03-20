@@ -867,14 +867,15 @@
   }
 
   .apoie-pill {
-    background: #f5e56b;
-    color: #1a1a1a;
-    @apply px-3 py-1.5 rounded-full text-micro font-semibold;
-    transition: filter 0.15s ease, transform 0.15s ease;
+    background: #E03C31;
+    color: #ffffff;
+    @apply px-4 py-1.5 rounded-full text-micro font-semibold;
+    transition: filter 0.15s ease, transform 0.15s ease, box-shadow 0.15s ease;
   }
   .apoie-pill:hover {
-    filter: brightness(1.05);
+    filter: brightness(1.1);
     transform: scale(1.02);
+    box-shadow: 0 2px 12px rgba(224, 60, 49, 0.3);
   }
 
   .tab-underline {

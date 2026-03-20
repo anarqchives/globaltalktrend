@@ -466,7 +466,7 @@ const GoogleMapView = ({
           icon: {
             path: google.maps.SymbolPath.CIRCLE,
             scale,
-            fillColor: intensity > 0.85 ? "#ff3300" : intensity > 0.7 ? "#ffaa00" : intensity > 0.55 ? "#ffff00" : "#00ff9d",
+            fillColor: intensity > 0.7 ? "#E03C31" : "#2557D6",
             fillOpacity: 0.85,
             strokeColor: "#ffffff",
             strokeWeight: 2,

@@ -77,7 +77,13 @@ const AppHeader = ({ minimal = false }: AppHeaderProps) => {
 
   return (
     <>
-      <header className="sticky top-0 z-50 h-[52px] flex items-center px-4 md:px-6 lg:px-8 bg-background/90 backdrop-blur-xl border-b border-border/30" role="banner">
+      <motion.header
+        initial={{ opacity: 0, y: -10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.4, ease: "easeOut" }}
+        className="sticky top-0 z-50 h-14 flex items-center px-4 md:px-6 lg:px-8 bg-[#F4F4F0]/90 dark:bg-[hsl(215,28%,7%)]/90 backdrop-blur-md border-b border-border/20"
+        role="banner"
+      >
         <div className="w-full max-w-[1440px] mx-auto flex items-center justify-between">
 
           {/* ─── LEFT: Logo ─── */}
@@ -92,25 +98,25 @@ const AppHeader = ({ minimal = false }: AppHeaderProps) => {
                 if(nextEl) nextEl.classList.remove('hidden'); 
               }} 
             />
-            <span className="hidden text-[14px] font-bold tracking-tight whitespace-nowrap select-none text-foreground uppercase">
+            <span className="hidden text-[14px] font-semibold tracking-tight whitespace-nowrap select-none text-foreground">
               <span className="hidden sm:inline">GTT Monitor</span>
               <span className="sm:hidden">GTT</span>
             </span>
           </Link>
 
           {/* ─── RIGHT: Controls ─── */}
-          <div className="flex items-center gap-1.5 shrink-0">
+          <div className="flex items-center gap-2 shrink-0">
 
             {/* Language selector + refresh */}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <button
-                  className="compact-btn inline-flex items-center gap-1 px-2.5 h-8 rounded-xl border border-border/30 hover:border-border/60 hover:bg-secondary/40 transition-all text-[11px] font-medium"
+                  className="compact-btn inline-flex items-center gap-1.5 px-2.5 h-8 rounded-lg text-muted-foreground hover:text-foreground transition-colors duration-200 text-[11px] font-medium"
                   aria-label={lang === "en" ? "Change language" : "Mudar idioma"}
                 >
-                  <span className="text-muted-foreground text-xs">🌐</span>
-                  <span className="text-foreground">{lang.toUpperCase()}</span>
-                  <ChevronDown className="w-2.5 h-2.5 text-muted-foreground/50" />
+                  <span className="text-xs">🌐</span>
+                  <span>{lang.toUpperCase()}</span>
+                  <ChevronDown className="w-2.5 h-2.5 opacity-50" />
                 </button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="min-w-[200px] max-h-[340px] overflow-y-auto rounded-2xl">
@@ -134,10 +140,13 @@ const AppHeader = ({ minimal = false }: AppHeaderProps) => {
               </DropdownMenuContent>
             </DropdownMenu>
 
+            {/* Separator */}
+            <div className="w-px h-4 bg-border/40" />
+
             {/* Dark mode */}
             <button
               onClick={() => setDark(!dark)}
-              className="compact-btn flex items-center justify-center w-8 h-8 rounded-xl text-muted-foreground hover:text-foreground hover:bg-secondary/40 transition-all"
+              className="compact-btn flex items-center justify-center w-8 h-8 rounded-lg text-muted-foreground hover:text-foreground transition-colors duration-200"
               aria-label={dark ? "Switch to light mode" : "Switch to dark mode"}
             >
               {dark ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
@@ -146,22 +155,28 @@ const AppHeader = ({ minimal = false }: AppHeaderProps) => {
             {/* About */}
             <button
               onClick={() => navigate("/metodologia")}
-              className="compact-btn flex items-center justify-center w-8 h-8 rounded-xl text-muted-foreground hover:text-foreground hover:bg-secondary/40 transition-all"
+              className="compact-btn hidden sm:flex items-center justify-center w-8 h-8 rounded-lg text-muted-foreground hover:text-foreground transition-colors duration-200"
               aria-label={lang === "en" ? "About" : "Sobre"}
             >
               <Info className="w-4 h-4" />
             </button>
 
-            {/* Support — highlighted */}
+            {/* Separator */}
+            <div className="hidden sm:block w-px h-4 bg-border/40" />
+
+            {/* Support — highlighted with coral */}
             <a
               href="https://buy.stripe.com/fZu7sMgw6cHLeTnbWVdIA00"
               target="_blank"
               rel="noopener noreferrer"
-              className="hidden sm:flex items-center h-8 px-3.5 rounded-xl text-[11px] font-semibold transition-all hover:brightness-105 apoie-pill"
+              className="hidden sm:flex items-center h-8 px-4 rounded-full bg-[#E03C31] text-white text-[11px] font-semibold transition-all duration-200 hover:brightness-110 hover:shadow-md"
               aria-label={lang === "en" ? "Support the project" : "Apoie o projeto"}
             >
               {t("support")}
             </a>
+
+            {/* Separator */}
+            <div className="hidden sm:block w-px h-4 bg-border/40" />
 
             {/* Auth */}
             {user ? (
@@ -204,7 +219,7 @@ const AppHeader = ({ minimal = false }: AppHeaderProps) => {
                 onClick={() => setLoginOpen(true)}
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.97 }}
-                className="compact-btn flex items-center gap-1.5 h-8 px-4 rounded-xl text-[11px] font-semibold transition-all bg-foreground text-background"
+                className="compact-btn flex items-center gap-1.5 h-8 px-4 rounded-full text-[11px] font-semibold transition-all bg-foreground text-background"
               >
                 <span className="hidden sm:inline">{t("enter")}</span>
                 <LogIn className="w-3.5 h-3.5 sm:hidden" />
@@ -215,7 +230,7 @@ const AppHeader = ({ minimal = false }: AppHeaderProps) => {
             {!minimal && (
               <button
                 onClick={() => setMobileNavOpen(!mobileNavOpen)}
-                className="compact-btn md:hidden flex items-center justify-center w-8 h-8 rounded-xl text-muted-foreground hover:text-foreground hover:bg-secondary/40 transition-all"
+                className="compact-btn md:hidden flex items-center justify-center w-8 h-8 rounded-lg text-muted-foreground hover:text-foreground transition-colors duration-200"
                 aria-label={mobileNavOpen ? "Close menu" : "Open menu"}
               >
                 {mobileNavOpen ? <X className="w-4 h-4" /> : <Menu className="w-4 h-4" />}
@@ -223,7 +238,7 @@ const AppHeader = ({ minimal = false }: AppHeaderProps) => {
             )}
           </div>
         </div>
-      </header>
+      </motion.header>
 
       {/* ─── Mobile Nav Drawer ─── */}
       <AnimatePresence>
@@ -233,7 +248,7 @@ const AppHeader = ({ minimal = false }: AppHeaderProps) => {
             animate={{ opacity: 1, y: "0%" }}
             exit={{ opacity: 0, y: "-100%" }}
             transition={{ type: "spring", damping: 25, stiffness: 250 }}
-            className="md:hidden fixed top-[52px] inset-x-0 z-40 bg-background/98 backdrop-blur-xl border-b border-border/30 px-4 py-4 flex flex-col gap-1"
+            className="md:hidden fixed top-14 inset-x-0 z-40 bg-background/98 backdrop-blur-xl border-b border-border/30 px-4 py-4 flex flex-col gap-1"
             aria-label="Mobile navigation"
           >
             {[
@@ -241,6 +256,7 @@ const AppHeader = ({ minimal = false }: AppHeaderProps) => {
               { path: "/dashboard", labelPt: "Dashboard", labelEn: "Dashboard" },
               { path: "/mapa", labelPt: "Mapa", labelEn: "Maps" },
               { path: "/reports", labelPt: "Relatórios", labelEn: "Reports" },
+              { path: "/metodologia", labelPt: "Sobre", labelEn: "About" },
               { path: "/perfil", labelPt: "Perfil", labelEn: "Profile" },
             ].map((item, i) => {
               const active = item.path === "/" ? location.pathname === "/" : location.pathname.startsWith(item.path);
@@ -268,11 +284,11 @@ const AppHeader = ({ minimal = false }: AppHeaderProps) => {
             <motion.a
               initial={{ opacity: 0, y: 8 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.25 }}
+              transition={{ delay: 0.3 }}
               href="https://buy.stripe.com/fZu7sMgw6cHLeTnbWVdIA00"
               target="_blank"
               rel="noopener noreferrer"
-              className="sm:hidden flex items-center justify-center gap-2 mx-4 mt-2 h-11 rounded-2xl text-[13px] font-semibold apoie-pill"
+              className="sm:hidden flex items-center justify-center gap-2 mx-4 mt-2 h-11 rounded-full bg-[#E03C31] text-white text-[13px] font-semibold"
             >
               {t("support")}
             </motion.a>
