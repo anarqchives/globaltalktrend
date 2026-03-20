@@ -463,17 +463,25 @@ const GoogleMapView = ({
     <div className="w-full h-full relative" style={{ isolation: "isolate" }}>
       {/* Tab selector */}
       <div className="absolute top-3 left-3 z-20 flex gap-1 bg-card/90 backdrop-blur-xl rounded-2xl p-1 border border-border/30 shadow-[var(--shadow-md)]">
-        {tabs.map(({ key, icon: Icon, label }) => (
-          <button key={key} onClick={() => setActiveTab(key)}
-            className={`relative px-2.5 py-1.5 rounded-xl text-[9px] font-bold uppercase tracking-wider transition-colors ${
-              activeTab === key ? "bg-foreground text-background shadow-sm" : "text-muted-foreground hover:text-foreground hover:bg-muted"
-            }`}>
-            <span className="flex items-center gap-1">
-              <Icon className="w-3 h-3" />
-              {!isMobile && (label[lang as "pt" | "en"] || label.en)}
-            </span>
-          </button>
-        ))}
+        {tabs.map(({ key, icon: Icon, label }) => {
+          const vivid: Record<MapTab, string> = {
+            panorama: "bg-[#007AFF] text-white",
+            sentiment: "bg-[#FF3B30] text-white",
+            verification: "bg-[#34C759] text-white",
+            trending: "bg-[#FF9500] text-white",
+          };
+          return (
+            <button key={key} onClick={() => setActiveTab(key)}
+              className={`relative px-2.5 py-1.5 rounded-xl text-[9px] font-bold uppercase tracking-wider transition-all ${
+                activeTab === key ? `${vivid[key]} shadow-md` : "text-muted-foreground hover:text-foreground hover:bg-muted"
+              }`}>
+              <span className="flex items-center gap-1">
+                <Icon className="w-3 h-3" />
+                {!isMobile && (label[lang as "pt" | "en"] || label.en)}
+              </span>
+            </button>
+          );
+        })}
         {selectedCountry !== "global" && (
           <button onClick={() => onSelectCountry("global")}
             className="px-2.5 py-1.5 rounded-xl text-[9px] font-semibold text-muted-foreground hover:text-foreground hover:bg-muted flex items-center gap-1 transition-colors uppercase tracking-wider">
