@@ -61,6 +61,7 @@ const AppHeader = () => {
 
   const currentLang = languages.find(l => l.code === lang);
 
+  return (
     <>
       <header className="sticky top-0 z-50 bg-background/95 backdrop-blur-md border-b border-border/30" role="banner">
         <div className="h-12 flex items-center px-4 md:px-6 max-w-[1440px] mx-auto">
