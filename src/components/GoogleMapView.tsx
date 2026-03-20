@@ -234,8 +234,8 @@ const GoogleMapView = ({
         const dest = countryPoints.find(p => p.id === arc.destId);
         if (!origin || !dest) return;
         const isCritical = arc.volume > maxCount * 0.7;
-        const color = isCritical ? "#E03C31" : "#2557D6";
-        const weight = 0.8 + (arc.volume / maxCount) * 1.5;
+        const color = isCritical ? "#FF2D55" : "#007AFF";
+        const weight = 1.2 + (arc.volume / maxCount) * 2;
 
         const line = new google.maps.Polyline({
           path: [{ lat: origin.lat, lng: origin.lng }, { lat: dest.lat, lng: dest.lng }],
