@@ -732,19 +732,23 @@ const GoogleMapView = ({
       const intensity = Math.min(count / maxCount, 1);
 
       if (count > 0) {
+        // Gradient: #E8E4DC → #C5D3EE → #2557D6
+        const r = Math.round(232 - intensity * (232 - 37));
+        const g = Math.round(228 - intensity * (228 - 87));
+        const b = Math.round(220 - intensity * (220 - 214));
         return {
-          fillColor: intensity > 0.85 ? "#ff3300" : intensity > 0.7 ? "#ffaa00" : intensity > 0.55 ? "#ffff00" : "#00a6ff",
+          fillColor: `rgb(${r},${g},${b})`,
           fillOpacity: 0.5 + intensity * 0.4,
-          strokeColor: isDark ? "#0f1419" : "#f8fafb",
-          strokeWeight: 1,
+          strokeColor: isDark ? "#0f1419" : "#FFFFFF",
+          strokeWeight: 0.5,
           visible: true,
           zIndex: 1
         };
       } else {
         return {
-          fillColor: isDark ? "#1e293b" : "#e2e8f0",
-          fillOpacity: 0.15,
-          strokeColor: isDark ? "#0f1419" : "#f8fafb",
+          fillColor: isDark ? "#1e293b" : "#E8E4DC",
+          fillOpacity: 0.2,
+          strokeColor: isDark ? "#0f1419" : "#FFFFFF",
           strokeWeight: 0.5,
           visible: true,
           zIndex: 0
