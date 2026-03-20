@@ -110,10 +110,10 @@ const Index = () => {
   
   useEffect(() => {
     if (workspaceMode === "explorer") {
-      setPanelVisibility({ radar: false, map: false, timeline: true });
+      setPanelVisibility({ map: false, timeline: true });
       setCompactMode(false);
     } else {
-      setPanelVisibility({ radar: true, map: true, timeline: true });
+      setPanelVisibility({ map: true, timeline: true });
     }
   }, [workspaceMode]);
 
