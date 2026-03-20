@@ -237,7 +237,7 @@ function generateContextualFallback(filters: FilterState): TrendCardProps[] {
       { icon: "🇳🇬", platform: "Premium Times", title: "Nigéria: economia e política em transformação", category: "Geopolítica", time: timeStr, volume: "Destaque", change: "+130%", changePositive: true, sparkData: [20, 30, 40, 50, 58, 65, 72, 78, 84, 88], details: "Maior economia da África passa por reformas estruturais.", countryCode: "NG" },
     ],
     ZA: [
-      { icon: "🇿🇦", platform: "News24", title: "África do Sul: desafios energéticos e crescimento econômico", category: "Negócios/Finanças", time: timeStr, volume: "Análise", change: "+110%", changePositive: false, sparkData: [22, 32, 42, 50, 58, 64, 70, 76, 82, 86], details: "Crise energética impacta o desenvolvimento sul-africano.", countryCode: "ZA" },
+      { icon: "🇿🇦", platform: "News24", title: "África do Sul: desafios energéticos e crescimento econômico", category: "Economia", time: timeStr, volume: "Análise", change: "+110%", changePositive: false, sparkData: [22, 32, 42, 50, 58, 64, 70, 76, 82, 86], details: "Crise energética impacta o desenvolvimento sul-africano.", countryCode: "ZA" },
     ],
     TR: [
       { icon: "🇹🇷", platform: "Reuters", title: "Turquia: economia e geopolítica na encruzilhada", category: "Política", time: timeStr, volume: "Destaque", change: "+140%", changePositive: false, sparkData: [25, 35, 45, 55, 62, 70, 76, 82, 86, 90], details: "Turquia navega entre influência regional e desafios econômicos.", countryCode: "TR" },
