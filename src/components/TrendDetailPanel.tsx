@@ -271,7 +271,7 @@ const TrendDetailPanel: React.FC<TrendDetailPanelProps> = ({
               <button onClick={() => {
                 if (!userId) { toast({ title: t("loginRequired") }); return; }
                 setAlertOpen(true);
-              }} className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-background hover:bg-muted text-[12px] font-medium transition-colors">
+              }} className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-background hover:bg-muted text-[12px] font-medium transition-colors">
                 <Bell className="w-3.5 h-3.5" /> {lang === "pt" ? "Alerta" : "Alert"}
               </button>
               {sourceUrl && (
