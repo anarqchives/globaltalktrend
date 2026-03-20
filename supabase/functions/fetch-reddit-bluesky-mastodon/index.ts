@@ -205,7 +205,7 @@ async function getBskySession(): Promise<{ accessJwt: string; did: string } | nu
 
 async function fetchBluesky(): Promise<TrendItem[]> {
   const authenticated = isBlueskyAuthenticated();
-  console.log(`🦋 Bluesky mode: ${authenticated ? "authenticated" : "public (no credentials)"}");
+  console.log(`🦋 Bluesky mode: ${authenticated ? "authenticated" : "public (no credentials)"}`);
   // Try authenticated first, then fall back to public
   const session = await getBskySession();
   
