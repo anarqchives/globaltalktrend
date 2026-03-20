@@ -5,7 +5,6 @@ import AppHeader from "@/components/AppHeader";
 import FilterBar, { FilterState, countries } from "@/components/FilterBar";
 import TimelineCard from "@/components/TimelineCard";
 import TrendCardSkeleton from "@/components/TrendCardSkeleton";
-import TrendRadar from "@/components/TrendRadar";
 import TransparencyPanel from "@/components/TransparencyPanel";
 import TemporalHeatmap from "@/components/TemporalHeatmap";
 import { TrendCardProps } from "@/components/TrendCard";
