@@ -38,7 +38,8 @@ interface LiveAPIStatus {
 const KNOWN_SOURCES = [
   "Google Trends", "YouTube", "Reddit", "Bluesky", "Mastodon",
   "Hacker News", "NewsAPI", "GNews", "Bing News", "NewsData",
-  "The Guardian", "OpenAlex", "Stack Overflow", "Wikipedia", "GitHub"
+  "The Guardian", "OpenAlex", "Stack Overflow", "Wikipedia", "GitHub",
+  "Currents", "Mediastack"
 ];
 
 const API_ENDPOINTS: { name: string; functionName: string; group: string }[] = [
@@ -55,6 +56,8 @@ const API_ENDPOINTS: { name: string; functionName: string; group: string }[] = [
   { name: "Tech/Science Extra", functionName: "fetch-tech-science-extra", group: "Tech" },
   { name: "FRED Economics", functionName: "fetch-fred", group: "Economia" },
   { name: "The News API", functionName: "fetch-thenewsapi", group: "Imprensa" },
+  { name: "Currents / Mediastack", functionName: "fetch-currents-mediastack", group: "Imprensa" },
+  { name: "Reddit / Bluesky / Mastodon", functionName: "fetch-reddit-bluesky-mastodon", group: "Social" },
 ];
 
 const countryNames: Record<string, string> = {
