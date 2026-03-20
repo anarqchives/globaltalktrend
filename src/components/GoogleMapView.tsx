@@ -559,24 +559,24 @@ const GoogleMapView = ({
   }, [mapMode, mapLoaded, renderHeatmap, renderChoropleth, renderFlow, renderSentiment]);
 
   /* ─── Mode selector config ─── */
-  const mapModes: { key: MapMode; icon: typeof Flame; label: string; activeColor: string }[] = [
-    { key: "heatmap", icon: Flame, label: "Heatmap", activeColor: "bg-[#2557D6]" },
-    { key: "choropleth", icon: MapIcon, label: lang === "pt" ? "Coroplético" : "Choropleth", activeColor: "bg-[#2557D6]" },
-    { key: "flow", icon: GitBranch, label: lang === "pt" ? "Fluxo" : "Flow", activeColor: "bg-violet-600" },
-    { key: "sentiment", icon: Heart, label: lang === "pt" ? "Sentimento" : "Sentiment", activeColor: "bg-emerald-600" },
+  const mapModes: { key: MapMode; icon: typeof Flame; label: string }[] = [
+    { key: "heatmap", icon: Flame, label: "Heatmap" },
+    { key: "choropleth", icon: MapIcon, label: lang === "pt" ? "Coroplético" : "Choropleth" },
+    { key: "flow", icon: GitBranch, label: lang === "pt" ? "Fluxo" : "Flow" },
+    { key: "sentiment", icon: Heart, label: lang === "pt" ? "Sentimento" : "Sentiment" },
   ];
 
   return (
     <div className="w-full h-full relative" style={{ isolation: "isolate" }}>
       {/* Mode selector */}
       <div className="absolute top-3 left-3 z-20 flex gap-1 bg-card/90 backdrop-blur-xl rounded-2xl p-1.5 border border-border/30 shadow-[0_4px_20px_rgba(0,0,0,0.08)]">
-        {mapModes.map(({ key, icon: Icon, label, activeColor }) => (
+        {mapModes.map(({ key, icon: Icon, label }) => (
           <button
             key={key}
             onClick={() => setMapMode(key)}
-            className={`relative px-3 py-2 rounded-xl text-xs font-semibold uppercase tracking-wider transition-colors ${
+            className={`relative px-3 py-2 rounded-xl text-[11px] font-bold uppercase tracking-wider transition-colors ${
               mapMode === key
-                ? `${activeColor} text-white`
+                ? "bg-foreground text-background shadow-sm"
                 : "text-muted-foreground hover:text-foreground hover:bg-muted"
             }`}
           >
