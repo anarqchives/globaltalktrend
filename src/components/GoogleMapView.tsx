@@ -668,8 +668,14 @@ const GoogleMapView = ({
         }}
       >
         {tabs.map(({ key, icon: Icon, label }) => {
-          const vividColors: Record<MapTab, string> = {
-            panorama: "#007AFF", sentiment: "#FF3B30", verification: "#34C759", trending: "#FF9500",
+          const tabGradients: Record<MapTab, string> = {
+            panorama: "linear-gradient(135deg, #7BB3FF 0%, #A8C8FF 100%)",
+            sentiment: "linear-gradient(135deg, #FF9A9E 0%, #FECFEF 100%)",
+            verification: "linear-gradient(135deg, #84DCC6 0%, #A8EDEA 100%)",
+            trending: "linear-gradient(135deg, #FFD89B 0%, #FFE8B8 100%)",
+          };
+          const tabTextColors: Record<MapTab, string> = {
+            panorama: "#1A4B8C", sentiment: "#8C1A2A", verification: "#1A6B50", trending: "#7A4A00",
           };
           const isActive = activeTab === key;
           return (
@@ -678,16 +684,16 @@ const GoogleMapView = ({
               whileTap={{ scale: 0.96 }}
               className="relative px-2.5 py-1.5 rounded-xl text-[9px] font-bold uppercase tracking-wider transition-colors"
               style={{
-                background: isActive ? vividColors[key] : "transparent",
-                color: isActive ? "#fff" : undefined,
-                boxShadow: isActive ? `0 2px 12px ${vividColors[key]}40` : "none",
+                background: isActive ? tabGradients[key] : "transparent",
+                color: isActive ? tabTextColors[key] : undefined,
+                boxShadow: isActive ? `0 2px 10px rgba(0,0,0,0.08)` : "none",
               }}
             >
               {isActive && (
                 <motion.div
                   layoutId="map-tab-indicator"
                   className="absolute inset-0 rounded-xl"
-                  style={{ background: vividColors[key], zIndex: -1 }}
+                  style={{ background: tabGradients[key], zIndex: -1 }}
                   transition={{ type: "spring", stiffness: 400, damping: 30 }}
                 />
               )}
