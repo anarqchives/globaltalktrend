@@ -466,7 +466,7 @@ const Index = () => {
                       )}
                     </div>
                     <div className="flex items-center gap-1.5 mt-0.5 text-[8px] text-muted-foreground">
-                      <span className="uppercase font-medium" style={{ color: SOURCE_HEX_MAP[w.platform?.toLowerCase()] || undefined }}>{w.platform}</span>
+                      <span className="uppercase font-medium">{w.platform}</span>
                       {w.isActive && w.currentScore !== undefined && (
                         <span className="font-bold tabular-nums" style={{
                           color: w.currentScore >= 75 ? "hsl(var(--priority-critical))" 
