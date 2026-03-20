@@ -178,7 +178,7 @@ function generateContextualFallback(filters: FilterState): TrendCardProps[] {
     ],
     US: [
       { icon: "🇺🇸", platform: "Google Trends", title: "Top trending topics in the United States", category: "Geral", time: timeStr, volume: "High", change: "+trending", changePositive: true, sparkData: [25, 40, 50, 65, 70, 80, 85, 88, 92, 96], details: "What Americans are searching for right now.", countryCode: "US" },
-      { icon: "🗽", platform: "New York Times", title: "Congress debates new legislation on AI regulation", category: "Política", time: timeStr, volume: "Alto", change: "+novo", changePositive: true, sparkData: [15, 25, 40, 50, 60, 70, 75, 82, 88, 90], details: "Regulamentação de IA avança no legislativo americano.", countryCode: "US" },
+      { icon: "🗽", platform: "New York Times", title: "Congress debates new legislation on AI regulation", category: "Geopolítica", time: timeStr, volume: "Alto", change: "+novo", changePositive: true, sparkData: [15, 25, 40, 50, 60, 70, 75, 82, 88, 90], details: "Regulamentação de IA avança no legislativo americano.", countryCode: "US" },
     ],
     PS: [
       { icon: "🇵🇸", platform: "Al Jazeera", title: "Últimas notícias sobre Gaza e o conflito na Palestina", category: "Conflitos/Crises", time: timeStr, volume: "Alto", change: "+trending", changePositive: false, sparkData: [40, 55, 65, 75, 80, 85, 90, 92, 95, 98], details: "Acompanhe a cobertura em tempo real do conflito na região.", countryCode: "PS" },
