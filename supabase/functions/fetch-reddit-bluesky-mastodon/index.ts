@@ -164,12 +164,23 @@ async function fetchReddit(): Promise<TrendItem[]> {
 }
 
 // ── Bluesky / AT Protocol ──
+function isBlueskyEnabled(): boolean {
+  // Bluesky public API works without credentials; authenticated mode needs both
+  // Feature flag: always enabled (public API), but logs auth status
+  return true;
+}
+
+function isBlueskyAuthenticated(): boolean {
+  return !!(Deno.env.get("BLUESKY_IDENTIFIER") && Deno.env.get("BLUESKY_APP_PASSWORD"));
+}
+
 let bskySession: { accessJwt: string; did: string; expires: number } | null = null;
 
 async function getBskySession(): Promise<{ accessJwt: string; did: string } | null> {
-  const identifier = Deno.env.get("BLUESKY_IDENTIFIER");
-  const password = Deno.env.get("BLUESKY_APP_PASSWORD");
-  if (!identifier || !password) return null;
+  if (!isBlueskyAuthenticated()) return null;
+
+  const identifier = Deno.env.get("BLUESKY_IDENTIFIER")!;
+  const password = Deno.env.get("BLUESKY_APP_PASSWORD")!;
 
   if (bskySession && Date.now() < bskySession.expires) {
     return { accessJwt: bskySession.accessJwt, did: bskySession.did };
@@ -193,6 +204,8 @@ async function getBskySession(): Promise<{ accessJwt: string; did: string } | nu
 }
 
 async function fetchBluesky(): Promise<TrendItem[]> {
+  const authenticated = isBlueskyAuthenticated();
+  console.log(`🦋 Bluesky mode: ${authenticated ? "authenticated" : "public (no credentials)"}");
   // Try authenticated first, then fall back to public
   const session = await getBskySession();
   
