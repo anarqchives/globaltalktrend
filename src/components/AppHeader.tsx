@@ -171,7 +171,22 @@ const AppHeader = ({ minimal = false, filters, onFilterChange, onForceReset, onS
               <span className="text-[13px] font-medium tracking-tight text-muted-foreground">Monitor</span>
             </Link>
 
-            {/* Separator */}
+            <div className="w-px h-4 bg-border/50 shrink-0 hidden sm:block" />
+
+            {/* Compact search */}
+            {filters && onFilterChange && (
+              <div className="hidden sm:flex items-center relative shrink-0">
+                <Search className="absolute left-2 w-3 h-3 text-muted-foreground pointer-events-none" />
+                <input
+                  type="text"
+                  placeholder={lang === "pt" ? "Buscar..." : lang === "es" ? "Buscar..." : "Search..."}
+                  value={filters.query || ""}
+                  onChange={e => update("query", e.target.value)}
+                  className="h-6 w-28 lg:w-36 pl-6 pr-2 rounded-full border border-border/50 bg-muted/30 text-[10px] text-foreground placeholder:text-muted-foreground outline-none focus:border-primary/40 focus:bg-muted/50 transition-colors"
+                />
+              </div>
+            )}
+
             <div className="w-px h-4 bg-border/50 shrink-0 hidden sm:block" />
 
             {/* Country pills */}
@@ -195,7 +210,6 @@ const AppHeader = ({ minimal = false, filters, onFilterChange, onForceReset, onS
               </div>
             )}
 
-            {/* Separator */}
             <div className="w-px h-4 bg-border/50 shrink-0 hidden lg:block" />
 
             {/* Category pills */}
@@ -218,11 +232,24 @@ const AppHeader = ({ minimal = false, filters, onFilterChange, onForceReset, onS
 
             {/* Right controls */}
             <div className="flex items-center gap-1.5 shrink-0">
-              {/* Theme toggle - compact */}
+              {/* Theme toggle */}
               <button onClick={() => setDark(!dark)}
                 className="compact-btn flex items-center justify-center w-7 h-7 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted transition-colors">
                 {dark ? <Moon className="w-3.5 h-3.5" /> : <Sun className="w-3.5 h-3.5" />}
               </button>
+
+              {/* Language selector */}
+              <div className="hidden sm:flex items-center">
+                <select
+                  value={lang}
+                  onChange={e => { setLang(e.target.value as any); window.dispatchEvent(new Event("trend-refresh")); }}
+                  className="h-6 px-1.5 rounded-md bg-transparent border border-border/40 text-[10px] font-medium text-muted-foreground hover:text-foreground cursor-pointer outline-none focus:border-primary/40 transition-colors"
+                >
+                  {Object.entries(languages).map(([code, label]) => (
+                    <option key={code} value={code}>{code.toUpperCase()}</option>
+                  ))}
+                </select>
+              </div>
 
               <a href="https://buy.stripe.com/fZu7sMgw6cHLeTnbWVdIA00" target="_blank" rel="noopener noreferrer"
                 className="hidden sm:flex apoie-pill compact-link">{t("support")}</a>
@@ -243,7 +270,7 @@ const AppHeader = ({ minimal = false, filters, onFilterChange, onForceReset, onS
                 </button>
               )}
 
-              {/* Menu drawer button */}
+              {/* Menu drawer */}
               <button onClick={() => setDrawerOpen(true)}
                 className="compact-btn flex items-center justify-center w-7 h-7 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted transition-colors relative">
                 <Menu className="w-4 h-4" />
