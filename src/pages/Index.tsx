@@ -73,7 +73,7 @@ const Index = () => {
   const [gridColumns, setGridColumns] = useState(2);
   const [expandedCardIndex, setExpandedCardIndex] = useState<number | null>(null);
   const [mapSelectedCountry, setMapSelectedCountry] = useState<string | null>(null);
-  const [showWatchlistPanel, setShowWatchlistPanel] = useState(false);
+  const [showWatchlistPanelPanel, setShowWatchlistPanelPanel] = useState(false);
   const [panelVisibility, setPanelVisibility] = useState(() => {
     try {
       const saved = localStorage.getItem("map-panel-open");
@@ -383,8 +383,8 @@ const Index = () => {
           <div className="flex items-center gap-1">
             {/* Watchlist toggle */}
             <button 
-              onClick={() => setShowWatchlist(v => !v)}
-              className={`flex items-center gap-1 px-2 py-1 rounded-lg text-[9px] transition-colors touch-manipulation ${showWatchlist ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:bg-muted"}`}
+              onClick={() => setShowWatchlistPanel(v => !v)}
+              className={`flex items-center gap-1 px-2 py-1 rounded-lg text-[9px] transition-colors touch-manipulation ${showWatchlistPanel ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:bg-muted"}`}
               title={lang === "pt" ? "Watchlist" : "Watchlist"}
             >
               <Eye className="w-3 h-3" />
@@ -431,7 +431,7 @@ const Index = () => {
         )}
 
         {/* ═══ WATCHLIST PANEL ═══ */}
-        {showWatchlist && watchlist.length > 0 && (
+        {showWatchlistPanel && watchlist.length > 0 && (
           <div className="mx-2 sm:mx-3 mt-2 rounded-lg border border-border bg-card p-2 space-y-1">
             <div className="flex items-center justify-between px-1 mb-1">
               <span className="text-[9px] font-semibold uppercase tracking-wider text-muted-foreground">
@@ -475,7 +475,7 @@ const Index = () => {
             ))}
           </div>
         )}
-        {showWatchlist && watchlist.length === 0 && (
+        {showWatchlistPanel && watchlist.length === 0 && (
           <div className="mx-2 sm:mx-3 mt-2 rounded-lg border border-border/50 bg-card p-4 text-center">
             <Eye className="w-5 h-5 text-muted-foreground/30 mx-auto mb-1" />
             <p className="text-[10px] text-muted-foreground">
