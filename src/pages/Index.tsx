@@ -7,7 +7,7 @@ import { FilterState } from "@/components/FilterBar";
 import TimelineCard from "@/components/TimelineCard";
 import TrendCardSkeleton from "@/components/TrendCardSkeleton";
 import TransparencyPanel from "@/components/TransparencyPanel";
-import RankingStrip from "@/components/RankingStrip";
+
 import { TrendCardProps } from "@/components/TrendCard";
 import { useTrends } from "@/hooks/use-trends";
 import { useTranslatedTrends, TranslatedTrendCardProps } from "@/hooks/use-translated-trends";
@@ -306,7 +306,7 @@ const Index = () => {
   const renderTimeline = () => (
     <div ref={timelineContainerRef} className="h-full flex flex-col min-h-0">
       <div ref={scrollRef} className="flex-1 overflow-y-auto overflow-x-hidden" style={{ scrollbarWidth: "thin", scrollbarColor: "hsl(var(--border)) transparent" }}>
-        <RankingStrip trends={diversifiedTrends} onSelectTrend={handleCardClick} />
+        
 
         {/* Timeline header */}
         <div className="px-3 py-2 flex items-center justify-between sticky top-0 z-10 bg-background/80 backdrop-blur-sm border-b border-border">
