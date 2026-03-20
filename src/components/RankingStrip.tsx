@@ -17,8 +17,8 @@ const SOURCE_TYPE_MAP: Record<string, string> = {
 };
 
 const RANK_BG: Record<string, string> = {
-  imprensa: "#2557D6", redes_sociais: "#7C3AED", google_trends: "#D97706",
-  dados_oficiais: "#059669", cientifico: "#0891B2",
+  imprensa: "#059669", redes_sociais: "#7C3AED", google_trends: "#D97706",
+  dados_oficiais: "#2557D6", cientifico: "#0891B2",
 };
 
 function getSourceType(platform: string): string {
@@ -42,7 +42,6 @@ const RankingStrip: React.FC<RankingStripProps> = ({ trends, onSelectTrend }) =>
         return { ...t, vol, originalIndex };
       })
       .filter(t => t.vol > 0)
-      // Filter out generic YouTube
       .filter(t => !t.platform.toLowerCase().includes("youtube"))
       .sort((a, b) => b.vol - a.vol)
       .slice(0, 10);
@@ -51,28 +50,29 @@ const RankingStrip: React.FC<RankingStripProps> = ({ trends, onSelectTrend }) =>
   if (topTrends.length === 0) return null;
 
   return (
-    <div className="border-b border-border bg-card">
+    <div className="border-b border-border bg-card/80 backdrop-blur-sm">
       <div className="px-3 pt-1.5 pb-0.5">
-        <span className="text-[8px] font-semibold uppercase tracking-[0.08em] text-muted-foreground">
+        <span className="text-[8px] font-bold uppercase tracking-[0.1em] text-muted-foreground/60">
           {lang === "pt" ? "MAIS VISTOS AGORA" : "TRENDING NOW"}
         </span>
       </div>
-      <div className="flex gap-1.5 overflow-x-auto px-3 pb-2" style={{ scrollbarWidth: "none" }}>
+      <div className="flex gap-1.5 overflow-x-auto px-3 pb-2" style={{ scrollbarWidth: "none", scrollBehavior: "smooth" }}>
         {topTrends.map((t, i) => {
           const srcType = getSourceType(t.platform);
           const rankBg = RANK_BG[srcType] || "#6B6560";
           return (
             <button key={i} onClick={() => onSelectTrend(t.originalIndex)}
-              className="flex-shrink-0 flex items-center gap-2 bg-background border border-border rounded-xl px-2.5 py-1.5 min-w-[160px] max-w-[200px] hover:border-primary/30 hover:bg-card transition-all cursor-pointer group">
-              <span className="text-[12px] font-extrabold tabular-nums min-w-[18px] text-white rounded-md px-1 py-0.5 text-center"
+              className="flex-shrink-0 flex items-center gap-2 bg-background border border-border/40 rounded-lg px-2.5 py-1.5 hover:border-primary/30 hover:bg-card transition-all cursor-pointer group"
+              style={{ minWidth: 160, maxWidth: 200 }}>
+              <span className="text-[11px] font-extrabold tabular-nums min-w-[18px] text-white rounded px-1 py-0.5 text-center"
                 style={{ backgroundColor: i < 3 ? rankBg : "hsl(var(--muted-foreground) / 0.2)" }}>
                 {i + 1}
               </span>
-              <div className="min-w-0 text-left">
-                <div className="text-[9px] font-semibold text-foreground leading-tight line-clamp-1 group-hover:text-foreground">
-                  {t.title.slice(0, 35)}{t.title.length > 35 ? "…" : ""}
+              <div className="min-w-0 text-left overflow-hidden">
+                <div className="text-[10px] font-semibold text-foreground leading-tight truncate group-hover:text-foreground">
+                  {t.title.slice(0, 40)}{t.title.length > 40 ? "…" : ""}
                 </div>
-                <div className="text-[8px] text-muted-foreground mt-0.5 truncate">
+                <div className="text-[9px] text-muted-foreground mt-0.5 truncate">
                   {t.platform} · {t.volume}
                 </div>
               </div>
