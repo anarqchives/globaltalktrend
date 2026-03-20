@@ -103,6 +103,7 @@ const Index = () => {
   const { trackView } = useHistory(user?.id ?? null);
   const { trackAction } = useGamification(user?.id ?? null);
   const { cards: savedCards, removeCard, saveCard } = useSavedCards(user?.id ?? null);
+  const { watchlist, addToWatchlist, removeFromWatchlist, updateScores: updateWatchlistScores } = useWatchlist(user?.id ?? null, lang);
   const [collectionsOpen, setCollectionsOpen] = useState(false);
   const { saveFilter } = useSavedFilters(user?.id ?? null);
   const [trendCounts, setTrendCounts] = useState<Record<string, number>>({});
