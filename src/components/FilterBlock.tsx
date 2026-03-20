@@ -276,9 +276,9 @@ const FilterBlock = ({ filters, onChange, onReset, onSaveFilter }: FilterBlockPr
 
 
   return (
-    <div className="sticky top-12 z-40 bg-background/90 backdrop-blur-md border-b border-border/25">
-      <div className="max-w-[1440px] mx-auto px-4 md:px-6 py-2">
-        <div className="flex items-center gap-2 flex-wrap">
+    <div className="sticky top-11 sm:top-12 z-40 bg-background/90 backdrop-blur-md border-b border-border/25" style={{ WebkitBackdropFilter: "blur(12px)" }}>
+      <div className="max-w-[1440px] mx-auto px-3 sm:px-6 py-1.5 sm:py-2">
+        <div className="flex items-center gap-1.5 sm:gap-2 overflow-x-auto scrollbar-none -mx-3 px-3 sm:mx-0 sm:px-0 sm:flex-wrap" style={{ WebkitOverflowScrolling: "touch" }}>
           <CountryDropdown value={filters.country} onSelect={(v) => update("country", v)} />
           
           <FilterDropdown
