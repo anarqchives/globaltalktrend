@@ -750,9 +750,9 @@ const GoogleMapView = ({
           )}
           {activeTab === "sentiment" && (
             <div className="flex items-center gap-2">
-              <span className="flex items-center gap-0.5 text-[7px]"><span className="w-2 h-2 rounded-full bg-[#34C759]" />+</span>
-              <span className="flex items-center gap-0.5 text-[7px]"><span className="w-2 h-2 rounded-full bg-[#8E8E93]" />~</span>
-              <span className="flex items-center gap-0.5 text-[7px]"><span className="w-2 h-2 rounded-full bg-[#FF3B30]" />-</span>
+              <span className="flex items-center gap-0.5 text-[7px]"><span className="w-2.5 h-2.5 rounded-full bg-[#A8D8B0]" />+</span>
+              <span className="flex items-center gap-0.5 text-[7px]"><span className="w-2.5 h-2.5 rounded-full bg-[#D0CCC4]" />~</span>
+              <span className="flex items-center gap-0.5 text-[7px]"><span className="w-2.5 h-2.5 rounded-full bg-[#F0A8A0]" />-</span>
             </div>
           )}
           {activeTab === "verification" && (
