@@ -273,7 +273,7 @@ const TimelineCard = ({
       </div>
 
       {/* ② Title */}
-      <h3 className={`font-semibold text-foreground leading-snug mb-1 ${compact ? "text-[10px] line-clamp-1" : "text-[11px] line-clamp-2"}`}
+      <h3 className={`font-semibold text-foreground leading-snug mb-1 ${compact ? "text-[12px] line-clamp-1" : "text-[13px] line-clamp-2"}`}
         style={{ wordBreak: "break-word", overflow: "hidden", textOverflow: "ellipsis" }}>
         {decodeEntities(title)}
       </h3>
