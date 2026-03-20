@@ -79,15 +79,15 @@ function FilterDropdown({
     <div ref={ref} className="relative">
       <button
         onClick={() => setOpen(!open)}
-        className={`flex items-center gap-1.5 h-8 px-3 rounded-full text-[11px] font-medium transition-all border ${
+        className={`flex items-center gap-1 h-[26px] px-2.5 rounded-full text-[10px] font-medium transition-all border ${
           isActive
             ? "bg-primary/10 text-primary border-primary/30 shadow-sm"
             : "bg-card text-muted-foreground border-border/40 hover:border-border hover:text-foreground"
         }`}
       >
-        <Icon className="w-3 h-3 shrink-0" />
-        <span className="truncate max-w-[100px]">{displayLabel}</span>
-        <ChevronDown className={`w-3 h-3 shrink-0 transition-transform ${open ? "rotate-180" : ""}`} />
+        <Icon className="w-2.5 h-2.5 shrink-0" />
+        <span className="truncate max-w-[90px]">{displayLabel}</span>
+        <ChevronDown className={`w-2.5 h-2.5 shrink-0 transition-transform ${open ? "rotate-180" : ""}`} />
         {isActive && (
           <button
             onClick={(e) => { e.stopPropagation(); onSelect(defaultValue); }}
