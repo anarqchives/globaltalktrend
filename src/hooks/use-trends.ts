@@ -204,7 +204,7 @@ function generateContextualFallback(filters: FilterState): TrendCardProps[] {
       { icon: "📰", platform: "The Guardian", title: "Economy and public services dominate UK debate", category: "Economia", time: timeStr, volume: "Destaque", change: "+120%", changePositive: true, sparkData: [20, 32, 42, 52, 60, 68, 75, 80, 85, 88], details: "Economia britânica em foco no debate público.", countryCode: "GB" },
     ],
     FR: [
-      { icon: "🇫🇷", platform: "Le Monde", title: "France: actualités politiques et sociales", category: "Política", time: timeStr, volume: "Alto", change: "+trending", changePositive: true, sparkData: [22, 35, 45, 55, 65, 72, 80, 85, 90, 93], details: "Dernières nouvelles de la politique française.", countryCode: "FR" },
+      { icon: "🇫🇷", platform: "Le Monde", title: "France: actualités politiques et sociales", category: "Geopolítica", time: timeStr, volume: "Alto", change: "+trending", changePositive: true, sparkData: [22, 35, 45, 55, 65, 72, 80, 85, 90, 93], details: "Dernières nouvelles de la politique française.", countryCode: "FR" },
     ],
     DE: [
       { icon: "🇩🇪", platform: "Der Spiegel", title: "Deutschland: aktuelle Nachrichten und Analysen", category: "Política", time: timeStr, volume: "Alto", change: "+trending", changePositive: true, sparkData: [20, 32, 42, 55, 62, 70, 78, 84, 90, 93], details: "As últimas notícias e análises da Alemanha.", countryCode: "DE" },
