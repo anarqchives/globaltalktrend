@@ -24,8 +24,8 @@ const decodeEntities = (text: string): string => {
 };
 
 const SOURCE_DOT: Record<string, string> = {
-  imprensa: "#2557D6", redes_sociais: "#7C3AED", google_trends: "#D97706",
-  dados_oficiais: "#059669", cientifico: "#0891B2",
+  imprensa: "#4A7FBF", redes_sociais: "#8B7EC8", google_trends: "#D97706",
+  dados_oficiais: "#7A9E7E", cientifico: "#5BA8B5",
 };
 function getSourceType(p: string): string {
   const l = p.toLowerCase();

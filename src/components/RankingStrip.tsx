@@ -17,8 +17,8 @@ const SOURCE_TYPE_MAP: Record<string, string> = {
 };
 
 const RANK_BG: Record<string, string> = {
-  imprensa: "#059669", redes_sociais: "#7C3AED", google_trends: "#D97706",
-  dados_oficiais: "#2557D6", cientifico: "#0891B2",
+  imprensa: "#4A7FBF", redes_sociais: "#8B7EC8", google_trends: "#D97706",
+  dados_oficiais: "#7A9E7E", cientifico: "#5BA8B5",
 };
 
 function getSourceType(platform: string): string {
