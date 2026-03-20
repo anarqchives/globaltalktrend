@@ -24,8 +24,8 @@ const decodeEntities = (text: string): string => {
 };
 
 const SOURCE_DOT: Record<string, string> = {
-  imprensa: "#2557D6", redes_sociais: "#7C3AED", google_trends: "#D97706",
-  dados_oficiais: "#059669", cientifico: "#0891B2",
+  imprensa: "#4A7FBF", redes_sociais: "#8B7EC8", google_trends: "#D97706",
+  dados_oficiais: "#7A9E7E", cientifico: "#5BA8B5",
 };
 function getSourceType(p: string): string {
   const l = p.toLowerCase();
@@ -164,7 +164,7 @@ const TrendDetailPanel: React.FC<TrendDetailPanelProps> = ({
             </div>
 
             {/* Title */}
-            <h2 className="text-[20px] font-bold leading-snug text-foreground mb-4 font-serif">{decodeEntities(title)}</h2>
+            <h2 className="text-[20px] font-semibold leading-snug text-foreground mb-4">{decodeEntities(title)}</h2>
 
             {/* Metrics */}
             {hasMetrics && (
@@ -243,10 +243,10 @@ const TrendDetailPanel: React.FC<TrendDetailPanelProps> = ({
 
             {/* AI Context */}
             {showAiContext && (
-              <div className="rounded-xl bg-[#2557D6]/5 border border-[#2557D6]/10 p-4 mb-4">
+              <div className="rounded-lg bg-accent/5 border border-accent/10 p-4 mb-4">
                 <div className="flex items-center gap-1.5 mb-2">
-                  <Sparkles className="w-3.5 h-3.5 text-[#2557D6]" />
-                  <span className="text-[10px] font-bold text-[#2557D6] uppercase tracking-[0.08em]">
+                  <Sparkles className="w-3.5 h-3.5 text-foreground/60" />
+                  <span className="text-[10px] font-medium text-foreground/60 uppercase tracking-[0.08em]">
                     {lang === "pt" ? "Resumo por IA" : "AI Insight"}
                   </span>
                 </div>
@@ -276,7 +276,7 @@ const TrendDetailPanel: React.FC<TrendDetailPanelProps> = ({
               </button>
               {sourceUrl && (
                 <a href={sourceUrl} target="_blank" rel="noopener noreferrer"
-                  className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-[#2557D6] text-white text-[12px] font-medium hover:bg-[#2557D6]/90 transition-colors ml-auto">
+                  className="flex items-center gap-1.5 px-3 py-2 rounded-md bg-foreground text-background text-[12px] font-medium hover:bg-foreground/90 transition-colors ml-auto">
                   <ExternalLink className="w-3.5 h-3.5" /> {lang === "pt" ? "Fonte" : "Source"}
                 </a>
               )}

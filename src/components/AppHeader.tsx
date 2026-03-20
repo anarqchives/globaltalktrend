@@ -38,7 +38,7 @@ interface AppHeaderProps {
   isLoggedIn?: boolean;
 }
 
-/* ─── Country pills data ─── */
+/* ─── Country pills data — expanded ─── */
 const COUNTRY_PILLS = [
   { value: "global", label: "Global", flag: "🌐" },
   { value: "BR", label: "Brasil", flag: "🇧🇷" },
@@ -48,10 +48,10 @@ const COUNTRY_PILLS = [
   { value: "FR", label: "França", flag: "🇫🇷" },
   { value: "JP", label: "Japão", flag: "🇯🇵" },
   { value: "CN", label: "China", flag: "🇨🇳" },
+  { value: "IN", label: "Índia", flag: "🇮🇳" },
+  { value: "KR", label: "Coreia", flag: "🇰🇷" },
 ];
 const MORE_COUNTRIES = [
-  { value: "IN", label: "Índia", flag: "🇮🇳" },
-  { value: "KR", label: "Coreia do Sul", flag: "🇰🇷" },
   { value: "MX", label: "México", flag: "🇲🇽" },
   { value: "AR", label: "Argentina", flag: "🇦🇷" },
   { value: "IT", label: "Itália", flag: "🇮🇹" },
@@ -60,6 +60,18 @@ const MORE_COUNTRIES = [
   { value: "AU", label: "Austrália", flag: "🇦🇺" },
   { value: "ZA", label: "África do Sul", flag: "🇿🇦" },
   { value: "RU", label: "Rússia", flag: "🇷🇺" },
+  { value: "CA", label: "Canadá", flag: "🇨🇦" },
+  { value: "TR", label: "Turquia", flag: "🇹🇷" },
+  { value: "PL", label: "Polônia", flag: "🇵🇱" },
+  { value: "NL", label: "Holanda", flag: "🇳🇱" },
+  { value: "SE", label: "Suécia", flag: "🇸🇪" },
+  { value: "UA", label: "Ucrânia", flag: "🇺🇦" },
+  { value: "CO", label: "Colômbia", flag: "🇨🇴" },
+  { value: "CL", label: "Chile", flag: "🇨🇱" },
+  { value: "EG", label: "Egito", flag: "🇪🇬" },
+  { value: "NG", label: "Nigéria", flag: "🇳🇬" },
+  { value: "SA", label: "Arábia Saudita", flag: "🇸🇦" },
+  { value: "ID", label: "Indonésia", flag: "🇮🇩" },
 ];
 
 const CATEGORY_PILLS = [
@@ -69,6 +81,9 @@ const CATEGORY_PILLS = [
   { value: "Saúde", label: { pt: "Saúde", en: "Health" } },
   { value: "Tecnologia", label: { pt: "Tech", en: "Tech" } },
   { value: "Esportes", label: { pt: "Esportes", en: "Sports" } },
+  { value: "Ciência", label: { pt: "Ciência", en: "Science" } },
+  { value: "Cultura", label: { pt: "Cultura", en: "Culture" } },
+  { value: "Conflitos", label: { pt: "Conflitos", en: "Conflicts" } },
 ];
 
 const AppHeader = ({ minimal = false, filters, onFilterChange, onForceReset, onSaveFilter, onOpenSavedCollections, isLoggedIn }: AppHeaderProps) => {
@@ -305,7 +320,7 @@ const AppHeader = ({ minimal = false, filters, onFilterChange, onForceReset, onS
                       ? "bg-foreground text-background"
                       : "text-muted-foreground hover:text-foreground hover:bg-muted"
                   }`}>
-                  +10
+                  +{MORE_COUNTRIES.length}
                   <ChevronDown className="w-2.5 h-2.5" />
                 </button>
                 {moreCountriesOpen && (
