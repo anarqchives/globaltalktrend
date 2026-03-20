@@ -285,8 +285,8 @@ const GoogleMapView = ({
         const intensity = Math.min(c.count / maxCount, 1);
         const marker = new google.maps.Marker({
           position: { lat: c.lat, lng: c.lng }, map: googleMapRef.current,
-          icon: { path: google.maps.SymbolPath.CIRCLE, scale: 5 + intensity * 10, fillColor: "#FFFFFF", fillOpacity: 0.9, strokeColor: "#2557D6", strokeWeight: 2 },
-          label: { text: String(c.count), color: "#2557D6", fontSize: "9px", fontWeight: "800" },
+          icon: { path: google.maps.SymbolPath.CIRCLE, scale: 6 + intensity * 12, fillColor: "#007AFF", fillOpacity: 0.95, strokeColor: "#fff", strokeWeight: 2.5 },
+          label: { text: String(c.count), color: "#fff", fontSize: "10px", fontWeight: "800" },
           zIndex: Math.floor(intensity * 1000),
         });
         marker.addListener("click", () => onSelectCountry(c.id));
