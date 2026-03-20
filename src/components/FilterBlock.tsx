@@ -311,15 +311,7 @@ const FilterBlock = ({ filters, onChange, onReset, onSaveFilter }: FilterBlockPr
             onSelect={(v) => update("type", v)}
           />
 
-          <FilterDropdown
-            icon={Globe2}
-            label={lang === "pt" ? "Idioma" : "Language"}
-            value={lang}
-            defaultValue="pt"
-            options={langOptions}
-            onSelect={(v) => { setLang(v as any); window.dispatchEvent(new Event("trend-refresh")); }}
-            align="right"
-          />
+
 
           {/* Separator */}
           <div className="w-px h-5 bg-border/40 mx-0.5 hidden sm:block" />
