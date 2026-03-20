@@ -98,7 +98,7 @@ const Index = () => {
       return { timeline: true, map: true };
     }
   });
-  const togglePanel = (panel: "radar" | "timeline" | "map") => {
+  const togglePanel = (panel: "timeline" | "map") => {
     setPanelVisibility(prev => {
       const next = { ...prev, [panel]: !prev[panel] };
       if (panel === "map") {
