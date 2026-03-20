@@ -32,9 +32,14 @@ function getSourceType(platform: string): string {
   return "imprensa";
 }
 
+/* Vibrant, differentiated colors per source type for charts */
 const SOURCE_HEX: Record<string, string> = {
-  imprensa: "#5580AA", redes_sociais: "#C08040", google_trends: "#C09020",
-  dados_oficiais: "#558855", cientifico: "#7070AA", enciclopedico: "#408888",
+  imprensa: "#2563EB",       // vivid blue
+  redes_sociais: "#F97316",  // vibrant orange
+  google_trends: "#FACC15",  // bright yellow
+  dados_oficiais: "#10B981", // emerald green
+  cientifico: "#8B5CF6",     // vivid purple
+  enciclopedico: "#06B6D4",  // cyan
 };
 
 const SOURCE_BADGES: Record<string, { label: Record<string, string>; icon: string; css: string; explanation: Record<string, string> }> = {
