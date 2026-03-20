@@ -1,10 +1,9 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { motion, AnimatePresence } from "framer-motion";
 import {
-  Sun, Moon, LogOut, LogIn, ChevronDown, User, FileText,
+  Sun, Moon, LogOut, LogIn, ChevronRight, User, FileText,
   Loader2, Menu, X, BarChart3, BookOpen, RefreshCw,
-  Search, Bell, Bookmark, RotateCcw, Calendar, Layers
+  Bell, Bookmark, Globe, Calendar, LayoutGrid, Layers, Filter
 } from "lucide-react";
 import { useLanguage, languages } from "@/contexts/LanguageContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -12,10 +11,9 @@ import { lovable } from "@/integrations/lovable/index";
 import { toast } from "@/hooks/use-toast";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
-import {
-  DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger
-} from "@/components/ui/dropdown-menu";
-import { FilterState } from "@/components/FilterBar";
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+import { FilterState, countries } from "@/components/FilterBar";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 const defaultFilters: FilterState = {
   country: "global", period: "Hoje", category: "Todas", type: "Todas mídias", query: "",
@@ -31,77 +29,31 @@ interface AppHeaderProps {
   isLoggedIn?: boolean;
 }
 
-const COUNTRY_PILLS = [
-  { value: "global", label: "Global", flag: "🌐" },
-  { value: "BR", label: "Brasil", flag: "🇧🇷" },
-  { value: "US", label: "EUA", flag: "🇺🇸" },
-  { value: "DE", label: "Alemanha", flag: "🇩🇪" },
-  { value: "GB", label: "Reino Unido", flag: "🇬🇧" },
-  { value: "FR", label: "França", flag: "🇫🇷" },
-  { value: "JP", label: "Japão", flag: "🇯🇵" },
-  { value: "CN", label: "China", flag: "🇨🇳" },
-  { value: "IN", label: "Índia", flag: "🇮🇳" },
-  { value: "KR", label: "Coreia", flag: "🇰🇷" },
-];
-
-const MORE_COUNTRIES = [
-  { value: "MX", label: "México", flag: "🇲🇽" },
-  { value: "AR", label: "Argentina", flag: "🇦🇷" },
-  { value: "IT", label: "Itália", flag: "🇮🇹" },
-  { value: "ES", label: "Espanha", flag: "🇪🇸" },
-  { value: "PT", label: "Portugal", flag: "🇵🇹" },
-  { value: "AU", label: "Austrália", flag: "🇦🇺" },
-  { value: "ZA", label: "África do Sul", flag: "🇿🇦" },
-  { value: "RU", label: "Rússia", flag: "🇷🇺" },
-  { value: "CA", label: "Canadá", flag: "🇨🇦" },
-  { value: "TR", label: "Turquia", flag: "🇹🇷" },
-  { value: "PL", label: "Polônia", flag: "🇵🇱" },
-  { value: "NL", label: "Holanda", flag: "🇳🇱" },
-  { value: "SE", label: "Suécia", flag: "🇸🇪" },
-  { value: "UA", label: "Ucrânia", flag: "🇺🇦" },
-  { value: "CO", label: "Colômbia", flag: "🇨🇴" },
-  { value: "CL", label: "Chile", flag: "🇨🇱" },
-  { value: "EG", label: "Egito", flag: "🇪🇬" },
-  { value: "NG", label: "Nigéria", flag: "🇳🇬" },
-  { value: "SA", label: "Arábia Saudita", flag: "🇸🇦" },
-  { value: "ID", label: "Indonésia", flag: "🇮🇩" },
-  { value: "PH", label: "Filipinas", flag: "🇵🇭" },
-  { value: "TH", label: "Tailândia", flag: "🇹🇭" },
-  { value: "VN", label: "Vietnã", flag: "🇻🇳" },
-  { value: "PK", label: "Paquistão", flag: "🇵🇰" },
-  { value: "PS", label: "Palestina", flag: "🇵🇸" },
-  { value: "IR", label: "Irã", flag: "🇮🇷" },
-  { value: "IQ", label: "Iraque", flag: "🇮🇶" },
-  { value: "NZ", label: "Nova Zelândia", flag: "🇳🇿" },
-  { value: "NO", label: "Noruega", flag: "🇳🇴" },
-  { value: "PE", label: "Peru", flag: "🇵🇪" },
-];
-
-const CATEGORY_PILLS = [
+const CATEGORIES = [
   { value: "Todas", label: { pt: "Todas", en: "All" } },
+  { value: "Geopolítica", label: { pt: "Geopolítica", en: "Geopolitics" } },
   { value: "Economia", label: { pt: "Economia", en: "Economy" } },
-  { value: "Política", label: { pt: "Geopolítica", en: "Geopolitics" } },
-  { value: "Saúde", label: { pt: "Saúde", en: "Health" } },
-  { value: "Tecnologia", label: { pt: "Tech", en: "Tech" } },
-  { value: "Esportes", label: { pt: "Esportes", en: "Sports" } },
+  { value: "Tecnologia", label: { pt: "Tecnologia", en: "Technology" } },
   { value: "Ciência", label: { pt: "Ciência", en: "Science" } },
-  { value: "Cultura", label: { pt: "Cultura", en: "Culture" } },
-  { value: "Conflitos", label: { pt: "Conflitos", en: "Conflicts" } },
+  { value: "Saúde", label: { pt: "Saúde", en: "Health" } },
   { value: "Entretenimento", label: { pt: "Entretenimento", en: "Entertainment" } },
-  { value: "Negócios", label: { pt: "Negócios", en: "Business" } },
+  { value: "Esportes", label: { pt: "Esportes", en: "Sports" } },
+  { value: "Cultura", label: { pt: "Cultura", en: "Culture" } },
+  { value: "Meio Ambiente", label: { pt: "Meio Ambiente", en: "Environment" } },
+  { value: "Educação", label: { pt: "Educação", en: "Education" } },
 ];
 
-const SOURCE_TYPE_FILTERS = [
+const SOURCE_TYPES = [
   { v: "Todas mídias", l: { pt: "Todas", en: "All" } },
   { v: "Imprensa", l: { pt: "Imprensa", en: "Press" } },
   { v: "Redes sociais", l: { pt: "Social", en: "Social" } },
   { v: "Buscas (Google)", l: { pt: "Buscas", en: "Searches" } },
   { v: "Dados oficiais", l: { pt: "Dados Oficiais", en: "Official" } },
-  { v: "Multiplataforma", l: { pt: "Multi", en: "Multi" } },
   { v: "Ciência", l: { pt: "Acadêmico", en: "Academic" } },
+  { v: "Multiplataforma", l: { pt: "Multi", en: "Multi" } },
 ];
 
-const PERIOD_OPTIONS = [
+const PERIODS = [
   { v: "Última hora", l: { pt: "Última hora", en: "Last hour" } },
   { v: "Hoje", l: { pt: "Hoje", en: "Today" } },
   { v: "Últimas 24h", l: { pt: "24h", en: "24h" } },
@@ -116,8 +68,8 @@ const AppHeader = ({ minimal = false, filters, onFilterChange, onForceReset, onS
   const [user, setUser] = useState<any>(null);
   const [loginOpen, setLoginOpen] = useState(false);
   const [loginLoading, setLoginLoading] = useState<"google" | "apple" | null>(null);
-  const [moreCountriesOpen, setMoreCountriesOpen] = useState(false);
-  const moreRef = useRef<HTMLDivElement>(null);
+  const [drawerOpen, setDrawerOpen] = useState(false);
+  const [countrySearch, setCountrySearch] = useState("");
   const [dark, setDark] = useState(() => {
     if (typeof window !== "undefined") {
       const saved = localStorage.getItem("theme");
@@ -137,15 +89,6 @@ const AppHeader = ({ minimal = false, filters, onFilterChange, onForceReset, onS
     supabase.auth.getSession().then(({ data: { session } }) => setUser(session?.user ?? null));
     return () => subscription.unsubscribe();
   }, []);
-
-  useEffect(() => {
-    if (!moreCountriesOpen) return;
-    const handler = (e: MouseEvent) => {
-      if (moreRef.current && !moreRef.current.contains(e.target as Node)) setMoreCountriesOpen(false);
-    };
-    document.addEventListener("mousedown", handler);
-    return () => document.removeEventListener("mousedown", handler);
-  }, [moreCountriesOpen]);
 
   const handleOAuthLogin = async (provider: "google" | "apple") => {
     try {
@@ -168,95 +111,88 @@ const AppHeader = ({ minimal = false, filters, onFilterChange, onForceReset, onS
     filters.country !== defaultFilters.country ||
     filters.period !== defaultFilters.period ||
     filters.category !== defaultFilters.category ||
-    filters.type !== defaultFilters.type ||
-    filters.query
+    filters.type !== defaultFilters.type
   );
+
+  // Build active filter pills for display
+  const activeFilterPills: { key: keyof FilterState; label: string; defaultValue: string }[] = [];
+  if (filters) {
+    if (filters.country !== "global") {
+      const allC = countries.flatMap(g => g.items);
+      const found = allC.find(c => c.value === filters.country);
+      activeFilterPills.push({ key: "country", label: found?.label || filters.country, defaultValue: "global" });
+    }
+    if (filters.category !== "Todas") {
+      activeFilterPills.push({ key: "category", label: filters.category, defaultValue: "Todas" });
+    }
+    if (filters.type !== "Todas mídias") {
+      activeFilterPills.push({ key: "type", label: filters.type, defaultValue: "Todas mídias" });
+    }
+    if (filters.period !== "Hoje") {
+      activeFilterPills.push({ key: "period", label: filters.period, defaultValue: "Hoje" });
+    }
+  }
+
+  const filteredCountries = countries.map(group => ({
+    ...group,
+    items: group.items.filter(c =>
+      !countrySearch || c.label.toLowerCase().includes(countrySearch.toLowerCase()) || c.value.toLowerCase().includes(countrySearch.toLowerCase())
+    ),
+  })).filter(g => g.items.length > 0);
 
   return (
     <>
-      <header className="sticky top-0 z-50 flex flex-col bg-background/92 backdrop-blur-md border-b border-border/50" role="banner">
-        {/* Row 1: Logo + Search + Controls */}
-        <div className="h-10 flex items-center px-2 md:px-4">
-          <div className="w-full max-w-[1440px] mx-auto flex items-center gap-2">
-            <Link to="/welcome" className="flex items-center gap-1.5 shrink-0 mr-1" aria-label="GTT Monitor">
-              <span className="text-[11px] font-bold tracking-tight text-foreground">GTTMonitor</span>
+      <header className="sticky top-0 z-50 bg-background/92 backdrop-blur-md border-b border-border/40" role="banner">
+        <div className="h-11 flex items-center px-3 md:px-5">
+          <div className="w-full max-w-[1440px] mx-auto flex items-center">
+            {/* Logo */}
+            <Link to="/welcome" className="flex items-center gap-1.5 shrink-0" aria-label="GTT Monitor">
+              <span className="text-[12px] font-bold tracking-tight text-foreground">GTTMonitor</span>
             </Link>
 
-            {filters && onFilterChange && (
-              <div className="relative hidden sm:flex items-center h-7 w-[160px] lg:w-[200px] flex-shrink-0">
-                <Search className="absolute left-2 text-muted-foreground w-3 h-3" />
-                <input type="text" placeholder={lang === "pt" ? "Buscar tendência..." : "Search trend..."}
-                  value={filters.query || ""} onChange={(e) => update("query", e.target.value)}
-                  className="w-full h-full pl-6 pr-2 rounded-full border border-border bg-card text-[11px] text-foreground placeholder:text-muted-foreground outline-none focus:border-primary/40 focus:ring-1 focus:ring-primary/15 transition-all" />
-                {filters.query && (
-                  <button onClick={() => update("query", "")} className="absolute right-1.5 text-muted-foreground hover:text-foreground compact-btn">
-                    <X className="w-2.5 h-2.5" />
-                  </button>
-                )}
+            {/* Active filter pills */}
+            {activeFilterPills.length > 0 && (
+              <div className="flex items-center gap-1 ml-3 overflow-x-auto scrollbar-none">
+                {activeFilterPills.map(pill => (
+                  <span key={pill.key}
+                    className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium bg-foreground/8 text-foreground border border-border/40 flex-shrink-0">
+                    {pill.label}
+                    <button onClick={() => update(pill.key, pill.defaultValue)}
+                      className="hover:text-destructive transition-colors">
+                      <X className="w-2.5 h-2.5" />
+                    </button>
+                  </span>
+                ))}
               </div>
             )}
 
             <div className="flex-1" />
 
-            <div className="flex items-center gap-1">
-              <button onClick={() => setDark(!dark)}
-                className="compact-btn flex items-center justify-center w-7 h-7 rounded-lg text-muted-foreground hover:text-foreground transition-colors"
-                aria-label={dark ? "Light mode" : "Dark mode"}>
-                {dark ? <Sun className="w-3.5 h-3.5" /> : <Moon className="w-3.5 h-3.5" />}
-              </button>
-
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <button className="compact-btn inline-flex items-center gap-0.5 px-1.5 h-7 rounded-lg text-[10px] font-semibold text-muted-foreground hover:text-foreground transition-colors">
-                    {lang.toUpperCase()} <ChevronDown className="w-2.5 h-2.5 opacity-40" />
-                  </button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="min-w-[200px] max-h-[340px] overflow-y-auto">
-                  {languages.map((l) =>
-                    <DropdownMenuItem key={l.code} className={`gap-2 text-[12px] ${lang === l.code ? "font-semibold" : ""}`} onClick={() => setLang(l.code)}>
-                      <span className="font-medium">{l.label}</span>
-                      <span className="text-muted-foreground text-[10px]">{l.name}</span>
-                    </DropdownMenuItem>
-                  )}
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem className="gap-2 text-[10px] text-muted-foreground" onClick={() => {
-                    window.dispatchEvent(new Event("trend-refresh"));
-                    toast({ title: lang === "en" ? "Refreshing translations..." : "Atualizando traduções..." });
-                  }}>
-                    <RefreshCw className="w-3 h-3" /> {lang === "en" ? "Force re-translate" : "Forçar retradução"}
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
+            {/* Controls */}
+            <div className="flex items-center gap-1.5">
+              {/* Filter button — opens drawer */}
+              {filters && onFilterChange && (
+                <button onClick={() => setDrawerOpen(true)}
+                  className={`compact-btn flex items-center gap-1 h-7 px-2.5 rounded-lg text-[10px] font-semibold transition-all ${
+                    hasActiveFilters ? "bg-foreground text-background" : "text-muted-foreground hover:text-foreground hover:bg-muted"
+                  }`}>
+                  <Filter className="w-3 h-3" />
+                  <span className="hidden sm:inline">{lang === "pt" ? "Filtros" : "Filters"}</span>
+                  {hasActiveFilters && <span className="w-1.5 h-1.5 rounded-full bg-background/60" />}
+                </button>
+              )}
 
               <a href="https://buy.stripe.com/fZu7sMgw6cHLeTnbWVdIA00" target="_blank" rel="noopener noreferrer"
                 className="hidden sm:flex apoie-pill compact-link">{t("support")}</a>
 
-              <div className="hidden sm:block w-px h-4 bg-border/40" />
-
               {user ? (
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <button className="compact-btn flex items-center justify-center w-7 h-7 rounded-full hover:ring-2 hover:ring-ring/20 transition-all">
-                      <Avatar className="w-5 h-5">
-                        {userAvatar && <AvatarImage src={userAvatar} alt={userName} />}
-                        <AvatarFallback className="text-[8px] font-bold bg-foreground text-background">{userInitial}</AvatarFallback>
-                      </Avatar>
-                    </button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end" className="w-52">
-                    <div className="px-3 py-2 border-b border-border/30">
-                      <p className="text-[11px] font-semibold truncate">{userName}</p>
-                      <p className="text-[9px] text-muted-foreground truncate">{user?.email}</p>
-                    </div>
-                    <DropdownMenuItem className="gap-2 text-[12px]" asChild><Link to="/dashboard"><BarChart3 className="w-3 h-3" /> Dashboard</Link></DropdownMenuItem>
-                    <DropdownMenuItem className="gap-2 text-[12px]" asChild><Link to="/reports"><FileText className="w-3 h-3" /> {lang === "en" ? "Reports" : "Relatórios"}</Link></DropdownMenuItem>
-                    <DropdownMenuItem className="gap-2 text-[12px]" asChild><Link to="/perfil"><User className="w-3 h-3" /> {lang === "en" ? "Profile" : "Perfil"}</Link></DropdownMenuItem>
-                    <DropdownMenuSeparator />
-                    <DropdownMenuItem onClick={handleLogout} className="gap-2 text-[12px] text-destructive focus:text-destructive">
-                      <LogOut className="w-3 h-3" /> {lang === "en" ? "Sign out" : "Sair"}
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
+                <button onClick={() => navigate("/perfil")}
+                  className="compact-btn flex items-center justify-center w-7 h-7 rounded-full hover:ring-2 hover:ring-ring/20 transition-all">
+                  <Avatar className="w-5 h-5">
+                    {userAvatar && <AvatarImage src={userAvatar} alt={userName} />}
+                    <AvatarFallback className="text-[8px] font-bold bg-foreground text-background">{userInitial}</AvatarFallback>
+                  </Avatar>
+                </button>
               ) : (
                 <button onClick={() => setLoginOpen(true)}
                   className="compact-btn flex items-center gap-1 h-6 px-2.5 rounded-full text-[10px] font-semibold bg-foreground text-background">
@@ -265,122 +201,197 @@ const AppHeader = ({ minimal = false, filters, onFilterChange, onForceReset, onS
                 </button>
               )}
 
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <button className="compact-btn flex items-center justify-center w-7 h-7 rounded-lg text-muted-foreground hover:text-foreground transition-colors">
-                    <Menu className="w-4 h-4" />
-                  </button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-48">
-                  <DropdownMenuItem className="gap-2 text-[12px]" asChild><Link to="/dashboard"><BarChart3 className="w-3 h-3" /> Dashboard</Link></DropdownMenuItem>
-                  <DropdownMenuItem className="gap-2 text-[12px]" onClick={onSaveFilter}><Bell className="w-3 h-3" /> {lang === "pt" ? "Alertas" : "Alerts"}</DropdownMenuItem>
-                  <DropdownMenuItem className="gap-2 text-[12px]" onClick={onOpenSavedCollections}><Bookmark className="w-3 h-3" /> {lang === "pt" ? "Salvos" : "Saved"}</DropdownMenuItem>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem className="gap-2 text-[12px]" asChild><Link to="/metodologia"><BookOpen className="w-3 h-3" /> {lang === "pt" ? "Metodologia" : "Methodology"}</Link></DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
+              <button onClick={() => setDrawerOpen(true)}
+                className="compact-btn flex items-center justify-center w-7 h-7 rounded-lg text-muted-foreground hover:text-foreground transition-colors">
+                <Menu className="w-4 h-4" />
+              </button>
             </div>
           </div>
         </div>
-
-        {/* Row 2: Country pills + Category + Source type + Period */}
-        {filters && onFilterChange && (
-          <div className="flex items-center px-2 md:px-4 border-t border-border/30 overflow-hidden" style={{ height: 32 }}>
-            <div className="w-full max-w-[1440px] mx-auto flex items-center gap-1 overflow-x-auto" style={{ scrollbarWidth: "none" }}>
-              {/* Countries */}
-              {COUNTRY_PILLS.map(c => (
-                <button key={c.value} onClick={() => update("country", c.value)}
-                  className={`compact-btn flex-shrink-0 inline-flex items-center gap-1 px-2 h-6 rounded-full text-[9px] font-semibold transition-all ${
-                    filters.country === c.value ? "bg-foreground text-background" : "text-muted-foreground hover:text-foreground hover:bg-muted"
-                  }`}>
-                  <span className="text-[10px]">{c.flag}</span><span>{c.label}</span>
-                </button>
-              ))}
-
-              <div className="relative flex-shrink-0" ref={moreRef}>
-                <button onClick={() => setMoreCountriesOpen(!moreCountriesOpen)}
-                  className={`compact-btn inline-flex items-center gap-0.5 px-2 h-6 rounded-full text-[9px] font-semibold transition-all ${
-                    MORE_COUNTRIES.some(mc => mc.value === filters.country) ? "bg-foreground text-background" : "text-muted-foreground hover:text-foreground hover:bg-muted"
-                  }`}>
-                  +{MORE_COUNTRIES.length} <ChevronDown className="w-2.5 h-2.5" />
-                </button>
-                {moreCountriesOpen && (
-                  <div className="absolute top-full left-0 mt-1 z-[9999] bg-popover border border-border rounded-lg p-1 shadow-lg min-w-[180px] max-h-[320px] overflow-y-auto grid grid-cols-2 gap-0.5">
-                    {MORE_COUNTRIES.map(c => (
-                      <button key={c.value} onClick={() => { update("country", c.value); setMoreCountriesOpen(false); }}
-                        className={`w-full text-left px-2 py-1.5 rounded-md flex items-center gap-1 text-[10px] transition-colors ${
-                          filters.country === c.value ? "bg-primary/10 text-primary font-semibold" : "hover:bg-muted text-foreground"
-                        }`}>
-                        <span>{c.flag}</span> {c.label}
-                      </button>
-                    ))}
-                  </div>
-                )}
-              </div>
-
-              <div className="w-px h-4 bg-border/30 flex-shrink-0 mx-0.5" />
-
-              {/* Categories */}
-              {CATEGORY_PILLS.map(c => (
-                <button key={c.value} onClick={() => update("category", c.value)}
-                  className={`compact-btn flex-shrink-0 inline-flex items-center px-2 h-6 rounded-full text-[9px] font-semibold transition-all ${
-                    filters.category === c.value ? "bg-foreground text-background" : "text-muted-foreground hover:text-foreground hover:bg-muted"
-                  }`}>
-                  {c.label[lang as "pt" | "en"] || c.label.pt}
-                </button>
-              ))}
-
-              <div className="w-px h-4 bg-border/30 flex-shrink-0 mx-0.5 hidden md:block" />
-
-              {/* Source type pills — desktop */}
-              <div className="hidden md:flex items-center gap-0.5">
-                {SOURCE_TYPE_FILTERS.map(o => (
-                  <button key={o.v} onClick={() => update("type", o.v)}
-                    className={`compact-btn flex-shrink-0 inline-flex items-center px-2 h-6 rounded-full text-[9px] font-semibold transition-all ${
-                      filters.type === o.v ? "bg-foreground text-background" : "text-muted-foreground hover:text-foreground hover:bg-muted"
-                    }`}>
-                    {o.l[lang as "pt" | "en"] || o.l.pt}
-                  </button>
-                ))}
-              </div>
-
-              <div className="w-px h-4 bg-border/30 flex-shrink-0 mx-0.5 hidden lg:block" />
-
-              {/* Period dropdown — desktop */}
-              <div className="hidden lg:block">
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <button className={`compact-btn inline-flex items-center gap-0.5 px-2 h-6 rounded-full text-[9px] font-semibold transition-all ${
-                      filters.period !== defaultFilters.period ? "bg-foreground text-background" : "text-muted-foreground hover:bg-muted"
-                    }`}>
-                      <Calendar className="w-3 h-3" />
-                      {PERIOD_OPTIONS.find(p => p.v === filters.period)?.l[lang as "pt" | "en"] || filters.period}
-                      <ChevronDown className="w-2.5 h-2.5 opacity-40" />
-                    </button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="start" className="min-w-[140px]">
-                    {PERIOD_OPTIONS.map(o => (
-                      <DropdownMenuItem key={o.v} onClick={() => update("period", o.v)}
-                        className={`text-[11px] ${filters.period === o.v ? "font-semibold text-primary" : ""}`}>
-                        {o.l[lang as "pt" | "en"] || o.l.pt}
-                      </DropdownMenuItem>
-                    ))}
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              </div>
-
-              {/* Clear */}
-              {hasActiveFilters && (
-                <button onClick={() => { onFilterChange(defaultFilters); onForceReset?.(); }}
-                  className="compact-btn flex-shrink-0 flex items-center justify-center w-6 h-6 rounded-full border border-border text-muted-foreground hover:border-destructive/50 hover:bg-destructive/10 hover:text-destructive transition-all ml-1"
-                  title={lang === "pt" ? "Limpar filtros" : "Clear filters"}>
-                  <RotateCcw size={10} />
-                </button>
-              )}
-            </div>
-          </div>
-        )}
       </header>
+
+      {/* Filter & Navigation Drawer */}
+      <Sheet open={drawerOpen} onOpenChange={setDrawerOpen}>
+        <SheetContent side="right" className="w-[320px] sm:w-[360px] p-0">
+          <SheetHeader className="p-4 pb-3 border-b border-border/30">
+            <SheetTitle className="text-[14px] font-bold">
+              {lang === "pt" ? "Filtros & Navegação" : "Filters & Navigation"}
+            </SheetTitle>
+          </SheetHeader>
+          <ScrollArea className="h-[calc(100vh-60px)]">
+            <div className="p-4 space-y-5">
+              {/* FILTERS SECTION */}
+              {filters && onFilterChange && (
+                <>
+                  <div>
+                    <h4 className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground mb-2">
+                      {lang === "pt" ? "País / Região" : "Country / Region"}
+                    </h4>
+                    <input type="text" placeholder={lang === "pt" ? "Buscar país..." : "Search country..."}
+                      value={countrySearch} onChange={(e) => setCountrySearch(e.target.value)}
+                      className="w-full h-8 px-3 rounded-md border border-border bg-card text-[11px] text-foreground placeholder:text-muted-foreground outline-none focus:border-primary/40 mb-2" />
+                    <div className="max-h-[200px] overflow-y-auto space-y-1 scrollbar-thin">
+                      {filteredCountries.map(group => (
+                        <div key={group.group}>
+                          <div className="text-[9px] font-bold text-muted-foreground/50 uppercase tracking-wider px-1 py-1">{group.group}</div>
+                          <div className="grid grid-cols-2 gap-0.5">
+                            {group.items.map(c => (
+                              <button key={c.value} onClick={() => { update("country", c.value); }}
+                                className={`text-left px-2 py-1.5 rounded-md text-[11px] transition-colors ${
+                                  filters.country === c.value ? "bg-foreground text-background font-semibold" : "hover:bg-muted text-foreground"
+                                }`}>
+                                {c.label}
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div>
+                    <h4 className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground mb-2">
+                      {lang === "pt" ? "Categoria" : "Category"}
+                    </h4>
+                    <div className="flex flex-wrap gap-1">
+                      {CATEGORIES.map(c => (
+                        <button key={c.value} onClick={() => update("category", c.value)}
+                          className={`px-2.5 py-1 rounded-md text-[10px] font-medium transition-all ${
+                            filters.category === c.value ? "bg-foreground text-background" : "bg-muted/50 text-muted-foreground hover:bg-muted hover:text-foreground"
+                          }`}>
+                          {c.label[lang as "pt" | "en"] || c.label.pt}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div>
+                    <h4 className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground mb-2">
+                      {lang === "pt" ? "Período" : "Period"}
+                    </h4>
+                    <div className="flex flex-wrap gap-1">
+                      {PERIODS.map(p => (
+                        <button key={p.v} onClick={() => update("period", p.v)}
+                          className={`px-2.5 py-1 rounded-md text-[10px] font-medium transition-all ${
+                            filters.period === p.v ? "bg-foreground text-background" : "bg-muted/50 text-muted-foreground hover:bg-muted hover:text-foreground"
+                          }`}>
+                          {p.l[lang as "pt" | "en"] || p.l.pt}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div>
+                    <h4 className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground mb-2">
+                      {lang === "pt" ? "Tipo de Fonte" : "Source Type"}
+                    </h4>
+                    <div className="flex flex-wrap gap-1">
+                      {SOURCE_TYPES.map(s => (
+                        <button key={s.v} onClick={() => update("type", s.v)}
+                          className={`px-2.5 py-1 rounded-md text-[10px] font-medium transition-all ${
+                            filters.type === s.v ? "bg-foreground text-background" : "bg-muted/50 text-muted-foreground hover:bg-muted hover:text-foreground"
+                          }`}>
+                          {s.l[lang as "pt" | "en"] || s.l.pt}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {hasActiveFilters && (
+                    <button onClick={() => { onFilterChange(defaultFilters); onForceReset?.(); }}
+                      className="w-full flex items-center justify-center gap-1.5 py-2 rounded-md border border-destructive/30 text-destructive text-[11px] font-medium hover:bg-destructive/5 transition-colors">
+                      <X className="w-3 h-3" />
+                      {lang === "pt" ? "Limpar todos os filtros" : "Clear all filters"}
+                    </button>
+                  )}
+                </>
+              )}
+
+              {/* SETTINGS */}
+              <div className="border-t border-border/30 pt-4">
+                <h4 className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground mb-2">
+                  {lang === "pt" ? "Configurações" : "Settings"}
+                </h4>
+                <div className="space-y-1">
+                  <button onClick={() => setDark(!dark)}
+                    className="w-full flex items-center justify-between px-3 py-2 rounded-md hover:bg-muted transition-colors">
+                    <span className="flex items-center gap-2 text-[11px] font-medium">
+                      {dark ? <Moon className="w-3.5 h-3.5" /> : <Sun className="w-3.5 h-3.5" />}
+                      {dark ? (lang === "pt" ? "Modo escuro" : "Dark mode") : (lang === "pt" ? "Modo claro" : "Light mode")}
+                    </span>
+                    <span className="text-[9px] text-muted-foreground">{dark ? "ON" : "OFF"}</span>
+                  </button>
+                  <div className="px-3 py-2">
+                    <span className="text-[10px] font-medium text-muted-foreground mb-1 block">{lang === "pt" ? "Idioma" : "Language"}</span>
+                    <div className="flex flex-wrap gap-1 mt-1">
+                      {languages.slice(0, 6).map(l => (
+                        <button key={l.code} onClick={() => { setLang(l.code); window.dispatchEvent(new Event("trend-refresh")); }}
+                          className={`px-2 py-1 rounded text-[10px] font-medium transition-all ${
+                            lang === l.code ? "bg-foreground text-background" : "bg-muted/50 text-muted-foreground hover:bg-muted"
+                          }`}>
+                          {l.label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* NAVIGATION */}
+              <div className="border-t border-border/30 pt-4">
+                <h4 className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground mb-2">
+                  {lang === "pt" ? "Conta" : "Account"}
+                </h4>
+                <div className="space-y-0.5">
+                  <Link to="/dashboard" onClick={() => setDrawerOpen(false)}
+                    className="flex items-center justify-between px-3 py-2 rounded-md hover:bg-muted transition-colors text-[11px] font-medium">
+                    <span className="flex items-center gap-2"><BarChart3 className="w-3.5 h-3.5" /> Dashboard</span>
+                    <ChevronRight className="w-3 h-3 text-muted-foreground" />
+                  </Link>
+                  <button onClick={() => { onSaveFilter?.(); setDrawerOpen(false); }}
+                    className="w-full flex items-center justify-between px-3 py-2 rounded-md hover:bg-muted transition-colors text-[11px] font-medium">
+                    <span className="flex items-center gap-2"><Bell className="w-3.5 h-3.5" /> {lang === "pt" ? "Alertas" : "Alerts"}</span>
+                    <ChevronRight className="w-3 h-3 text-muted-foreground" />
+                  </button>
+                  <button onClick={() => { onOpenSavedCollections?.(); setDrawerOpen(false); }}
+                    className="w-full flex items-center justify-between px-3 py-2 rounded-md hover:bg-muted transition-colors text-[11px] font-medium">
+                    <span className="flex items-center gap-2"><Bookmark className="w-3.5 h-3.5" /> {lang === "pt" ? "Salvos" : "Saved"}</span>
+                    <ChevronRight className="w-3 h-3 text-muted-foreground" />
+                  </button>
+                  <Link to="/metodologia" onClick={() => setDrawerOpen(false)}
+                    className="flex items-center justify-between px-3 py-2 rounded-md hover:bg-muted transition-colors text-[11px] font-medium">
+                    <span className="flex items-center gap-2"><BookOpen className="w-3.5 h-3.5" /> {lang === "pt" ? "Metodologia" : "Methodology"}</span>
+                    <ChevronRight className="w-3 h-3 text-muted-foreground" />
+                  </Link>
+                  <Link to="/reports" onClick={() => setDrawerOpen(false)}
+                    className="flex items-center justify-between px-3 py-2 rounded-md hover:bg-muted transition-colors text-[11px] font-medium">
+                    <span className="flex items-center gap-2"><FileText className="w-3.5 h-3.5" /> {lang === "pt" ? "Relatórios" : "Reports"}</span>
+                    <ChevronRight className="w-3 h-3 text-muted-foreground" />
+                  </Link>
+                  {user ? (
+                    <>
+                      <Link to="/perfil" onClick={() => setDrawerOpen(false)}
+                        className="flex items-center justify-between px-3 py-2 rounded-md hover:bg-muted transition-colors text-[11px] font-medium">
+                        <span className="flex items-center gap-2"><User className="w-3.5 h-3.5" /> {lang === "pt" ? "Perfil" : "Profile"}</span>
+                        <ChevronRight className="w-3 h-3 text-muted-foreground" />
+                      </Link>
+                      <button onClick={() => { handleLogout(); setDrawerOpen(false); }}
+                        className="w-full flex items-center px-3 py-2 rounded-md hover:bg-destructive/5 transition-colors text-[11px] font-medium text-destructive">
+                        <LogOut className="w-3.5 h-3.5 mr-2" /> {lang === "pt" ? "Sair" : "Sign out"}
+                      </button>
+                    </>
+                  ) : (
+                    <button onClick={() => { setLoginOpen(true); setDrawerOpen(false); }}
+                      className="w-full flex items-center px-3 py-2 rounded-md hover:bg-muted transition-colors text-[11px] font-medium">
+                      <LogIn className="w-3.5 h-3.5 mr-2" /> {lang === "pt" ? "Entrar" : "Sign in"}
+                    </button>
+                  )}
+                </div>
+              </div>
+            </div>
+          </ScrollArea>
+        </SheetContent>
+      </Sheet>
 
       {/* Login Dialog */}
       <Dialog open={loginOpen} onOpenChange={setLoginOpen}>
