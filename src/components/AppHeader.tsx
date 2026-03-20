@@ -166,6 +166,55 @@ const AppHeader = () => {
         </div>
       </header>
 
+
+      {/* About / Methodology Modal */}
+      <Dialog open={aboutOpen} onOpenChange={setAboutOpen}>
+        <DialogContent className="sm:max-w-[520px] max-h-[80vh] overflow-y-auto p-6 rounded-2xl border-border/50">
+          <DialogHeader>
+            <DialogTitle className="text-[16px] font-bold">
+              {lang === "pt" ? "Sobre o GTT Monitor" : "About GTT Monitor"}
+            </DialogTitle>
+            <DialogDescription className="text-[11px] text-muted-foreground">
+              {lang === "pt" ? "Metodologia, fontes e transparência" : "Methodology, sources & transparency"}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 mt-2 text-[12px] text-foreground/90 leading-relaxed">
+            <section>
+              <h3 className="text-[13px] font-semibold mb-1.5">{lang === "pt" ? "O que é" : "What it is"}</h3>
+              <p className="text-muted-foreground">
+                {lang === "pt"
+                  ? "O GTT Monitor é uma plataforma de inteligência de tendências que agrega, cruza e classifica dados de 21+ fontes públicas em tempo real, incluindo Google Trends, NewsAPI, GDELT, YouTube, Reddit, além de fontes acadêmicas e institucionais."
+                  : "GTT Monitor is a trend intelligence platform that aggregates, cross-references and classifies data from 21+ public sources in real time, including Google Trends, NewsAPI, GDELT, YouTube, Reddit, plus academic and institutional sources."}
+              </p>
+            </section>
+            <section>
+              <h3 className="text-[13px] font-semibold mb-1.5">{lang === "pt" ? "Metodologia" : "Methodology"}</h3>
+              <ul className="list-disc pl-4 space-y-1 text-muted-foreground">
+                <li>{lang === "pt" ? "Coleta multi-fonte com fallback em 5 camadas" : "Multi-source collection with 5-layer fallback"}</li>
+                <li>{lang === "pt" ? "Classificação por volume, crescimento e cross-platform" : "Classification by volume, growth and cross-platform presence"}</li>
+                <li>{lang === "pt" ? "Prioridade para imprensa verificada (Reuters, BBC, Guardian)" : "Priority for verified press (Reuters, BBC, Guardian)"}</li>
+                <li>{lang === "pt" ? "Atualização a cada 15 minutos" : "Updates every 15 minutes"}</li>
+                <li>{lang === "pt" ? "Selos de confiabilidade: oficial, verificado, científico, internacional" : "Reliability badges: official, verified, scientific, international"}</li>
+              </ul>
+            </section>
+            <section>
+              <h3 className="text-[13px] font-semibold mb-1.5">{lang === "pt" ? "Transparência" : "Transparency"}</h3>
+              <p className="text-muted-foreground">
+                {lang === "pt"
+                  ? "Cada card exibe a origem dos dados e justificativas qualitativas. Os usuários podem dar feedback (👍 👎 🚩) para calibrar o algoritmo. Nenhum dado pessoal é coletado sem consentimento."
+                  : "Each card shows data origin and qualitative justifications. Users can give feedback (👍 👎 🚩) to calibrate the algorithm. No personal data is collected without consent."}
+              </p>
+            </section>
+            <div className="pt-2 border-t border-border/30">
+              <Link to="/metodologia" onClick={() => setAboutOpen(false)}
+                className="text-[11px] font-semibold text-primary hover:underline">
+                {lang === "pt" ? "Ver metodologia completa →" : "View full methodology →"}
+              </Link>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
       {/* Login Modal */}
       <Dialog open={loginOpen} onOpenChange={setLoginOpen}>
         <DialogContent className="sm:max-w-[360px] p-6 rounded-2xl border-border/50">
