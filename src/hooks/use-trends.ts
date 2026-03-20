@@ -107,17 +107,7 @@ export function useTrends(filters: FilterState, onTrendCountsChange: (counts: Re
         return result;
       };
 
-      const fetchClientSourceWithLogs = async (
-        sourceName: string,
-        fetchPromise: Promise<TrendCardProps[]>,
-        timeoutMs = 8000
-      ) => {
-        if (import.meta.env.DEV) console.log(`🔍 Buscando ${sourceName}...`);
-        const result = await withTimeout(fetchPromise, timeoutMs, [] as TrendCardProps[]);
-        if (import.meta.env.DEV) console.log(`✅ ${sourceName} retornou:`, result.length, "itens");
-        health = updateSourceHealth(health, sourceName, result.length > 0, result.length);
-        return result;
-      };
+      // Client-side source fetching removed — all sources now use edge functions
 
       const [
         edgeResult, extraResult, extraSourcesResult, socialTrendsResult, openDataResult,
