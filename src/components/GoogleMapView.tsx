@@ -6,26 +6,19 @@ import { supabase } from "@/integrations/supabase/client";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { TrendCardProps } from "./TrendCard";
-import { Flame, Globe, RefreshCw, GitBranch, Heart, Plus, Minus, Map as MapIcon } from "lucide-react";
-import { 
-  computeFlowArcs, 
-  computeSentimentBubbles, 
-  computeCurvePoints,
+import { Flame, Globe, GitBranch, Heart, Plus, Minus, Map as MapIcon } from "lucide-react";
+import {
+  computeFlowArcs,
+  computeSentimentBubbles,
   deriveSentiment,
   sentimentColors,
-  type Sentiment,
   type FlowArc,
-  type SentimentBubble
+  type SentimentBubble,
 } from "@/lib/map-visualizations";
 
-type MapMode = "heatmap" | "flow" | "sentiment" | "choropleth";
+type MapMode = "heatmap" | "choropleth" | "flow" | "sentiment";
 
-interface CountryPoint {
-  id: string;
-  name: string;
-  lat: number;
-  lng: number;
-}
+interface CountryPoint { id: string; name: string; lat: number; lng: number; }
 
 const countryPoints: CountryPoint[] = [
   { id: "BR", name: "Brasil", lat: -14.24, lng: -51.93 },
@@ -77,34 +70,49 @@ const countryPoints: CountryPoint[] = [
   { id: "NZ", name: "Nova Zelândia", lat: -40.9, lng: 174.89 },
 ];
 
-const lightStyles: google.maps.MapTypeStyle[] = [
-  { elementType: "geometry", stylers: [{ color: "#E8E4DC" }] },
-  { elementType: "labels.icon", stylers: [{ visibility: "off" }] },
-  { elementType: "labels.text.fill", stylers: [{ color: "#6B6560" }] },
-  { elementType: "labels.text.stroke", stylers: [{ color: "#F4F4F0" }, { weight: 2 }] },
-  { featureType: "administrative.country", elementType: "geometry.stroke", stylers: [{ color: "#B0A898" }, { weight: 0.5 }] },
-  { featureType: "water", elementType: "geometry", stylers: [{ color: "#C8D4DC" }] },
-  { featureType: "road", stylers: [{ visibility: "off" }] },
+/* ─── Base map style: warm beige continents, blue-gray oceans, no clutter ─── */
+const BASE_MAP_STYLE: google.maps.MapTypeStyle[] = [
+  { featureType: "all", elementType: "labels.icon", stylers: [{ visibility: "off" }] },
+  { featureType: "administrative.locality", stylers: [{ visibility: "off" }] },
   { featureType: "poi", stylers: [{ visibility: "off" }] },
+  { featureType: "road", stylers: [{ visibility: "off" }] },
   { featureType: "transit", stylers: [{ visibility: "off" }] },
+  { featureType: "landscape.natural", elementType: "geometry", stylers: [{ color: "#EDE8DF" }] },
+  { featureType: "landscape.man_made", elementType: "geometry", stylers: [{ color: "#E4DFD5" }] },
+  { featureType: "water", elementType: "geometry", stylers: [{ color: "#C9D5DC" }] },
+  { featureType: "administrative.country", elementType: "geometry.stroke", stylers: [{ color: "#A89F94" }, { weight: 0.8 }] },
+  { featureType: "administrative.country", elementType: "labels.text.fill", stylers: [{ color: "#7A736B" }] },
+  { featureType: "administrative.country", elementType: "labels.text.stroke", stylers: [{ color: "#EDE8DF" }, { weight: 2 }] },
   { featureType: "administrative.province", elementType: "geometry.stroke", stylers: [{ visibility: "off" }] },
-  { featureType: "administrative.locality", elementType: "labels", stylers: [{ visibility: "off" }] },
 ];
 
-const darkStyles: google.maps.MapTypeStyle[] = [
+const DARK_MAP_STYLE: google.maps.MapTypeStyle[] = [
+  { featureType: "all", elementType: "labels.icon", stylers: [{ visibility: "off" }] },
+  { featureType: "administrative.locality", stylers: [{ visibility: "off" }] },
+  { featureType: "poi", stylers: [{ visibility: "off" }] },
+  { featureType: "road", stylers: [{ visibility: "off" }] },
+  { featureType: "transit", stylers: [{ visibility: "off" }] },
   { elementType: "geometry", stylers: [{ color: "#1a1f2e" }] },
-  { elementType: "labels.icon", stylers: [{ visibility: "off" }] },
   { elementType: "labels.text.fill", stylers: [{ color: "#64748b" }] },
   { elementType: "labels.text.stroke", stylers: [{ color: "#0f1419" }, { weight: 2 }] },
   { featureType: "administrative.country", elementType: "geometry.stroke", stylers: [{ color: "#334155" }, { weight: 0.5 }] },
   { featureType: "water", elementType: "geometry", stylers: [{ color: "#0c1e35" }] },
-  { featureType: "road", stylers: [{ visibility: "off" }] },
-  { featureType: "poi", stylers: [{ visibility: "off" }] },
-  { featureType: "transit", stylers: [{ visibility: "off" }] },
   { featureType: "administrative.province", elementType: "geometry.stroke", stylers: [{ visibility: "off" }] },
-  { featureType: "administrative.locality", elementType: "labels", stylers: [{ visibility: "off" }] },
 ];
 
+/* ─── Tooltip HTML builder ─── */
+function buildTooltipHtml(content: string, isDark: boolean): HTMLElement {
+  const div = document.createElement("div");
+  div.style.cssText = `font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;padding:12px 16px;min-width:200px;max-width:280px;background:${isDark ? "rgba(19,24,39,0.97)" : "rgba(255,255,255,0.97)"};color:${isDark ? "#e2e8f0" : "#111827"};border-radius:16px;backdrop-filter:blur(16px);border:1px solid ${isDark ? "rgba(71,84,103,0.5)" : "rgba(0,0,0,0.08)"};box-shadow:0 8px 32px rgba(0,0,0,0.12);`;
+  div.innerHTML = content;
+  return div;
+}
+
+function flagEmoji(code: string): string {
+  return String.fromCodePoint(...[...code.toUpperCase()].map(c => 0x1F1E6 + c.charCodeAt(0) - 65));
+}
+
+/* ─── Props ─── */
 interface GoogleMapViewProps {
   trendCounts: Record<string, number>;
   selectedCountry: string;
@@ -117,575 +125,184 @@ interface GoogleMapViewProps {
   onClose?: () => void;
 }
 
-const UpdateNotification = ({ countriesUpdated, newTrends, onDismiss }: { countriesUpdated: number; newTrends: number; onDismiss: () => void }) => (
-  <motion.div
-    initial={{ x: 100, opacity: 0 }}
-    animate={{ x: 0, opacity: 1 }}
-    exit={{ x: 100, opacity: 0 }}
-    transition={{ type: "spring", stiffness: 300, damping: 25 }}
-    className="absolute top-3 right-3 z-30 flex items-center gap-3 bg-card/95 backdrop-blur-xl border border-border/30 rounded-2xl px-4 py-3 shadow-lg"
-  >
-    <div className="w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center">
-      <RefreshCw className="w-4 h-4 text-primary animate-spin" />
-    </div>
-    <div className="flex flex-col">
-      <span className="text-xs font-semibold text-foreground">Mapa atualizado</span>
-      <span className="text-[10px] text-muted-foreground">{countriesUpdated} países · {newTrends} trends</span>
-    </div>
-    <button onClick={onDismiss} className="text-muted-foreground hover:text-foreground text-xs ml-1">✕</button>
-  </motion.div>
-);
-
-const HeatmapTooltip = React.memo(({ country, count, intensity, isDark }: {
-  country: CountryPoint;
-  count: number;
-  intensity: number;
-  isDark: boolean;
-}) => {
-  const criticality = intensity > 0.8 ? "🔥 CRÍTICO" : intensity > 0.6 ? "⚡ ALTO" : intensity > 0.4 ? "📊 MODERADO" : "ℹ️ NORMAL";
-  const bgColor = intensity > 0.8 ? "#ef4444" : intensity > 0.6 ? "#f97316" : intensity > 0.4 ? "#eab308" : "#6b7280";
-  const flag = String.fromCodePoint(...[...country.id.toUpperCase()].map(c => 0x1F1E6 + c.charCodeAt(0) - 65));
-
-  return (
-    <div style={{
-      fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
-      padding: "12px 16px",
-      minWidth: "200px",
-      background: isDark ? "rgba(19,24,39,0.97)" : "rgba(255,255,255,0.97)",
-      color: isDark ? "#e2e8f0" : "#111827",
-      borderRadius: "16px",
-      backdropFilter: "blur(16px)",
-      border: `1px solid ${isDark ? "rgba(71,84,103,0.5)" : "rgba(0,0,0,0.08)"}`,
-    }}>
-      <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "6px" }}>
-        <span style={{ fontSize: "24px" }}>{flag}</span>
-        <div>
-          <div style={{ fontWeight: "600", fontSize: "14px" }}>{country.name}</div>
-          <div style={{ fontSize: "11px", color: isDark ? "#94a3b8" : "#6b7280", marginTop: "2px" }}>{count} trends ativas</div>
-        </div>
-      </div>
-      <div style={{
-        fontSize: "11px",
-        background: bgColor,
-        color: "#fff",
-        padding: "2px 8px",
-        borderRadius: "12px",
-        display: "inline-block",
-        marginBottom: "8px",
-        fontWeight: "600",
-      }}>
-        {criticality}
-      </div>
-      <div style={{
-        fontSize: "11px",
-        color: isDark ? "#94a3b8" : "#475569",
-        marginBottom: "0px",
-        marginTop: "8px",
-      }}>
-        Clique para ver detalhes
-      </div>
-    </div>
-  );
-});
-
-HeatmapTooltip.displayName = "HeatmapTooltip";
-
-const SentimentTooltip = React.memo(({ bubble, isDark, trends }: {
-  bubble: SentimentBubble;
-  isDark: boolean;
-  trends: TrendCardProps[];
-}) => {
-  const total = Object.values(bubble.sentiment).reduce((a, b) => a + b, 0) || 1;
-  const flag = String.fromCodePoint(...[...bubble.countryId.toUpperCase()].map(c => 0x1F1E6 + c.charCodeAt(0) - 65));
-
-  const countryTrends = trends.filter(t => t.countryCode === bubble.countryId).slice(0, 3);
-
-  return (
-    <div style={{
-      fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
-      padding: "12px 16px",
-      minWidth: "240px",
-      background: isDark ? "rgba(19,24,39,0.97)" : "rgba(255,255,255,0.97)",
-      color: isDark ? "#e2e8f0" : "#111827",
-      borderRadius: "16px",
-      backdropFilter: "blur(16px)",
-      border: `1px solid ${isDark ? "rgba(71,84,103,0.5)" : "rgba(0,0,0,0.08)"}`,
-    }}>
-      <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "8px" }}>
-        <span style={{ fontSize: "24px" }}>{flag}</span>
-        <div>
-          <div style={{ fontWeight: "600", fontSize: "14px" }}>{bubble.countryName}</div>
-          <div style={{ fontSize: "11px", color: isDark ? "#94a3b8" : "#6b7280" }}>{bubble.volume} tendências</div>
-        </div>
-      </div>
-
-      <div style={{ marginBottom: "8px", fontSize: "11px" }}>
-        <div style={{ fontWeight: "600", marginBottom: "4px", color: isDark ? "#cbd5e1" : "#4b5563" }}>Sentimento</div>
-        <div style={{ display: "flex", gap: "4px" }}>
-          {Math.round((bubble.sentiment.positive / total) * 100) > 0 && (
-            <div style={{ fontSize: "10px", background: "rgba(16,185,129,0.2)", color: "#10b981", padding: "2px 6px", borderRadius: "4px" }}>
-              😊 {Math.round((bubble.sentiment.positive / total) * 100)}%
-            </div>
-          )}
-          {Math.round((bubble.sentiment.negative / total) * 100) > 0 && (
-            <div style={{ fontSize: "10px", background: "rgba(239,68,68,0.2)", color: "#ef4444", padding: "2px 6px", borderRadius: "4px" }}>
-              😠 {Math.round((bubble.sentiment.negative / total) * 100)}%
-            </div>
-          )}
-          {Math.round((bubble.sentiment.mixed / total) * 100) > 0 && (
-            <div style={{ fontSize: "10px", background: "rgba(245,158,11,0.2)", color: "#f59e0b", padding: "2px 6px", borderRadius: "4px" }}>
-              😐 {Math.round((bubble.sentiment.mixed / total) * 100)}%
-            </div>
-          )}
-        </div>
-      </div>
-
-      {countryTrends.length > 0 && (
-        <div style={{ fontSize: "11px" }}>
-          <div style={{ fontWeight: "600", marginBottom: "4px", color: isDark ? "#cbd5e1" : "#4b5563" }}>Top Trends</div>
-          {countryTrends.map((t, i) => (
-            <div key={i} style={{ fontSize: "10px", marginBottom: "2px", color: isDark ? "#cbd5e1" : "#374151" }}>
-              • {t.title.slice(0, 40)}...
-            </div>
-          ))}
-        </div>
-      )}
-    </div>
-  );
-});
-
-SentimentTooltip.displayName = "SentimentTooltip";
-
-const FlowTooltip = React.memo(({ arc, isDark }: {
-  arc: FlowArc;
-  isDark: boolean;
-}) => {
-  const originFlag = String.fromCodePoint(...[...arc.originId.toUpperCase()].map(c => 0x1F1E6 + c.charCodeAt(0) - 65));
-  const destFlag = String.fromCodePoint(...[...arc.destId.toUpperCase()].map(c => 0x1F1E6 + c.charCodeAt(0) - 65));
-
-  return (
-    <div style={{
-      fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
-      padding: "12px 16px",
-      minWidth: "260px",
-      background: isDark ? "rgba(19,24,39,0.97)" : "rgba(255,255,255,0.97)",
-      color: isDark ? "#e2e8f0" : "#111827",
-      borderRadius: "16px",
-      backdropFilter: "blur(16px)",
-      border: `1px solid ${isDark ? "rgba(71,84,103,0.5)" : "rgba(0,0,0,0.08)"}`,
-    }}>
-      <div style={{ display: "flex", alignItems: "center", gap: "6px", marginBottom: "8px" }}>
-        <span style={{ fontSize: "20px" }}>{originFlag}</span>
-        <div style={{ fontSize: "11px", fontWeight: "600" }}>{arc.originName}</div>
-        <span style={{ fontSize: "12px", color: isDark ? "#64748b" : "#9ca3af" }}>→</span>
-        <span style={{ fontSize: "20px" }}>{destFlag}</span>
-        <div style={{ fontSize: "11px", fontWeight: "600" }}>{arc.destName}</div>
-      </div>
-
-      <div style={{ fontSize: "11px", marginBottom: "6px", lineHeight: "1.4" }}>
-        <div style={{ fontWeight: "600", color: isDark ? "#cbd5e1" : "#4b5563" }}>{arc.trendTitle.slice(0, 50)}...</div>
-      </div>
-
-      <div style={{ fontSize: "10px", display: "flex", gap: "8px", color: isDark ? "#cbd5e1" : "#6b7280" }}>
-        <span>📊 Vol: {arc.volume}</span>
-        <span>⏱️ {arc.timeDelta.toFixed(1)}h</span>
-        <span style={{ color: sentimentColors[arc.sentiment] }}>● {arc.sentiment}</span>
-      </div>
-    </div>
-  );
-});
-
-FlowTooltip.displayName = "FlowTooltip";
-
+/* ═══════════════════════════════════════════════════════════════ */
+/*  MAIN COMPONENT                                                */
+/* ═══════════════════════════════════════════════════════════════ */
 const GoogleMapView = ({
-  trendCounts,
-  selectedCountry,
-  onSelectCountry,
-  activeTrend,
-  onDismissTrend,
-  trends = [],
-  onSelectTrend,
-  highlightCountry,
-  onClose,
+  trendCounts, selectedCountry, onSelectCountry, trends = [], onSelectTrend, highlightCountry, onClose,
 }: GoogleMapViewProps) => {
-  const { t, lang } = useLanguage();
+  const { lang } = useLanguage();
   const isMobile = useIsMobile();
   const mapRef = useRef<HTMLDivElement>(null);
   const googleMapRef = useRef<google.maps.Map | null>(null);
-  const hoverInfoRef = useRef<google.maps.InfoWindow | null>(null);
+  const infoRef = useRef<google.maps.InfoWindow | null>(null);
   const heatmapRef = useRef<any>(null);
   const markersRef = useRef<google.maps.Marker[]>([]);
   const polylinesRef = useRef<google.maps.Polyline[]>([]);
-  const particleAnimationsRef = useRef<number[]>([]);
+  const animFramesRef = useRef<number[]>([]);
   const geoJsonLoadedRef = useRef(false);
 
   const [mapLoaded, setMapLoaded] = useState(false);
   const [mapError, setMapError] = useState<string | null>(null);
   const [mapMode, setMapMode] = useState<MapMode>("heatmap");
-  const [modeTransitioning, setModeTransitioning] = useState(false);
   const [isDark, setIsDark] = useState(() => document.documentElement.classList.contains("dark"));
-  const [updateNotif, setUpdateNotif] = useState<{ countries: number; trends: number } | null>(null);
   const [mapRetry, setMapRetry] = useState(0);
 
+  // Derived data
+  const maxCount = useMemo(() => Math.max(...Object.values(trendCounts), 1), [trendCounts]);
+  const activeCountries = useMemo(() => Object.values(trendCounts).filter(v => v > 0).length, [trendCounts]);
+  const totalTrends = useMemo(() => Object.values(trendCounts).reduce((a, b) => a + b, 0), [trendCounts]);
+  const sentimentBubbles = useMemo(() => computeSentimentBubbles(trends, countryPoints), [trends]);
+  const flowArcs = useMemo(() => computeFlowArcs(trends, countryPoints, 0.55), [trends]);
+
+  // Dark mode observer
   useEffect(() => {
-    const observer = new MutationObserver(() => {
-      setIsDark(document.documentElement.classList.contains("dark"));
-    });
-    observer.observe(document.documentElement, { attributes: true, attributeFilter: ["class"] });
-    return () => observer.disconnect();
+    const obs = new MutationObserver(() => setIsDark(document.documentElement.classList.contains("dark")));
+    obs.observe(document.documentElement, { attributes: true, attributeFilter: ["class"] });
+    return () => obs.disconnect();
   }, []);
 
+  // ─── Cleanup helpers ───
+  const clearLayers = useCallback(() => {
+    markersRef.current.forEach(m => m.setMap(null));
+    markersRef.current = [];
+    polylinesRef.current.forEach(p => p.setMap(null));
+    polylinesRef.current = [];
+    animFramesRef.current.forEach(id => cancelAnimationFrame(id));
+    animFramesRef.current = [];
+    if (heatmapRef.current) { heatmapRef.current.setMap(null); heatmapRef.current = null; }
+    if (googleMapRef.current && geoJsonLoadedRef.current) {
+      googleMapRef.current.data.setStyle({ visible: false });
+    }
+    infoRef.current?.close();
+  }, []);
+
+  // ─── Load Google Maps ───
   useEffect(() => {
     let cancelled = false;
-    const loadMap = async () => {
+    const load = async () => {
       try {
         const CACHE_KEY = "gtt_maps_api_key";
         let apiKey = sessionStorage.getItem(CACHE_KEY);
         if (!apiKey) {
           const { data, error } = await supabase.functions.invoke("get-maps-key");
           if (cancelled) return;
-          if (error || !data?.key) {
-            setMapError("Chave do mapa indisponível");
-            return;
-          }
+          if (error || !data?.key) { setMapError("Chave do mapa indisponível"); return; }
           apiKey = data.key;
-          sessionStorage.setItem(CACHE_KEY, apiKey);
+          sessionStorage.setItem(CACHE_KEY, apiKey!);
         }
-
-        setOptions({ key: apiKey, v: "weekly" });
-
+        setOptions({ key: apiKey!, v: "weekly" });
         const { Map } = (await google.maps.importLibrary("maps")) as any;
         const { InfoWindow } = (await google.maps.importLibrary("maps")) as any;
-
-        if (!mapRef.current) return;
-
+        if (!mapRef.current || cancelled) return;
         const map = new Map(mapRef.current, {
-          center: { lat: 20, lng: 0 },
-          zoom: 2.5,
-          minZoom: 2,
-          maxZoom: 8,
-          disableDefaultUI: true,
-          zoomControl: false,
-          mapTypeControl: false,
-          streetViewControl: false,
-          fullscreenControl: false,
-          mapTypeId: "roadmap",
-          styles: isDark ? darkStyles : lightStyles,
+          center: { lat: 20, lng: 0 }, zoom: 2.5, minZoom: 2, maxZoom: 8,
+          disableDefaultUI: true, zoomControl: false, mapTypeControl: false,
+          streetViewControl: false, fullscreenControl: false, mapTypeId: "roadmap",
+          styles: isDark ? DARK_MAP_STYLE : BASE_MAP_STYLE,
           gestureHandling: "greedy",
-          backgroundColor: isDark ? "#0f1419" : "#f8fafb",
+          backgroundColor: isDark ? "#0f1419" : "#EDE8DF",
         });
-
         googleMapRef.current = map;
-        hoverInfoRef.current = new InfoWindow({ disableAutoPan: true });
+        infoRef.current = new InfoWindow({ disableAutoPan: true });
         setMapLoaded(true);
-      } catch (err) {
-        if (!cancelled) setMapError("Falha ao carregar mapa");
-      }
+      } catch { if (!cancelled) setMapError("Falha ao carregar mapa"); }
     };
-    loadMap();
+    load();
     return () => { cancelled = true; };
   }, [mapRetry, isDark]);
 
-  const maxCount = useMemo(() => Math.max(...Object.values(trendCounts), 1), [trendCounts]);
-  const activeCountries = useMemo(() => Object.values(trendCounts).filter(v => v > 0).length, [trendCounts]);
-  const totalTrends = useMemo(() => Object.values(trendCounts).reduce((a, b) => a + b, 0), [trendCounts]);
-
-  const sentimentBubbles = useMemo(() => computeSentimentBubbles(trends, countryPoints), [trends]);
-  const flowArcs = useMemo(() => computeFlowArcs(trends, countryPoints, 0.55), [trends]);
-
-  const showTooltip = useCallback((content: React.ReactNode, position: { lat: number; lng: number }) => {
-    if (!hoverInfoRef.current || !googleMapRef.current) return;
-
-    const div = document.createElement("div");
-    import("react-dom/client").then(({ createRoot }) => {
-      const root = createRoot(div);
-      root.render(content);
-    });
-
-    hoverInfoRef.current.setContent(div);
-    hoverInfoRef.current.setPosition(position);
-    hoverInfoRef.current.open(googleMapRef.current);
+  // ─── Show tooltip ───
+  const showTooltip = useCallback((html: HTMLElement, pos: { lat: number; lng: number }) => {
+    if (!infoRef.current || !googleMapRef.current) return;
+    infoRef.current.setContent(html);
+    infoRef.current.setPosition(pos);
+    infoRef.current.open(googleMapRef.current);
   }, []);
 
-  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-  // HEATMAP RENDERING
-  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  /* ═══════════════════════════════════════════════════════════ */
+  /*  MODE 1: HEATMAP                                           */
+  /* ═══════════════════════════════════════════════════════════ */
   const renderHeatmap = useCallback(async () => {
     if (!googleMapRef.current) return;
-
-    markersRef.current.forEach(m => m.setMap(null));
-    markersRef.current = [];
-    if (heatmapRef.current) heatmapRef.current.setMap(null);
-    if (googleMapRef.current && geoJsonLoadedRef.current) googleMapRef.current.data.setStyle({ visible: false });
-
+    clearLayers();
     try {
       const { HeatmapLayer } = (await google.maps.importLibrary("visualization")) as any;
-
       const heatmapData = countryPoints
         .filter(c => trendCounts[c.id] > 0)
         .flatMap(c => {
           const count = trendCounts[c.id];
           const intensity = Math.min(count / maxCount, 1);
-          return Array(Math.max(2, Math.ceil(intensity * 15)))
-            .fill(null)
-            .map(() => ({
-              location: new google.maps.LatLng(
-                c.lat + (Math.random() - 0.5) * 3,
-                c.lng + (Math.random() - 0.5) * 3
-              ),
-              weight: intensity,
-            }));
+          return Array(Math.max(2, Math.ceil(intensity * 15))).fill(null).map(() => ({
+            location: new google.maps.LatLng(c.lat + (Math.random() - 0.5) * 3, c.lng + (Math.random() - 0.5) * 3),
+            weight: intensity,
+          }));
         });
 
       heatmapRef.current = new HeatmapLayer({
-        data: heatmapData,
-        map: googleMapRef.current,
-        radius: 45,
-        opacity: 0.75,
+        data: heatmapData, map: googleMapRef.current,
+        radius: 55, opacity: 0.75, maxIntensity: 1,
         gradient: [
-          "rgba(37, 87, 214, 0)",
-          "rgba(37, 87, 214, 0.2)",
-          "rgba(37, 87, 214, 0.4)",
-          "rgba(37, 87, 214, 0.6)",
-          "rgba(224, 60, 49, 0.7)",
-          "rgba(224, 60, 49, 0.9)",
+          "rgba(201, 213, 220, 0)",
+          "rgba(37, 87, 214, 0.25)",
+          "rgba(37, 87, 214, 0.55)",
+          "rgba(37, 87, 214, 0.85)",
+          "rgba(139, 92, 246, 0.90)",
+          "rgba(224, 60, 49, 0.95)",
         ],
       });
 
-      // Marcadores no topo com glow sutil
-      countryPoints.forEach(c => {
-        const count = trendCounts[c.id] || 0;
-        if (count === 0) return;
+      // Top 10 markers
+      const sorted = countryPoints
+        .map(c => ({ ...c, count: trendCounts[c.id] || 0 }))
+        .filter(c => c.count > 0)
+        .sort((a, b) => b.count - a.count)
+        .slice(0, 10);
 
-        const intensity = Math.min(count / maxCount, 1);
-        const scale = 5 + intensity * 14;
-
+      sorted.forEach(c => {
+        const intensity = Math.min(c.count / maxCount, 1);
+        const scale = 6 + intensity * 14;
         const marker = new google.maps.Marker({
-          position: { lat: c.lat, lng: c.lng },
-          map: googleMapRef.current,
+          position: { lat: c.lat, lng: c.lng }, map: googleMapRef.current,
           icon: {
-            path: google.maps.SymbolPath.CIRCLE,
-            scale,
-            fillColor: intensity > 0.7 ? "#E03C31" : "#2557D6",
-            fillOpacity: 0.85,
-            strokeColor: "#ffffff",
-            strokeWeight: 2,
+            path: google.maps.SymbolPath.CIRCLE, scale,
+            fillColor: intensity > 0.7 ? "#E03C31" : "#2557D6", fillOpacity: 0.85,
+            strokeColor: "#ffffff", strokeWeight: 2,
           },
-          title: `${c.name}: ${count} trends`,
+          label: { text: String(c.count), color: "#fff", fontSize: "9px", fontWeight: "700" },
           zIndex: Math.floor(intensity * 1000),
         });
-
-        const originalIcon = marker.getIcon() as google.maps.Symbol;
-
+        const origIcon = marker.getIcon() as google.maps.Symbol;
         marker.addListener("click", () => onSelectCountry(c.id));
         marker.addListener("mouseover", () => {
-          marker.setIcon({
-            ...originalIcon,
-            scale: scale * 1.2,
-            fillOpacity: 1,
-          } as google.maps.Symbol);
-          showTooltip(
-            <HeatmapTooltip country={c} count={count} intensity={intensity} isDark={isDark} />,
-            { lat: c.lat, lng: c.lng }
-          );
+          marker.setIcon({ ...origIcon, scale: scale * 1.2, fillOpacity: 1 } as google.maps.Symbol);
+          showTooltip(buildTooltipHtml(`
+            <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
+              <span style="font-size:22px">${flagEmoji(c.id)}</span>
+              <div>
+                <div style="font-weight:600;font-size:14px">${c.name}</div>
+                <div style="font-size:11px;opacity:0.6">${c.count} ${lang === "pt" ? "tendências ativas" : "active trends"}</div>
+              </div>
+            </div>
+            <div style="font-size:11px;opacity:0.5;margin-top:4px">${lang === "pt" ? "Clique para filtrar" : "Click to filter"}</div>
+          `, isDark), { lat: c.lat, lng: c.lng });
         });
         marker.addListener("mouseout", () => {
-          marker.setIcon({
-            ...originalIcon,
-            scale,
-            fillOpacity: 0.85,
-          } as google.maps.Symbol);
-          hoverInfoRef.current?.close();
+          marker.setIcon({ ...origIcon, scale, fillOpacity: 0.85 } as google.maps.Symbol);
+          infoRef.current?.close();
         });
-
         markersRef.current.push(marker);
       });
-    } catch (err) {
-      console.error("Erro ao renderizar heatmap:", err);
-    }
-  }, [trendCounts, maxCount, onSelectCountry, showTooltip, isDark]);
+    } catch (err) { console.error("Heatmap render error:", err); }
+  }, [trendCounts, maxCount, onSelectCountry, showTooltip, isDark, clearLayers, lang]);
 
-  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-  // SENTIMENT RENDERING
-  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-  const renderSentimentMarkers = useCallback(() => {
-    if (!googleMapRef.current) return;
-
-    markersRef.current.forEach(m => m.setMap(null));
-    markersRef.current = [];
-    if (googleMapRef.current && geoJsonLoadedRef.current) googleMapRef.current.data.setStyle({ visible: false });
-
-    sentimentBubbles.forEach((bubble) => {
-      const c = countryPoints.find(p => p.id === bubble.countryId);
-      if (!c || bubble.volume === 0) return;
-
-      const intensity = Math.min(bubble.volume / maxCount, 1);
-      const color = sentimentColors[bubble.dominantSentiment];
-      const scale = 6 + intensity * 12;
-      const pulseSpeed = 3.5 - intensity * 1.5; // Mais rápido com crescimento
-
-      const marker = new google.maps.Marker({
-        position: { lat: c.lat, lng: c.lng },
-        map: googleMapRef.current,
-        icon: {
-          path: google.maps.SymbolPath.CIRCLE,
-          scale,
-          fillColor: color,
-          fillOpacity: 0.8,
-          strokeColor: "#ffffff",
-          strokeWeight: 2,
-        },
-        title: `${c.name}: ${bubble.volume} trends`,
-        zIndex: Math.floor(intensity * 1000),
-      });
-
-      const el = (marker as any).getDiv?.() as HTMLElement | undefined;
-      if (el) {
-        el.style.animation = `pulse-bubble ${pulseSpeed}s cubic-bezier(0.25, 0.1, 0.25, 1) infinite`;
-      }
-
-      marker.addListener("click", () => onSelectCountry(c.id));
-      marker.addListener("mouseover", () => {
-        showTooltip(
-          <SentimentTooltip bubble={bubble} isDark={isDark} trends={trends} />,
-          { lat: c.lat, lng: c.lng }
-        );
-      });
-      marker.addListener("mouseout", () => {
-        hoverInfoRef.current?.close();
-      });
-
-      markersRef.current.push(marker);
-    });
-  }, [sentimentBubbles, maxCount, onSelectCountry, showTooltip, isDark, trends]);
-
-  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-  // FLOW RENDERING — animated polylines between countries
-  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-  const renderFlowArcs = useCallback(() => {
-    if (!googleMapRef.current) return;
-
-    markersRef.current.forEach(m => m.setMap(null));
-    markersRef.current = [];
-    polylinesRef.current.forEach(p => p.setMap(null));
-    polylinesRef.current = [];
-    particleAnimationsRef.current.forEach(id => cancelAnimationFrame(id));
-    particleAnimationsRef.current = [];
-    if (googleMapRef.current && geoJsonLoadedRef.current) googleMapRef.current.data.setStyle({ visible: false });
-
-    flowArcs.forEach((arc) => {
-      const origin = countryPoints.find(p => p.id === arc.originId);
-      const dest = countryPoints.find(p => p.id === arc.destId);
-      if (!origin || !dest) return;
-
-      const isCritical = arc.volume > maxCount * 0.7;
-      const strokeColor = isCritical ? "#E03C31" : "#2557D6";
-      const strokeWeight = 1.5 + (arc.volume / maxCount) * 3;
-
-      // Main line (invisible, path holder)
-      const polyline = new google.maps.Polyline({
-        path: [
-          { lat: origin.lat, lng: origin.lng },
-          { lat: dest.lat, lng: dest.lng },
-        ],
-        geodesic: true,
-        strokeColor,
-        strokeOpacity: 0,
-        strokeWeight,
-        icons: [{
-          icon: {
-            path: google.maps.SymbolPath.FORWARD_CLOSED_ARROW,
-            scale: 3,
-            strokeColor,
-            fillColor: strokeColor,
-            fillOpacity: 0.8,
-          },
-          offset: '0%',
-          repeat: '80px',
-        }],
-        map: googleMapRef.current,
-        zIndex: 2,
-      });
-
-      // Animate icons along the line
-      let count = 0;
-      const animateFlow = () => {
-        count = (count + 1) % 200;
-        const icons = polyline.get('icons');
-        if (icons && icons[0]) {
-          icons[0].offset = (count / 2) + '%';
-          polyline.set('icons', icons);
-        }
-        const id = requestAnimationFrame(animateFlow);
-        particleAnimationsRef.current.push(id);
-      };
-      animateFlow();
-
-      // Dashed line underneath for visibility
-      const dashLine = new google.maps.Polyline({
-        path: [
-          { lat: origin.lat, lng: origin.lng },
-          { lat: dest.lat, lng: dest.lng },
-        ],
-        geodesic: true,
-        strokeColor,
-        strokeOpacity: 0.25,
-        strokeWeight: strokeWeight * 0.6,
-        map: googleMapRef.current,
-        zIndex: 1,
-      });
-
-      polyline.addListener("mouseover", () => {
-        dashLine.setOptions({ strokeOpacity: 0.5 });
-        showTooltip(
-          <FlowTooltip arc={arc} isDark={isDark} />,
-          { lat: (origin.lat + dest.lat) / 2, lng: (origin.lng + dest.lng) / 2 }
-        );
-      });
-      polyline.addListener("mouseout", () => {
-        dashLine.setOptions({ strokeOpacity: 0.25 });
-        hoverInfoRef.current?.close();
-      });
-
-      polylinesRef.current.push(polyline, dashLine);
-    });
-
-    // Country markers
-    countryPoints.forEach(c => {
-      const count = trendCounts[c.id] || 0;
-      if (count === 0) return;
-      const intensity = Math.min(count / maxCount, 1);
-      const marker = new google.maps.Marker({
-        position: { lat: c.lat, lng: c.lng },
-        map: googleMapRef.current,
-        icon: {
-          path: google.maps.SymbolPath.CIRCLE,
-          scale: 4 + intensity * 6,
-          fillColor: "#2557D6",
-          fillOpacity: 0.7,
-          strokeColor: "#ffffff",
-          strokeWeight: 1.5,
-        },
-      });
-      marker.addListener("click", () => onSelectCountry(c.id));
-      markersRef.current.push(marker);
-    });
-  }, [flowArcs, trendCounts, maxCount, onSelectCountry, showTooltip, isDark]);
-
-  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-  // CHOROPLETH RENDERING
-  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  /* ═══════════════════════════════════════════════════════════ */
+  /*  MODE 2: CHOROPLETH                                        */
+  /* ═══════════════════════════════════════════════════════════ */
   const renderChoropleth = useCallback(() => {
     if (!googleMapRef.current) return;
+    clearLayers();
     const map = googleMapRef.current;
-
-    markersRef.current.forEach(m => m.setMap(null));
-    markersRef.current = [];
-    polylinesRef.current.forEach(p => p.setMap(null));
-    polylinesRef.current = [];
-    particleAnimationsRef.current.forEach(id => cancelAnimationFrame(id));
-    particleAnimationsRef.current = [];
-    if (heatmapRef.current) heatmapRef.current.setMap(null);
 
     if (!geoJsonLoadedRef.current) {
       map.data.loadGeoJson("https://raw.githubusercontent.com/datasets/geo-countries/master/data/countries.geojson");
@@ -693,260 +310,363 @@ const GoogleMapView = ({
 
       map.data.addListener("mouseover", (event: any) => {
         map.data.revertStyle();
-        map.data.overrideStyle(event.feature, { strokeWeight: 2, strokeColor: isDark ? "#ffffff" : "#000000", zIndex: 10 });
-        
+        map.data.overrideStyle(event.feature, { strokeWeight: 2, strokeColor: "#2557D6", zIndex: 10 });
         const isoA2 = event.feature.getProperty("ISO_A2");
         const count = trendCounts[isoA2] || 0;
-        const countryName = event.feature.getProperty("ADMIN") || isoA2;
-        
+        const name = event.feature.getProperty("ADMIN") || isoA2;
         if (count > 0 && isoA2 !== "-99") {
-          const lat = event.latLng.lat();
-          const lng = event.latLng.lng();
-          const intensity = Math.min(count / maxCount, 1);
-          
-          showTooltip(
-            <HeatmapTooltip country={{id: isoA2, name: countryName, lat, lng}} count={count} intensity={intensity} isDark={isDark} />,
-            { lat, lng }
-          );
+          showTooltip(buildTooltipHtml(`
+            <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">
+              <span style="font-size:20px">${flagEmoji(isoA2)}</span>
+              <div>
+                <div style="font-weight:600;font-size:14px">${name}</div>
+                <div style="font-size:11px;opacity:0.6">${count} trends</div>
+              </div>
+            </div>
+          `, isDark), event.latLng);
         }
       });
-      
-      map.data.addListener("mouseout", () => {
-        map.data.revertStyle();
-        hoverInfoRef.current?.close();
-      });
-
+      map.data.addListener("mouseout", () => { map.data.revertStyle(); infoRef.current?.close(); });
       map.data.addListener("click", (event: any) => {
         const isoA2 = event.feature.getProperty("ISO_A2");
-        if (trendCounts[isoA2] > 0 && isoA2 !== "-99") {
-           onSelectCountry(isoA2);
-        }
+        if (trendCounts[isoA2] > 0 && isoA2 !== "-99") onSelectCountry(isoA2);
       });
     }
 
     map.data.setStyle((feature) => {
       const isoA2 = feature.getProperty("ISO_A2");
       if (isoA2 === "-99" || !isoA2) return { visible: false };
-
       const count = trendCounts[isoA2 as string] || 0;
-      const intensity = Math.min(count / maxCount, 1);
+      const intensity = Math.sqrt(Math.min(count / maxCount, 1)); // sqrt for better distribution
 
       if (count > 0) {
-        // Gradient: #E8E4DC → #C5D3EE → #2557D6
-        const r = Math.round(232 - intensity * (232 - 37));
-        const g = Math.round(228 - intensity * (228 - 87));
-        const b = Math.round(220 - intensity * (220 - 214));
+        const r = Math.round(201 - (201 - 37) * intensity);
+        const g = Math.round(213 - (213 - 87) * intensity);
+        const b = Math.round(220 - (220 - 214) * intensity);
         return {
-          fillColor: `rgb(${r},${g},${b})`,
-          fillOpacity: 0.5 + intensity * 0.4,
-          strokeColor: isDark ? "#0f1419" : "#FFFFFF",
-          strokeWeight: 0.5,
-          visible: true,
-          zIndex: 1
-        };
-      } else {
-        return {
-          fillColor: isDark ? "#1e293b" : "#E8E4DC",
-          fillOpacity: 0.2,
-          strokeColor: isDark ? "#0f1419" : "#FFFFFF",
-          strokeWeight: 0.5,
-          visible: true,
-          zIndex: 0
+          fillColor: `rgb(${r},${g},${b})`, fillOpacity: 0.4 + intensity * 0.5,
+          strokeColor: "#FFFFFF", strokeWeight: 0.8, strokeOpacity: 0.6,
+          visible: true, zIndex: 1, cursor: "pointer",
         };
       }
+      return {
+        fillColor: isDark ? "#1e293b" : "#E8E4DC", fillOpacity: 0.3,
+        strokeColor: isDark ? "#0f1419" : "#FFFFFF", strokeWeight: 0.5,
+        visible: true, zIndex: 0,
+      };
+    });
+  }, [trendCounts, maxCount, onSelectCountry, showTooltip, isDark, clearLayers]);
+
+  /* ═══════════════════════════════════════════════════════════ */
+  /*  MODE 3: FLOW — animated polylines between countries       */
+  /* ═══════════════════════════════════════════════════════════ */
+  const renderFlow = useCallback(() => {
+    if (!googleMapRef.current) return;
+    clearLayers();
+
+    // Origin dots with pulse
+    countryPoints.forEach(c => {
+      const count = trendCounts[c.id] || 0;
+      if (count === 0) return;
+      const intensity = Math.min(count / maxCount, 1);
+      const marker = new google.maps.Marker({
+        position: { lat: c.lat, lng: c.lng }, map: googleMapRef.current,
+        icon: {
+          path: google.maps.SymbolPath.CIRCLE,
+          scale: 4 + intensity * 8,
+          fillColor: "#2557D6", fillOpacity: 0.8,
+          strokeColor: "#ffffff", strokeWeight: 2,
+        },
+        zIndex: 5,
+      });
+      marker.addListener("click", () => onSelectCountry(c.id));
+      markersRef.current.push(marker);
     });
 
-  }, [trendCounts, maxCount, showTooltip, onSelectCountry, isDark]);
+    // Animated flow lines
+    flowArcs.forEach(arc => {
+      const origin = countryPoints.find(p => p.id === arc.originId);
+      const dest = countryPoints.find(p => p.id === arc.destId);
+      if (!origin || !dest) return;
 
-  // Renderizar quando modo muda
+      const isCritical = arc.volume > maxCount * 0.7;
+      const color = isCritical ? "#E03C31" : "#2557D6";
+      const weight = 1.5 + (arc.volume / maxCount) * 2.5;
+
+      // Dashed path
+      const dashLine = new google.maps.Polyline({
+        path: [{ lat: origin.lat, lng: origin.lng }, { lat: dest.lat, lng: dest.lng }],
+        geodesic: true, strokeColor: color, strokeOpacity: 0.2, strokeWeight: weight * 0.6,
+        map: googleMapRef.current, zIndex: 1,
+        icons: [{
+          icon: { path: "M 0,-1 0,1", strokeOpacity: 0.4, strokeColor: color, scale: 2.5 },
+          offset: "0", repeat: "14px",
+        }],
+      });
+
+      // Animated arrow
+      const arrowLine = new google.maps.Polyline({
+        path: [{ lat: origin.lat, lng: origin.lng }, { lat: dest.lat, lng: dest.lng }],
+        geodesic: true, strokeOpacity: 0, strokeWeight: 0,
+        icons: [{
+          icon: {
+            path: google.maps.SymbolPath.FORWARD_CLOSED_ARROW,
+            scale: 3.5, strokeColor: "#FFFFFF", strokeWeight: 1,
+            fillColor: color, fillOpacity: 1,
+          },
+          offset: "0%",
+        }],
+        map: googleMapRef.current, zIndex: 3,
+      });
+
+      let offset = 0;
+      const animate = () => {
+        offset = (offset + 0.5) % 100;
+        const icons = arrowLine.get("icons");
+        if (icons?.[0]) { icons[0].offset = offset + "%"; arrowLine.set("icons", icons); }
+        animFramesRef.current.push(requestAnimationFrame(animate));
+      };
+      animate();
+
+      // Hover tooltip
+      dashLine.addListener("mouseover", (e: any) => {
+        dashLine.setOptions({ strokeOpacity: 0.5 });
+        showTooltip(buildTooltipHtml(`
+          <div style="display:flex;align-items:center;gap:6px;margin-bottom:6px">
+            <span style="font-size:18px">${flagEmoji(arc.originId)}</span>
+            <span style="font-weight:600;font-size:11px">${arc.originName}</span>
+            <span style="opacity:0.4">→</span>
+            <span style="font-size:18px">${flagEmoji(arc.destId)}</span>
+            <span style="font-weight:600;font-size:11px">${arc.destName}</span>
+          </div>
+          <div style="font-size:11px;font-weight:600;margin-bottom:4px">${arc.trendTitle.slice(0, 50)}…</div>
+          <div style="font-size:10px;display:flex;gap:8px;opacity:0.6">
+            <span>📊 ${arc.volume}</span>
+            <span>⏱️ ${arc.timeDelta.toFixed(1)}h</span>
+          </div>
+        `, isDark), { lat: (origin.lat + dest.lat) / 2, lng: (origin.lng + dest.lng) / 2 });
+      });
+      dashLine.addListener("mouseout", () => { dashLine.setOptions({ strokeOpacity: 0.2 }); infoRef.current?.close(); });
+
+      polylinesRef.current.push(dashLine, arrowLine);
+    });
+  }, [flowArcs, trendCounts, maxCount, onSelectCountry, showTooltip, isDark, clearLayers]);
+
+  /* ═══════════════════════════════════════════════════════════ */
+  /*  MODE 4: SENTIMENT — per-country coloring via Data Layer   */
+  /* ═══════════════════════════════════════════════════════════ */
+  const renderSentiment = useCallback(() => {
+    if (!googleMapRef.current) return;
+    clearLayers();
+    const map = googleMapRef.current;
+
+    // Build sentiment lookup
+    const sentimentByCountry = new Map<string, SentimentBubble>();
+    sentimentBubbles.forEach(b => sentimentByCountry.set(b.countryId, b));
+
+    // Use GeoJSON for country polygons
+    if (!geoJsonLoadedRef.current) {
+      map.data.loadGeoJson("https://raw.githubusercontent.com/datasets/geo-countries/master/data/countries.geojson");
+      geoJsonLoadedRef.current = true;
+    }
+
+    // Hover
+    map.data.addListener("mouseover", (event: any) => {
+      const isoA2 = event.feature.getProperty("ISO_A2");
+      const bubble = sentimentByCountry.get(isoA2);
+      if (!bubble || isoA2 === "-99") return;
+      map.data.revertStyle();
+      map.data.overrideStyle(event.feature, { strokeWeight: 1.5, strokeColor: "#fff", zIndex: 10 });
+      const total = bubble.trendCount || 1;
+      const posP = Math.round((bubble.sentiment.positive) * 100);
+      const neuP = Math.round((bubble.sentiment.neutral) * 100);
+      const negP = Math.round((bubble.sentiment.negative) * 100);
+      const emoji = bubble.dominantSentiment === "positive" ? "😊" : bubble.dominantSentiment === "negative" ? "😟" : "😐";
+      const label = bubble.dominantSentiment === "positive" ? (lang === "pt" ? "POSITIVO" : "POSITIVE") : bubble.dominantSentiment === "negative" ? (lang === "pt" ? "NEGATIVO" : "NEGATIVE") : (lang === "pt" ? "NEUTRO" : "NEUTRAL");
+      showTooltip(buildTooltipHtml(`
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
+          <span style="font-size:20px">${flagEmoji(isoA2)}</span>
+          <div>
+            <div style="font-weight:600;font-size:14px">${bubble.countryName}</div>
+          </div>
+        </div>
+        <div style="font-size:12px;margin-bottom:6px">${emoji} ${lang === "pt" ? "Sentimento" : "Sentiment"}: <strong>${label}</strong></div>
+        <div style="display:flex;gap:4px;margin-bottom:6px">
+          <span style="font-size:10px;background:rgba(34,197,94,0.15);color:#22c55e;padding:2px 6px;border-radius:4px">😊 ${posP}%</span>
+          <span style="font-size:10px;background:rgba(100,116,139,0.15);color:#64748b;padding:2px 6px;border-radius:4px">😐 ${neuP}%</span>
+          <span style="font-size:10px;background:rgba(224,60,49,0.15);color:#E03C31;padding:2px 6px;border-radius:4px">😟 ${negP}%</span>
+        </div>
+        <div style="font-size:10px;opacity:0.5">${total} ${lang === "pt" ? "tendências analisadas" : "trends analyzed"}</div>
+      `, isDark), event.latLng);
+    });
+    map.data.addListener("mouseout", () => { map.data.revertStyle(); infoRef.current?.close(); });
+    map.data.addListener("click", (event: any) => {
+      const isoA2 = event.feature.getProperty("ISO_A2");
+      if (sentimentByCountry.has(isoA2)) onSelectCountry(isoA2);
+    });
+
+    map.data.setStyle((feature) => {
+      const isoA2 = feature.getProperty("ISO_A2");
+      if (isoA2 === "-99" || !isoA2) return { visible: false };
+      const bubble = sentimentByCountry.get(isoA2 as string);
+      if (!bubble) {
+        return {
+          fillColor: isDark ? "#1e293b" : "#E8E4DC", fillOpacity: 0.3,
+          strokeColor: "#FFFFFF", strokeWeight: 0.5, visible: true,
+        };
+      }
+      const score = Math.min(bubble.trendCount / (maxCount || 1), 1);
+      const colors: Record<string, string> = {
+        positive: `rgba(34, 197, 94, ${0.25 + score * 0.55})`,
+        neutral: `rgba(100, 116, 139, ${0.20 + score * 0.40})`,
+        negative: `rgba(224, 60, 49, ${0.25 + score * 0.55})`,
+        mixed: `rgba(245, 158, 11, ${0.25 + score * 0.45})`,
+      };
+      return {
+        fillColor: colors[bubble.dominantSentiment] || colors.neutral,
+        fillOpacity: 1, strokeColor: "#FFFFFF", strokeWeight: 0.7, strokeOpacity: 0.7,
+        visible: true,
+      };
+    });
+
+    // Sentiment intensity markers for strong signals
+    sentimentBubbles.filter(b => {
+      const score = Math.min(b.trendCount / (maxCount || 1), 1);
+      return score > 0.3;
+    }).forEach(b => {
+      const c = countryPoints.find(p => p.id === b.countryId);
+      if (!c) return;
+      const color = b.dominantSentiment === "positive" ? "#22c55e" : b.dominantSentiment === "negative" ? "#E03C31" : "#64748b";
+      const marker = new google.maps.Marker({
+        position: { lat: c.lat, lng: c.lng }, map: googleMapRef.current,
+        icon: {
+          path: google.maps.SymbolPath.CIRCLE, scale: 4,
+          fillColor: color, fillOpacity: 0.9, strokeColor: "#fff", strokeWeight: 1.5,
+        },
+        zIndex: 5,
+      });
+      markersRef.current.push(marker);
+    });
+  }, [sentimentBubbles, maxCount, onSelectCountry, showTooltip, isDark, clearLayers, lang]);
+
+  /* ─── Mode switch ─── */
   useEffect(() => {
     if (!mapLoaded || !googleMapRef.current) return;
+    if (mapMode === "heatmap") renderHeatmap();
+    else if (mapMode === "choropleth") renderChoropleth();
+    else if (mapMode === "flow") renderFlow();
+    else if (mapMode === "sentiment") renderSentiment();
+  }, [mapMode, mapLoaded, renderHeatmap, renderChoropleth, renderFlow, renderSentiment]);
 
-    if (mapMode === "heatmap") {
-      renderHeatmap();
-    } else if (mapMode === "sentiment") {
-      renderSentimentMarkers();
-    } else if (mapMode === "flow") {
-      renderFlowArcs();
-    } else if (mapMode === "choropleth") {
-      renderChoropleth();
-    }
-  }, [mapMode, mapLoaded, renderHeatmap, renderSentimentMarkers, renderFlowArcs, renderChoropleth]);
-
-  const mapModes: { key: MapMode; icon: typeof Flame; labelKey: string }[] = [
-    { key: "choropleth", icon: MapIcon, labelKey: "Coroplético" },
-    { key: "heatmap", icon: Flame, labelKey: "Heatmap" },
-    { key: "flow", icon: GitBranch, labelKey: "Fluxo" },
-    { key: "sentiment", icon: Heart, labelKey: "Sentimento" },
+  /* ─── Mode selector config ─── */
+  const mapModes: { key: MapMode; icon: typeof Flame; label: string; activeColor: string }[] = [
+    { key: "heatmap", icon: Flame, label: "Heatmap", activeColor: "bg-[#2557D6]" },
+    { key: "choropleth", icon: MapIcon, label: lang === "pt" ? "Coroplético" : "Choropleth", activeColor: "bg-[#2557D6]" },
+    { key: "flow", icon: GitBranch, label: lang === "pt" ? "Fluxo" : "Flow", activeColor: "bg-violet-600" },
+    { key: "sentiment", icon: Heart, label: lang === "pt" ? "Sentimento" : "Sentiment", activeColor: "bg-emerald-600" },
   ];
 
   return (
     <div className="w-full h-full relative" style={{ isolation: "isolate" }}>
-      <style>{`
-        @keyframes pulse-bubble {
-          0%, 100% { transform: scale(1); }
-          50% { transform: scale(1.03); }
-        }
-      `}</style>
-
-      {/* Toolbar */}
-      <div className="absolute top-3 left-3 z-20 flex gap-1 bg-white/90 dark:bg-slate-900/90 backdrop-blur-xl rounded-lg p-1 border border-border/30 shadow-md">
-        {mapModes.map(({ key, icon: Icon, labelKey }) => (
-          <motion.button
+      {/* Mode selector */}
+      <div className="absolute top-3 left-3 z-20 flex gap-1 bg-card/90 backdrop-blur-xl rounded-2xl p-1.5 border border-border/30 shadow-[0_4px_20px_rgba(0,0,0,0.08)]">
+        {mapModes.map(({ key, icon: Icon, label, activeColor }) => (
+          <button
             key={key}
-            onClick={() => {
-              setModeTransitioning(true);
-              setTimeout(() => {
-                setMapMode(key);
-                setModeTransitioning(false);
-              }, 150);
-            }}
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            className={`relative px-3 py-1.5 rounded-md text-xs font-medium transition-colors ${
+            onClick={() => setMapMode(key)}
+            className={`relative px-3 py-2 rounded-xl text-xs font-semibold uppercase tracking-wider transition-colors ${
               mapMode === key
-                ? "bg-primary text-primary-foreground"
+                ? `${activeColor} text-white`
                 : "text-muted-foreground hover:text-foreground hover:bg-muted"
             }`}
           >
             <span className="flex items-center gap-1.5">
               <Icon className="w-3.5 h-3.5" />
-              {labelKey}
+              {!isMobile && label}
             </span>
-          </motion.button>
+          </button>
         ))}
         {selectedCountry !== "global" && (
-          <motion.button
+          <button
             onClick={() => onSelectCountry("global")}
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            className="px-3 py-1.5 rounded-md text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-muted flex items-center gap-1.5 transition-colors"
+            className="px-3 py-2 rounded-xl text-xs font-semibold text-muted-foreground hover:text-foreground hover:bg-muted flex items-center gap-1.5 transition-colors uppercase tracking-wider"
           >
             <Globe className="w-3.5 h-3.5" />
-            Global
-          </motion.button>
+            {!isMobile && "Global"}
+          </button>
         )}
       </div>
-
-      {/* Update notification */}
-      <AnimatePresence>
-        {updateNotif && (
-          <UpdateNotification
-            countriesUpdated={updateNotif.countries}
-            newTrends={updateNotif.trends}
-            onDismiss={() => setUpdateNotif(null)}
-          />
-        )}
-      </AnimatePresence>
 
       {/* Map container */}
       <div ref={mapRef} className="absolute inset-0 z-0" />
 
       {/* Zoom controls */}
       {mapLoaded && (
-        <div className={`absolute z-20 flex flex-col gap-1 ${isMobile ? 'bottom-24 right-3' : 'bottom-[100px] right-3'}`}>
-          <motion.button
+        <div className={`absolute z-20 flex flex-col gap-1 ${isMobile ? "bottom-24 right-3" : "bottom-[100px] right-3"}`}>
+          <button
             onClick={() => googleMapRef.current?.setZoom((googleMapRef.current?.getZoom() || 3) + 1)}
-            whileHover={{ scale: 1.1 }}
-            whileTap={{ scale: 0.9 }}
-            className="w-9 h-9 rounded-lg bg-white/90 dark:bg-slate-900/90 backdrop-blur-xl border border-border/30 shadow-md flex items-center justify-center text-foreground hover:bg-white dark:hover:bg-slate-800 transition-colors"
+            className="w-9 h-9 rounded-xl bg-card/90 backdrop-blur-xl border border-border/30 shadow-md flex items-center justify-center text-foreground hover:bg-card transition-colors"
           >
             <Plus className="w-4 h-4" />
-          </motion.button>
-          <motion.button
+          </button>
+          <button
             onClick={() => googleMapRef.current?.setZoom((googleMapRef.current?.getZoom() || 3) - 1)}
-            whileHover={{ scale: 1.1 }}
-            whileTap={{ scale: 0.9 }}
-            className="w-9 h-9 rounded-lg bg-white/90 dark:bg-slate-900/90 backdrop-blur-xl border border-border/30 shadow-md flex items-center justify-center text-foreground hover:bg-white dark:hover:bg-slate-800 transition-colors"
+            className="w-9 h-9 rounded-xl bg-card/90 backdrop-blur-xl border border-border/30 shadow-md flex items-center justify-center text-foreground hover:bg-card transition-colors"
           >
             <Minus className="w-4 h-4" />
-          </motion.button>
+          </button>
         </div>
       )}
 
-      {/* Transition overlay */}
-      <AnimatePresence>
-        {modeTransitioning && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.15 }}
-            className="absolute inset-0 z-[5] bg-background/20 backdrop-blur-[2px] pointer-events-none"
-          />
-        )}
-      </AnimatePresence>
-
       {/* Loading */}
       {!mapLoaded && !mapError && (
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          className="absolute inset-0 flex items-center justify-center bg-background/50 backdrop-blur-sm z-10"
-        >
+        <div className="absolute inset-0 flex items-center justify-center bg-background/50 backdrop-blur-sm z-10">
           <div className="flex items-center gap-3 text-muted-foreground text-sm">
-            <motion.div
-              animate={{ rotate: 360 }}
-              transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
-              className="w-5 h-5 border-2 border-primary/30 border-t-primary rounded-full"
-            />
-            <span className="font-medium">Carregando mapa…</span>
+            <div className="w-5 h-5 border-2 border-primary/30 border-t-primary rounded-full animate-spin" />
+            <span className="font-medium">{lang === "pt" ? "Carregando mapa…" : "Loading map…"}</span>
           </div>
-        </motion.div>
+        </div>
       )}
 
       {/* Error */}
       {mapError && (
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          className="absolute inset-0 flex items-center justify-center bg-background/30 backdrop-blur-sm z-10"
-        >
-          <motion.div
-            initial={{ scale: 0.95 }}
-            animate={{ scale: 1 }}
-            className="text-center p-6 bg-card/80 backdrop-blur-xl rounded-2xl border border-border/30 shadow-lg max-w-xs"
-          >
+        <div className="absolute inset-0 flex items-center justify-center bg-background/30 backdrop-blur-sm z-10">
+          <div className="text-center p-6 bg-card/80 backdrop-blur-xl rounded-2xl border border-border/30 shadow-lg max-w-xs">
             <div className="text-3xl mb-3">🗺️</div>
             <p className="text-sm font-medium text-foreground mb-1">{mapError}</p>
-            <p className="text-xs text-muted-foreground/60 mb-4">Tente recarregar</p>
-            <motion.button
-              onClick={() => setMapRetry(r => r + 1)}
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              className="px-4 py-2 rounded-full bg-primary text-primary-foreground text-xs font-semibold hover:opacity-90 transition-opacity"
-            >
-              🔄 Tentar novamente
-            </motion.button>
-          </motion.div>
-        </motion.div>
+            <button onClick={() => setMapRetry(r => r + 1)} className="mt-3 px-4 py-2 rounded-full bg-primary text-primary-foreground text-xs font-semibold hover:opacity-90 transition-opacity">
+              🔄 {lang === "pt" ? "Tentar novamente" : "Retry"}
+            </button>
+          </div>
+        </div>
       )}
 
       {/* Legend */}
-      <motion.div
-        initial={{ opacity: 0, x: -10 }}
-        animate={{ opacity: 1, x: 0 }}
-        className="absolute bottom-3 left-3 z-20 bg-white/90 dark:bg-slate-900/90 backdrop-blur-xl border border-border/30 rounded-xl p-3 shadow-md"
-      >
+      <div className="absolute bottom-3 left-3 z-20 bg-card/90 backdrop-blur-xl border border-border/30 rounded-xl p-3 shadow-[0_4px_20px_rgba(0,0,0,0.08)]">
         <div className="text-[10px] uppercase tracking-widest text-muted-foreground font-semibold mb-1.5">
-          {mapMode === "heatmap" && (lang === "pt" ? "Densidade" : "Density")}
-          {mapMode === "flow" && (lang === "pt" ? "Propagação" : "Propagation")}
-          {mapMode === "sentiment" && (lang === "pt" ? "Sentimento" : "Sentiment")}
-          {mapMode === "choropleth" && (lang === "pt" ? "Cobertura" : "Coverage")}
+          {mapMode === "heatmap" && (lang === "pt" ? "Densidade de Tendências" : "Trend Density")}
+          {mapMode === "choropleth" && (lang === "pt" ? "Cobertura por País" : "Coverage by Country")}
+          {mapMode === "flow" && (lang === "pt" ? "Propagação entre Países" : "Cross-Country Propagation")}
+          {mapMode === "sentiment" && (lang === "pt" ? "Sentimento por País" : "Sentiment by Country")}
         </div>
+
         {mapMode === "heatmap" && (
-          <>
-            <div className="flex items-center gap-2 mb-1">
-              <div className="w-20 h-2 rounded-full bg-gradient-to-r from-[#2557D6]/20 via-[#2557D6] to-[#E03C31]" />
-              <span className="text-[10px] text-muted-foreground">{lang === "pt" ? "Baixo → Alto volume" : "Low → High volume"}</span>
-            </div>
-          </>
+          <div className="flex items-center gap-2">
+            <div className="w-24 h-2 rounded-full bg-gradient-to-r from-[#C9D5DC] via-[#2557D6] to-[#E03C31]" />
+            <span className="text-[9px] text-muted-foreground">{lang === "pt" ? "Baixo → Alto" : "Low → High"}</span>
+          </div>
+        )}
+        {mapMode === "choropleth" && (
+          <div className="flex items-center gap-2">
+            <div className="w-24 h-2 rounded-full bg-gradient-to-r from-[#E8E4DC] via-[#C5D3EE] to-[#2557D6]" />
+            <span className="text-[9px] text-muted-foreground">{lang === "pt" ? "Sem dados → Alto" : "No data → High"}</span>
+          </div>
         )}
         {mapMode === "flow" && (
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-3">
             <div className="flex items-center gap-1">
               <div className="w-6 h-0.5 bg-[#2557D6]" />
-              <span className="text-[9px] text-muted-foreground">{lang === "pt" ? "Normal" : "Normal"}</span>
+              <span className="text-[9px] text-muted-foreground">Normal</span>
             </div>
             <div className="flex items-center gap-1">
               <div className="w-6 h-0.5 bg-[#E03C31]" />
@@ -957,22 +677,17 @@ const GoogleMapView = ({
         {mapMode === "sentiment" && (
           <div className="flex items-center gap-3">
             <span className="flex items-center gap-1 text-[9px]"><span className="w-2.5 h-2.5 rounded-full bg-emerald-500" />{lang === "pt" ? "Positivo" : "Positive"}</span>
-            <span className="flex items-center gap-1 text-[9px]"><span className="w-2.5 h-2.5 rounded-full bg-gray-400" />{lang === "pt" ? "Neutro" : "Neutral"}</span>
-            <span className="flex items-center gap-1 text-[9px]"><span className="w-2.5 h-2.5 rounded-full bg-red-500" />{lang === "pt" ? "Negativo" : "Negative"}</span>
+            <span className="flex items-center gap-1 text-[9px]"><span className="w-2.5 h-2.5 rounded-full bg-slate-400" />{lang === "pt" ? "Neutro" : "Neutral"}</span>
+            <span className="flex items-center gap-1 text-[9px]"><span className="w-2.5 h-2.5 rounded-full bg-[#E03C31]" />{lang === "pt" ? "Negativo" : "Negative"}</span>
           </div>
         )}
-        {mapMode === "choropleth" && (
-          <div className="flex items-center gap-2 mb-1">
-            <div className="w-20 h-2 rounded-full bg-gradient-to-r from-[#E8E4DC] via-[#C5D3EE] to-[#2557D6]" />
-            <span className="text-[10px] text-muted-foreground">{lang === "pt" ? "Sem dados → Alto" : "No data → High"}</span>
-          </div>
-        )}
-        <div className="flex gap-3 text-[9px] text-muted-foreground/60 mt-1.5">
+
+        <div className="flex gap-3 text-[9px] text-muted-foreground/50 mt-1.5">
           <span>Máx: {maxCount}</span>
           <span>· {activeCountries} {lang === "pt" ? "países" : "countries"}</span>
           <span>· {totalTrends} trends</span>
         </div>
-      </motion.div>
+      </div>
     </div>
   );
 };
