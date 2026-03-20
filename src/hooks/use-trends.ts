@@ -24,9 +24,7 @@ import {
   normalizeCategory, normalizeTrendForFilter, NormalizedTrendForFilter,
 } from "@/lib/trend-normalize";
 
-import {
-  fetchRedditClientSide, fetchBlueskyClientSide, fetchMastodonClientSide,
-} from "@/lib/social-fetchers";
+// Client-side social fetchers now replaced by edge function fetch-reddit-bluesky-mastodon
 
 // ─── Source Priority Groups ────────────────────────────────────────
 const SOURCE_GROUPS: Record<string, string[]> = {
