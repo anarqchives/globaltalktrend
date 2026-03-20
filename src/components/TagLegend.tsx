@@ -3,39 +3,59 @@ import { motion, AnimatePresence } from "framer-motion";
 import { HelpCircle, X } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
 
-const GROUPS = [
+interface TagItem {
+  icon: string;
+  tag: string;
+  desc: Record<string, string>;
+  when: Record<string, string>;
+  exampleCss: string;
+}
+
+interface TagGroup {
+  key: string;
+  title: Record<string, string>;
+  items: TagItem[];
+}
+
+const GROUPS: TagGroup[] = [
   {
     key: "status",
-    title: { pt: "Status", en: "Status", es: "Estado" },
+    title: { pt: "Status", en: "Status" },
     items: [
-      { icon: "🟢", tag: "+novo", desc: { pt: "Surgida nas últimas horas", en: "Emerged in last hours" }, when: { pt: "Primeiras 4h de vida", en: "First 4h of life" } },
-      { icon: "📈", tag: "+trending", desc: { pt: "Volume crescendo rápido", en: "Volume growing fast" }, when: { pt: "Crescimento > 200%", en: "Growth > 200%" } },
-      { icon: "⭐", tag: "+popular", desc: { pt: "Alto engajamento", en: "High engagement" }, when: { pt: "Crescimento > 50%", en: "Growth > 50%" } },
-      { icon: "🌐", tag: "Multi", desc: { pt: "Confirmada em múltiplas plataformas", en: "Confirmed across platforms" }, when: { pt: "≥ 2 fontes independentes", en: "≥ 2 independent sources" } },
+      { icon: "🟢", tag: "+novo", desc: { pt: "Surgiu nas últimas horas", en: "Emerged recently" }, when: { pt: "Primeiras 4h", en: "First 4h" }, exampleCss: "bg-[hsl(var(--success-bg))] text-[hsl(var(--success-fg))]" },
+      { icon: "📈", tag: "+trending", desc: { pt: "Volume crescendo rápido", en: "Fast-growing volume" }, when: { pt: "Crescimento > 200%", en: "Growth > 200%" }, exampleCss: "bg-[hsl(var(--accent-coral)/0.1)] text-[hsl(var(--accent-coral))]" },
+      { icon: "⭐", tag: "+popular", desc: { pt: "Alto engajamento", en: "High engagement" }, when: { pt: "Crescimento > 50%", en: "Growth > 50%" }, exampleCss: "bg-[hsl(var(--source-search)/0.1)] text-[hsl(var(--source-search))]" },
+      { icon: "🌐", tag: "Multi", desc: { pt: "Múltiplas plataformas", en: "Multiple platforms" }, when: { pt: "≥ 2 fontes", en: "≥ 2 sources" }, exampleCss: "bg-[hsl(var(--source-official)/0.1)] text-[hsl(var(--source-official))]" },
     ],
   },
   {
     key: "verification",
-    title: { pt: "Verificação", en: "Verification", es: "Verificación" },
+    title: { pt: "Verificação", en: "Verification" },
     items: [
-      { icon: "✓", tag: "Verificado", desc: { pt: "Fonte jornalística reconhecida", en: "Recognized press outlet" }, when: { pt: "Reuters, BBC, Guardian, etc.", en: "Reuters, BBC, Guardian, etc." } },
-      { icon: "🔬", tag: "Científico", desc: { pt: "Revisado por pares", en: "Peer-reviewed" }, when: { pt: "PubMed, arXiv, OpenAlex", en: "PubMed, arXiv, OpenAlex" } },
-      { icon: "◆", tag: "Oficial", desc: { pt: "Dado institucional", en: "Institutional data" }, when: { pt: "World Bank, FRED, WHO", en: "World Bank, FRED, WHO" } },
+      { icon: "✓", tag: "Verificado", desc: { pt: "Fonte jornalística reconhecida", en: "Recognized press" }, when: { pt: "Reuters, BBC, Guardian…", en: "Reuters, BBC, Guardian…" }, exampleCss: "bg-[hsl(var(--source-press)/0.1)] text-[hsl(var(--source-press))]" },
+      { icon: "🔬", tag: "Científico", desc: { pt: "Revisado por pares", en: "Peer-reviewed" }, when: { pt: "PubMed, arXiv, OpenAlex", en: "PubMed, arXiv, OpenAlex" }, exampleCss: "bg-[hsl(var(--source-academic)/0.1)] text-[hsl(var(--source-academic))]" },
+      { icon: "◆", tag: "Oficial", desc: { pt: "Dado institucional", en: "Institutional data" }, when: { pt: "World Bank, FRED, WHO", en: "World Bank, FRED, WHO" }, exampleCss: "bg-[hsl(var(--source-official)/0.1)] text-[hsl(var(--source-official))]" },
     ],
   },
   {
     key: "categories",
-    title: { pt: "Categorias", en: "Categories", es: "Categorías" },
+    title: { pt: "Categorias", en: "Categories" },
     items: [
-      { icon: "", tag: "", desc: { pt: "Entretenimento · Tecnologia · Geopolítica · Esportes · Ciências · Cultura · Economia", en: "Entertainment · Technology · Geopolitics · Sports · Sciences · Culture · Economy" }, when: { pt: "Classificação automática por conteúdo", en: "Auto-classified by content" } },
+      { icon: "🎭", tag: "Entretenimento", desc: { pt: "Cultura pop, celebridades, mídia", en: "Pop culture, celebrities, media" }, when: { pt: "Auto-classificado", en: "Auto-classified" }, exampleCss: "bg-secondary text-foreground" },
+      { icon: "💻", tag: "Tecnologia", desc: { pt: "Software, hardware, IA, startups", en: "Software, hardware, AI, startups" }, when: { pt: "Auto-classificado", en: "Auto-classified" }, exampleCss: "bg-secondary text-foreground" },
+      { icon: "🌍", tag: "Geopolítica", desc: { pt: "Política, diplomacia, conflitos", en: "Politics, diplomacy, conflicts" }, when: { pt: "Inclui política e conflitos", en: "Includes politics & conflicts" }, exampleCss: "bg-secondary text-foreground" },
+      { icon: "⚽", tag: "Esportes", desc: { pt: "Futebol, olimpíadas, competições", en: "Football, olympics, competitions" }, when: { pt: "Auto-classificado", en: "Auto-classified" }, exampleCss: "bg-secondary text-foreground" },
+      { icon: "🔬", tag: "Ciências", desc: { pt: "Pesquisa, descobertas, saúde", en: "Research, discoveries, health" }, when: { pt: "Auto-classificado", en: "Auto-classified" }, exampleCss: "bg-secondary text-foreground" },
+      { icon: "🎨", tag: "Cultura", desc: { pt: "Artes, literatura, patrimônio", en: "Arts, literature, heritage" }, when: { pt: "Auto-classificado", en: "Auto-classified" }, exampleCss: "bg-secondary text-foreground" },
+      { icon: "📊", tag: "Economia", desc: { pt: "Finanças, negócios, mercados", en: "Finance, business, markets" }, when: { pt: "Inclui negócios e finanças", en: "Includes business & finance" }, exampleCss: "bg-secondary text-foreground" },
     ],
   },
   {
     key: "alerts",
-    title: { pt: "Alertas", en: "Alerts", es: "Alertas" },
+    title: { pt: "Alertas", en: "Alerts" },
     items: [
-      { icon: "🔥", tag: "Crítico", desc: { pt: "Propagação geográfica ampla", en: "Wide geographic spread" }, when: { pt: "≥ 5 países, volume alto", en: "≥ 5 countries, high volume" } },
-      { icon: "⚡", tag: "Crise", desc: { pt: "Emergência ou tensão ativa", en: "Emergency or active tension" }, when: { pt: "Keywords de crise detectados", en: "Crisis keywords detected" } },
+      { icon: "🔥", tag: "Crítico", desc: { pt: "Propagação geográfica ampla", en: "Wide geographic spread" }, when: { pt: "≥ 5 países + volume alto", en: "≥ 5 countries + high volume" }, exampleCss: "bg-[hsl(var(--color-critical-bg))] text-[hsl(var(--color-critical))]" },
+      { icon: "⚡", tag: "Crise", desc: { pt: "Emergência ou tensão ativa", en: "Active emergency or tension" }, when: { pt: "Keywords de crise", en: "Crisis keywords" }, exampleCss: "bg-[hsl(var(--color-critical-bg))] text-[hsl(var(--color-critical))]" },
     ],
   },
 ];
@@ -48,7 +68,7 @@ export default function TagLegend() {
     <div className="relative">
       <button onClick={() => setOpen(!open)}
         className="flex items-center gap-1 text-[9px] text-muted-foreground/60 hover:text-muted-foreground transition-colors px-1.5 py-0.5 rounded-md hover:bg-secondary"
-        title={lang === "pt" ? "Tags" : "Tags"}>
+        title="Tags">
         <HelpCircle className="w-3 h-3" />
         <span className="hidden sm:inline">Tags</span>
       </button>
@@ -56,21 +76,17 @@ export default function TagLegend() {
       <AnimatePresence>
         {open && (
           <>
-            {/* Backdrop */}
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+              className="fixed inset-0 z-40" onClick={() => setOpen(false)} />
             <motion.div
-              initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-              className="fixed inset-0 z-40"
-              onClick={() => setOpen(false)}
-            />
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95, y: -4 }}
+              initial={{ opacity: 0, scale: 0.96, y: -4 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.95, y: -4 }}
+              exit={{ opacity: 0, scale: 0.96, y: -4 }}
               transition={{ duration: 0.15, ease: [0.25, 0.1, 0.25, 1] }}
-              className="absolute top-full right-0 mt-1 z-50 w-[320px] bg-card border border-border/40 rounded-xl shadow-lg overflow-hidden"
+              className="absolute top-full right-0 mt-1 z-50 w-[340px] bg-card border border-border/40 rounded-xl shadow-[var(--shadow-lg)] overflow-hidden"
             >
               {/* Header */}
-              <div className="flex items-center justify-between px-4 pt-3 pb-2">
+              <div className="flex items-center justify-between px-4 pt-3 pb-2 border-b border-border/20">
                 <h3 className="text-[13px] font-bold text-foreground">
                   {lang === "pt" ? "Legenda das Tags" : "Tag Legend"}
                 </h3>
@@ -79,37 +95,32 @@ export default function TagLegend() {
                 </button>
               </div>
 
-              <div className="px-4 pb-4 space-y-3 max-h-[400px] overflow-y-auto scrollbar-thin">
+              <div className="px-4 pb-4 space-y-4 max-h-[420px] overflow-y-auto" style={{ scrollbarWidth: "thin" }}>
                 {GROUPS.map(group => (
-                  <div key={group.key}>
-                    <div className="text-[9px] font-bold uppercase tracking-[0.08em] text-muted-foreground/50 mb-1.5">
+                  <div key={group.key} className="pt-3">
+                    <div className="text-[9px] font-bold uppercase tracking-[0.1em] text-muted-foreground/50 mb-2">
                       {group.title[lang as keyof typeof group.title] || group.title.en}
                     </div>
 
-                    {group.key === "categories" ? (
-                      <p className="text-[10px] text-muted-foreground leading-relaxed">
-                        {group.items[0].desc[lang as "pt" | "en"] || group.items[0].desc.en}
-                      </p>
-                    ) : (
-                      <div className="space-y-1.5">
-                        {group.items.map((item, i) => (
-                          <div key={i} className="flex items-start gap-2">
-                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[9px] font-semibold bg-secondary text-foreground shrink-0 mt-0.5">
-                              {item.icon && <span>{item.icon}</span>}
-                              {item.tag}
-                            </span>
-                            <div className="min-w-0">
-                              <p className="text-[10px] text-foreground leading-snug">
-                                {item.desc[lang as "pt" | "en"] || item.desc.en}
-                              </p>
-                              <p className="text-[9px] text-muted-foreground/60 mt-0.5">
-                                {item.when[lang as "pt" | "en"] || item.when.en}
-                              </p>
-                            </div>
+                    <div className="space-y-2">
+                      {group.items.map((item, i) => (
+                        <div key={i} className="flex items-start gap-2.5">
+                          {/* Tag chip — matches real card appearance */}
+                          <span className={`inline-flex items-center gap-1 px-2 py-[3px] rounded-md text-[9px] font-semibold shrink-0 mt-0.5 ${item.exampleCss}`}>
+                            {item.icon && <span className="text-[10px]">{item.icon}</span>}
+                            {item.tag}
+                          </span>
+                          <div className="min-w-0 flex-1">
+                            <p className="text-[10.5px] text-foreground leading-snug font-medium">
+                              {item.desc[lang as "pt" | "en"] || item.desc.en}
+                            </p>
+                            <p className="text-[9px] text-muted-foreground/50 mt-0.5 leading-snug">
+                              {item.when[lang as "pt" | "en"] || item.when.en}
+                            </p>
                           </div>
-                        ))}
-                      </div>
-                    )}
+                        </div>
+                      ))}
+                    </div>
                   </div>
                 ))}
               </div>
