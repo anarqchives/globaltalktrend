@@ -77,7 +77,7 @@ serve(async (req) => {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
-    // 4. Monthly cost control: limit to 5000 generations/month
+    // 4. Monthly cost control: limit to 20000 generations/month
     const startOfMonth = new Date();
     startOfMonth.setDate(1);
     startOfMonth.setHours(0, 0, 0, 0);
@@ -85,7 +85,7 @@ serve(async (req) => {
       .from('trend_context_cache')
       .select('*', { count: 'exact', head: true })
       .gte('created_at', startOfMonth.toISOString());
-    if ((monthlyCount || 0) > 5000) {
+    if ((monthlyCount || 0) > 20000) {
       console.warn('Monthly AI context generation limit reached');
       return new Response(JSON.stringify({ contexts: cachedResults, limited: true }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },

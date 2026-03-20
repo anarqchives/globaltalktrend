@@ -147,9 +147,9 @@ export function useTranslatedTrends(trends: TrendCardProps[], lang: string) {
       return;
     }
 
-    // For PT: still check if any non-Latin titles need translation
-    const hasNonLatin = lang === "pt" && trends.some(t => NON_LATIN_REGEX.test(t.title));
-    if (lang === "pt" && !hasNonLatin) {
+    // Check if any trends actually need translation
+    const hasTranslatable = trends.some(t => needsTranslation(t, lang));
+    if (!hasTranslatable) {
       setTranslated(trends.map(t => ({ ...t, _originalTitle: t.title })));
       lastLangRef.current = lang;
       lastTrendsKeyRef.current = "";

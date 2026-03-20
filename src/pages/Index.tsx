@@ -271,10 +271,8 @@ const Index = () => {
     return () => clearInterval(interval);
   }, [isActive, expandedCardIndex, fetchTrends, updatePending]);
 
-  const filterTimeoutRef = useRef<ReturnType<typeof setTimeout>>();
   const handleFilterChange = useCallback((newFilters: FilterState) => {
-    clearTimeout(filterTimeoutRef.current);
-    filterTimeoutRef.current = setTimeout(() => setFilters(newFilters), 300);
+    setFilters(newFilters);
   }, []);
 
   // Card click → toggle inline expansion
