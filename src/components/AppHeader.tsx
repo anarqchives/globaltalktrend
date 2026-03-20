@@ -139,37 +139,91 @@ const AppHeader = ({ minimal = false, filters, onFilterChange, onForceReset, onS
     ),
   })).filter(g => g.items.length > 0);
 
+  const QUICK_COUNTRIES = [
+    { value: "global", emoji: "🌐", label: "Global" },
+    { value: "BR", emoji: "🇧🇷", label: "Brasil" },
+    { value: "US", emoji: "🇺🇸", label: "EUA" },
+    { value: "GB", emoji: "🇬🇧", label: "UK" },
+    { value: "FR", emoji: "🇫🇷", label: "França" },
+    { value: "DE", emoji: "🇩🇪", label: "Alemanha" },
+  ];
+
+  const QUICK_CATEGORIES = [
+    { value: "Todas", label: { pt: "Todas", en: "All", es: "Todas" } },
+    { value: "Geopolítica", label: { pt: "Geopolítica", en: "Geopolitics", es: "Geopolítica" } },
+    { value: "Economia", label: { pt: "Economia", en: "Economy", es: "Economía" } },
+    { value: "Tecnologia", label: { pt: "Tech", en: "Tech", es: "Tech" } },
+    { value: "Saúde", label: { pt: "Saúde", en: "Health", es: "Salud" } },
+    { value: "Esportes", label: { pt: "Esportes", en: "Sports", es: "Deportes" } },
+  ];
+
+  const [showMoreCountries, setShowMoreCountries] = useState(false);
+
   return (
     <>
       <header className="sticky top-0 z-50 bg-background/92 backdrop-blur-md border-b border-border/40" role="banner">
-        <div className="h-11 flex items-center px-3 md:px-5">
-          <div className="w-full max-w-[1440px] mx-auto flex items-center">
+        {/* Row 1: Logo + inline filter pills + controls */}
+        <div className="h-10 flex items-center px-3 md:px-5">
+          <div className="w-full max-w-[1440px] mx-auto flex items-center gap-2 min-w-0">
             {/* Logo */}
-            <Link to="/welcome" className="flex items-center gap-1.5 shrink-0" aria-label="GTT Monitor">
+            <Link to="/welcome" className="flex items-center gap-1 shrink-0" aria-label="GTT Monitor">
               <span className="text-[13px] font-bold tracking-tight text-foreground">GTT</span>
               <span className="text-[13px] font-medium tracking-tight text-muted-foreground">Monitor</span>
             </Link>
 
-            {/* Active filter pills */}
-            {activeFilterPills.length > 0 && (
-              <div className="flex items-center gap-1 ml-3 overflow-x-auto scrollbar-none">
-                {activeFilterPills.map(pill => (
-                  <span key={pill.key}
-                    className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium bg-foreground/8 text-foreground border border-border/40 flex-shrink-0 whitespace-nowrap">
-                    {pill.label}
-                    <button onClick={() => update(pill.key, pill.defaultValue)}
-                      className="hover:text-destructive transition-colors ml-0.5">
-                      <X className="w-2.5 h-2.5" />
-                    </button>
-                  </span>
+            {/* Separator */}
+            <div className="w-px h-4 bg-border/50 shrink-0 hidden sm:block" />
+
+            {/* Country pills */}
+            {filters && onFilterChange && (
+              <div className="hidden md:flex items-center gap-0.5 overflow-x-auto scrollbar-none shrink-0">
+                {QUICK_COUNTRIES.map(c => (
+                  <button key={c.value} onClick={() => update("country", c.value)}
+                    className={`flex items-center gap-1 px-2 py-1 rounded-full text-[10px] font-medium whitespace-nowrap transition-all ${
+                      filters.country === c.value
+                        ? "bg-foreground text-background shadow-sm"
+                        : "text-muted-foreground hover:text-foreground hover:bg-muted/60"
+                    }`}>
+                    <span className="text-[11px]">{c.emoji}</span>
+                    <span>{c.label}</span>
+                  </button>
+                ))}
+                <button onClick={() => setShowMoreCountries(!showMoreCountries)}
+                  className="px-1.5 py-1 rounded-full text-[9px] font-medium text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-colors whitespace-nowrap">
+                  +{countries.flatMap(g => g.items).length - QUICK_COUNTRIES.length}
+                </button>
+              </div>
+            )}
+
+            {/* Separator */}
+            <div className="w-px h-4 bg-border/50 shrink-0 hidden lg:block" />
+
+            {/* Category pills */}
+            {filters && onFilterChange && (
+              <div className="hidden lg:flex items-center gap-0.5 overflow-x-auto scrollbar-none shrink-0">
+                {QUICK_CATEGORIES.map(c => (
+                  <button key={c.value} onClick={() => update("category", c.value)}
+                    className={`px-2 py-1 rounded-full text-[10px] font-medium whitespace-nowrap transition-all ${
+                      filters.category === c.value
+                        ? "bg-foreground text-background shadow-sm"
+                        : "text-muted-foreground hover:text-foreground hover:bg-muted/60"
+                    }`}>
+                    {c.label[lang as keyof typeof c.label] || c.label.pt}
+                  </button>
                 ))}
               </div>
             )}
 
-            <div className="flex-1" />
+            <div className="flex-1 min-w-0" />
 
-            {/* Right controls — single clean row */}
-            <div className="flex items-center gap-1.5">
+            {/* Right controls */}
+            <div className="flex items-center gap-1.5 shrink-0">
+              {/* Theme toggle - compact */}
+              <button onClick={() => setDark(!dark)}
+                className="compact-btn flex items-center justify-center w-7 h-7 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted transition-colors">
+                {dark ? <Moon className="w-3.5 h-3.5" /> : <Sun className="w-3.5 h-3.5" />}
+              </button>
+
               <a href="https://buy.stripe.com/fZu7sMgw6cHLeTnbWVdIA00" target="_blank" rel="noopener noreferrer"
                 className="hidden sm:flex apoie-pill compact-link">{t("support")}</a>
 
@@ -189,17 +243,74 @@ const AppHeader = ({ minimal = false, filters, onFilterChange, onForceReset, onS
                 </button>
               )}
 
-              {/* Single menu button that opens the drawer */}
+              {/* Menu drawer button */}
               <button onClick={() => setDrawerOpen(true)}
-                className={`compact-btn flex items-center justify-center w-7 h-7 rounded-lg transition-colors ${
-                  hasActiveFilters ? "bg-foreground text-background" : "text-muted-foreground hover:text-foreground hover:bg-muted"
-                }`}>
+                className="compact-btn flex items-center justify-center w-7 h-7 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted transition-colors relative">
                 <Menu className="w-4 h-4" />
                 {hasActiveFilters && <span className="absolute -top-0.5 -right-0.5 w-1.5 h-1.5 rounded-full bg-destructive" />}
               </button>
             </div>
           </div>
         </div>
+
+        {/* Row 2 (mobile only): country + category pills */}
+        {filters && onFilterChange && (
+          <div className="md:hidden flex items-center gap-1 px-3 pb-1.5 overflow-x-auto scrollbar-none">
+            {QUICK_COUNTRIES.slice(0, 4).map(c => (
+              <button key={c.value} onClick={() => update("country", c.value)}
+                className={`flex items-center gap-0.5 px-2 py-0.5 rounded-full text-[9px] font-medium whitespace-nowrap transition-all shrink-0 ${
+                  filters.country === c.value
+                    ? "bg-foreground text-background"
+                    : "text-muted-foreground hover:bg-muted/60"
+                }`}>
+                <span>{c.emoji}</span> {c.label}
+              </button>
+            ))}
+            <div className="w-px h-3 bg-border/40 shrink-0" />
+            {QUICK_CATEGORIES.slice(0, 4).map(c => (
+              <button key={c.value} onClick={() => update("category", c.value)}
+                className={`px-2 py-0.5 rounded-full text-[9px] font-medium whitespace-nowrap transition-all shrink-0 ${
+                  filters.category === c.value
+                    ? "bg-foreground text-background"
+                    : "text-muted-foreground hover:bg-muted/60"
+                }`}>
+                {c.label[lang as keyof typeof c.label] || c.label.pt}
+              </button>
+            ))}
+            <button onClick={() => setDrawerOpen(true)}
+              className="px-1.5 py-0.5 rounded-full text-[9px] text-muted-foreground hover:bg-muted/60 shrink-0">
+              <Filter className="w-3 h-3" />
+            </button>
+          </div>
+        )}
+
+        {/* Expanded country picker (desktop "+N more" click) */}
+        {showMoreCountries && filters && onFilterChange && (
+          <div className="hidden md:block border-t border-border/30 px-5 py-2 bg-background/95 backdrop-blur-sm">
+            <div className="max-w-[1440px] mx-auto">
+              <div className="flex items-center gap-2 mb-1.5">
+                <input type="text" placeholder={lang === "pt" ? "Buscar país..." : "Search country..."}
+                  value={countrySearch} onChange={e => setCountrySearch(e.target.value)}
+                  className="h-7 px-2.5 rounded-md border border-border bg-card text-[10px] text-foreground placeholder:text-muted-foreground outline-none focus:border-primary/40 w-48" />
+                <button onClick={() => setShowMoreCountries(false)} className="text-muted-foreground hover:text-foreground">
+                  <X className="w-3.5 h-3.5" />
+                </button>
+              </div>
+              <div className="flex flex-wrap gap-0.5 max-h-[120px] overflow-y-auto scrollbar-thin">
+                {filteredCountries.flatMap(g => g.items).map(c => (
+                  <button key={c.value} onClick={() => { update("country", c.value); setShowMoreCountries(false); }}
+                    className={`px-2 py-1 rounded-md text-[10px] font-medium transition-all ${
+                      filters.country === c.value
+                        ? "bg-foreground text-background"
+                        : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                    }`}>
+                    {c.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
       </header>
 
       {/* Unified Navigation Drawer */}
