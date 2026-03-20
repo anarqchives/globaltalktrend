@@ -391,7 +391,7 @@ const GoogleMapView = ({
       const cp = countryPoints.find(c => c.id === cc);
       if (!cp) return;
       const sourceTypesCount = [data.press > 0, data.official > 0, data.academic > 0, data.social > 0].filter(Boolean).length;
-      const coverageColors = ["#94a3b8", "#f59e0b", "#22c55e", "#2557D6"];
+      const coverageColors = ["#8E8E93", "#FF9500", "#34C759", "#007AFF"];
       const color = coverageColors[Math.min(sourceTypesCount - 1, 3)];
       const intensity = Math.min(data.total / maxCount, 1);
 
