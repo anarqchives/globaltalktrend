@@ -6,7 +6,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip
 import { AreaChart, Area, ResponsiveContainer } from "recharts";
 import EmergingTrendsSection from "./EmergingTrendsSection";
 import CriticalMomentsSection from "./CriticalMomentsSection";
-const WeeklyPulseDashboard = lazy(() => import("./WeeklyPulseDashboard"));
+
 import { TrendCardProps } from "./TrendCard";
 import { CriticalMoment } from "@/hooks/use-critical-moments";
 import { AnomalyAlert } from "@/hooks/use-anomaly-alerts";
@@ -44,11 +44,6 @@ const legendText: Record<string, Record<string, string>> = {
     pt: "Os 20 assuntos mais discutidos agora — ordenados por volume total.",
     en: "The 20 most discussed topics right now — sorted by total volume.",
     es: "Los 20 temas más discutidos ahora — ordenados por volumen total.",
-  },
-  weekly: {
-    pt: "Painel semanal de inteligência — volume, categorias e tendências dos últimos 7 dias.",
-    en: "Weekly intelligence dashboard — volume, categories and trends from the last 7 days.",
-    es: "Panel semanal de inteligencia — volumen, categorías y tendencias de los últimos 7 días.",
   },
 };
 
@@ -577,15 +572,6 @@ export default function TrendRadar({ trends, allTrends, criticalMoments, anomali
       badge: null,
       pulse: false,
     },
-    {
-      value: "weekly",
-      icon: Activity,
-      label: lang === "pt" ? "Semana" : "Weekly",
-      activeColor: "sky",
-      dot: null,
-      badge: null,
-      pulse: false,
-    },
   ];
 
   const activeColorMap: Record<string, string> = {
@@ -718,12 +704,6 @@ export default function TrendRadar({ trends, allTrends, criticalMoments, anomali
               </div>
             </TabsContent>
 
-            <TabsContent value="weekly" className="absolute inset-0 mt-0 overflow-y-auto scrollbar-thin data-[state=inactive]:hidden animate-in fade-in-0 duration-200">
-              <Legend tab="weekly" lang={lang} />
-              <Suspense fallback={<TabLoadingState lang={lang} />}>
-                <WeeklyPulseDashboard trends={allTrends} />
-              </Suspense>
-            </TabsContent>
           </div>
         </div>
       </Tabs>

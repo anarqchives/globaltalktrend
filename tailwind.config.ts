@@ -57,7 +57,6 @@ export default {
   				border: 'hsl(var(--sidebar-border))',
   				ring: 'hsl(var(--sidebar-ring))'
   			},
-  			// Semantic status colors
   			critical: {
   				DEFAULT: 'hsl(var(--color-critical))',
   				bg: 'hsl(var(--color-critical-bg))',
@@ -74,7 +73,6 @@ export default {
   				DEFAULT: 'hsl(var(--color-positive))',
   				bg: 'hsl(var(--color-positive-bg))',
   			},
-  			// Chart palette
   			chart: {
   				'1': 'hsl(var(--chart-1))',
   				'2': 'hsl(var(--chart-2))',
@@ -83,7 +81,6 @@ export default {
   				'5': 'hsl(var(--chart-5))',
   				'6': 'hsl(var(--chart-6))',
   			},
-  			// Status backgrounds
   			warning: {
   				bg: 'hsl(var(--warning-bg))',
   				fg: 'hsl(var(--warning-fg))',
@@ -112,10 +109,11 @@ export default {
   		},
   		borderRadius: {
   			lg: 'var(--radius)',
-  			md: 'calc(var(--radius) - 2px)',
-  			sm: 'calc(var(--radius) - 4px)',
+  			md: 'calc(var(--radius) - 4px)',
+  			sm: 'calc(var(--radius) - 8px)',
   			xl: 'calc(var(--radius) + 4px)',
   			'2xl': 'calc(var(--radius) + 8px)',
+  			'3xl': '2rem',
   		},
   		boxShadow: {
   			'elevation-xs': 'var(--shadow-xs)',
@@ -164,25 +162,24 @@ export default {
   		},
   		fontFamily: {
   			sans: [
-  				'"Inter"',
   				'"Helvetica Neue"',
   				'Helvetica',
-  				'Arial',
   				'-apple-system',
   				'BlinkMacSystemFont',
+  				'"Segoe UI"',
+  				'Arial',
   				'sans-serif',
   			],
-  			outfit: ['"Outfit"', 'sans-serif'],
   			serif: ['ui-serif', 'Georgia', 'Cambria', 'Times New Roman', 'Times', 'serif'],
   			mono: ['ui-monospace', 'SFMono-Regular', 'Menlo', 'Monaco', 'Consolas', 'monospace']
   		},
   		fontSize: {
-  			'hero': ['28px', { lineHeight: '1.1', fontWeight: '700', letterSpacing: '-0.5px' }],
-  			'display': ['22px', { lineHeight: '1.15', fontWeight: '700', letterSpacing: '-0.3px' }],
-  			'heading': ['18px', { lineHeight: '1.25', fontWeight: '600', letterSpacing: '-0.2px' }],
-  			'title': ['15px', { lineHeight: '1.3', fontWeight: '600' }],
+  			'hero': ['32px', { lineHeight: '1.08', fontWeight: '700', letterSpacing: '-0.02em' }],
+  			'display': ['24px', { lineHeight: '1.12', fontWeight: '700', letterSpacing: '-0.015em' }],
+  			'heading': ['18px', { lineHeight: '1.25', fontWeight: '600', letterSpacing: '-0.01em' }],
+  			'title': ['15px', { lineHeight: '1.3', fontWeight: '500' }],
   			'body': ['13px', { lineHeight: '1.5', fontWeight: '400' }],
-  			'caption': ['11px', { lineHeight: '1.3', fontWeight: '500', letterSpacing: '0.3px' }],
+  			'caption': ['11px', { lineHeight: '1.3', fontWeight: '500', letterSpacing: '0.02em' }],
   			'micro': ['10px', { lineHeight: '1.3', fontWeight: '500' }],
   		}
   	}
