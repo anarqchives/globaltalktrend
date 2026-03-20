@@ -232,7 +232,7 @@ const TimelineCard = ({
     <motion.div
       variants={cardVariants}
       onClick={onClick}
-      className={`bg-card rounded-2xl border cursor-pointer w-full relative overflow-hidden
+      className={`bg-card rounded-lg border cursor-pointer w-full relative overflow-hidden
         transition-all duration-200 ease-[cubic-bezier(0.21,0.47,0.32,0.98)]
         ${isSelected
           ? "border-l-[3px] border-l-[#2557D6] border-[#2557D6]/20 shadow-[0_6px_24px_rgba(26,24,20,0.10)]"
