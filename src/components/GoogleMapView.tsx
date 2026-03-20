@@ -261,15 +261,15 @@ const GoogleMapView = ({
 
       sorted.forEach(c => {
         const intensity = Math.min(c.count / maxCount, 1);
-        const scale = 6 + intensity * 14;
+        const scale = 6 + intensity * 15; // 12px to 36px diameter
         const marker = new google.maps.Marker({
           position: { lat: c.lat, lng: c.lng }, map: googleMapRef.current,
           icon: {
             path: google.maps.SymbolPath.CIRCLE, scale,
-            fillColor: intensity > 0.7 ? "#E03C31" : "#2557D6", fillOpacity: 0.85,
-            strokeColor: "#ffffff", strokeWeight: 2,
+            fillColor: "#FFFFFF", fillOpacity: 0.95,
+            strokeColor: "#2557D6", strokeWeight: 2.5,
           },
-          label: { text: String(c.count), color: "#fff", fontSize: "9px", fontWeight: "700" },
+          label: { text: String(c.count), color: "#2557D6", fontSize: "10px", fontWeight: "800" },
           zIndex: Math.floor(intensity * 1000),
         });
         const origIcon = marker.getIcon() as google.maps.Symbol;
