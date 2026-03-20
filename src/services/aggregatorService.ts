@@ -202,3 +202,51 @@ export function stopAutoRefresh() {
     refreshInterval = null;
   }
 }
+
+// ─── Diagnostics API ───────────────────────────────────────────────
+export interface AggregatorSourceStatus {
+  name: string;
+  enabled: boolean;
+  reason?: string;
+  lastFetchCount: number | null;
+  lastFetchTime: Date | null;
+  cached: boolean;
+}
+
+const sourceStats: Record<string, { count: number; ts: number }> = {};
+
+export function recordSourceStat(name: string, count: number) {
+  sourceStats[name] = { count, ts: Date.now() };
+}
+
+export function getAggregatorDiagnostics(): AggregatorSourceStatus[] {
+  const keys = {
+    newsData: import.meta.env.VITE_NEWSDATA_API_KEY as string | undefined,
+    theNewsApi: import.meta.env.VITE_THENEWSAPI_KEY as string | undefined,
+    mediastack: import.meta.env.VITE_MEDIASTACK_KEY as string | undefined,
+    alphaVantage: import.meta.env.VITE_ALPHAVANTAGE_KEY as string | undefined,
+    fixer: import.meta.env.VITE_FIXER_KEY as string | undefined,
+  };
+
+  const sources: { name: string; key: string | undefined; reason?: string }[] = [
+    { name: "GDELT", key: "open" },
+    { name: "NewsData", key: keys.newsData, reason: "VITE_NEWSDATA_API_KEY" },
+    { name: "TheNewsAPI", key: keys.theNewsApi, reason: "VITE_THENEWSAPI_KEY" },
+    { name: "Mediastack", key: keys.mediastack, reason: "VITE_MEDIASTACK_KEY" },
+    { name: "AlphaVantage", key: keys.alphaVantage, reason: "VITE_ALPHAVANTAGE_KEY" },
+    { name: "Fixer", key: keys.fixer, reason: "VITE_FIXER_KEY" },
+  ];
+
+  return sources.map((s) => {
+    const enabled = s.key === "open" || !!s.key;
+    const stat = sourceStats[s.name];
+    return {
+      name: s.name,
+      enabled,
+      reason: enabled ? undefined : `Missing ${s.reason}`,
+      lastFetchCount: stat?.count ?? null,
+      lastFetchTime: stat ? new Date(stat.ts) : null,
+      cached: !!aggCache && Date.now() - aggCache.ts < AGG_CACHE_TTL,
+    };
+  });
+}
