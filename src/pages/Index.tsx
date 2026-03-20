@@ -579,10 +579,14 @@ const Index = () => {
   return (
     <div className="h-screen flex flex-col bg-background overflow-hidden w-full max-w-[100vw]">
       <AppHeader />
-      <FilterBlock filters={filters} onChange={handleFilterChange} onReset={() => { setFilters(defaultFilters); setMapSelectedCountry(null); }} onSaveFilter={user ? () => {
+      <FilterBlock filters={filters} onChange={handleFilterChange} onReset={() => { setFilters(defaultFilters); setMapSelectedCountry(null); }} onSaveFilter={() => {
+        if (!user) {
+          toast({ title: lang === "pt" ? "Faça login para salvar filtros" : "Log in to save filters", variant: "destructive" });
+          return;
+        }
         const name = prompt(lang === "pt" ? "Nome do filtro:" : "Filter name:");
         if (name) saveFilter(name, filters);
-      } : undefined} />
+      }} isLoggedIn={!!user} />
 
       <div className="flex-1 overflow-hidden flex flex-col min-h-0">
         {isMobile ? (
