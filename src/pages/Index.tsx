@@ -62,28 +62,7 @@ function getInitialFilters(): FilterState {
   };
 }
 
-/* ─── Watchlist item ─── */
-interface WatchlistItem {
-  title: string;
-  platform: string;
-  category?: string;
-  countryCode?: string;
-  addedAt: number;
-  lastScore?: number;
-  lastVolume?: string;
-  lastChange?: string;
-}
-
-function loadWatchlist(): WatchlistItem[] {
-  try {
-    const raw = localStorage.getItem("gtt_watchlist");
-    return raw ? JSON.parse(raw) : [];
-  } catch { return []; }
-}
-
-function saveWatchlistStorage(items: WatchlistItem[]) {
-  try { localStorage.setItem("gtt_watchlist", JSON.stringify(items)); } catch {}
-}
+/* Watchlist types imported from hook */
 
 const Index = () => {
   const { t, lang } = useLanguage();
