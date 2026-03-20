@@ -91,7 +91,7 @@ export default {
         'display': ['24px', { lineHeight: '1.12', fontWeight: '700', letterSpacing: '-0.015em' }],
         'heading': ['18px', { lineHeight: '1.25', fontWeight: '600', letterSpacing: '-0.01em' }],
         'title': ['15px', { lineHeight: '1.3', fontWeight: '500' }],
-        'body': ['13px', { lineHeight: '1.5', fontWeight: '400' }],
+        'body': ['14px', { lineHeight: '1.5', fontWeight: '400' }],
         'caption': ['11px', { lineHeight: '1.3', fontWeight: '500', letterSpacing: '0.02em' }],
         'micro': ['10px', { lineHeight: '1.3', fontWeight: '500' }],
       },
