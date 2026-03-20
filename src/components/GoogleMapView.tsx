@@ -795,7 +795,7 @@ const GoogleMapView = ({
 
       {/* ── Legend + Zoom controls — aligned bottom-left ── */}
       {activeTab !== "trending" && (
-        <div className={`absolute z-20 flex items-end gap-2 ${isMobile ? "bottom-24 left-3 right-3" : "bottom-4 left-3"}`}>
+        <div className={`absolute z-20 flex items-start gap-2 ${isMobile ? "bottom-24 left-3 right-3" : "bottom-4 left-3"}`}>
           {/* Legend block — enlarged */}
           <div className="bg-card/90 backdrop-blur-xl border border-border/30 rounded-xl p-3.5 shadow-[var(--shadow-md)] flex-1 max-w-xs">
             <div className="text-[9px] uppercase tracking-widest text-muted-foreground font-semibold mb-2">
