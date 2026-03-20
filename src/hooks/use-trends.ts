@@ -207,7 +207,7 @@ function generateContextualFallback(filters: FilterState): TrendCardProps[] {
       { icon: "🇫🇷", platform: "Le Monde", title: "France: actualités politiques et sociales", category: "Geopolítica", time: timeStr, volume: "Alto", change: "+trending", changePositive: true, sparkData: [22, 35, 45, 55, 65, 72, 80, 85, 90, 93], details: "Dernières nouvelles de la politique française.", countryCode: "FR" },
     ],
     DE: [
-      { icon: "🇩🇪", platform: "Der Spiegel", title: "Deutschland: aktuelle Nachrichten und Analysen", category: "Política", time: timeStr, volume: "Alto", change: "+trending", changePositive: true, sparkData: [20, 32, 42, 55, 62, 70, 78, 84, 90, 93], details: "As últimas notícias e análises da Alemanha.", countryCode: "DE" },
+      { icon: "🇩🇪", platform: "Der Spiegel", title: "Deutschland: aktuelle Nachrichten und Analysen", category: "Geopolítica", time: timeStr, volume: "Alto", change: "+trending", changePositive: true, sparkData: [20, 32, 42, 55, 62, 70, 78, 84, 90, 93], details: "As últimas notícias e análises da Alemanha.", countryCode: "DE" },
     ],
     AR: [
       { icon: "🇦🇷", platform: "Clarín", title: "Argentina: Milei anuncia novas reformas econômicas", category: "Política", time: timeStr, volume: "Alto", change: "+200%", changePositive: true, sparkData: [25, 38, 50, 60, 70, 78, 85, 90, 93, 96], details: "Presidente argentino avança com agenda de reformas.", countryCode: "AR" },
