@@ -273,7 +273,6 @@ async function fetchMastodon(): Promise<TrendItem[]> {
   const accessToken = Deno.env.get("MASTODON_ACCESS_TOKEN");
   const authenticated = isMastodonAuthenticated();
   console.log(`🐘 Mastodon mode: ${authenticated ? "authenticated" : "public"} (${baseUrl})`);
-  const accessToken = Deno.env.get("MASTODON_ACCESS_TOKEN");
   
   try {
     const headers: Record<string, string> = {};
