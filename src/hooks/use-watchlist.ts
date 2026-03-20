@@ -116,7 +116,7 @@ export function useWatchlist(userId: string | null, lang: string) {
         last_volume: item.lastVolume || null,
         last_change: item.lastChange || null,
         added_at: new Date(item.addedAt).toISOString(),
-      }, { onConflict: "user_id,title,platform" }).catch(() => {});
+      }, { onConflict: "user_id,title,platform" }).then(() => {});
     }
 
     toast({ title: lang === "pt" ? "👁 Monitorando" : "👁 Watching", description: card.title.slice(0, 50) });
