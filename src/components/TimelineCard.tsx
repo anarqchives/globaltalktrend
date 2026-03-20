@@ -302,12 +302,14 @@ const TimelineCard = ({
   const showChange = changeNum > 0;
 
   const contextSnippet = useMemo(() => {
+    // Prefer AI-generated context
+    if (aiContext) return aiContext.slice(0, 200);
     const raw = description || details || "";
     const normTitle = title.toLowerCase().trim();
     const normDesc = raw.toLowerCase().trim();
     if (!normDesc || normDesc === normTitle || normDesc.startsWith(normTitle.slice(0, 30))) return null;
     return raw.slice(0, 160) + (raw.length > 160 ? "…" : "");
-  }, [description, details, title]);
+  }, [aiContext, description, details, title]);
 
   const termExplanation = useMemo(() => findTermExplanation(title, lang), [title, lang]);
 
