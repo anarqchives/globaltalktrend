@@ -378,6 +378,7 @@ const Index = () => {
                           staggerIndex={trendIdx < 10 ? trendIdx : 0}
                           isMultiplatform={isMulti}
                           isSelected={expandedCardIndex === trendIdx}
+                          aiContext={aiContext}
                           onSaveCard={saveCard}
                           onClick={() => handleCardClick(trendIdx)}
                           onFilterPlatform={(p) => {
