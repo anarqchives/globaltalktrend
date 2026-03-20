@@ -250,7 +250,7 @@ function CountryDropdown({ value, onSelect }: { value: string; onSelect: (v: str
 }
 
 const FilterBlock = ({ filters, onChange, onReset, onSaveFilter }: FilterBlockProps) => {
-  const { lang, setLang } = useLanguage();
+  const { lang } = useLanguage();
   const update = (key: keyof FilterState, value: string) => onChange({ ...filters, [key]: value });
 
   const hasActive = filters.country !== defaultFilters.country ||
