@@ -182,7 +182,7 @@ const GoogleMapView = ({
           streetViewControl: false, fullscreenControl: false, mapTypeId: "roadmap",
           styles: isDark ? DARK_MAP_STYLE : BASE_MAP_STYLE,
           gestureHandling: "greedy",
-          backgroundColor: isDark ? "#0f1419" : "#EDE8DF",
+          backgroundColor: isDark ? "#0f1419" : "#E8E4E0",
         });
         googleMapRef.current = map;
         infoRef.current = new google.maps.InfoWindow({ disableAutoPan: true });
