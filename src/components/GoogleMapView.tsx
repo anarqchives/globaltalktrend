@@ -341,7 +341,7 @@ const GoogleMapView = ({
     } catch (err) { console.error("Panorama render error:", err); }
   }, [trendCounts, maxCount, flowArcs, onSelectCountry, showTooltip, isDark, clearLayers, lang, isMobile]);
 
-  /* ═══ TAB 2: SENTIMENT — country colored by sentiment with explanations ═══ */
+  /* ═══ TAB 2: SENTIMENT — soft organic blobs by sentiment ═══ */
   const renderSentiment = useCallback(() => {
     if (!googleMapRef.current) return;
     clearLayers();
@@ -349,58 +349,61 @@ const GoogleMapView = ({
     const sentimentByCountry = new Map<string, SentimentBubble>();
     sentimentBubbles.forEach(b => sentimentByCountry.set(b.countryId, b));
 
+    // Warm, soft palette inspired by references
+    const sentBlobColors: Record<string, string[]> = {
+      positive: ["#A8D8B0", "#7CC98A", "#60B870"],
+      neutral: ["#D0CCC4", "#BEB8AE", "#A8A29E"],
+      negative: ["#F0A8A0", "#E88880", "#D86860"],
+      mixed: ["#F0D080", "#E8C060", "#D8B040"],
+    };
+
     sentimentBubbles.forEach(b => {
       const cp = countryPoints.find(c => c.id === b.countryId);
       if (!cp) return;
-      const sentColors: Record<string, string> = {
-        positive: "#34C759", neutral: "#8E8E93", negative: "#FF3B30", mixed: "#FF9500",
-      };
-      const color = sentColors[b.dominantSentiment] || sentColors.neutral;
+      const palette = sentBlobColors[b.dominantSentiment] || sentBlobColors.neutral;
       const intensity = Math.min(b.trendCount / maxCount, 1);
-      const scale = 8 + intensity * 14;
 
-      // Glow ring
-      const glow = new google.maps.Marker({
-        position: { lat: cp.lat, lng: cp.lng }, map: googleMapRef.current,
-        icon: { path: google.maps.SymbolPath.CIRCLE, scale: scale + 4, fillColor: color, fillOpacity: 0.12, strokeColor: color, strokeWeight: 0, strokeOpacity: 0 },
-        zIndex: 1,
+      // Triple-layer organic blob
+      [0, 1, 2].forEach((layer) => {
+        const scales = [22 + intensity * 30, 14 + intensity * 20, 7 + intensity * 10];
+        const opacities = [0.07, 0.14, 0.28];
+        const jitter = layer === 0 ? 0.8 : layer === 1 ? 0.3 : 0;
+        const m = new google.maps.Marker({
+          position: { lat: cp.lat + (Math.random() - 0.5) * jitter, lng: cp.lng + (Math.random() - 0.5) * jitter },
+          map: googleMapRef.current,
+          icon: { path: google.maps.SymbolPath.CIRCLE, scale: scales[layer], fillColor: palette[layer], fillOpacity: opacities[layer], strokeWeight: 0 },
+          zIndex: layer + 1, clickable: layer === 2,
+        });
+        if (layer === 2) {
+          const posP = Math.round(b.sentiment.positive * 100);
+          const neuP = Math.round(b.sentiment.neutral * 100);
+          const negP = Math.round(b.sentiment.negative * 100);
+          const emoji = b.dominantSentiment === "positive" ? "😊" : b.dominantSentiment === "negative" ? "😟" : "😐";
+          const topCategories = [...new Set(trends.filter(t => t.countryCode?.toUpperCase() === b.countryId).map(t => t.category))].slice(0, 3);
+          const explanation = lang === "pt"
+            ? `Sentimento predominantemente ${b.dominantSentiment === "positive" ? "positivo" : b.dominantSentiment === "negative" ? "negativo" : "neutro"} com base em ${b.trendCount} tendências. Temas: ${topCategories.join(", ") || "variados"}.`
+            : `Predominantly ${b.dominantSentiment} sentiment based on ${b.trendCount} trends. Topics: ${topCategories.join(", ") || "various"}.`;
+
+          m.addListener("mouseover", () => {
+            showTooltip(buildTooltipHtml(`
+              <div style="display:flex;align-items:center;gap:6px;margin-bottom:6px">
+                <span style="font-size:16px">${flagEmoji(b.countryId)}</span>
+                <div><div style="font-weight:700">${b.countryName}</div></div>
+              </div>
+              <div style="margin-bottom:6px">${emoji} <strong>${b.dominantSentiment === "positive" ? "Positivo" : b.dominantSentiment === "negative" ? "Negativo" : "Neutro"}</strong></div>
+              <div style="display:flex;gap:3px;margin-bottom:6px">
+                <span style="background:rgba(34,197,94,0.15);color:#22c55e;padding:2px 6px;border-radius:4px;font-size:9px;font-weight:600">😊 ${posP}%</span>
+                <span style="background:rgba(100,116,139,0.15);color:#94a3b8;padding:2px 6px;border-radius:4px;font-size:9px;font-weight:600">😐 ${neuP}%</span>
+                <span style="background:rgba(224,60,49,0.15);color:#E03C31;padding:2px 6px;border-radius:4px;font-size:9px;font-weight:600">😟 ${negP}%</span>
+              </div>
+              <div style="font-size:9px;opacity:0.7;line-height:1.4">${explanation}</div>
+            `, isDark), { lat: cp.lat, lng: cp.lng });
+          });
+          m.addListener("mouseout", () => infoRef.current?.close());
+          m.addListener("click", () => onSelectCountry(b.countryId));
+        }
+        markersRef.current.push(m);
       });
-      // Main circle
-      const marker = new google.maps.Marker({
-        position: { lat: cp.lat, lng: cp.lng }, map: googleMapRef.current,
-        icon: { path: google.maps.SymbolPath.CIRCLE, scale, fillColor: color, fillOpacity: 0.6, strokeColor: "#fff", strokeWeight: 1.5 },
-        zIndex: 5,
-      });
-
-      const posP = Math.round(b.sentiment.positive * 100);
-      const neuP = Math.round(b.sentiment.neutral * 100);
-      const negP = Math.round(b.sentiment.negative * 100);
-      const emoji = b.dominantSentiment === "positive" ? "😊" : b.dominantSentiment === "negative" ? "😟" : "😐";
-
-      // Build contextual explanation
-      const topCategories = [...new Set(trends.filter(t => t.countryCode?.toUpperCase() === b.countryId).map(t => t.category))].slice(0, 3);
-      const explanation = lang === "pt"
-        ? `Sentimento predominantemente ${b.dominantSentiment === "positive" ? "positivo" : b.dominantSentiment === "negative" ? "negativo" : "neutro"} com base em ${b.trendCount} tendências. Temas principais: ${topCategories.join(", ") || "variados"}.`
-        : `Predominantly ${b.dominantSentiment} sentiment based on ${b.trendCount} trends. Main topics: ${topCategories.join(", ") || "various"}.`;
-
-      marker.addListener("mouseover", () => {
-        showTooltip(buildTooltipHtml(`
-          <div style="display:flex;align-items:center;gap:6px;margin-bottom:6px">
-            <span style="font-size:16px">${flagEmoji(b.countryId)}</span>
-            <div><div style="font-weight:700">${b.countryName}</div></div>
-          </div>
-          <div style="margin-bottom:6px">${emoji} <strong>${b.dominantSentiment === "positive" ? "Positivo" : b.dominantSentiment === "negative" ? "Negativo" : "Neutro"}</strong></div>
-          <div style="display:flex;gap:3px;margin-bottom:6px">
-            <span style="background:rgba(34,197,94,0.15);color:#22c55e;padding:2px 6px;border-radius:4px;font-size:9px;font-weight:600">😊 ${posP}%</span>
-            <span style="background:rgba(100,116,139,0.15);color:#94a3b8;padding:2px 6px;border-radius:4px;font-size:9px;font-weight:600">😐 ${neuP}%</span>
-            <span style="background:rgba(224,60,49,0.15);color:#E03C31;padding:2px 6px;border-radius:4px;font-size:9px;font-weight:600">😟 ${negP}%</span>
-          </div>
-          <div style="font-size:9px;opacity:0.7;line-height:1.4">${explanation}</div>
-        `, isDark), { lat: cp.lat, lng: cp.lng });
-      });
-      marker.addListener("mouseout", () => infoRef.current?.close());
-      marker.addListener("click", () => onSelectCountry(b.countryId));
-      markersRef.current.push(glow, marker);
     });
   }, [sentimentBubbles, maxCount, trends, onSelectCountry, showTooltip, isDark, clearLayers, lang]);
 
