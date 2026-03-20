@@ -162,7 +162,7 @@ export default {
   		},
   		fontFamily: {
   			sans: ['"DM Sans"', '-apple-system', 'BlinkMacSystemFont', '"Segoe UI"', 'Arial', 'sans-serif'],
-  			serif: ['ui-serif', 'Georgia', 'Cambria', 'Times New Roman', 'Times', 'serif'],
+  			serif: ['"Instrument Serif"', 'Georgia', 'Cambria', 'Times New Roman', 'Times', 'serif'],
   			mono: ['ui-monospace', 'SFMono-Regular', 'Menlo', 'Monaco', 'Consolas', 'monospace']
   		},
   		fontSize: {

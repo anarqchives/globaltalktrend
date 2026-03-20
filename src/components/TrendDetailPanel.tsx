@@ -135,17 +135,17 @@ const TrendDetailPanel: React.FC<TrendDetailPanelProps> = ({
 
         {/* Header */}
         <div className="sticky top-0 z-10 bg-card/95 backdrop-blur-md border-b border-border px-5 py-3 flex items-center gap-2">
-          <button onClick={onClose} className="p-1.5 rounded-xl hover:bg-muted transition-colors text-muted-foreground">
+          <button onClick={onClose} className="p-1.5 rounded-lg hover:bg-muted transition-colors text-muted-foreground">
             <X className="w-4 h-4" />
           </button>
           <span className="text-[10px] uppercase tracking-[0.08em] font-semibold text-muted-foreground">
             {lang === "pt" ? "Detalhes" : "Details"}
           </span>
           <div className="flex-1" />
-          <button onClick={onPrev} disabled={!hasPrev} className="p-1.5 rounded-xl hover:bg-muted text-muted-foreground disabled:opacity-30">
+          <button onClick={onPrev} disabled={!hasPrev} className="p-1.5 rounded-lg hover:bg-muted text-muted-foreground disabled:opacity-30">
             <ChevronLeft className="w-4 h-4" />
           </button>
-          <button onClick={onNext} disabled={!hasNext} className="p-1.5 rounded-xl hover:bg-muted text-muted-foreground disabled:opacity-30">
+          <button onClick={onNext} disabled={!hasNext} className="p-1.5 rounded-lg hover:bg-muted text-muted-foreground disabled:opacity-30">
             <ChevronRight className="w-4 h-4" />
           </button>
         </div>
@@ -164,33 +164,33 @@ const TrendDetailPanel: React.FC<TrendDetailPanelProps> = ({
             </div>
 
             {/* Title */}
-            <h2 className="text-[20px] font-bold leading-snug text-foreground mb-4">{decodeEntities(title)}</h2>
+            <h2 className="text-[20px] font-bold leading-snug text-foreground mb-4 font-serif">{decodeEntities(title)}</h2>
 
             {/* Metrics */}
             {hasMetrics && (
               <div className="grid grid-cols-3 gap-2 mb-5">
                 {showVolume && (
-                  <div className="rounded-xl bg-background p-3 text-center">
+                  <div className="rounded-lg bg-background p-3 text-center">
                     <span className="text-[9px] uppercase tracking-[0.08em] text-muted-foreground block mb-0.5">Volume</span>
-                    <span className="text-[14px] font-bold text-foreground">{volume}</span>
+                    <span className="text-[15px] font-bold text-foreground">{volume}</span>
                   </div>
                 )}
                 {showChange && (
-                  <div className="rounded-xl bg-background p-3 text-center">
+                  <div className="rounded-lg bg-background p-3 text-center">
                     <span className="text-[9px] uppercase tracking-[0.08em] text-muted-foreground block mb-0.5">
                       {lang === "pt" ? "Cresc." : "Growth"}
                     </span>
-                    <span className={`text-[14px] font-bold ${changePositive ? "text-[#059669]" : "text-[#E03C31]"}`}>
+                    <span className={`text-[15px] font-bold ${changePositive ? "text-[#059669]" : "text-[#E03C31]"}`}>
                       {changePositive ? "+" : ""}{change}
                     </span>
                   </div>
                 )}
                 {srcCount > 1 && (
-                  <div className="rounded-xl bg-background p-3 text-center">
+                  <div className="rounded-lg bg-background p-3 text-center">
                     <span className="text-[9px] uppercase tracking-[0.08em] text-muted-foreground block mb-0.5">
                       {lang === "pt" ? "Fontes" : "Sources"}
                     </span>
-                    <span className="text-[14px] font-bold text-foreground">{srcCount}</span>
+                    <span className="text-[15px] font-bold text-foreground">{srcCount}</span>
                   </div>
                 )}
               </div>
@@ -243,7 +243,7 @@ const TrendDetailPanel: React.FC<TrendDetailPanelProps> = ({
 
             {/* AI Context */}
             {showAiContext && (
-              <div className="rounded-2xl bg-[#2557D6]/5 border border-[#2557D6]/10 p-4 mb-4">
+              <div className="rounded-xl bg-[#2557D6]/5 border border-[#2557D6]/10 p-4 mb-4">
                 <div className="flex items-center gap-1.5 mb-2">
                   <Sparkles className="w-3.5 h-3.5 text-[#2557D6]" />
                   <span className="text-[10px] font-bold text-[#2557D6] uppercase tracking-[0.08em]">
@@ -261,22 +261,22 @@ const TrendDetailPanel: React.FC<TrendDetailPanelProps> = ({
 
             {/* Actions */}
             <div className="flex items-center gap-2 pt-4 border-t border-border flex-wrap">
-              <button onClick={handleShare} className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-background hover:bg-muted text-[12px] font-medium transition-colors">
+              <button onClick={handleShare} className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-background hover:bg-muted text-[12px] font-medium transition-colors">
                 <Share2 className="w-3.5 h-3.5" /> {lang === "pt" ? "Compartilhar" : "Share"}
               </button>
               <button onClick={() => onSaveCard?.({ title, platform, category, country_code: countryCode, source_url: sourceUrl, description: realDescription || aiContext || "" })}
-                className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-background hover:bg-muted text-[12px] font-medium transition-colors">
+                className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-background hover:bg-muted text-[12px] font-medium transition-colors">
                 <Bookmark className="w-3.5 h-3.5" /> {lang === "pt" ? "Salvar" : "Save"}
               </button>
               <button onClick={() => {
                 if (!userId) { toast({ title: t("loginRequired") }); return; }
                 setAlertOpen(true);
-              }} className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-background hover:bg-muted text-[12px] font-medium transition-colors">
+              }} className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-background hover:bg-muted text-[12px] font-medium transition-colors">
                 <Bell className="w-3.5 h-3.5" /> {lang === "pt" ? "Alerta" : "Alert"}
               </button>
               {sourceUrl && (
                 <a href={sourceUrl} target="_blank" rel="noopener noreferrer"
-                  className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-[#2557D6] text-white text-[12px] font-medium hover:bg-[#2557D6]/90 transition-colors ml-auto">
+                  className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-[#2557D6] text-white text-[12px] font-medium hover:bg-[#2557D6]/90 transition-colors ml-auto">
                   <ExternalLink className="w-3.5 h-3.5" /> {lang === "pt" ? "Fonte" : "Source"}
                 </a>
               )}
