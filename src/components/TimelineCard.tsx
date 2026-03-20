@@ -9,6 +9,7 @@ const SOURCE_TYPE_MAP: Record<string, string> = {
   "the guardian": "imprensa", "npr": "imprensa", "newsapi": "imprensa", "gnews": "imprensa",
   "bing news": "imprensa", "newsdata": "imprensa", "thenewsapi": "imprensa", "the news api": "imprensa",
   "variety": "imprensa", "bbc": "imprensa", "reuters": "imprensa", "france 24": "imprensa",
+  "ap news": "imprensa", "bloomberg": "imprensa",
   "reddit": "redes_sociais", "bluesky": "redes_sociais", "mastodon": "redes_sociais",
   "x (twitter)": "redes_sociais", "youtube": "redes_sociais", "hacker news": "redes_sociais",
   "lobsters": "redes_sociais",
@@ -17,6 +18,7 @@ const SOURCE_TYPE_MAP: Record<string, string> = {
   "ibge": "dados_oficiais", "imf": "dados_oficiais", "who": "dados_oficiais",
   "pubmed": "cientifico", "openal": "cientifico", "arxiv": "cientifico",
   "crossref": "cientifico", "semantic scholar": "cientifico",
+  "wikipedia": "enciclopedico",
 };
 
 function getSourceType(platform: string): string {
@@ -33,6 +35,16 @@ const SOURCE_DOT_COLORS: Record<string, string> = {
   google_trends: "#D97706",
   dados_oficiais: "#059669",
   cientifico: "#0891B2",
+  enciclopedico: "#06b6d4",
+};
+
+const SOURCE_BADGES: Record<string, { label: Record<string, string>; icon: string; color: string }> = {
+  imprensa: { label: { pt: "Imprensa Verificada", en: "Verified Press" }, icon: "✓", color: "#059669" },
+  dados_oficiais: { label: { pt: "Dados Oficiais", en: "Official Data" }, icon: "◆", color: "#2557D6" },
+  cientifico: { label: { pt: "Acadêmico", en: "Academic" }, icon: "◈", color: "#7C3AED" },
+  enciclopedico: { label: { pt: "Enciclopédico", en: "Encyclopedic" }, icon: "◎", color: "#06b6d4" },
+  redes_sociais: { label: { pt: "Social/Trending", en: "Social/Trending" }, icon: "◉", color: "#D97706" },
+  google_trends: { label: { pt: "Social/Trending", en: "Social/Trending" }, icon: "◉", color: "#D97706" },
 };
 
 const countryCodeToFlag = (code?: string) => {
@@ -74,7 +86,7 @@ const SparklineChart = React.memo(({ data, color }: { data: number[]; color: str
   const { pathD, areaD, lastPt } = useMemo(() => {
     if (!data || data.length < 2) return { pathD: "", areaD: "", lastPt: { x: 0, y: 0 } };
     const max = Math.max(...data), min = Math.min(...data), range = max - min || 1;
-    const w = 120, h = 28, pad = 2;
+    const w = 100, h = 24, pad = 2;
     const pts = data.map((v, i) => ({
       x: pad + (i / (data.length - 1)) * (w - pad * 2),
       y: pad + (1 - (v - min) / range) * (h - pad * 2),
@@ -90,23 +102,23 @@ const SparklineChart = React.memo(({ data, color }: { data: number[]; color: str
 
   if (!data || data.length < 2) return (
     <div className="flex items-center justify-center h-full">
-      <span className="text-[9px] text-muted-foreground/40 italic">—</span>
+      <span className="text-[7px] text-muted-foreground/40 italic">—</span>
     </div>
   );
 
   return (
-    <svg width={120} height={28} viewBox="0 0 120 28" className="w-full h-full" style={{ overflow: "visible" }}>
+    <svg width={100} height={24} viewBox="0 0 100 24" className="w-full h-full" style={{ overflow: "visible" }}>
       <defs>
         <linearGradient id={id} x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor={color} stopOpacity={0.15} />
+          <stop offset="0%" stopColor={color} stopOpacity={0.18} />
           <stop offset="100%" stopColor={color} stopOpacity={0} />
         </linearGradient>
       </defs>
       <path d={areaD} fill={`url(#${id})`} />
       <motion.path d={pathD} stroke={color} strokeWidth={1.5} fill="none" strokeLinecap="round"
-        initial={{ pathLength: 0 }} animate={{ pathLength: 1 }} transition={{ duration: 1, ease: "easeInOut" }} />
-      <circle cx={lastPt.x} cy={lastPt.y} r="2" fill={color}>
-        <animate attributeName="r" values="2;3;2" dur="2s" repeatCount="indefinite" />
+        initial={{ pathLength: 0 }} animate={{ pathLength: 1 }} transition={{ duration: 0.8, ease: "easeInOut" }} />
+      <circle cx={lastPt.x} cy={lastPt.y} r="1.5" fill={color}>
+        <animate attributeName="r" values="1.5;2.5;1.5" dur="2s" repeatCount="indefinite" />
       </circle>
     </svg>
   );
@@ -143,6 +155,7 @@ const TimelineCard = ({
   const sourceType = getSourceType(platform);
   const dotColor = SOURCE_DOT_COLORS[sourceType] || "#6B6560";
   const flag = countryCodeToFlag(countryCode);
+  const badge = SOURCE_BADGES[sourceType];
 
   /* Time */
   const formattedTime = useMemo(() => {
@@ -176,7 +189,7 @@ const TimelineCard = ({
   const tags = useMemo(() => {
     const result: { label: string; color: string; verified?: boolean }[] = [];
     if (trustBadge === "verified" || trustBadge === "press") {
-      result.push({ label: "✓ " + (lang === "pt" ? "Imprensa" : "Press"), color: dotColor, verified: true });
+      result.push({ label: "✓ " + (lang === "pt" ? "Imprensa" : "Press"), color: "#059669", verified: true });
     } else if (trustBadge === "scientific") {
       result.push({ label: "🔬 " + (lang === "pt" ? "Científico" : "Scientific"), color: "#0891B2", verified: true });
     }
@@ -185,7 +198,7 @@ const TimelineCard = ({
     else if (changePositive && ch > 50) result.push({ label: "+popular", color: "#2557D6" });
     if (isMultiplatform) result.push({ label: "🌐 Multi", color: "#6B6560" });
     return result.filter(tag => validateTag(tag.label, title));
-  }, [trustBadge, change, changePositive, isMultiplatform, title, lang, dotColor]);
+  }, [trustBadge, change, changePositive, isMultiplatform, title, lang]);
 
   /* Sparkline data */
   const sparkData = useMemo(() => {
@@ -209,65 +222,73 @@ const TimelineCard = ({
     const normTitle = title.toLowerCase().trim();
     const normDesc = raw.toLowerCase().trim();
     if (!normDesc || normDesc === normTitle || normDesc.startsWith(normTitle.slice(0, 30))) return null;
-    return raw.slice(0, 120) + (raw.length > 120 ? "…" : "");
+    return raw.slice(0, 90) + (raw.length > 90 ? "…" : "");
   }, [description, details, title]);
 
   /* Sparkline color */
-  const sparkColor = useMemo(() => {
-    if (changePositive && changeNum > 10) return "#2557D6";
-    if (!changePositive && changeNum > 10) return "#E03C31";
-    return "#94A3B8";
-  }, [changePositive, changeNum]);
+  const sparkColor = useMemo(() => dotColor, [dotColor]);
 
   return (
     <motion.div
       variants={cardVariants}
       onClick={onClick}
-      className={`bg-card rounded-2xl border cursor-pointer mb-2 w-full
-        transition-all duration-[180ms] ease-[cubic-bezier(0.21,0.47,0.32,0.98)]
+      className={`bg-card rounded-2xl border cursor-pointer w-full relative overflow-hidden
+        transition-all duration-200 ease-[cubic-bezier(0.21,0.47,0.32,0.98)]
         ${isSelected
           ? "border-l-[3px] border-l-[#2557D6] border-[#2557D6]/20 shadow-[0_6px_24px_rgba(26,24,20,0.10)]"
-          : "border-border shadow-[0_2px_12px_rgba(26,24,20,0.06)] hover:shadow-[0_6px_24px_rgba(26,24,20,0.10)] hover:-translate-y-px hover:border-[#2557D6]/20"}
+          : "border-border shadow-[0_2px_8px_rgba(26,24,20,0.04)] hover:shadow-[0_4px_16px_rgba(26,24,20,0.08)] hover:-translate-y-[1px] hover:border-[#2557D6]/15"}
         `}
-      style={{ padding: compact ? "10px 14px" : "14px 16px" }}
+      style={{ padding: compact ? "8px 10px" : "10px 12px" }}
     >
-      {/* ① Source · time · country */}
-      <div className="flex items-center gap-1.5 mb-2">
+      {/* Accent top border */}
+      <div className="absolute top-0 left-0 right-0 h-[2px]" style={{ backgroundColor: dotColor }} />
+
+      {/* ① Source · time · country · badge */}
+      <div className="flex items-center gap-1 mb-1.5 flex-wrap">
         <button onClick={(e) => { e.stopPropagation(); onFilterPlatform?.(platform); }}
-          className="flex items-center gap-1.5 flex-shrink-0 hover:opacity-80 transition-opacity">
-          <div className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: dotColor }} />
-          <span className="text-[11px] uppercase tracking-[0.08em] font-bold" style={{ color: dotColor }}>
+          className="flex items-center gap-1 flex-shrink-0 hover:opacity-80 transition-opacity">
+          <div className="w-1.5 h-1.5 rounded-full flex-shrink-0" style={{ backgroundColor: dotColor }} />
+          <span className="text-[8px] uppercase tracking-[0.08em] font-bold" style={{ color: dotColor }}>
             {platform}
           </span>
         </button>
-        <span className="text-[11px] text-muted-foreground/40">·</span>
-        <span className="text-[11px] uppercase tracking-[0.06em] text-muted-foreground">{formattedTime}</span>
-        {flag && <span className="text-[11px]">{flag}</span>}
-        <div className="flex-1" />
+        <span className="text-[8px] text-muted-foreground/30">·</span>
+        <span className="text-[8px] uppercase tracking-[0.06em] text-muted-foreground">{formattedTime}</span>
+        {flag && <span className="text-[9px]">{flag}</span>}
+        {badge && (
+          <span className="text-[7px] font-semibold px-1.5 py-0.5 rounded-full ml-auto"
+            style={{ backgroundColor: `${badge.color}12`, color: badge.color, border: `1px solid ${badge.color}20` }}>
+            {badge.icon} {badge.label[lang] || badge.label.en}
+          </span>
+        )}
+        {!badge && (
+          <div className="flex-1" />
+        )}
         <button onClick={(e) => {
           e.stopPropagation();
           onSaveCard?.({ title, platform, category, country_code: countryCode, source_url: sourceUrl, description: contextSnippet || "" });
-        }} className="p-1 rounded-md text-muted-foreground/30 hover:text-[#2557D6] transition-colors">
-          <Bookmark className="w-3.5 h-3.5" />
+        }} className="p-0.5 rounded-md text-muted-foreground/20 hover:text-[#2557D6] transition-colors flex-shrink-0">
+          <Bookmark className="w-3 h-3" />
         </button>
       </div>
 
       {/* ② Title */}
-      <h3 className={`font-semibold text-foreground leading-snug mb-1 break-words ${compact ? "text-[13px] line-clamp-1" : "text-[15px] line-clamp-2"}`}>
+      <h3 className={`font-semibold text-foreground leading-snug mb-1 ${compact ? "text-[10px] line-clamp-1" : "text-[11px] line-clamp-2"}`}
+        style={{ wordBreak: "break-word", overflow: "hidden", textOverflow: "ellipsis" }}>
         {decodeEntities(title)}
       </h3>
 
       {/* ③ Description */}
       {contextSnippet && !compact && (
-        <p className="text-[13px] text-muted-foreground leading-relaxed line-clamp-1 mb-2">{decodeEntities(contextSnippet)}</p>
+        <p className="text-[9px] text-muted-foreground leading-relaxed line-clamp-2 mb-1.5">{decodeEntities(contextSnippet)}</p>
       )}
 
       {/* ④ Tags */}
-      {tags.length > 0 && (
-        <div className="flex items-center gap-1 flex-wrap mb-2">
+      {tags.length > 0 && !compact && (
+        <div className="flex items-center gap-1 flex-wrap mb-1.5">
           {tags.map((tag, i) => (
-            <span key={i} className="inline-flex items-center gap-0.5 px-2 py-0.5 rounded-full text-[10px] font-semibold uppercase tracking-[0.06em]"
-              style={{ backgroundColor: `${tag.color}15`, color: tag.color }}>
+            <span key={i} className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full text-[7px] font-semibold uppercase tracking-[0.06em]"
+              style={{ backgroundColor: `${tag.color}12`, color: tag.color, border: `1px solid ${tag.color}18` }}>
               {tag.label}
             </span>
           ))}
@@ -275,37 +296,29 @@ const TimelineCard = ({
       )}
 
       {/* ⑤ Sparkline + Metrics */}
-      {!compact && (
-        <div className="flex items-end gap-3 mt-1">
-          <div className="flex-1" style={{ height: 28 }}>
-            <SparklineChart data={sparkData || []} color={sparkColor} />
-          </div>
-          <div className="flex items-center gap-3 flex-shrink-0">
-            {showChange && (
-              <span className={`text-[12px] font-bold ${changePositive ? "text-[#059669]" : "text-[#E03C31]"}`}>
-                {changePositive ? "↗" : "↘"} {changePositive ? "+" : ""}{change}
-              </span>
-            )}
-            {showVolume && (
-              <div className="flex flex-col items-end">
-                <span className="text-[9px] uppercase tracking-[0.08em] text-muted-foreground/50">Vol</span>
-                <span className="text-[12px] font-semibold text-foreground">{volume}</span>
-              </div>
-            )}
-            {sources && sources.length > 1 && (
-              <div className="flex flex-col items-end">
-                <span className="text-[9px] uppercase tracking-[0.08em] text-muted-foreground/50">{lang === "pt" ? "Fontes" : "Src"}</span>
-                <span className="text-[12px] font-semibold text-foreground">{sources.length}</span>
-              </div>
-            )}
-          </div>
+      <div className="flex items-end gap-2 mt-1">
+        <div className="flex-1 min-w-0" style={{ height: 22 }}>
+          <SparklineChart data={sparkData || []} color={sparkColor} />
         </div>
-      )}
+        <div className="flex items-center gap-2 flex-shrink-0">
+          {showChange && (
+            <span className={`text-[9px] font-bold ${changePositive ? "text-[#059669]" : "text-[#E03C31]"}`}>
+              {changePositive ? "↗" : "↘"}{change}
+            </span>
+          )}
+          {showVolume && (
+            <span className="text-[9px] font-semibold text-foreground tabular-nums">{volume}</span>
+          )}
+          {sources && sources.length > 1 && (
+            <span className="text-[8px] text-muted-foreground tabular-nums">{sources.length}src</span>
+          )}
+        </div>
+      </div>
 
       {/* Compact metrics */}
       {compact && (showVolume || showChange) && (
-        <div className="flex items-center gap-2 text-[10px] text-muted-foreground mt-1">
-          {showVolume && <span className="font-medium">{volume}</span>}
+        <div className="flex items-center gap-1.5 text-[8px] text-muted-foreground mt-0.5">
+          {showVolume && <span className="font-medium tabular-nums">{volume}</span>}
           {showChange && (
             <span className={`font-bold ${changePositive ? "text-[#059669]" : "text-[#E03C31]"}`}>{change}</span>
           )}
