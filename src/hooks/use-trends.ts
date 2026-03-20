@@ -249,7 +249,7 @@ function generateContextualFallback(filters: FilterState): TrendCardProps[] {
       { icon: "🇦🇺", platform: "BBC News", title: "Austrália: clima extremo e política energética", category: "Meio Ambiente", time: timeStr, volume: "Destaque", change: "+120%", changePositive: false, sparkData: [20, 30, 42, 52, 60, 68, 75, 80, 85, 88], details: "Eventos climáticos extremos impactam economia australiana.", countryCode: "AU" },
     ],
     CA: [
-      { icon: "🇨🇦", platform: "Reuters", title: "Canadá: imigração e economia dominam debate público", category: "Política", time: timeStr, volume: "Alto", change: "+130%", changePositive: true, sparkData: [22, 34, 44, 54, 62, 70, 76, 82, 86, 90], details: "Políticas de imigração e mercado de trabalho em discussão.", countryCode: "CA" },
+      { icon: "🇨🇦", platform: "Reuters", title: "Canadá: imigração e economia dominam debate público", category: "Geopolítica", time: timeStr, volume: "Alto", change: "+130%", changePositive: true, sparkData: [22, 34, 44, 54, 62, 70, 76, 82, 86, 90], details: "Políticas de imigração e mercado de trabalho em discussão.", countryCode: "CA" },
     ],
   };
 
