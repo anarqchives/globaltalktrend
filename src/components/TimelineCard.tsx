@@ -248,15 +248,15 @@ const TimelineCard = ({
         <button onClick={(e) => { e.stopPropagation(); onFilterPlatform?.(platform); }}
           className="flex items-center gap-1 flex-shrink-0 hover:opacity-80 transition-opacity">
           <div className="w-1.5 h-1.5 rounded-full flex-shrink-0" style={{ backgroundColor: dotColor }} />
-          <span className="text-[8px] uppercase tracking-[0.08em] font-bold" style={{ color: dotColor }}>
+          <span className="text-[10px] uppercase tracking-[0.08em] font-bold" style={{ color: dotColor }}>
             {platform}
           </span>
         </button>
-        <span className="text-[8px] text-muted-foreground/30">·</span>
-        <span className="text-[8px] uppercase tracking-[0.06em] text-muted-foreground">{formattedTime}</span>
-        {flag && <span className="text-[9px]">{flag}</span>}
+        <span className="text-[10px] text-muted-foreground/30">·</span>
+        <span className="text-[10px] uppercase tracking-[0.06em] text-muted-foreground">{formattedTime}</span>
+        {flag && <span className="text-[11px]">{flag}</span>}
         {badge && (
-          <span className="text-[7px] font-semibold px-1.5 py-0.5 rounded-full ml-auto"
+          <span className="text-[9px] font-semibold px-1.5 py-0.5 rounded-full ml-auto"
             style={{ backgroundColor: `${badge.color}12`, color: badge.color, border: `1px solid ${badge.color}20` }}>
             {badge.icon} {badge.label[lang] || badge.label.en}
           </span>
