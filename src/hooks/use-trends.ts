@@ -234,7 +234,7 @@ function generateContextualFallback(filters: FilterState): TrendCardProps[] {
       { icon: "🇪🇬", platform: "Ahram Online", title: "Egito: economia do Canal de Suez e diplomacia regional", category: "Economia", time: timeStr, volume: "Destaque", change: "+100%", changePositive: true, sparkData: [18, 28, 38, 48, 55, 62, 68, 75, 80, 85], details: "Egito mantém papel central na diplomacia do Oriente Médio.", countryCode: "EG" },
     ],
     NG: [
-      { icon: "🇳🇬", platform: "Premium Times", title: "Nigéria: economia e política em transformação", category: "Política", time: timeStr, volume: "Destaque", change: "+130%", changePositive: true, sparkData: [20, 30, 40, 50, 58, 65, 72, 78, 84, 88], details: "Maior economia da África passa por reformas estruturais.", countryCode: "NG" },
+      { icon: "🇳🇬", platform: "Premium Times", title: "Nigéria: economia e política em transformação", category: "Geopolítica", time: timeStr, volume: "Destaque", change: "+130%", changePositive: true, sparkData: [20, 30, 40, 50, 58, 65, 72, 78, 84, 88], details: "Maior economia da África passa por reformas estruturais.", countryCode: "NG" },
     ],
     ZA: [
       { icon: "🇿🇦", platform: "News24", title: "África do Sul: desafios energéticos e crescimento econômico", category: "Negócios/Finanças", time: timeStr, volume: "Análise", change: "+110%", changePositive: false, sparkData: [22, 32, 42, 50, 58, 64, 70, 76, 82, 86], details: "Crise energética impacta o desenvolvimento sul-africano.", countryCode: "ZA" },
