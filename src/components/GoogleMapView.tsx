@@ -200,8 +200,7 @@ const GoogleMapView = ({
           });
         }
 
-        await loaderInstance.importLibrary("maps");
-        await loaderInstance.importLibrary("visualization");
+        await loaderInstance.load();
 
         if (!mapRef.current || cancelled) return;
         const map = new google.maps.Map(mapRef.current, {
