@@ -713,12 +713,6 @@ export default function TrendRadar({ trends, allTrends, criticalMoments, anomali
               </div>
             </TabsContent>
 
-            <TabsContent value="weekly" className="absolute inset-0 mt-0 overflow-y-auto scrollbar-thin data-[state=inactive]:hidden animate-in fade-in-0 duration-200">
-              <Legend tab="weekly" lang={lang} />
-              <Suspense fallback={<TabLoadingState lang={lang} />}>
-                <WeeklyPulseDashboard trends={allTrends} />
-              </Suspense>
-            </TabsContent>
           </div>
         </div>
       </Tabs>
