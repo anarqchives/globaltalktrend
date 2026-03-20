@@ -117,12 +117,6 @@ const Index = () => {
     }
   }, [workspaceMode]);
 
-  const timelinePanelRef = useRef<HTMLDivElement>(null);
-  const radarPanelRef = useRef<ElementRef<typeof ResizablePanel>>(null);
-  const [radarCollapsed, setRadarCollapsed] = useState(() => {
-    try { return localStorage.getItem("radar-collapsed") === "true"; } catch { return false; }
-  });
-  const [mobileRadarCollapsed, setMobileRadarCollapsed] = useState(false);
   const { timelineRef: gridRef, columns: gridColumns } = useTimelineColumns();
 
   useEffect(() => {
