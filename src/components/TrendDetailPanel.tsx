@@ -170,9 +170,9 @@ const TrendDetailPanel: React.FC<TrendDetailPanelProps> = ({
             {hasMetrics && (
               <div className="grid grid-cols-3 gap-2 mb-5">
                 {showVolume && (
-                  <div className="rounded-xl bg-background p-3 text-center">
+                  <div className="rounded-lg bg-background p-3 text-center">
                     <span className="text-[9px] uppercase tracking-[0.08em] text-muted-foreground block mb-0.5">Volume</span>
-                    <span className="text-[14px] font-bold text-foreground">{volume}</span>
+                    <span className="text-[15px] font-bold text-foreground">{volume}</span>
                   </div>
                 )}
                 {showChange && (
