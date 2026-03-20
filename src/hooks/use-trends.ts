@@ -654,9 +654,22 @@ export function useTrends(filters: FilterState, onTrendCountsChange: (counts: Re
           timeoutMs,
           { data: { trends: [] } } as Awaited<ReturnType<typeof supabase.functions.invoke>>
         );
-        const count = result.data?.trends?.length || 0;
+        const trends = result.data?.trends || [];
+        const count = trends.length;
         if (import.meta.env.DEV) console.log(`✅ ${sourceName} retornou:`, count, "itens");
         
+        // Save last-good data per source
+        if (count > 0) {
+          saveSourceLastGood(functionName, trends);
+        } else {
+          // Fallback: inject last-good cached data for this source
+          const fallback = getSourceLastGood(functionName);
+          if (fallback.length > 0) {
+            if (import.meta.env.DEV) console.log(`♻️ ${sourceName}: usando ${fallback.length} itens do último ciclo OK`);
+            result.data = { trends: fallback };
+          }
+        }
+
         // Track health per source
         const platforms: string[] = (result.data?.trends || []).map((t: any) => String(t.platform || ""));
         const uniquePlatforms = Array.from(new Set(platforms));
@@ -666,7 +679,6 @@ export function useTrends(filters: FilterState, onTrendCountsChange: (counts: Re
             health = updateSourceHealth(health, p, pCount > 0, pCount);
           }
         } else {
-          // Mark function-level failure
           health = updateSourceHealth(health, sourceName, false, 0);
         }
         
