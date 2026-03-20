@@ -215,13 +215,9 @@ const AppHeader = () => {
 
       {/* About / Methodology Modal — with fade-in + scale animation */}
       <Dialog open={aboutOpen} onOpenChange={setAboutOpen}>
-        <DialogContent className="sm:max-w-[560px] max-h-[85vh] overflow-y-auto p-0 rounded-2xl border-border/50 bg-card" asChild>
-          <motion.div
-            initial={{ opacity: 0, scale: 0.95, y: 8 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.95, y: 8 }}
-            transition={{ duration: 0.25, ease: [0.21, 0.47, 0.32, 0.98] }}
-            className="sm:max-w-[560px] max-h-[85vh] overflow-y-auto p-6 rounded-2xl border border-border/50 bg-card shadow-xl"
+        <DialogContent className="sm:max-w-[560px] max-h-[85vh] overflow-y-auto p-0 rounded-2xl border-border/50 bg-card">
+          <div
+            className="sm:max-w-[560px] max-h-[85vh] overflow-y-auto p-6"
           >
             <DialogHeader>
               <DialogTitle className="text-[16px] font-bold">
