@@ -176,7 +176,7 @@ const TrendDetailPanel: React.FC<TrendDetailPanelProps> = ({
                   </div>
                 )}
                 {showChange && (
-                  <div className="rounded-xl bg-background p-3 text-center">
+                  <div className="rounded-lg bg-background p-3 text-center">
                     <span className="text-[9px] uppercase tracking-[0.08em] text-muted-foreground block mb-0.5">
                       {lang === "pt" ? "Cresc." : "Growth"}
                     </span>
