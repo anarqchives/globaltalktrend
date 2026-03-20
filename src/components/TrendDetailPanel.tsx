@@ -265,7 +265,7 @@ const TrendDetailPanel: React.FC<TrendDetailPanelProps> = ({
                 <Share2 className="w-3.5 h-3.5" /> {lang === "pt" ? "Compartilhar" : "Share"}
               </button>
               <button onClick={() => onSaveCard?.({ title, platform, category, country_code: countryCode, source_url: sourceUrl, description: realDescription || aiContext || "" })}
-                className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-background hover:bg-muted text-[12px] font-medium transition-colors">
+                className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-background hover:bg-muted text-[12px] font-medium transition-colors">
                 <Bookmark className="w-3.5 h-3.5" /> {lang === "pt" ? "Salvar" : "Save"}
               </button>
               <button onClick={() => {
