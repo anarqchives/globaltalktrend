@@ -287,7 +287,7 @@ const TimelineCard = ({
       {tags.length > 0 && !compact && (
         <div className="flex items-center gap-1 flex-wrap mb-1.5">
           {tags.map((tag, i) => (
-            <span key={i} className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full text-[7px] font-semibold uppercase tracking-[0.06em]"
+            <span key={i} className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full text-[9px] font-semibold uppercase tracking-[0.06em]"
               style={{ backgroundColor: `${tag.color}12`, color: tag.color, border: `1px solid ${tag.color}18` }}>
               {tag.label}
             </span>
