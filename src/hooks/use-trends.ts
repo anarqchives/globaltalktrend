@@ -13,9 +13,8 @@ const PREDICTIVE_CACHE_KEY = "gtt_predictive_cache";
 const SOURCE_HEALTH_KEY = "gtt_source_health";
 
 const STANDARD_CATEGORIES = new Set([
-  "Política", "Entretenimento", "Tecnologia", "Esportes", "Cultura",
-  "Negócios/Finanças", "Ciência", "Saúde", "Clima/Meio Ambiente",
-  "Conflitos/Crises", "Conhecimento", "Geral",
+  "Geopolítica", "Economia", "Tecnologia", "Ciência", "Saúde",
+  "Entretenimento", "Esportes", "Cultura", "Meio Ambiente", "Educação", "Geral",
 ]);
 
 // ─── Source Priority Groups ────────────────────────────────────────
