@@ -302,15 +302,15 @@ const TimelineCard = ({
         </div>
         <div className="flex items-center gap-2 flex-shrink-0">
           {showChange && (
-            <span className={`text-[9px] font-bold ${changePositive ? "text-[#059669]" : "text-[#E03C31]"}`}>
+            <span className={`text-[11px] font-bold ${changePositive ? "text-[#059669]" : "text-[#E03C31]"}`}>
               {changePositive ? "↗" : "↘"}{change}
             </span>
           )}
           {showVolume && (
-            <span className="text-[9px] font-semibold text-foreground tabular-nums">{volume}</span>
+            <span className="text-[11px] font-semibold text-foreground tabular-nums">{volume}</span>
           )}
           {sources && sources.length > 1 && (
-            <span className="text-[8px] text-muted-foreground tabular-nums">{sources.length}src</span>
+            <span className="text-[10px] text-muted-foreground tabular-nums">{sources.length}src</span>
           )}
         </div>
       </div>
