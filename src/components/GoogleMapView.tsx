@@ -206,57 +206,67 @@ const GoogleMapView = ({
     clearLayers();
     try {
       const { HeatmapLayer } = (await google.maps.importLibrary("visualization")) as any;
+
+      // Soft organic gradient blobs — scattered points with warm palette
       const heatmapData = countryPoints
         .filter(c => trendCounts[c.id] > 0)
         .flatMap(c => {
           const count = trendCounts[c.id];
           const intensity = Math.min(count / maxCount, 1);
-          return Array(Math.max(2, Math.ceil(intensity * 15))).fill(null).map(() => ({
-            location: new google.maps.LatLng(c.lat + (Math.random() - 0.5) * 3, c.lng + (Math.random() - 0.5) * 3),
-            weight: intensity,
+          // More spread-out points for organic blob feel
+          return Array(Math.max(4, Math.ceil(intensity * 25))).fill(null).map(() => ({
+            location: new google.maps.LatLng(
+              c.lat + (Math.random() - 0.5) * 6,
+              c.lng + (Math.random() - 0.5) * 6
+            ),
+            weight: intensity * (0.4 + Math.random() * 0.6),
           }));
         });
 
       heatmapRef.current = new HeatmapLayer({
         data: heatmapData, map: googleMapRef.current,
-        radius: 65, opacity: 0.6, maxIntensity: 1,
+        radius: isMobile ? 80 : 100, opacity: 0.55, maxIntensity: 0.85,
         gradient: [
           "rgba(0, 0, 0, 0)",
-          "rgba(120, 200, 255, 0.15)",
-          "rgba(100, 180, 255, 0.25)",
-          "rgba(160, 120, 255, 0.35)",
-          "rgba(255, 160, 200, 0.45)",
-          "rgba(255, 120, 100, 0.55)",
-          "rgba(255, 80, 60, 0.7)",
+          "rgba(255, 228, 200, 0.08)",
+          "rgba(255, 200, 160, 0.15)",
+          "rgba(255, 170, 120, 0.22)",
+          "rgba(245, 140, 90, 0.32)",
+          "rgba(230, 120, 160, 0.40)",
+          "rgba(200, 140, 220, 0.48)",
+          "rgba(170, 130, 240, 0.52)",
         ],
       });
 
-      // Flow arcs overlaid on heatmap
+      // Soft flow arcs — translucent gradient-like lines
       flowArcs.slice(0, 15).forEach(arc => {
         const origin = countryPoints.find(p => p.id === arc.originId);
         const dest = countryPoints.find(p => p.id === arc.destId);
         if (!origin || !dest) return;
-        const isCritical = arc.volume > maxCount * 0.7;
-        const color = isCritical ? "#FF2D55" : "#007AFF";
-        const weight = 1.2 + (arc.volume / maxCount) * 2;
+        const warmth = arc.volume / maxCount;
+        // Gradient feel: warm amber for strong, soft lavender for light
+        const color = warmth > 0.6 ? "rgba(245, 158, 80, 0.35)" : "rgba(180, 150, 230, 0.30)";
+        const weight = 2 + warmth * 3;
 
         const line = new google.maps.Polyline({
           path: [{ lat: origin.lat, lng: origin.lng }, { lat: dest.lat, lng: dest.lng }],
-          geodesic: true, strokeColor: color, strokeOpacity: 0.25, strokeWeight: weight,
+          geodesic: true, strokeColor: warmth > 0.6 ? "#F59E50" : "#B496E6", strokeOpacity: 0.18, strokeWeight: weight,
           map: googleMapRef.current, zIndex: 1,
         });
+
+        // Subtle animated dot along the arc
         const arrowLine = new google.maps.Polyline({
           path: [{ lat: origin.lat, lng: origin.lng }, { lat: dest.lat, lng: dest.lng }],
           geodesic: true, strokeOpacity: 0, strokeWeight: 0,
           icons: [{
-            icon: { path: google.maps.SymbolPath.FORWARD_CLOSED_ARROW, scale: 2.5, strokeColor: "#fff", strokeWeight: 1, fillColor: color, fillOpacity: 0.9 },
+            icon: { path: google.maps.SymbolPath.CIRCLE, scale: 3, fillColor: warmth > 0.6 ? "#F5A060" : "#C4A8F0", fillOpacity: 0.7, strokeWeight: 0 },
             offset: "0%",
           }],
           map: googleMapRef.current, zIndex: 3,
         });
         let offset = 0;
         const animate = () => {
-          offset = (offset + 0.3) % 100;
+          offset = (offset + 0.2) % 100;
           const icons = arrowLine.get("icons");
           if (icons?.[0]) { icons[0].offset = offset + "%"; arrowLine.set("icons", icons); }
           animFramesRef.current.push(requestAnimationFrame(animate));
@@ -282,18 +292,41 @@ const GoogleMapView = ({
         polylinesRef.current.push(line, arrowLine);
       });
 
-      // Top country markers
-      const sorted = countryPoints.map(c => ({ ...c, count: trendCounts[c.id] || 0 })).filter(c => c.count > 0).sort((a, b) => b.count - a.count).slice(0, 10);
-      sorted.forEach(c => {
+      // Soft blob markers for top countries — layered for organic feel
+      const sorted = countryPoints.map(c => ({ ...c, count: trendCounts[c.id] || 0 })).filter(c => c.count > 0).sort((a, b) => b.count - a.count).slice(0, 12);
+      const blobPalette = ["#F5A060", "#E88B9C", "#C4A8F0", "#90C8E8", "#F0D070", "#A8D8B0"];
+      sorted.forEach((c, idx) => {
         const intensity = Math.min(c.count / maxCount, 1);
-        const marker = new google.maps.Marker({
+        const blobColor = blobPalette[idx % blobPalette.length];
+
+        // Outer glow — large, very soft
+        const outerGlow = new google.maps.Marker({
           position: { lat: c.lat, lng: c.lng }, map: googleMapRef.current,
-          icon: { path: google.maps.SymbolPath.CIRCLE, scale: 6 + intensity * 12, fillColor: "#007AFF", fillOpacity: 0.95, strokeColor: "#fff", strokeWeight: 2.5 },
-          label: { text: String(c.count), color: "#fff", fontSize: "10px", fontWeight: "800" },
-          zIndex: Math.floor(intensity * 1000),
+          icon: { path: google.maps.SymbolPath.CIRCLE, scale: 18 + intensity * 28, fillColor: blobColor, fillOpacity: 0.08, strokeWeight: 0 },
+          zIndex: 1, clickable: false,
         });
-        marker.addListener("click", () => onSelectCountry(c.id));
-        marker.addListener("mouseover", () => {
+        // Mid glow
+        const midGlow = new google.maps.Marker({
+          position: { lat: c.lat, lng: c.lng }, map: googleMapRef.current,
+          icon: { path: google.maps.SymbolPath.CIRCLE, scale: 12 + intensity * 18, fillColor: blobColor, fillOpacity: 0.15, strokeWeight: 0 },
+          zIndex: 2, clickable: false,
+        });
+        // Inner core — slightly more visible
+        const core = new google.maps.Marker({
+          position: { lat: c.lat, lng: c.lng }, map: googleMapRef.current,
+          icon: { path: google.maps.SymbolPath.CIRCLE, scale: 6 + intensity * 8, fillColor: blobColor, fillOpacity: 0.35, strokeWeight: 0 },
+          zIndex: 3,
+        });
+        // Small label
+        const label = new google.maps.Marker({
+          position: { lat: c.lat, lng: c.lng }, map: googleMapRef.current,
+          icon: { path: google.maps.SymbolPath.CIRCLE, scale: 0.01, fillOpacity: 0, strokeWeight: 0 },
+          label: { text: String(c.count), color: isDark ? "#e2e8f0" : "#1a1a1a", fontSize: "9px", fontWeight: "700", fontFamily: "'Helvetica Neue', sans-serif" },
+          zIndex: 10,
+        });
+
+        core.addListener("click", () => onSelectCountry(c.id));
+        core.addListener("mouseover", () => {
           showTooltip(buildTooltipHtml(`
             <div style="display:flex;align-items:center;gap:6px;margin-bottom:4px">
               <span style="font-size:18px">${flagEmoji(c.id)}</span>
@@ -302,13 +335,13 @@ const GoogleMapView = ({
             </div>
           `, isDark), { lat: c.lat, lng: c.lng });
         });
-        marker.addListener("mouseout", () => infoRef.current?.close());
-        markersRef.current.push(marker);
+        core.addListener("mouseout", () => infoRef.current?.close());
+        markersRef.current.push(outerGlow, midGlow, core, label);
       });
     } catch (err) { console.error("Panorama render error:", err); }
-  }, [trendCounts, maxCount, flowArcs, onSelectCountry, showTooltip, isDark, clearLayers, lang]);
+  }, [trendCounts, maxCount, flowArcs, onSelectCountry, showTooltip, isDark, clearLayers, lang, isMobile]);
 
-  /* ═══ TAB 2: SENTIMENT — country colored by sentiment with explanations ═══ */
+  /* ═══ TAB 2: SENTIMENT — soft organic blobs by sentiment ═══ */
   const renderSentiment = useCallback(() => {
     if (!googleMapRef.current) return;
     clearLayers();
@@ -316,62 +349,65 @@ const GoogleMapView = ({
     const sentimentByCountry = new Map<string, SentimentBubble>();
     sentimentBubbles.forEach(b => sentimentByCountry.set(b.countryId, b));
 
+    // Warm, soft palette inspired by references
+    const sentBlobColors: Record<string, string[]> = {
+      positive: ["#A8D8B0", "#7CC98A", "#60B870"],
+      neutral: ["#D0CCC4", "#BEB8AE", "#A8A29E"],
+      negative: ["#F0A8A0", "#E88880", "#D86860"],
+      mixed: ["#F0D080", "#E8C060", "#D8B040"],
+    };
+
     sentimentBubbles.forEach(b => {
       const cp = countryPoints.find(c => c.id === b.countryId);
       if (!cp) return;
-      const sentColors: Record<string, string> = {
-        positive: "#34C759", neutral: "#8E8E93", negative: "#FF3B30", mixed: "#FF9500",
-      };
-      const color = sentColors[b.dominantSentiment] || sentColors.neutral;
+      const palette = sentBlobColors[b.dominantSentiment] || sentBlobColors.neutral;
       const intensity = Math.min(b.trendCount / maxCount, 1);
-      const scale = 8 + intensity * 14;
 
-      // Glow ring
-      const glow = new google.maps.Marker({
-        position: { lat: cp.lat, lng: cp.lng }, map: googleMapRef.current,
-        icon: { path: google.maps.SymbolPath.CIRCLE, scale: scale + 4, fillColor: color, fillOpacity: 0.12, strokeColor: color, strokeWeight: 0, strokeOpacity: 0 },
-        zIndex: 1,
+      // Triple-layer organic blob
+      [0, 1, 2].forEach((layer) => {
+        const scales = [22 + intensity * 30, 14 + intensity * 20, 7 + intensity * 10];
+        const opacities = [0.07, 0.14, 0.28];
+        const jitter = layer === 0 ? 0.8 : layer === 1 ? 0.3 : 0;
+        const m = new google.maps.Marker({
+          position: { lat: cp.lat + (Math.random() - 0.5) * jitter, lng: cp.lng + (Math.random() - 0.5) * jitter },
+          map: googleMapRef.current,
+          icon: { path: google.maps.SymbolPath.CIRCLE, scale: scales[layer], fillColor: palette[layer], fillOpacity: opacities[layer], strokeWeight: 0 },
+          zIndex: layer + 1, clickable: layer === 2,
+        });
+        if (layer === 2) {
+          const posP = Math.round(b.sentiment.positive * 100);
+          const neuP = Math.round(b.sentiment.neutral * 100);
+          const negP = Math.round(b.sentiment.negative * 100);
+          const emoji = b.dominantSentiment === "positive" ? "😊" : b.dominantSentiment === "negative" ? "😟" : "😐";
+          const topCategories = [...new Set(trends.filter(t => t.countryCode?.toUpperCase() === b.countryId).map(t => t.category))].slice(0, 3);
+          const explanation = lang === "pt"
+            ? `Sentimento predominantemente ${b.dominantSentiment === "positive" ? "positivo" : b.dominantSentiment === "negative" ? "negativo" : "neutro"} com base em ${b.trendCount} tendências. Temas: ${topCategories.join(", ") || "variados"}.`
+            : `Predominantly ${b.dominantSentiment} sentiment based on ${b.trendCount} trends. Topics: ${topCategories.join(", ") || "various"}.`;
+
+          m.addListener("mouseover", () => {
+            showTooltip(buildTooltipHtml(`
+              <div style="display:flex;align-items:center;gap:6px;margin-bottom:6px">
+                <span style="font-size:16px">${flagEmoji(b.countryId)}</span>
+                <div><div style="font-weight:700">${b.countryName}</div></div>
+              </div>
+              <div style="margin-bottom:6px">${emoji} <strong>${b.dominantSentiment === "positive" ? "Positivo" : b.dominantSentiment === "negative" ? "Negativo" : "Neutro"}</strong></div>
+              <div style="display:flex;gap:3px;margin-bottom:6px">
+                <span style="background:rgba(34,197,94,0.15);color:#22c55e;padding:2px 6px;border-radius:4px;font-size:9px;font-weight:600">😊 ${posP}%</span>
+                <span style="background:rgba(100,116,139,0.15);color:#94a3b8;padding:2px 6px;border-radius:4px;font-size:9px;font-weight:600">😐 ${neuP}%</span>
+                <span style="background:rgba(224,60,49,0.15);color:#E03C31;padding:2px 6px;border-radius:4px;font-size:9px;font-weight:600">😟 ${negP}%</span>
+              </div>
+              <div style="font-size:9px;opacity:0.7;line-height:1.4">${explanation}</div>
+            `, isDark), { lat: cp.lat, lng: cp.lng });
+          });
+          m.addListener("mouseout", () => infoRef.current?.close());
+          m.addListener("click", () => onSelectCountry(b.countryId));
+        }
+        markersRef.current.push(m);
       });
-      // Main circle
-      const marker = new google.maps.Marker({
-        position: { lat: cp.lat, lng: cp.lng }, map: googleMapRef.current,
-        icon: { path: google.maps.SymbolPath.CIRCLE, scale, fillColor: color, fillOpacity: 0.6, strokeColor: "#fff", strokeWeight: 1.5 },
-        zIndex: 5,
-      });
-
-      const posP = Math.round(b.sentiment.positive * 100);
-      const neuP = Math.round(b.sentiment.neutral * 100);
-      const negP = Math.round(b.sentiment.negative * 100);
-      const emoji = b.dominantSentiment === "positive" ? "😊" : b.dominantSentiment === "negative" ? "😟" : "😐";
-
-      // Build contextual explanation
-      const topCategories = [...new Set(trends.filter(t => t.countryCode?.toUpperCase() === b.countryId).map(t => t.category))].slice(0, 3);
-      const explanation = lang === "pt"
-        ? `Sentimento predominantemente ${b.dominantSentiment === "positive" ? "positivo" : b.dominantSentiment === "negative" ? "negativo" : "neutro"} com base em ${b.trendCount} tendências. Temas principais: ${topCategories.join(", ") || "variados"}.`
-        : `Predominantly ${b.dominantSentiment} sentiment based on ${b.trendCount} trends. Main topics: ${topCategories.join(", ") || "various"}.`;
-
-      marker.addListener("mouseover", () => {
-        showTooltip(buildTooltipHtml(`
-          <div style="display:flex;align-items:center;gap:6px;margin-bottom:6px">
-            <span style="font-size:16px">${flagEmoji(b.countryId)}</span>
-            <div><div style="font-weight:700">${b.countryName}</div></div>
-          </div>
-          <div style="margin-bottom:6px">${emoji} <strong>${b.dominantSentiment === "positive" ? "Positivo" : b.dominantSentiment === "negative" ? "Negativo" : "Neutro"}</strong></div>
-          <div style="display:flex;gap:3px;margin-bottom:6px">
-            <span style="background:rgba(34,197,94,0.15);color:#22c55e;padding:2px 6px;border-radius:4px;font-size:9px;font-weight:600">😊 ${posP}%</span>
-            <span style="background:rgba(100,116,139,0.15);color:#94a3b8;padding:2px 6px;border-radius:4px;font-size:9px;font-weight:600">😐 ${neuP}%</span>
-            <span style="background:rgba(224,60,49,0.15);color:#E03C31;padding:2px 6px;border-radius:4px;font-size:9px;font-weight:600">😟 ${negP}%</span>
-          </div>
-          <div style="font-size:9px;opacity:0.7;line-height:1.4">${explanation}</div>
-        `, isDark), { lat: cp.lat, lng: cp.lng });
-      });
-      marker.addListener("mouseout", () => infoRef.current?.close());
-      marker.addListener("click", () => onSelectCountry(b.countryId));
-      markersRef.current.push(glow, marker);
     });
   }, [sentimentBubbles, maxCount, trends, onSelectCountry, showTooltip, isDark, clearLayers, lang]);
 
-  /* ═══ TAB 3: VERIFICATION — source coverage strength ═══ */
+  /* ═══ TAB 3: VERIFICATION — soft gradient blobs by source coverage ═══ */
   const renderVerification = useCallback(() => {
     if (!googleMapRef.current) return;
     clearLayers();
@@ -390,42 +426,54 @@ const GoogleMapView = ({
       countrySourceTypes.set(cc, entry);
     });
 
+    // Soft organic palettes by coverage strength
+    const coveragePalettes: string[][] = [
+      ["#D0CCC4", "#BEB8AE", "#A8A29E"], // 1 type — warm gray
+      ["#F0D080", "#E8C060", "#D8B040"], // 2 types — amber
+      ["#A8D8B0", "#80C890", "#60B870"], // 3 types — green
+      ["#90C8E8", "#70B0D8", "#50A0D0"], // 4 types — soft blue
+    ];
+
     countrySourceTypes.forEach((data, cc) => {
       const cp = countryPoints.find(c => c.id === cc);
       if (!cp) return;
       const sourceTypesCount = [data.press > 0, data.official > 0, data.academic > 0, data.social > 0].filter(Boolean).length;
-      const coverageColors = ["#8E8E93", "#FF9500", "#34C759", "#007AFF"];
-      const color = coverageColors[Math.min(sourceTypesCount - 1, 3)];
+      const palette = coveragePalettes[Math.min(sourceTypesCount - 1, 3)];
       const intensity = Math.min(data.total / maxCount, 1);
 
-      const marker = new google.maps.Marker({
-        position: { lat: cp.lat, lng: cp.lng }, map: googleMapRef.current,
-        icon: { path: google.maps.SymbolPath.CIRCLE, scale: 6 + intensity * 12, fillColor: color, fillOpacity: 0.65, strokeColor: "#fff", strokeWeight: 1.5 },
-        zIndex: 5,
+      // Triple-layer organic blob
+      [0, 1, 2].forEach((layer) => {
+        const scales = [20 + intensity * 26, 12 + intensity * 16, 6 + intensity * 9];
+        const opacities = [0.06, 0.13, 0.30];
+        const m = new google.maps.Marker({
+          position: { lat: cp.lat, lng: cp.lng },
+          map: googleMapRef.current,
+          icon: { path: google.maps.SymbolPath.CIRCLE, scale: scales[layer], fillColor: palette[layer], fillOpacity: opacities[layer], strokeWeight: 0 },
+          zIndex: layer + 1, clickable: layer === 2,
+        });
+        if (layer === 2) {
+          const strengthLabel = sourceTypesCount >= 3 ? (lang === "pt" ? "Forte" : "Strong") : sourceTypesCount >= 2 ? (lang === "pt" ? "Moderada" : "Moderate") : (lang === "pt" ? "Fraca" : "Weak");
+          m.addListener("mouseover", () => {
+            showTooltip(buildTooltipHtml(`
+              <div style="display:flex;align-items:center;gap:6px;margin-bottom:6px">
+                <span style="font-size:16px">${flagEmoji(cc)}</span>
+                <div><div style="font-weight:700">${cp.name}</div>
+                <div style="opacity:0.5;font-size:9px">${data.total} ${lang === "pt" ? "tendências" : "trends"}</div></div>
+              </div>
+              <div style="font-weight:600;margin-bottom:6px">🛡️ ${lang === "pt" ? "Confirmação" : "Verification"}: <span style="color:${palette[2]}">${strengthLabel}</span></div>
+              <div style="display:flex;flex-direction:column;gap:3px;font-size:9px">
+                ${data.press > 0 ? `<div>📰 ${lang === "pt" ? "Imprensa" : "Press"}: ${data.press}</div>` : ""}
+                ${data.official > 0 ? `<div>🏛️ ${lang === "pt" ? "Oficial" : "Official"}: ${data.official}</div>` : ""}
+                ${data.academic > 0 ? `<div>🔬 ${lang === "pt" ? "Acadêmico" : "Academic"}: ${data.academic}</div>` : ""}
+                ${data.social > 0 ? `<div>💬 Social: ${data.social}</div>` : ""}
+              </div>
+            `, isDark), { lat: cp.lat, lng: cp.lng });
+          });
+          m.addListener("mouseout", () => infoRef.current?.close());
+          m.addListener("click", () => onSelectCountry(cc));
+        }
+        markersRef.current.push(m);
       });
-
-      const strengthLabel = sourceTypesCount >= 3 ? (lang === "pt" ? "Forte" : "Strong") : sourceTypesCount >= 2 ? (lang === "pt" ? "Moderada" : "Moderate") : (lang === "pt" ? "Fraca" : "Weak");
-
-      marker.addListener("mouseover", () => {
-        showTooltip(buildTooltipHtml(`
-          <div style="display:flex;align-items:center;gap:6px;margin-bottom:6px">
-            <span style="font-size:16px">${flagEmoji(cc)}</span>
-            <div><div style="font-weight:700">${cp.name}</div>
-            <div style="opacity:0.5;font-size:9px">${data.total} ${lang === "pt" ? "tendências" : "trends"}</div></div>
-          </div>
-          <div style="font-weight:600;margin-bottom:6px">🛡️ ${lang === "pt" ? "Confirmação" : "Verification"}: <span style="color:${color}">${strengthLabel}</span></div>
-          <div style="display:flex;flex-direction:column;gap:3px;font-size:9px">
-            ${data.press > 0 ? `<div>📰 ${lang === "pt" ? "Imprensa" : "Press"}: ${data.press}</div>` : ""}
-            ${data.official > 0 ? `<div>🏛️ ${lang === "pt" ? "Oficial" : "Official"}: ${data.official}</div>` : ""}
-            ${data.academic > 0 ? `<div>🔬 ${lang === "pt" ? "Acadêmico" : "Academic"}: ${data.academic}</div>` : ""}
-            ${data.social > 0 ? `<div>💬 Social: ${data.social}</div>` : ""}
-          </div>
-          <div style="margin-top:6px;font-size:8px;opacity:0.5">${sourceTypesCount} ${lang === "pt" ? "tipos de fonte" : "source types"}</div>
-        `, isDark), { lat: cp.lat, lng: cp.lng });
-      });
-      marker.addListener("mouseout", () => infoRef.current?.close());
-      marker.addListener("click", () => onSelectCountry(cc));
-      markersRef.current.push(marker);
     });
   }, [trends, maxCount, onSelectCountry, showTooltip, isDark, clearLayers, lang]);
 
@@ -691,28 +739,28 @@ const GoogleMapView = ({
           {activeTab === "panorama" && (
             <div className="space-y-1">
               <div className="flex items-center gap-1.5">
-                <div className="w-20 h-1.5 rounded-full bg-gradient-to-r from-[#00C8FF] via-[#FFB800] to-[#FF2828]" />
+                <div className="w-20 h-1.5 rounded-full bg-gradient-to-r from-[#FFE4C8] via-[#E88BA0] to-[#AA82F0]" />
                 <span className="text-[7px] text-muted-foreground">{lang === "pt" ? "Baixo → Alto" : "Low → High"}</span>
               </div>
               <div className="flex items-center gap-2">
-                <div className="flex items-center gap-1"><div className="w-4 h-0.5 bg-[#007AFF]" /><span className="text-[7px] text-muted-foreground">{lang === "pt" ? "Fluxo" : "Flow"}</span></div>
-                <div className="flex items-center gap-1"><div className="w-4 h-0.5 bg-[#FF2D55]" /><span className="text-[7px] text-muted-foreground">{lang === "pt" ? "Crítico" : "Critical"}</span></div>
+                <div className="flex items-center gap-1"><div className="w-4 h-0.5 rounded bg-[#F5A060]/40" /><span className="text-[7px] text-muted-foreground">{lang === "pt" ? "Fluxo" : "Flow"}</span></div>
+                <div className="flex items-center gap-1"><div className="w-4 h-0.5 rounded bg-[#C4A8F0]/50" /><span className="text-[7px] text-muted-foreground">{lang === "pt" ? "Leve" : "Light"}</span></div>
               </div>
             </div>
           )}
           {activeTab === "sentiment" && (
             <div className="flex items-center gap-2">
-              <span className="flex items-center gap-0.5 text-[7px]"><span className="w-2 h-2 rounded-full bg-[#34C759]" />+</span>
-              <span className="flex items-center gap-0.5 text-[7px]"><span className="w-2 h-2 rounded-full bg-[#8E8E93]" />~</span>
-              <span className="flex items-center gap-0.5 text-[7px]"><span className="w-2 h-2 rounded-full bg-[#FF3B30]" />-</span>
+              <span className="flex items-center gap-0.5 text-[7px]"><span className="w-2.5 h-2.5 rounded-full bg-[#A8D8B0]" />+</span>
+              <span className="flex items-center gap-0.5 text-[7px]"><span className="w-2.5 h-2.5 rounded-full bg-[#D0CCC4]" />~</span>
+              <span className="flex items-center gap-0.5 text-[7px]"><span className="w-2.5 h-2.5 rounded-full bg-[#F0A8A0]" />-</span>
             </div>
           )}
           {activeTab === "verification" && (
             <div className="flex items-center gap-2">
-              <span className="flex items-center gap-1 text-[7px]"><span className="w-2 h-2 rounded-full bg-[#8E8E93]" />{lang === "pt" ? "1 tipo" : "1 type"}</span>
-              <span className="flex items-center gap-1 text-[7px]"><span className="w-2 h-2 rounded-full bg-[#FF9500]" />2</span>
-              <span className="flex items-center gap-1 text-[7px]"><span className="w-2 h-2 rounded-full bg-[#34C759]" />3</span>
-              <span className="flex items-center gap-1 text-[7px]"><span className="w-2 h-2 rounded-full bg-[#007AFF]" />4+</span>
+              <span className="flex items-center gap-1 text-[7px]"><span className="w-2.5 h-2.5 rounded-full bg-[#D0CCC4]" />{lang === "pt" ? "1 tipo" : "1 type"}</span>
+              <span className="flex items-center gap-1 text-[7px]"><span className="w-2.5 h-2.5 rounded-full bg-[#F0D080]" />2</span>
+              <span className="flex items-center gap-1 text-[7px]"><span className="w-2.5 h-2.5 rounded-full bg-[#A8D8B0]" />3</span>
+              <span className="flex items-center gap-1 text-[7px]"><span className="w-2.5 h-2.5 rounded-full bg-[#90C8E8]" />4+</span>
             </div>
           )}
 
