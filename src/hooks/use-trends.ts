@@ -240,7 +240,7 @@ function generateContextualFallback(filters: FilterState): TrendCardProps[] {
       { icon: "🇿🇦", platform: "News24", title: "África do Sul: desafios energéticos e crescimento econômico", category: "Economia", time: timeStr, volume: "Análise", change: "+110%", changePositive: false, sparkData: [22, 32, 42, 50, 58, 64, 70, 76, 82, 86], details: "Crise energética impacta o desenvolvimento sul-africano.", countryCode: "ZA" },
     ],
     TR: [
-      { icon: "🇹🇷", platform: "Reuters", title: "Turquia: economia e geopolítica na encruzilhada", category: "Política", time: timeStr, volume: "Destaque", change: "+140%", changePositive: false, sparkData: [25, 35, 45, 55, 62, 70, 76, 82, 86, 90], details: "Turquia navega entre influência regional e desafios econômicos.", countryCode: "TR" },
+      { icon: "🇹🇷", platform: "Reuters", title: "Turquia: economia e geopolítica na encruzilhada", category: "Geopolítica", time: timeStr, volume: "Destaque", change: "+140%", changePositive: false, sparkData: [25, 35, 45, 55, 62, 70, 76, 82, 86, 90], details: "Turquia navega entre influência regional e desafios econômicos.", countryCode: "TR" },
     ],
     KR: [
       { icon: "🇰🇷", platform: "Korea Herald", title: "Coreia do Sul: tecnologia e cultura K-pop em alta", category: "Tecnologia", time: timeStr, volume: "Alto", change: "+200%", changePositive: true, sparkData: [25, 38, 50, 60, 70, 78, 85, 90, 93, 96], details: "Inovação tecnológica e exportações culturais em crescimento.", countryCode: "KR" },
