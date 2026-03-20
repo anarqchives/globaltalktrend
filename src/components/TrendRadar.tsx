@@ -572,15 +572,6 @@ export default function TrendRadar({ trends, allTrends, criticalMoments, anomali
       badge: null,
       pulse: false,
     },
-    {
-      value: "REMOVED_WEEKLY",
-      icon: Activity,
-      label: "SKIP",
-      activeColor: "sky",
-      dot: null,
-      badge: null,
-      pulse: false,
-    },
   ];
 
   const activeColorMap: Record<string, string> = {
