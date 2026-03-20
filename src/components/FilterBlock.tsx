@@ -1,7 +1,7 @@
 import React, { useState, useMemo, useRef, useEffect } from "react";
-import { X, ChevronDown, Search, MapPin, Clock, Layers, Radio, Globe2, RotateCcw, Bookmark } from "lucide-react";
+import { X, ChevronDown, Search, MapPin, Clock, Layers, Radio, RotateCcw, Bookmark } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
-import { useLanguage, languages } from "@/contexts/LanguageContext";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { FilterState, countries } from "@/components/FilterBar";
 
 interface FilterBlockProps {
@@ -250,7 +250,7 @@ function CountryDropdown({ value, onSelect }: { value: string; onSelect: (v: str
 }
 
 const FilterBlock = ({ filters, onChange, onReset, onSaveFilter }: FilterBlockProps) => {
-  const { lang, setLang } = useLanguage();
+  const { lang } = useLanguage();
   const update = (key: keyof FilterState, value: string) => onChange({ ...filters, [key]: value });
 
   const hasActive = filters.country !== defaultFilters.country ||
@@ -273,10 +273,7 @@ const FilterBlock = ({ filters, onChange, onReset, onSaveFilter }: FilterBlockPr
     label: p.l[lang as keyof typeof p.l] || p.l.pt,
   }));
 
-  const langOptions = languages.map(l => ({
-    value: l.code,
-    label: l.label,
-  }));
+
 
   return (
     <div className="sticky top-12 z-40 bg-background/90 backdrop-blur-md border-b border-border/25">
@@ -311,15 +308,7 @@ const FilterBlock = ({ filters, onChange, onReset, onSaveFilter }: FilterBlockPr
             onSelect={(v) => update("type", v)}
           />
 
-          <FilterDropdown
-            icon={Globe2}
-            label={lang === "pt" ? "Idioma" : "Language"}
-            value={lang}
-            defaultValue="pt"
-            options={langOptions}
-            onSelect={(v) => { setLang(v as any); window.dispatchEvent(new Event("trend-refresh")); }}
-            align="right"
-          />
+
 
           {/* Separator */}
           <div className="w-px h-5 bg-border/40 mx-0.5 hidden sm:block" />
