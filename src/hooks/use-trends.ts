@@ -231,7 +231,7 @@ function generateContextualFallback(filters: FilterState): TrendCardProps[] {
       { icon: "🇯🇵", platform: "NHK", title: "Japan: economic recovery and innovation drive", category: "Economia", time: timeStr, volume: "Destaque", change: "+120%", changePositive: true, sparkData: [20, 30, 40, 50, 58, 65, 72, 78, 84, 88], details: "Japão investe em inovação e recuperação econômica.", countryCode: "JP" },
     ],
     EG: [
-      { icon: "🇪🇬", platform: "Ahram Online", title: "Egito: economia do Canal de Suez e diplomacia regional", category: "Negócios/Finanças", time: timeStr, volume: "Destaque", change: "+100%", changePositive: true, sparkData: [18, 28, 38, 48, 55, 62, 68, 75, 80, 85], details: "Egito mantém papel central na diplomacia do Oriente Médio.", countryCode: "EG" },
+      { icon: "🇪🇬", platform: "Ahram Online", title: "Egito: economia do Canal de Suez e diplomacia regional", category: "Economia", time: timeStr, volume: "Destaque", change: "+100%", changePositive: true, sparkData: [18, 28, 38, 48, 55, 62, 68, 75, 80, 85], details: "Egito mantém papel central na diplomacia do Oriente Médio.", countryCode: "EG" },
     ],
     NG: [
       { icon: "🇳🇬", platform: "Premium Times", title: "Nigéria: economia e política em transformação", category: "Política", time: timeStr, volume: "Destaque", change: "+130%", changePositive: true, sparkData: [20, 30, 40, 50, 58, 65, 72, 78, 84, 88], details: "Maior economia da África passa por reformas estruturais.", countryCode: "NG" },
