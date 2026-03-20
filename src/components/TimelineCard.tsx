@@ -128,7 +128,7 @@ export const cardVariants = {
   hidden: { opacity: 0, y: 16, scale: 0.98 },
   show: {
     opacity: 1, y: 0, scale: 1,
-    transition: { duration: 0.35, ease: [0.21, 0.47, 0.32, 0.98] },
+    transition: { duration: 0.35, ease: [0.21, 0.47, 0.32, 0.98] as [number, number, number, number] },
   },
 };
 
