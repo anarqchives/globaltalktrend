@@ -1,7 +1,7 @@
 /// <reference types="google.maps" />
 import React, { useEffect, useRef, useState, useMemo, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { setOptions } from "@googlemaps/js-api-loader";
+import { Loader } from "@googlemaps/js-api-loader";
 import { supabase } from "@/integrations/supabase/client";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -94,15 +94,29 @@ const DARK_MAP_STYLE: google.maps.MapTypeStyle[] = [
   { featureType: "administrative.province", elementType: "geometry.stroke", stylers: [{ visibility: "off" }] },
 ];
 
+/* ── Premium tooltip builder ── */
 function buildTooltipHtml(content: string, isDark: boolean): HTMLElement {
   const div = document.createElement("div");
-  div.style.cssText = `font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;padding:10px 14px;min-width:180px;max-width:280px;background:${isDark ? "rgba(19,24,39,0.97)" : "rgba(255,255,255,0.97)"};color:${isDark ? "#e2e8f0" : "#111827"};border-radius:8px;backdrop-filter:blur(16px);border:1px solid ${isDark ? "rgba(71,84,103,0.5)" : "rgba(0,0,0,0.06)"};box-shadow:0 4px 16px rgba(0,0,0,0.08);font-size:11px;`;
+  div.style.cssText = `
+    font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;
+    padding:14px 18px;min-width:200px;max-width:300px;
+    background:${isDark ? "rgba(15,20,30,0.96)" : "rgba(255,255,255,0.97)"};
+    color:${isDark ? "#e2e8f0" : "#1a1a1a"};
+    border-radius:12px;
+    backdrop-filter:blur(20px) saturate(1.8);
+    -webkit-backdrop-filter:blur(20px) saturate(1.8);
+    border:1px solid ${isDark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.06)"};
+    box-shadow:0 8px 32px rgba(0,0,0,${isDark ? "0.4" : "0.10"}), 0 1px 3px rgba(0,0,0,0.06);
+    font-size:12px;line-height:1.5;
+  `;
   div.innerHTML = content;
   return div;
 }
 
 function flagEmoji(code: string): string {
-  return String.fromCodePoint(...[...code.toUpperCase()].map(c => 0x1F1E6 + c.charCodeAt(0) - 65));
+  try {
+    return String.fromCodePoint(...[...code.toUpperCase()].map(c => 0x1F1E6 + c.charCodeAt(0) - 65));
+  } catch { return "🌐"; }
 }
 
 interface GoogleMapViewProps {
@@ -116,6 +130,9 @@ interface GoogleMapViewProps {
   highlightCountry?: string | null;
   onClose?: () => void;
 }
+
+/* keep a module-level ref to avoid double-loading */
+let loaderInstance: Loader | null = null;
 
 const GoogleMapView = ({
   trendCounts, selectedCountry, onSelectCountry, trends = [], onSelectTrend, highlightCountry, onClose,
@@ -159,7 +176,7 @@ const GoogleMapView = ({
     infoRef.current?.close();
   }, []);
 
-  // Load Google Maps
+  /* ── Load Google Maps with proper Loader instance ── */
   useEffect(() => {
     let cancelled = false;
     const load = async () => {
@@ -173,10 +190,21 @@ const GoogleMapView = ({
           apiKey = data.key;
           sessionStorage.setItem(CACHE_KEY, apiKey!);
         }
-        setOptions({ key: apiKey!, v: "weekly" });
-        const { Map } = (await google.maps.importLibrary("maps")) as any;
+
+        /* Use Loader class directly — more reliable across environments */
+        if (!loaderInstance) {
+          loaderInstance = new Loader({
+            apiKey: apiKey!,
+            version: "weekly",
+            libraries: ["visualization"],
+          });
+        }
+
+        await loaderInstance.importLibrary("maps");
+        await loaderInstance.importLibrary("visualization");
+
         if (!mapRef.current || cancelled) return;
-        const map = new Map(mapRef.current, {
+        const map = new google.maps.Map(mapRef.current, {
           center: { lat: 20, lng: 0 }, zoom: 2.5, minZoom: 2, maxZoom: 8,
           disableDefaultUI: true, zoomControl: false, mapTypeControl: false,
           streetViewControl: false, fullscreenControl: false, mapTypeId: "roadmap",
@@ -187,7 +215,10 @@ const GoogleMapView = ({
         googleMapRef.current = map;
         infoRef.current = new google.maps.InfoWindow({ disableAutoPan: true });
         setMapLoaded(true);
-      } catch { if (!cancelled) setMapError("Falha ao carregar mapa"); }
+      } catch (err) {
+        console.error("Map load error:", err);
+        if (!cancelled) setMapError("Falha ao carregar mapa");
+      }
     };
     load();
     return () => { cancelled = true; };
@@ -200,20 +231,60 @@ const GoogleMapView = ({
     infoRef.current.open(googleMapRef.current);
   }, []);
 
-  /* ═══ TAB 1: PANORAMA — heatmap + flow combined ═══ */
+  /* Helper: get top trends for a country */
+  const getCountryTopTrends = useCallback((cc: string, limit = 3) => {
+    return trends
+      .filter(t => t.countryCode?.toUpperCase() === cc)
+      .sort((a, b) => {
+        const va = parseFloat((a.volume || "0").replace(/[^0-9.]/g, "")) || 0;
+        const vb = parseFloat((b.volume || "0").replace(/[^0-9.]/g, "")) || 0;
+        return vb - va;
+      })
+      .slice(0, limit);
+  }, [trends]);
+
+  /* ═══ TOOLTIP BUILDERS — premium editorial cards ═══ */
+  const buildCountryTooltip = useCallback((name: string, cc: string, count: number, extra?: string) => {
+    const topTrends = getCountryTopTrends(cc, 3);
+    const trendsList = topTrends.map(t => {
+      const ch = t.change || "";
+      const isUp = t.changePositive;
+      const arrow = isUp ? "↗" : ch ? "↘" : "";
+      const chColor = isUp ? "#22c55e" : ch ? "#ef4444" : "#94a3b8";
+      return `<div style="display:flex;align-items:center;gap:6px;padding:4px 0;border-bottom:1px solid ${isDark ? "rgba(255,255,255,0.04)" : "rgba(0,0,0,0.04)"}">
+        <span style="font-size:10px;font-weight:600;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${t.title.slice(0, 45)}${t.title.length > 45 ? "…" : ""}</span>
+        ${ch ? `<span style="font-size:9px;font-weight:700;color:${chColor};white-space:nowrap">${arrow}${ch}</span>` : ""}
+      </div>`;
+    }).join("");
+
+    return buildTooltipHtml(`
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+        <span style="font-size:22px;line-height:1">${flagEmoji(cc)}</span>
+        <div>
+          <div style="font-weight:700;font-size:13px;letter-spacing:-0.02em">${name}</div>
+          <div style="font-size:10px;opacity:0.5;font-weight:500">${count} ${lang === "pt" ? "tendências ativas" : "active trends"}</div>
+        </div>
+      </div>
+      ${extra ? `<div style="margin-bottom:8px">${extra}</div>` : ""}
+      ${topTrends.length > 0 ? `
+        <div style="font-size:9px;text-transform:uppercase;letter-spacing:0.08em;opacity:0.4;font-weight:600;margin-bottom:4px">
+          ${lang === "pt" ? "Destaques" : "Highlights"}
+        </div>
+        ${trendsList}
+      ` : ""}
+    `, isDark);
+  }, [getCountryTopTrends, isDark, lang]);
+
+  /* ═══ TAB 1: PANORAMA — heatmap + flow ═══ */
   const renderPanorama = useCallback(async () => {
     if (!googleMapRef.current) return;
     clearLayers();
     try {
-      const { HeatmapLayer } = (await google.maps.importLibrary("visualization")) as any;
-
-      // Soft organic gradient blobs — scattered points with warm palette
       const heatmapData = countryPoints
         .filter(c => trendCounts[c.id] > 0)
         .flatMap(c => {
           const count = trendCounts[c.id];
           const intensity = Math.min(count / maxCount, 1);
-          // More spread-out points for organic blob feel
           return Array(Math.max(4, Math.ceil(intensity * 25))).fill(null).map(() => ({
             location: new google.maps.LatLng(
               c.lat + (Math.random() - 0.5) * 6,
@@ -223,43 +294,39 @@ const GoogleMapView = ({
           }));
         });
 
-      heatmapRef.current = new HeatmapLayer({
+      heatmapRef.current = new google.maps.visualization.HeatmapLayer({
         data: heatmapData, map: googleMapRef.current,
         radius: isMobile ? 80 : 100, opacity: 0.55, maxIntensity: 0.85,
         gradient: [
           "rgba(0, 0, 0, 0)",
-          "rgba(255, 228, 200, 0.08)",
-          "rgba(255, 200, 160, 0.15)",
-          "rgba(255, 170, 120, 0.22)",
-          "rgba(245, 140, 90, 0.32)",
-          "rgba(230, 120, 160, 0.40)",
-          "rgba(200, 140, 220, 0.48)",
-          "rgba(170, 130, 240, 0.52)",
+          "rgba(0, 200, 220, 0.06)",
+          "rgba(0, 210, 180, 0.12)",
+          "rgba(80, 220, 140, 0.20)",
+          "rgba(180, 220, 80, 0.30)",
+          "rgba(240, 200, 60, 0.38)",
+          "rgba(250, 150, 50, 0.46)",
+          "rgba(240, 80, 60, 0.55)",
         ],
       });
 
-      // Soft flow arcs — translucent gradient-like lines
+      /* Flow arcs */
       flowArcs.slice(0, 15).forEach(arc => {
         const origin = countryPoints.find(p => p.id === arc.originId);
         const dest = countryPoints.find(p => p.id === arc.destId);
         if (!origin || !dest) return;
         const warmth = arc.volume / maxCount;
-        // Gradient feel: warm amber for strong, soft lavender for light
-        const color = warmth > 0.6 ? "rgba(245, 158, 80, 0.35)" : "rgba(180, 150, 230, 0.30)";
-        const weight = 2 + warmth * 3;
+        const lineColor = warmth > 0.6 ? "#F59E50" : "#B496E6";
 
         const line = new google.maps.Polyline({
           path: [{ lat: origin.lat, lng: origin.lng }, { lat: dest.lat, lng: dest.lng }],
-          geodesic: true, strokeColor: warmth > 0.6 ? "#F59E50" : "#B496E6", strokeOpacity: 0.18, strokeWeight: weight,
+          geodesic: true, strokeColor: lineColor, strokeOpacity: 0.20, strokeWeight: 2 + warmth * 3,
           map: googleMapRef.current, zIndex: 1,
         });
-
-        // Subtle animated dot along the arc
         const arrowLine = new google.maps.Polyline({
           path: [{ lat: origin.lat, lng: origin.lng }, { lat: dest.lat, lng: dest.lng }],
           geodesic: true, strokeOpacity: 0, strokeWeight: 0,
           icons: [{
-            icon: { path: google.maps.SymbolPath.CIRCLE, scale: 3, fillColor: warmth > 0.6 ? "#F5A060" : "#C4A8F0", fillOpacity: 0.7, strokeWeight: 0 },
+            icon: { path: google.maps.SymbolPath.CIRCLE, scale: 3, fillColor: lineColor, fillOpacity: 0.7, strokeWeight: 0 },
             offset: "0%",
           }],
           map: googleMapRef.current, zIndex: 3,
@@ -275,16 +342,17 @@ const GoogleMapView = ({
 
         line.addListener("mouseover", () => {
           showTooltip(buildTooltipHtml(`
-            <div style="display:flex;align-items:center;gap:4px;margin-bottom:4px">
-              <span>${flagEmoji(arc.originId)}</span>
-              <span style="font-weight:600;font-size:10px">${arc.originName}</span>
-              <span style="opacity:0.3">→</span>
-              <span>${flagEmoji(arc.destId)}</span>
-              <span style="font-weight:600;font-size:10px">${arc.destName}</span>
+            <div style="display:flex;align-items:center;gap:6px;margin-bottom:8px">
+              <span style="font-size:16px">${flagEmoji(arc.originId)}</span>
+              <span style="font-weight:600;font-size:11px">${arc.originName}</span>
+              <span style="opacity:0.3;font-size:14px">→</span>
+              <span style="font-size:16px">${flagEmoji(arc.destId)}</span>
+              <span style="font-weight:600;font-size:11px">${arc.destName}</span>
             </div>
-            <div style="font-weight:600;margin-bottom:2px;font-size:10px">${arc.trendTitle.slice(0, 50)}…</div>
-            <div style="display:flex;gap:6px;opacity:0.5;font-size:9px">
-              <span>📊 ${arc.volume}</span><span>⏱️ ${arc.timeDelta.toFixed(1)}h</span>
+            <div style="font-weight:700;font-size:12px;margin-bottom:4px">${arc.trendTitle.slice(0, 60)}${arc.trendTitle.length > 60 ? "…" : ""}</div>
+            <div style="display:flex;gap:8px;opacity:0.5;font-size:10px;margin-top:4px">
+              <span>📊 ${lang === "pt" ? "Volume" : "Volume"}: ${arc.volume}</span>
+              <span>⏱️ ${lang === "pt" ? "Diferença" : "Delta"}: ${arc.timeDelta.toFixed(1)}h</span>
             </div>
           `, isDark), { lat: (origin.lat + dest.lat) / 2, lng: (origin.lng + dest.lng) / 2 });
         });
@@ -292,69 +360,83 @@ const GoogleMapView = ({
         polylinesRef.current.push(line, arrowLine);
       });
 
-      // Soft blob markers for top countries — layered for organic feel
-      const sorted = countryPoints.map(c => ({ ...c, count: trendCounts[c.id] || 0 })).filter(c => c.count > 0).sort((a, b) => b.count - a.count).slice(0, 12);
-      const blobPalette = ["#F5A060", "#E88B9C", "#C4A8F0", "#90C8E8", "#F0D070", "#A8D8B0"];
-      sorted.forEach((c, idx) => {
-        const intensity = Math.min(c.count / maxCount, 1);
-        const blobColor = blobPalette[idx % blobPalette.length];
+      /* Country markers — velocity-coded colors */
+      const sorted = countryPoints
+        .map(c => {
+          const count = trendCounts[c.id] || 0;
+          const countryTrends = trends.filter(t => t.countryCode?.toUpperCase() === c.id);
+          const avgChange = countryTrends.reduce((sum, t) => {
+            return sum + (parseFloat(t.change?.replace(/[^0-9.\-]/g, "") || "0") || 0);
+          }, 0) / (countryTrends.length || 1);
+          return { ...c, count, avgChange };
+        })
+        .filter(c => c.count > 0)
+        .sort((a, b) => b.count - a.count)
+        .slice(0, 14);
 
-        // Outer glow — large, very soft
+      sorted.forEach((c) => {
+        const intensity = Math.min(c.count / maxCount, 1);
+        /* Color by velocity: green=fast growth, amber=moderate, blue=stable/decline */
+        let blobColor: string;
+        if (c.avgChange > 200) blobColor = "#22c55e";
+        else if (c.avgChange > 50) blobColor = "#F5A060";
+        else if (c.avgChange > 0) blobColor = "#60B8D0";
+        else blobColor = "#94a3b8";
+
+        /* Triple-layer organic blob */
         const outerGlow = new google.maps.Marker({
           position: { lat: c.lat, lng: c.lng }, map: googleMapRef.current,
-          icon: { path: google.maps.SymbolPath.CIRCLE, scale: 18 + intensity * 28, fillColor: blobColor, fillOpacity: 0.08, strokeWeight: 0 },
+          icon: { path: google.maps.SymbolPath.CIRCLE, scale: 18 + intensity * 28, fillColor: blobColor, fillOpacity: 0.07, strokeWeight: 0 },
           zIndex: 1, clickable: false,
         });
-        // Mid glow
         const midGlow = new google.maps.Marker({
           position: { lat: c.lat, lng: c.lng }, map: googleMapRef.current,
           icon: { path: google.maps.SymbolPath.CIRCLE, scale: 12 + intensity * 18, fillColor: blobColor, fillOpacity: 0.15, strokeWeight: 0 },
           zIndex: 2, clickable: false,
         });
-        // Inner core — slightly more visible
         const core = new google.maps.Marker({
           position: { lat: c.lat, lng: c.lng }, map: googleMapRef.current,
           icon: { path: google.maps.SymbolPath.CIRCLE, scale: 6 + intensity * 8, fillColor: blobColor, fillOpacity: 0.35, strokeWeight: 0 },
           zIndex: 3,
         });
-        // Small label
         const label = new google.maps.Marker({
           position: { lat: c.lat, lng: c.lng }, map: googleMapRef.current,
           icon: { path: google.maps.SymbolPath.CIRCLE, scale: 0.01, fillOpacity: 0, strokeWeight: 0 },
-          label: { text: String(c.count), color: isDark ? "#e2e8f0" : "#1a1a1a", fontSize: "9px", fontWeight: "700", fontFamily: "'Helvetica Neue', sans-serif" },
+          label: { text: String(c.count), color: isDark ? "#e2e8f0" : "#1a1a1a", fontSize: "10px", fontWeight: "700", fontFamily: "'Helvetica Neue', sans-serif" },
           zIndex: 10,
         });
 
         core.addListener("click", () => onSelectCountry(c.id));
         core.addListener("mouseover", () => {
-          showTooltip(buildTooltipHtml(`
-            <div style="display:flex;align-items:center;gap:6px;margin-bottom:4px">
-              <span style="font-size:18px">${flagEmoji(c.id)}</span>
-              <div><div style="font-weight:600">${c.name}</div>
-              <div style="opacity:0.5">${c.count} ${lang === "pt" ? "tendências" : "trends"}</div></div>
-            </div>
-          `, isDark), { lat: c.lat, lng: c.lng });
+          const velocityLabel = c.avgChange > 200
+            ? `<span style="color:#22c55e;font-weight:700">⚡ ${lang === "pt" ? "Crescimento rápido" : "Fast growth"}</span>`
+            : c.avgChange > 50
+            ? `<span style="color:#F5A060;font-weight:700">📈 ${lang === "pt" ? "Em alta" : "Rising"}</span>`
+            : c.avgChange > 0
+            ? `<span style="color:#60B8D0;font-weight:700">→ ${lang === "pt" ? "Estável" : "Stable"}</span>`
+            : `<span style="color:#94a3b8;font-weight:700">↘ ${lang === "pt" ? "Desacelerando" : "Slowing"}</span>`;
+
+          showTooltip(
+            buildCountryTooltip(c.name, c.id, c.count, `<div style="font-size:11px;margin-bottom:2px">${velocityLabel}</div>`),
+            { lat: c.lat, lng: c.lng }
+          );
         });
         core.addListener("mouseout", () => infoRef.current?.close());
         markersRef.current.push(outerGlow, midGlow, core, label);
       });
     } catch (err) { console.error("Panorama render error:", err); }
-  }, [trendCounts, maxCount, flowArcs, onSelectCountry, showTooltip, isDark, clearLayers, lang, isMobile]);
+  }, [trendCounts, maxCount, flowArcs, trends, onSelectCountry, showTooltip, buildCountryTooltip, isDark, clearLayers, lang, isMobile]);
 
-  /* ═══ TAB 2: SENTIMENT — soft organic blobs by sentiment ═══ */
+  /* ═══ TAB 2: SENTIMENT — richer data per country ═══ */
   const renderSentiment = useCallback(() => {
     if (!googleMapRef.current) return;
     clearLayers();
 
-    const sentimentByCountry = new Map<string, SentimentBubble>();
-    sentimentBubbles.forEach(b => sentimentByCountry.set(b.countryId, b));
-
-    // Warm, soft palette inspired by references
     const sentBlobColors: Record<string, string[]> = {
-      positive: ["#A8D8B0", "#7CC98A", "#60B870"],
+      positive: ["#34D399", "#22c55e", "#16a34a"],
       neutral: ["#D0CCC4", "#BEB8AE", "#A8A29E"],
-      negative: ["#F0A8A0", "#E88880", "#D86860"],
-      mixed: ["#F0D080", "#E8C060", "#D8B040"],
+      negative: ["#F87171", "#ef4444", "#dc2626"],
+      mixed: ["#FBBF24", "#f59e0b", "#d97706"],
     };
 
     sentimentBubbles.forEach(b => {
@@ -363,10 +445,9 @@ const GoogleMapView = ({
       const palette = sentBlobColors[b.dominantSentiment] || sentBlobColors.neutral;
       const intensity = Math.min(b.trendCount / maxCount, 1);
 
-      // Triple-layer organic blob
       [0, 1, 2].forEach((layer) => {
         const scales = [22 + intensity * 30, 14 + intensity * 20, 7 + intensity * 10];
-        const opacities = [0.07, 0.14, 0.28];
+        const opacities = [0.07, 0.15, 0.30];
         const jitter = layer === 0 ? 0.8 : layer === 1 ? 0.3 : 0;
         const m = new google.maps.Marker({
           position: { lat: cp.lat + (Math.random() - 0.5) * jitter, lng: cp.lng + (Math.random() - 0.5) * jitter },
@@ -374,29 +455,55 @@ const GoogleMapView = ({
           icon: { path: google.maps.SymbolPath.CIRCLE, scale: scales[layer], fillColor: palette[layer], fillOpacity: opacities[layer], strokeWeight: 0 },
           zIndex: layer + 1, clickable: layer === 2,
         });
+
         if (layer === 2) {
           const posP = Math.round(b.sentiment.positive * 100);
           const neuP = Math.round(b.sentiment.neutral * 100);
           const negP = Math.round(b.sentiment.negative * 100);
-          const emoji = b.dominantSentiment === "positive" ? "😊" : b.dominantSentiment === "negative" ? "😟" : "😐";
-          const topCategories = [...new Set(trends.filter(t => t.countryCode?.toUpperCase() === b.countryId).map(t => t.category))].slice(0, 3);
-          const explanation = lang === "pt"
-            ? `Sentimento predominantemente ${b.dominantSentiment === "positive" ? "positivo" : b.dominantSentiment === "negative" ? "negativo" : "neutro"} com base em ${b.trendCount} tendências. Temas: ${topCategories.join(", ") || "variados"}.`
-            : `Predominantly ${b.dominantSentiment} sentiment based on ${b.trendCount} trends. Topics: ${topCategories.join(", ") || "various"}.`;
+          const topCategories = [...new Set(trends.filter(t => t.countryCode?.toUpperCase() === b.countryId).map(t => t.category))].filter(Boolean).slice(0, 4);
+          const topTrends = getCountryTopTrends(b.countryId, 3);
+
+          const sentimentBar = `
+            <div style="display:flex;height:6px;border-radius:3px;overflow:hidden;margin-bottom:8px">
+              <div style="width:${posP}%;background:#22c55e"></div>
+              <div style="width:${neuP}%;background:#94a3b8"></div>
+              <div style="width:${negP}%;background:#ef4444"></div>
+            </div>
+          `;
+
+          const categoriesTags = topCategories.map(c =>
+            `<span style="display:inline-block;padding:2px 6px;border-radius:4px;font-size:9px;font-weight:500;background:${isDark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.04)"};margin-right:3px;margin-bottom:2px">${c}</span>`
+          ).join("");
+
+          const trendsList = topTrends.map(t =>
+            `<div style="font-size:10px;padding:3px 0;border-bottom:1px solid ${isDark ? "rgba(255,255,255,0.04)" : "rgba(0,0,0,0.04)"};overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${t.title.slice(0, 50)}${t.title.length > 50 ? "…" : ""}</div>`
+          ).join("");
 
           m.addListener("mouseover", () => {
             showTooltip(buildTooltipHtml(`
-              <div style="display:flex;align-items:center;gap:6px;margin-bottom:6px">
-                <span style="font-size:16px">${flagEmoji(b.countryId)}</span>
-                <div><div style="font-weight:700">${b.countryName}</div></div>
+              <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
+                <span style="font-size:22px;line-height:1">${flagEmoji(b.countryId)}</span>
+                <div>
+                  <div style="font-weight:700;font-size:13px">${b.countryName}</div>
+                  <div style="font-size:10px;opacity:0.5">${b.trendCount} ${lang === "pt" ? "tendências" : "trends"}</div>
+                </div>
               </div>
-              <div style="margin-bottom:6px">${emoji} <strong>${b.dominantSentiment === "positive" ? "Positivo" : b.dominantSentiment === "negative" ? "Negativo" : "Neutro"}</strong></div>
-              <div style="display:flex;gap:3px;margin-bottom:6px">
-                <span style="background:rgba(34,197,94,0.15);color:#22c55e;padding:2px 6px;border-radius:4px;font-size:9px;font-weight:600">😊 ${posP}%</span>
-                <span style="background:rgba(100,116,139,0.15);color:#94a3b8;padding:2px 6px;border-radius:4px;font-size:9px;font-weight:600">😐 ${neuP}%</span>
-                <span style="background:rgba(224,60,49,0.15);color:#E03C31;padding:2px 6px;border-radius:4px;font-size:9px;font-weight:600">😟 ${negP}%</span>
+
+              <div style="display:flex;gap:6px;margin-bottom:8px;align-items:center">
+                <span style="font-size:10px;font-weight:700;color:#22c55e">😊 ${posP}%</span>
+                <span style="font-size:10px;font-weight:700;color:#94a3b8">😐 ${neuP}%</span>
+                <span style="font-size:10px;font-weight:700;color:#ef4444">😟 ${negP}%</span>
               </div>
-              <div style="font-size:9px;opacity:0.7;line-height:1.4">${explanation}</div>
+              ${sentimentBar}
+
+              ${categoriesTags ? `<div style="margin-bottom:8px">${categoriesTags}</div>` : ""}
+
+              ${trendsList ? `
+                <div style="font-size:9px;text-transform:uppercase;letter-spacing:0.08em;opacity:0.4;font-weight:600;margin-bottom:4px">
+                  ${lang === "pt" ? "Principais temas" : "Top topics"}
+                </div>
+                ${trendsList}
+              ` : ""}
             `, isDark), { lat: cp.lat, lng: cp.lng });
           });
           m.addListener("mouseout", () => infoRef.current?.close());
@@ -405,20 +512,21 @@ const GoogleMapView = ({
         markersRef.current.push(m);
       });
     });
-  }, [sentimentBubbles, maxCount, trends, onSelectCountry, showTooltip, isDark, clearLayers, lang]);
+  }, [sentimentBubbles, maxCount, trends, getCountryTopTrends, onSelectCountry, showTooltip, isDark, clearLayers, lang]);
 
-  /* ═══ TAB 3: VERIFICATION — soft gradient blobs by source coverage ═══ */
+  /* ═══ TAB 3: VERIFICATION — richer source breakdown ═══ */
   const renderVerification = useCallback(() => {
     if (!googleMapRef.current) return;
     clearLayers();
 
-    const countrySourceTypes = new Map<string, { press: number; official: number; academic: number; social: number; total: number }>();
+    const countrySourceTypes = new Map<string, { press: number; official: number; academic: number; social: number; total: number; platforms: Set<string> }>();
     trends.forEach(t => {
       const cc = t.countryCode?.toUpperCase();
       if (!cc || cc.length !== 2) return;
-      const entry = countrySourceTypes.get(cc) || { press: 0, official: 0, academic: 0, social: 0, total: 0 };
+      const entry = countrySourceTypes.get(cc) || { press: 0, official: 0, academic: 0, social: 0, total: 0, platforms: new Set<string>() };
       const plat = t.platform.toLowerCase();
-      if (plat.includes("guardian") || plat.includes("news") || plat.includes("bbc") || plat.includes("reuters")) entry.press++;
+      entry.platforms.add(t.platform);
+      if (plat.includes("guardian") || plat.includes("news") || plat.includes("bbc") || plat.includes("reuters") || plat.includes("gdelt")) entry.press++;
       else if (plat.includes("world bank") || plat.includes("fred") || plat.includes("who") || plat.includes("ibge") || plat.includes("imf")) entry.official++;
       else if (plat.includes("pubmed") || plat.includes("arxiv") || plat.includes("openal") || plat.includes("crossref") || plat.includes("semantic")) entry.academic++;
       else entry.social++;
@@ -426,12 +534,12 @@ const GoogleMapView = ({
       countrySourceTypes.set(cc, entry);
     });
 
-    // Soft organic palettes by coverage strength
+    /* Color by reliability level */
     const coveragePalettes: string[][] = [
-      ["#D0CCC4", "#BEB8AE", "#A8A29E"], // 1 type — warm gray
-      ["#F0D080", "#E8C060", "#D8B040"], // 2 types — amber
-      ["#A8D8B0", "#80C890", "#60B870"], // 3 types — green
-      ["#90C8E8", "#70B0D8", "#50A0D0"], // 4 types — soft blue
+      ["#FCA5A5", "#ef4444", "#dc2626"], // 1 type — red (weak)
+      ["#FDE68A", "#f59e0b", "#d97706"], // 2 types — amber
+      ["#86EFAC", "#22c55e", "#16a34a"], // 3 types — green
+      ["#93C5FD", "#3b82f6", "#2563eb"], // 4 types — blue (strongest)
     ];
 
     countrySourceTypes.forEach((data, cc) => {
@@ -441,32 +549,70 @@ const GoogleMapView = ({
       const palette = coveragePalettes[Math.min(sourceTypesCount - 1, 3)];
       const intensity = Math.min(data.total / maxCount, 1);
 
-      // Triple-layer organic blob
       [0, 1, 2].forEach((layer) => {
         const scales = [20 + intensity * 26, 12 + intensity * 16, 6 + intensity * 9];
-        const opacities = [0.06, 0.13, 0.30];
+        const opacities = [0.06, 0.14, 0.32];
         const m = new google.maps.Marker({
           position: { lat: cp.lat, lng: cp.lng },
           map: googleMapRef.current,
           icon: { path: google.maps.SymbolPath.CIRCLE, scale: scales[layer], fillColor: palette[layer], fillOpacity: opacities[layer], strokeWeight: 0 },
           zIndex: layer + 1, clickable: layer === 2,
         });
+
         if (layer === 2) {
-          const strengthLabel = sourceTypesCount >= 3 ? (lang === "pt" ? "Forte" : "Strong") : sourceTypesCount >= 2 ? (lang === "pt" ? "Moderada" : "Moderate") : (lang === "pt" ? "Fraca" : "Weak");
+          const strengthLabel = sourceTypesCount >= 4
+            ? (lang === "pt" ? "Excelente" : "Excellent")
+            : sourceTypesCount >= 3
+            ? (lang === "pt" ? "Forte" : "Strong")
+            : sourceTypesCount >= 2
+            ? (lang === "pt" ? "Moderada" : "Moderate")
+            : (lang === "pt" ? "Fraca" : "Weak");
+          const strengthColor = sourceTypesCount >= 4 ? "#3b82f6" : sourceTypesCount >= 3 ? "#22c55e" : sourceTypesCount >= 2 ? "#f59e0b" : "#ef4444";
+
+          const platformsList = [...data.platforms].slice(0, 6).map(p =>
+            `<span style="display:inline-block;padding:2px 6px;border-radius:4px;font-size:9px;font-weight:500;background:${isDark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.04)"};margin-right:3px;margin-bottom:2px">${p}</span>`
+          ).join("");
+
+          /* Source breakdown bar */
+          const barTotal = data.total || 1;
+          const sourceBar = `
+            <div style="display:flex;height:6px;border-radius:3px;overflow:hidden;margin:8px 0">
+              ${data.press > 0 ? `<div style="width:${(data.press / barTotal) * 100}%;background:#3b82f6" title="Press"></div>` : ""}
+              ${data.official > 0 ? `<div style="width:${(data.official / barTotal) * 100}%;background:#8b5cf6" title="Official"></div>` : ""}
+              ${data.academic > 0 ? `<div style="width:${(data.academic / barTotal) * 100}%;background:#22c55e" title="Academic"></div>` : ""}
+              ${data.social > 0 ? `<div style="width:${(data.social / barTotal) * 100}%;background:#f59e0b" title="Social"></div>` : ""}
+            </div>
+          `;
+
           m.addListener("mouseover", () => {
             showTooltip(buildTooltipHtml(`
+              <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
+                <span style="font-size:22px;line-height:1">${flagEmoji(cc)}</span>
+                <div>
+                  <div style="font-weight:700;font-size:13px">${cp.name}</div>
+                  <div style="font-size:10px;opacity:0.5">${data.total} ${lang === "pt" ? "tendências verificadas" : "verified trends"}</div>
+                </div>
+              </div>
+
               <div style="display:flex;align-items:center;gap:6px;margin-bottom:6px">
-                <span style="font-size:16px">${flagEmoji(cc)}</span>
-                <div><div style="font-weight:700">${cp.name}</div>
-                <div style="opacity:0.5;font-size:9px">${data.total} ${lang === "pt" ? "tendências" : "trends"}</div></div>
+                <span style="font-size:11px;font-weight:700">🛡️ ${lang === "pt" ? "Confirmação" : "Verification"}:</span>
+                <span style="font-size:11px;font-weight:800;color:${strengthColor}">${strengthLabel}</span>
               </div>
-              <div style="font-weight:600;margin-bottom:6px">🛡️ ${lang === "pt" ? "Confirmação" : "Verification"}: <span style="color:${palette[2]}">${strengthLabel}</span></div>
-              <div style="display:flex;flex-direction:column;gap:3px;font-size:9px">
-                ${data.press > 0 ? `<div>📰 ${lang === "pt" ? "Imprensa" : "Press"}: ${data.press}</div>` : ""}
-                ${data.official > 0 ? `<div>🏛️ ${lang === "pt" ? "Oficial" : "Official"}: ${data.official}</div>` : ""}
-                ${data.academic > 0 ? `<div>🔬 ${lang === "pt" ? "Acadêmico" : "Academic"}: ${data.academic}</div>` : ""}
-                ${data.social > 0 ? `<div>💬 Social: ${data.social}</div>` : ""}
+
+              <div style="display:flex;gap:8px;font-size:10px;margin-bottom:4px">
+                ${data.press > 0 ? `<span style="color:#3b82f6;font-weight:600">📰 ${data.press}</span>` : ""}
+                ${data.official > 0 ? `<span style="color:#8b5cf6;font-weight:600">🏛️ ${data.official}</span>` : ""}
+                ${data.academic > 0 ? `<span style="color:#22c55e;font-weight:600">🔬 ${data.academic}</span>` : ""}
+                ${data.social > 0 ? `<span style="color:#f59e0b;font-weight:600">💬 ${data.social}</span>` : ""}
               </div>
+              ${sourceBar}
+
+              ${platformsList ? `
+                <div style="font-size:9px;text-transform:uppercase;letter-spacing:0.08em;opacity:0.4;font-weight:600;margin-bottom:4px">
+                  ${lang === "pt" ? "Fontes" : "Sources"}
+                </div>
+                <div style="line-height:1.8">${platformsList}</div>
+              ` : ""}
             `, isDark), { lat: cp.lat, lng: cp.lng });
           });
           m.addListener("mouseout", () => infoRef.current?.close());
@@ -477,7 +623,7 @@ const GoogleMapView = ({
     });
   }, [trends, maxCount, onSelectCountry, showTooltip, isDark, clearLayers, lang]);
 
-  /* ═══ TAB 4: TRENDING NOW — no map rendering, pure data panel ═══ */
+  /* ═══ TAB 4: TRENDING NOW ═══ */
   const trendingNow = useMemo(() => {
     const now = Date.now();
     return [...trends]
@@ -500,7 +646,7 @@ const GoogleMapView = ({
     if (activeTab === "panorama") renderPanorama();
     else if (activeTab === "sentiment") renderSentiment();
     else if (activeTab === "verification") renderVerification();
-    else if (activeTab === "trending") { clearLayers(); /* trending is a data panel, not map mode */ }
+    else if (activeTab === "trending") { clearLayers(); }
   }, [activeTab, mapLoaded, renderPanorama, renderSentiment, renderVerification, clearLayers]);
 
   const tabs: { key: MapTab; icon: typeof Flame; label: Record<string, string> }[] = [
@@ -565,10 +711,10 @@ const GoogleMapView = ({
         )}
       </div>
 
-      {/* Map container — hidden when trending tab is active */}
+      {/* Map container */}
       <div ref={mapRef} className={`absolute inset-0 z-0 ${activeTab === "trending" ? "opacity-20" : ""}`} />
 
-      {/* TRENDING NOW overlay panel */}
+      {/* TRENDING NOW overlay */}
       <AnimatePresence>
         {activeTab === "trending" && (
           <motion.div
@@ -592,7 +738,6 @@ const GoogleMapView = ({
                     transition={{ delay: i * 0.04 }}
                     className="bg-card/80 backdrop-blur-sm border border-border/30 rounded-xl p-3.5 select-text"
                   >
-                    {/* Header: rank + platform + flag + category */}
                     <div className="flex items-center gap-2 mb-2">
                       <span className="text-[18px] font-extrabold text-muted-foreground/20 tabular-nums leading-none">{i + 1}</span>
                       <div className="flex items-center gap-1.5 flex-wrap">
@@ -601,24 +746,13 @@ const GoogleMapView = ({
                         {t.category && <span className="px-1.5 py-0.5 rounded bg-muted text-muted-foreground text-[8px] font-medium">{t.category}</span>}
                       </div>
                     </div>
-
-                    {/* Title */}
                     <h4 className="text-[12px] font-bold text-foreground leading-snug mb-1.5">{t.title}</h4>
-
-                    {/* Context / Description — no duplicate text */}
                     {t.description && t.description.toLowerCase().trim() !== t.title.toLowerCase().trim() && (
                       <p className="text-[10px] text-muted-foreground leading-relaxed mb-2 line-clamp-3">{t.description}</p>
                     )}
-                    {t.details && t.details !== t.description && t.details.toLowerCase().trim() !== t.title.toLowerCase().trim() && (
-                      <p className="text-[9px] text-muted-foreground/70 leading-relaxed mb-2 line-clamp-2 italic">{t.details.slice(0, 200)}</p>
-                    )}
-
-                    {/* Thumbnail if available */}
                     {t.thumbnail && (
                       <img src={t.thumbnail} alt="" className="w-full h-24 object-cover rounded-lg mb-2 bg-muted" loading="lazy" />
                     )}
-
-                    {/* Metrics row */}
                     <div className="flex items-center gap-2 text-[9px] mb-2">
                       {t.volume && <span className="font-semibold text-foreground">{t.volume}</span>}
                       {t.change && (
@@ -626,12 +760,7 @@ const GoogleMapView = ({
                           {t.changePositive ? "↗" : "↘"}{t.change}
                         </span>
                       )}
-                      {t.sources && t.sources.length > 1 && (
-                        <span className="text-muted-foreground">{t.sources.length} {lang === "pt" ? "fontes" : "sources"}</span>
-                      )}
                     </div>
-
-                    {/* Source */}
                     {t.sourceUrl && (
                       <a href={t.sourceUrl} target="_blank" rel="noopener noreferrer"
                         className="inline-flex items-center gap-1 text-[8px] text-primary hover:underline mb-2">
@@ -639,50 +768,18 @@ const GoogleMapView = ({
                         {lang === "pt" ? "Fonte original" : "Original source"}
                       </a>
                     )}
-
-                    {/* Action icons */}
                     <div className="flex items-center gap-1 pt-2 border-t border-border/20">
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          const url = t.sourceUrl || window.location.href;
-                          navigator.clipboard.writeText(`${t.title} — ${url}`);
-                          toast({ title: lang === "pt" ? "Link copiado!" : "Link copied!" });
-                        }}
-                        className="flex items-center justify-center w-7 h-7 rounded-lg hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
-                        title={lang === "pt" ? "Compartilhar" : "Share"}
-                      >
+                      <button onClick={(e) => { e.stopPropagation(); navigator.clipboard.writeText(`${t.title} — ${t.sourceUrl || window.location.href}`); toast({ title: lang === "pt" ? "Link copiado!" : "Link copied!" }); }}
+                        className="flex items-center justify-center w-7 h-7 rounded-lg hover:bg-muted text-muted-foreground hover:text-foreground transition-colors" title={lang === "pt" ? "Compartilhar" : "Share"}>
                         <Share2 className="w-3 h-3" />
                       </button>
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          toast({ title: lang === "pt" ? "Salvo!" : "Saved!" });
-                        }}
-                        className="flex items-center justify-center w-7 h-7 rounded-lg hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
-                        title={lang === "pt" ? "Salvar" : "Save"}
-                      >
+                      <button onClick={(e) => { e.stopPropagation(); toast({ title: lang === "pt" ? "Salvo!" : "Saved!" }); }}
+                        className="flex items-center justify-center w-7 h-7 rounded-lg hover:bg-muted text-muted-foreground hover:text-foreground transition-colors" title={lang === "pt" ? "Salvar" : "Save"}>
                         <Bookmark className="w-3 h-3" />
                       </button>
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          toast({ title: "👍" });
-                        }}
-                        className="flex items-center justify-center w-7 h-7 rounded-lg hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
-                        title={lang === "pt" ? "Curtir" : "Like"}
-                      >
+                      <button onClick={(e) => { e.stopPropagation(); toast({ title: "👍" }); }}
+                        className="flex items-center justify-center w-7 h-7 rounded-lg hover:bg-muted text-muted-foreground hover:text-foreground transition-colors" title={lang === "pt" ? "Curtir" : "Like"}>
                         <ThumbsUp className="w-3 h-3" />
-                      </button>
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          toast({ title: lang === "pt" ? "Bug reportado" : "Bug reported", description: t.title });
-                        }}
-                        className="flex items-center justify-center w-7 h-7 rounded-lg hover:bg-muted text-muted-foreground hover:text-destructive transition-colors"
-                        title={lang === "pt" ? "Reportar bug" : "Report bug"}
-                      >
-                        <Bug className="w-3 h-3" />
                       </button>
                     </div>
                   </motion.div>
@@ -693,19 +790,103 @@ const GoogleMapView = ({
         )}
       </AnimatePresence>
 
-      {mapLoaded && (
-        <div className={`absolute z-20 flex flex-col gap-1 ${isMobile ? "bottom-24 right-3" : "bottom-[100px] right-3"}`}>
-          <button onClick={() => googleMapRef.current?.setZoom((googleMapRef.current?.getZoom() || 3) + 1)}
-            className="w-8 h-8 rounded-xl bg-card/90 backdrop-blur-xl border border-border/30 shadow-[var(--shadow-sm)] flex items-center justify-center text-foreground hover:bg-card transition-colors">
-            <Plus className="w-3.5 h-3.5" />
-          </button>
-          <button onClick={() => googleMapRef.current?.setZoom((googleMapRef.current?.getZoom() || 3) - 1)}
-            className="w-8 h-8 rounded-xl bg-card/90 backdrop-blur-xl border border-border/30 shadow-[var(--shadow-sm)] flex items-center justify-center text-foreground hover:bg-card transition-colors">
-            <Minus className="w-3.5 h-3.5" />
-          </button>
+      {/* ── Legend + Zoom controls — aligned bottom-left ── */}
+      {activeTab !== "trending" && (
+        <div className={`absolute z-20 flex items-end gap-2 ${isMobile ? "bottom-24 left-3 right-3" : "bottom-4 left-3"}`}>
+          {/* Legend block — enlarged */}
+          <div className="bg-card/90 backdrop-blur-xl border border-border/30 rounded-xl p-3.5 shadow-[var(--shadow-md)] flex-1 max-w-xs">
+            <div className="text-[9px] uppercase tracking-widest text-muted-foreground font-semibold mb-2">
+              {activeTab === "panorama" && (lang === "pt" ? "Panorama · Densidade + Fluxo" : "Panorama · Density + Flow")}
+              {activeTab === "sentiment" && (lang === "pt" ? "Sentimento por País" : "Sentiment by Country")}
+              {activeTab === "verification" && (lang === "pt" ? "Cobertura de Fontes" : "Source Coverage")}
+            </div>
+
+            {activeTab === "panorama" && (
+              <div className="space-y-2">
+                <div>
+                  <div className="text-[8px] text-muted-foreground mb-1 font-medium">{lang === "pt" ? "Densidade de tendências" : "Trend density"}</div>
+                  <div className="flex items-center gap-2">
+                    <div className="w-full h-2 rounded-full bg-gradient-to-r from-[#00C8DC] via-[#B4DC50] via-[#F0C83C] to-[#F05032]" />
+                    <span className="text-[8px] text-muted-foreground whitespace-nowrap">{lang === "pt" ? "Baixo → Alto" : "Low → High"}</span>
+                  </div>
+                </div>
+                <div>
+                  <div className="text-[8px] text-muted-foreground mb-1 font-medium">{lang === "pt" ? "Velocidade" : "Velocity"}</div>
+                  <div className="flex items-center gap-3 flex-wrap">
+                    <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded-full bg-[#22c55e]" /><span className="text-[8px] text-muted-foreground">⚡ {lang === "pt" ? "Rápido" : "Fast"}</span></span>
+                    <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded-full bg-[#F5A060]" /><span className="text-[8px] text-muted-foreground">📈 {lang === "pt" ? "Alta" : "Rising"}</span></span>
+                    <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded-full bg-[#60B8D0]" /><span className="text-[8px] text-muted-foreground">→ {lang === "pt" ? "Estável" : "Stable"}</span></span>
+                  </div>
+                </div>
+                <div className="flex items-center gap-3">
+                  <div className="flex items-center gap-1"><div className="w-5 h-0.5 rounded bg-[#F5A060]/40" /><span className="text-[8px] text-muted-foreground">{lang === "pt" ? "Fluxo forte" : "Strong flow"}</span></div>
+                  <div className="flex items-center gap-1"><div className="w-5 h-0.5 rounded bg-[#B496E6]/40" /><span className="text-[8px] text-muted-foreground">{lang === "pt" ? "Fluxo leve" : "Light flow"}</span></div>
+                </div>
+              </div>
+            )}
+
+            {activeTab === "sentiment" && (
+              <div className="space-y-2">
+                <div className="flex items-center gap-3">
+                  <span className="flex items-center gap-1.5"><span className="w-3 h-3 rounded-full bg-[#22c55e]" /><span className="text-[9px] text-muted-foreground font-medium">😊 {lang === "pt" ? "Positivo" : "Positive"}</span></span>
+                  <span className="flex items-center gap-1.5"><span className="w-3 h-3 rounded-full bg-[#A8A29E]" /><span className="text-[9px] text-muted-foreground font-medium">😐 {lang === "pt" ? "Neutro" : "Neutral"}</span></span>
+                </div>
+                <div className="flex items-center gap-3">
+                  <span className="flex items-center gap-1.5"><span className="w-3 h-3 rounded-full bg-[#ef4444]" /><span className="text-[9px] text-muted-foreground font-medium">😟 {lang === "pt" ? "Negativo" : "Negative"}</span></span>
+                  <span className="flex items-center gap-1.5"><span className="w-3 h-3 rounded-full bg-[#f59e0b]" /><span className="text-[9px] text-muted-foreground font-medium">🔀 {lang === "pt" ? "Misto" : "Mixed"}</span></span>
+                </div>
+                <div className="text-[8px] text-muted-foreground/60 leading-relaxed">
+                  {lang === "pt" ? "Clique em um país para filtrar. Hover para detalhes." : "Click a country to filter. Hover for details."}
+                </div>
+              </div>
+            )}
+
+            {activeTab === "verification" && (
+              <div className="space-y-2">
+                <div>
+                  <div className="text-[8px] text-muted-foreground mb-1 font-medium">{lang === "pt" ? "Nível de confirmação" : "Verification level"}</div>
+                  <div className="flex items-center gap-3 flex-wrap">
+                    <span className="flex items-center gap-1.5"><span className="w-3 h-3 rounded-full bg-[#ef4444]" /><span className="text-[9px] text-muted-foreground font-medium">{lang === "pt" ? "Fraca" : "Weak"}</span></span>
+                    <span className="flex items-center gap-1.5"><span className="w-3 h-3 rounded-full bg-[#f59e0b]" /><span className="text-[9px] text-muted-foreground font-medium">{lang === "pt" ? "Moderada" : "Moderate"}</span></span>
+                    <span className="flex items-center gap-1.5"><span className="w-3 h-3 rounded-full bg-[#22c55e]" /><span className="text-[9px] text-muted-foreground font-medium">{lang === "pt" ? "Forte" : "Strong"}</span></span>
+                    <span className="flex items-center gap-1.5"><span className="w-3 h-3 rounded-full bg-[#3b82f6]" /><span className="text-[9px] text-muted-foreground font-medium">{lang === "pt" ? "Excelente" : "Excellent"}</span></span>
+                  </div>
+                </div>
+                <div>
+                  <div className="text-[8px] text-muted-foreground mb-1 font-medium">{lang === "pt" ? "Tipos de fonte" : "Source types"}</div>
+                  <div className="flex items-center gap-3 flex-wrap">
+                    <span className="flex items-center gap-1 text-[8px] text-muted-foreground"><span className="w-2 h-2 rounded-sm bg-[#3b82f6]" />📰 {lang === "pt" ? "Imprensa" : "Press"}</span>
+                    <span className="flex items-center gap-1 text-[8px] text-muted-foreground"><span className="w-2 h-2 rounded-sm bg-[#8b5cf6]" />🏛️ {lang === "pt" ? "Oficial" : "Official"}</span>
+                    <span className="flex items-center gap-1 text-[8px] text-muted-foreground"><span className="w-2 h-2 rounded-sm bg-[#22c55e]" />🔬 {lang === "pt" ? "Acadêmico" : "Academic"}</span>
+                    <span className="flex items-center gap-1 text-[8px] text-muted-foreground"><span className="w-2 h-2 rounded-sm bg-[#f59e0b]" />💬 Social</span>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            <div className="flex gap-2 text-[8px] text-muted-foreground/40 mt-2 pt-2 border-t border-border/20">
+              <span>{activeCountries} {lang === "pt" ? "países" : "countries"}</span>
+              <span>· {totalTrends} trends</span>
+            </div>
+          </div>
+
+          {/* Zoom controls — aligned to legend */}
+          {mapLoaded && (
+            <div className="flex flex-col gap-1">
+              <button onClick={() => googleMapRef.current?.setZoom((googleMapRef.current?.getZoom() || 3) + 1)}
+                className="w-8 h-8 rounded-xl bg-card/90 backdrop-blur-xl border border-border/30 shadow-[var(--shadow-sm)] flex items-center justify-center text-foreground hover:bg-card transition-colors">
+                <Plus className="w-3.5 h-3.5" />
+              </button>
+              <button onClick={() => googleMapRef.current?.setZoom((googleMapRef.current?.getZoom() || 3) - 1)}
+                className="w-8 h-8 rounded-xl bg-card/90 backdrop-blur-xl border border-border/30 shadow-[var(--shadow-sm)] flex items-center justify-center text-foreground hover:bg-card transition-colors">
+                <Minus className="w-3.5 h-3.5" />
+              </button>
+            </div>
+          )}
         </div>
       )}
 
+      {/* Loading */}
       {!mapLoaded && !mapError && (
         <div className="absolute inset-0 flex items-center justify-center bg-background/50 backdrop-blur-sm z-10">
           <div className="flex items-center gap-3 text-muted-foreground text-[10px]">
@@ -715,58 +896,16 @@ const GoogleMapView = ({
         </div>
       )}
 
+      {/* Error */}
       {mapError && (
         <div className="absolute inset-0 flex items-center justify-center bg-background/30 backdrop-blur-sm z-10">
           <div className="text-center p-5 bg-card/80 backdrop-blur-xl rounded-2xl border border-border/30 shadow-[var(--shadow-lg)] max-w-xs">
             <div className="text-2xl mb-2">🗺️</div>
             <p className="text-[10px] font-medium text-foreground mb-1">{mapError}</p>
-            <button onClick={() => setMapRetry(r => r + 1)} className="mt-2 px-3 py-1.5 rounded-full bg-primary text-primary-foreground text-[9px] font-semibold hover:opacity-90 transition-opacity">
+            <button onClick={() => { setMapError(null); setMapRetry(r => r + 1); }}
+              className="mt-2 px-3 py-1.5 rounded-full bg-primary text-primary-foreground text-[9px] font-semibold hover:opacity-90 transition-opacity">
               🔄 {lang === "pt" ? "Tentar novamente" : "Retry"}
             </button>
-          </div>
-        </div>
-      )}
-
-      {/* Legend */}
-      {activeTab !== "trending" && (
-        <div className="absolute bottom-3 left-3 z-20 bg-card/90 backdrop-blur-xl border border-border/30 rounded-xl p-2.5 shadow-[var(--shadow-md)]">
-          <div className="text-[8px] uppercase tracking-widest text-muted-foreground font-semibold mb-1">
-            {activeTab === "panorama" && (lang === "pt" ? "Panorama · Densidade + Fluxo" : "Panorama · Density + Flow")}
-            {activeTab === "sentiment" && (lang === "pt" ? "Sentimento por País" : "Sentiment by Country")}
-            {activeTab === "verification" && (lang === "pt" ? "Cobertura de Fontes" : "Source Coverage")}
-          </div>
-
-          {activeTab === "panorama" && (
-            <div className="space-y-1">
-              <div className="flex items-center gap-1.5">
-                <div className="w-20 h-1.5 rounded-full bg-gradient-to-r from-[#FFE4C8] via-[#E88BA0] to-[#AA82F0]" />
-                <span className="text-[7px] text-muted-foreground">{lang === "pt" ? "Baixo → Alto" : "Low → High"}</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <div className="flex items-center gap-1"><div className="w-4 h-0.5 rounded bg-[#F5A060]/40" /><span className="text-[7px] text-muted-foreground">{lang === "pt" ? "Fluxo" : "Flow"}</span></div>
-                <div className="flex items-center gap-1"><div className="w-4 h-0.5 rounded bg-[#C4A8F0]/50" /><span className="text-[7px] text-muted-foreground">{lang === "pt" ? "Leve" : "Light"}</span></div>
-              </div>
-            </div>
-          )}
-          {activeTab === "sentiment" && (
-            <div className="flex items-center gap-2">
-              <span className="flex items-center gap-0.5 text-[7px]"><span className="w-2.5 h-2.5 rounded-full bg-[#A8D8B0]" />+</span>
-              <span className="flex items-center gap-0.5 text-[7px]"><span className="w-2.5 h-2.5 rounded-full bg-[#D0CCC4]" />~</span>
-              <span className="flex items-center gap-0.5 text-[7px]"><span className="w-2.5 h-2.5 rounded-full bg-[#F0A8A0]" />-</span>
-            </div>
-          )}
-          {activeTab === "verification" && (
-            <div className="flex items-center gap-2">
-              <span className="flex items-center gap-1 text-[7px]"><span className="w-2.5 h-2.5 rounded-full bg-[#D0CCC4]" />{lang === "pt" ? "1 tipo" : "1 type"}</span>
-              <span className="flex items-center gap-1 text-[7px]"><span className="w-2.5 h-2.5 rounded-full bg-[#F0D080]" />2</span>
-              <span className="flex items-center gap-1 text-[7px]"><span className="w-2.5 h-2.5 rounded-full bg-[#A8D8B0]" />3</span>
-              <span className="flex items-center gap-1 text-[7px]"><span className="w-2.5 h-2.5 rounded-full bg-[#90C8E8]" />4+</span>
-            </div>
-          )}
-
-          <div className="flex gap-2 text-[7px] text-muted-foreground/40 mt-1">
-            <span>{activeCountries} {lang === "pt" ? "países" : "countries"}</span>
-            <span>· {totalTrends} trends</span>
           </div>
         </div>
       )}
