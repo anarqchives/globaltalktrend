@@ -217,14 +217,14 @@ const GoogleMapView = ({
 
       heatmapRef.current = new HeatmapLayer({
         data: heatmapData, map: googleMapRef.current,
-        radius: 55, opacity: 0.65, maxIntensity: 1,
+        radius: 60, opacity: 0.75, maxIntensity: 1,
         gradient: [
-          "rgba(201, 213, 220, 0)",
-          "rgba(37, 87, 214, 0.2)",
-          "rgba(37, 87, 214, 0.5)",
-          "rgba(217, 119, 6, 0.6)",
-          "rgba(217, 119, 6, 0.8)",
-          "rgba(224, 60, 49, 0.9)",
+          "rgba(0, 0, 0, 0)",
+          "rgba(0, 200, 255, 0.3)",
+          "rgba(0, 150, 255, 0.5)",
+          "rgba(255, 200, 0, 0.6)",
+          "rgba(255, 120, 0, 0.8)",
+          "rgba(255, 40, 40, 0.95)",
         ],
       });
 
