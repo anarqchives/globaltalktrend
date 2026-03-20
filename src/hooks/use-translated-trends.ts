@@ -69,22 +69,21 @@ function needsTranslation(trend: TrendCardProps, lang: string): boolean {
   
   // Non-Latin scripts ALWAYS need translation (CJK, Cyrillic, Arabic, Thai, etc.)
   if (NON_LATIN_REGEX.test(title)) {
-    // If target is "pt", still translate non-Latin titles
     return true;
-  }
-  
-  // If target lang is "pt" (default), skip Latin-script content
-  if (lang === "pt") {
-    // But translate if title looks English and platform isn't explicitly PT
-    if (ENGLISH_INDICATORS.test(title) && PLATFORM_LANG[trend.platform] !== "pt") {
-      return false; // Keep English titles as-is in PT mode (acceptable)
-    }
-    return false;
   }
   
   // If the platform already produces content in the target language, skip
   const platformLang = PLATFORM_LANG[trend.platform];
   if (platformLang === lang) return false;
+  
+  // For PT: translate English titles to Portuguese
+  if (lang === "pt") {
+    // If the title looks English, translate it
+    if (ENGLISH_INDICATORS.test(title)) return true;
+    // If the platform is known to produce English content, translate
+    if (platformLang === "en") return true;
+    return false;
+  }
   
   // Everything else needs translation
   return true;
@@ -148,9 +147,9 @@ export function useTranslatedTrends(trends: TrendCardProps[], lang: string) {
       return;
     }
 
-    // For PT: still check if any non-Latin titles need translation
-    const hasNonLatin = lang === "pt" && trends.some(t => NON_LATIN_REGEX.test(t.title));
-    if (lang === "pt" && !hasNonLatin) {
+    // Check if any trends actually need translation
+    const hasTranslatable = trends.some(t => needsTranslation(t, lang));
+    if (!hasTranslatable) {
       setTranslated(trends.map(t => ({ ...t, _originalTitle: t.title })));
       lastLangRef.current = lang;
       lastTrendsKeyRef.current = "";

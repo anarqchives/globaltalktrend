@@ -13,13 +13,16 @@ interface FilterBlockProps {
 
 const CATEGORIES = [
   { value: "Todas", label: { pt: "Todas", en: "All", es: "Todas" } },
-  { value: "Entretenimento", label: { pt: "Entretenimento", en: "Entertainment", es: "Entretenimiento" } },
-  { value: "Tecnologia", label: { pt: "Tecnologia", en: "Technology", es: "Tecnología" } },
   { value: "Geopolítica", label: { pt: "Geopolítica", en: "Geopolitics", es: "Geopolítica" } },
-  { value: "Esportes", label: { pt: "Esportes", en: "Sports", es: "Deportes" } },
-  { value: "Ciências", label: { pt: "Ciências", en: "Sciences", es: "Ciencias" } },
-  { value: "Cultura", label: { pt: "Cultura", en: "Culture", es: "Cultura" } },
   { value: "Economia", label: { pt: "Economia", en: "Economy", es: "Economía" } },
+  { value: "Tecnologia", label: { pt: "Tecnologia", en: "Technology", es: "Tecnología" } },
+  { value: "Ciência", label: { pt: "Ciência", en: "Science", es: "Ciencia" } },
+  { value: "Saúde", label: { pt: "Saúde", en: "Health", es: "Salud" } },
+  { value: "Entretenimento", label: { pt: "Entretenimento", en: "Entertainment", es: "Entretenimiento" } },
+  { value: "Esportes", label: { pt: "Esportes", en: "Sports", es: "Deportes" } },
+  { value: "Cultura", label: { pt: "Cultura", en: "Culture", es: "Cultura" } },
+  { value: "Meio Ambiente", label: { pt: "Meio Ambiente", en: "Environment", es: "Medio Ambiente" } },
+  { value: "Educação", label: { pt: "Educação", en: "Education", es: "Educación" } },
 ];
 
 const SOURCE_TYPES = [
