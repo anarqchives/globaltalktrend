@@ -258,8 +258,21 @@ async function fetchBluesky(): Promise<TrendItem[]> {
 }
 
 // ── Mastodon API ──
+function isMastodonEnabled(): boolean {
+  // Mastodon public trends API works without credentials on most instances
+  // Feature flag: always enabled via public API, authenticated mode optional
+  return true;
+}
+
+function isMastodonAuthenticated(): boolean {
+  return !!(Deno.env.get("MASTODON_ACCESS_TOKEN"));
+}
+
 async function fetchMastodon(): Promise<TrendItem[]> {
   const baseUrl = Deno.env.get("MASTODON_BASE_URL") || "https://mastodon.social";
+  const accessToken = Deno.env.get("MASTODON_ACCESS_TOKEN");
+  const authenticated = isMastodonAuthenticated();
+  console.log(`🐘 Mastodon mode: ${authenticated ? "authenticated" : "public"} (${baseUrl})`);
   const accessToken = Deno.env.get("MASTODON_ACCESS_TOKEN");
   
   try {
