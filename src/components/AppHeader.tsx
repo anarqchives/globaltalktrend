@@ -129,6 +129,16 @@ const AppHeader = () => {
             <a href="https://buy.stripe.com/fZu7sMgw6cHLeTnbWVdIA00" target="_blank" rel="noopener noreferrer"
               className="apoie-pill compact-link hidden sm:flex">{t("support")}</a>
 
+            {/* About / Methodology */}
+            <button
+              onClick={() => setAboutOpen(true)}
+              className="flex items-center justify-center w-8 h-8 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+              aria-label={lang === "pt" ? "Sobre" : "About"}
+              title={lang === "pt" ? "Sobre / Metodologia" : "About / Methodology"}
+            >
+              <Info className="w-4 h-4" />
+            </button>
+
             {/* Avatar / Login */}
             {user ? (
               <div className="flex items-center gap-1">
