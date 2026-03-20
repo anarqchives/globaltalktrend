@@ -615,10 +615,10 @@ const GoogleMapView = ({
           )}
           {activeTab === "verification" && (
             <div className="flex items-center gap-2">
-              <span className="flex items-center gap-1 text-[7px]"><span className="w-2 h-2 rounded-full bg-[#94a3b8]" />{lang === "pt" ? "1 tipo" : "1 type"}</span>
-              <span className="flex items-center gap-1 text-[7px]"><span className="w-2 h-2 rounded-full bg-[#f59e0b]" />2</span>
-              <span className="flex items-center gap-1 text-[7px]"><span className="w-2 h-2 rounded-full bg-[#22c55e]" />3</span>
-              <span className="flex items-center gap-1 text-[7px]"><span className="w-2 h-2 rounded-full bg-[#2557D6]" />4+</span>
+              <span className="flex items-center gap-1 text-[7px]"><span className="w-2 h-2 rounded-full bg-[#8E8E93]" />{lang === "pt" ? "1 tipo" : "1 type"}</span>
+              <span className="flex items-center gap-1 text-[7px]"><span className="w-2 h-2 rounded-full bg-[#FF9500]" />2</span>
+              <span className="flex items-center gap-1 text-[7px]"><span className="w-2 h-2 rounded-full bg-[#34C759]" />3</span>
+              <span className="flex items-center gap-1 text-[7px]"><span className="w-2 h-2 rounded-full bg-[#007AFF]" />4+</span>
             </div>
           )}
 
