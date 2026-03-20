@@ -232,6 +232,7 @@ const TimelineCard = ({
   platform, title, category, time, volume, change, changePositive,
   historicalData, countryCode, sources, sourceUrl, trustBadge, thumbnail,
   publishedAt, description, details, translated, isMultiplatform, sparkData: rawSparkData,
+  aiContext,
   onClick, onFilterPlatform, onSaveCard,
   staggerIndex = 0, compact = false, isSelected = false,
 }: TimelineCardProps) => {
