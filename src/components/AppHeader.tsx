@@ -1,6 +1,6 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useMemo } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { Sun, Moon, LogOut, LogIn, Loader2, ChevronDown, Globe2, Info } from "lucide-react";
+import { Sun, Moon, LogOut, LogIn, Loader2, ChevronDown, Globe2, Info, CheckCircle2, XCircle, RefreshCw } from "lucide-react";
 import { useLanguage, languages } from "@/contexts/LanguageContext";
 import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable/index";
@@ -8,6 +8,24 @@ import { toast } from "@/hooks/use-toast";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { motion, AnimatePresence } from "framer-motion";
+
+/* ─── Data sources registry ─── */
+interface SourceDef { name: string; fn: string; category: string; }
+const DATA_SOURCES: SourceDef[] = [
+  { name: "Google Trends", fn: "fetch-trends", category: "Buscas" },
+  { name: "The Guardian / News Extra", fn: "fetch-news-extra", category: "Imprensa" },
+  { name: "The News API", fn: "fetch-thenewsapi", category: "Imprensa" },
+  { name: "GDELT", fn: "fetch-gdelt-trends", category: "Imprensa" },
+  { name: "Fontes Extras (Reuters, BBC…)", fn: "fetch-extra-sources", category: "Imprensa" },
+  { name: "Social Trends", fn: "fetch-social-trends", category: "Social" },
+  { name: "Wikipedia / Open Data", fn: "fetch-open-data", category: "Enciclopédico" },
+  { name: "Crossref", fn: "fetch-crossref", category: "Acadêmico" },
+  { name: "Semantic Scholar", fn: "fetch-semantic-scholar", category: "Acadêmico" },
+  { name: "OMS (WHO)", fn: "fetch-who-data", category: "Oficial" },
+  { name: "FMI (IMF)", fn: "fetch-imf-data", category: "Oficial" },
+  { name: "FRED Economics", fn: "fetch-fred", category: "Oficial" },
+  { name: "Tech/Science Extra", fn: "fetch-tech-science-extra", category: "Ciência" },
+];
 
 const AppHeader = () => {
   const { lang, setLang, t } = useLanguage();
@@ -27,6 +45,17 @@ const AppHeader = () => {
     return false;
   });
 
+  /* Source health from localStorage (written by use-trends) */
+  const [sourceHealth, setSourceHealth] = useState<Record<string, { ok: boolean; count: number; lastUpdate: string }>>({});
+  const [healthLoading, setHealthLoading] = useState(false);
+
+  const loadHealth = () => {
+    try {
+      const raw = localStorage.getItem("gtt_source_health");
+      if (raw) setSourceHealth(JSON.parse(raw));
+    } catch { /* ignore */ }
+  };
+
   useEffect(() => {
     document.documentElement.classList.toggle("dark", dark);
     localStorage.setItem("theme", dark ? "dark" : "light");
@@ -37,6 +66,11 @@ const AppHeader = () => {
     supabase.auth.getSession().then(({ data: { session } }) => setUser(session?.user ?? null));
     return () => subscription.unsubscribe();
   }, []);
+
+  // Load health when about modal opens
+  useEffect(() => {
+    if (aboutOpen) loadHealth();
+  }, [aboutOpen]);
 
   const handleOAuthLogin = async (provider: "google" | "apple") => {
     try {
@@ -50,7 +84,7 @@ const AppHeader = () => {
   const userAvatar = user?.user_metadata?.avatar_url;
   const userName = user?.user_metadata?.full_name || user?.email?.split("@")[0] || "";
   const userInitial = userName.charAt(0).toUpperCase();
-  // Close lang dropdown on outside click
+
   useEffect(() => {
     if (!langOpen) return;
     const handler = (e: MouseEvent) => {
@@ -62,11 +96,25 @@ const AppHeader = () => {
 
   const currentLang = languages.find(l => l.code === lang);
 
+  const sourcesWithStatus = useMemo(() => {
+    return DATA_SOURCES.map(src => {
+      const health = sourceHealth[src.name];
+      return {
+        ...src,
+        online: health ? health.ok : null,
+        count: health?.count || 0,
+        lastUpdate: health?.lastUpdate || null,
+      };
+    });
+  }, [sourceHealth]);
+
+  const onlineCount = sourcesWithStatus.filter(s => s.online === true).length;
+  const offlineCount = sourcesWithStatus.filter(s => s.online === false).length;
+
   return (
     <>
       <header className="sticky top-0 z-50 bg-background/95 backdrop-blur-md border-b border-border/30" role="banner">
         <div className="h-12 flex items-center px-4 md:px-6 max-w-[1440px] mx-auto">
-          {/* Logo */}
           <Link to="/welcome" className="flex items-center gap-1.5 shrink-0" aria-label="GTT Monitor">
             <span className="text-[15px] font-bold tracking-tight text-foreground">GTT</span>
             <span className="text-[15px] font-medium tracking-tight text-muted-foreground">Monitor</span>
@@ -74,7 +122,6 @@ const AppHeader = () => {
 
           <div className="flex-1" />
 
-          {/* Right: Theme + Apoie + Avatar */}
           <div className="flex items-center gap-1.5">
             {/* Language dropdown */}
             <div ref={langRef} className="relative">
@@ -166,52 +213,116 @@ const AppHeader = () => {
         </div>
       </header>
 
-
-      {/* About / Methodology Modal */}
+      {/* About / Methodology Modal — with fade-in + scale animation */}
       <Dialog open={aboutOpen} onOpenChange={setAboutOpen}>
-        <DialogContent className="sm:max-w-[520px] max-h-[80vh] overflow-y-auto p-6 rounded-2xl border-border/50">
-          <DialogHeader>
-            <DialogTitle className="text-[16px] font-bold">
-              {lang === "pt" ? "Sobre o GTT Monitor" : "About GTT Monitor"}
-            </DialogTitle>
-            <DialogDescription className="text-[11px] text-muted-foreground">
-              {lang === "pt" ? "Metodologia, fontes e transparência" : "Methodology, sources & transparency"}
-            </DialogDescription>
-          </DialogHeader>
-          <div className="space-y-4 mt-2 text-[12px] text-foreground/90 leading-relaxed">
-            <section>
-              <h3 className="text-[13px] font-semibold mb-1.5">{lang === "pt" ? "O que é" : "What it is"}</h3>
-              <p className="text-muted-foreground">
-                {lang === "pt"
-                  ? "O GTT Monitor é uma plataforma de inteligência de tendências que agrega, cruza e classifica dados de 21+ fontes públicas em tempo real, incluindo Google Trends, NewsAPI, GDELT, YouTube, Reddit, além de fontes acadêmicas e institucionais."
-                  : "GTT Monitor is a trend intelligence platform that aggregates, cross-references and classifies data from 21+ public sources in real time, including Google Trends, NewsAPI, GDELT, YouTube, Reddit, plus academic and institutional sources."}
-              </p>
-            </section>
-            <section>
-              <h3 className="text-[13px] font-semibold mb-1.5">{lang === "pt" ? "Metodologia" : "Methodology"}</h3>
-              <ul className="list-disc pl-4 space-y-1 text-muted-foreground">
-                <li>{lang === "pt" ? "Coleta multi-fonte com fallback em 5 camadas" : "Multi-source collection with 5-layer fallback"}</li>
-                <li>{lang === "pt" ? "Classificação por volume, crescimento e cross-platform" : "Classification by volume, growth and cross-platform presence"}</li>
-                <li>{lang === "pt" ? "Prioridade para imprensa verificada (Reuters, BBC, Guardian)" : "Priority for verified press (Reuters, BBC, Guardian)"}</li>
-                <li>{lang === "pt" ? "Atualização a cada 15 minutos" : "Updates every 15 minutes"}</li>
-                <li>{lang === "pt" ? "Selos de confiabilidade: oficial, verificado, científico, internacional" : "Reliability badges: official, verified, scientific, international"}</li>
-              </ul>
-            </section>
-            <section>
-              <h3 className="text-[13px] font-semibold mb-1.5">{lang === "pt" ? "Transparência" : "Transparency"}</h3>
-              <p className="text-muted-foreground">
-                {lang === "pt"
-                  ? "Cada card exibe a origem dos dados e justificativas qualitativas. Os usuários podem dar feedback (👍 👎 🚩) para calibrar o algoritmo. Nenhum dado pessoal é coletado sem consentimento."
-                  : "Each card shows data origin and qualitative justifications. Users can give feedback (👍 👎 🚩) to calibrate the algorithm. No personal data is collected without consent."}
-              </p>
-            </section>
-            <div className="pt-2 border-t border-border/30">
-              <Link to="/metodologia" onClick={() => setAboutOpen(false)}
-                className="text-[11px] font-semibold text-primary hover:underline">
-                {lang === "pt" ? "Ver metodologia completa →" : "View full methodology →"}
-              </Link>
+        <DialogContent className="sm:max-w-[560px] max-h-[85vh] overflow-y-auto p-0 rounded-2xl border-border/50 bg-card" asChild>
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95, y: 8 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.95, y: 8 }}
+            transition={{ duration: 0.25, ease: [0.21, 0.47, 0.32, 0.98] }}
+            className="sm:max-w-[560px] max-h-[85vh] overflow-y-auto p-6 rounded-2xl border border-border/50 bg-card shadow-xl"
+          >
+            <DialogHeader>
+              <DialogTitle className="text-[16px] font-bold">
+                {lang === "pt" ? "Sobre o GTT Monitor" : "About GTT Monitor"}
+              </DialogTitle>
+              <DialogDescription className="text-[11px] text-muted-foreground">
+                {lang === "pt" ? "Metodologia, fontes e transparência" : "Methodology, sources & transparency"}
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-4 mt-3 text-[12px] text-foreground/90 leading-relaxed">
+              <section>
+                <h3 className="text-[13px] font-semibold mb-1.5">{lang === "pt" ? "O que é" : "What it is"}</h3>
+                <p className="text-muted-foreground">
+                  {lang === "pt"
+                    ? "O GTT Monitor é uma plataforma de inteligência de tendências que agrega, cruza e classifica dados de 21+ fontes públicas em tempo real, incluindo Google Trends, NewsAPI, GDELT, YouTube, Reddit, além de fontes acadêmicas e institucionais."
+                    : "GTT Monitor is a trend intelligence platform that aggregates, cross-references and classifies data from 21+ public sources in real time, including Google Trends, NewsAPI, GDELT, YouTube, Reddit, plus academic and institutional sources."}
+                </p>
+              </section>
+              <section>
+                <h3 className="text-[13px] font-semibold mb-1.5">{lang === "pt" ? "Metodologia" : "Methodology"}</h3>
+                <ul className="list-disc pl-4 space-y-1 text-muted-foreground">
+                  <li>{lang === "pt" ? "Coleta multi-fonte com fallback em 5 camadas" : "Multi-source collection with 5-layer fallback"}</li>
+                  <li>{lang === "pt" ? "Classificação por volume, crescimento e cross-platform" : "Classification by volume, growth and cross-platform presence"}</li>
+                  <li>{lang === "pt" ? "Prioridade para imprensa verificada (Reuters, BBC, Guardian)" : "Priority for verified press (Reuters, BBC, Guardian)"}</li>
+                  <li>{lang === "pt" ? "Atualização a cada 15 minutos" : "Updates every 15 minutes"}</li>
+                  <li>{lang === "pt" ? "Selos de confiabilidade: oficial, verificado, científico, internacional" : "Reliability badges: official, verified, scientific, international"}</li>
+                </ul>
+              </section>
+
+              {/* ─── Data Sources Status ─── */}
+              <section>
+                <div className="flex items-center justify-between mb-2">
+                  <h3 className="text-[13px] font-semibold">
+                    {lang === "pt" ? "Fontes de Dados" : "Data Sources"}
+                  </h3>
+                  <div className="flex items-center gap-2 text-[9px]">
+                    <span className="flex items-center gap-1 text-[hsl(var(--success-fg))]">
+                      <CheckCircle2 className="w-3 h-3" />{onlineCount}
+                    </span>
+                    {offlineCount > 0 && (
+                      <span className="flex items-center gap-1 text-destructive">
+                        <XCircle className="w-3 h-3" />{offlineCount}
+                      </span>
+                    )}
+                    <button onClick={loadHealth} className="p-0.5 rounded hover:bg-muted transition-colors text-muted-foreground">
+                      <RefreshCw className={`w-3 h-3 ${healthLoading ? "animate-spin" : ""}`} />
+                    </button>
+                  </div>
+                </div>
+                <div className="grid grid-cols-1 gap-1">
+                  {sourcesWithStatus.map((src, i) => (
+                    <motion.div
+                      key={src.name}
+                      initial={{ opacity: 0, x: -6 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: i * 0.03, duration: 0.2 }}
+                      className="flex items-center gap-2 px-2.5 py-1.5 rounded-lg bg-muted/40 hover:bg-muted/60 transition-colors"
+                    >
+                      <div className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${
+                        src.online === true ? "bg-[hsl(var(--success-fg))]" :
+                        src.online === false ? "bg-destructive" :
+                        "bg-muted-foreground/30"
+                      }`} />
+                      <span className="text-[10px] font-medium text-foreground flex-1 truncate">{src.name}</span>
+                      <span className="text-[8px] text-muted-foreground/60 uppercase tracking-wider">{src.category}</span>
+                      {src.count > 0 && (
+                        <span className="text-[8px] font-semibold text-muted-foreground tabular-nums">{src.count}</span>
+                      )}
+                      <span className={`text-[8px] font-bold uppercase ${
+                        src.online === true ? "text-[hsl(var(--success-fg))]" :
+                        src.online === false ? "text-destructive" :
+                        "text-muted-foreground/40"
+                      }`}>
+                        {src.online === true ? "ON" : src.online === false ? "OFF" : "—"}
+                      </span>
+                    </motion.div>
+                  ))}
+                </div>
+                <p className="text-[9px] text-muted-foreground/50 mt-1.5 italic">
+                  {lang === "pt"
+                    ? "Status baseado na última coleta. Fontes client-side (Reddit, Bluesky, Mastodon) não listadas."
+                    : "Status based on last fetch. Client-side sources (Reddit, Bluesky, Mastodon) not listed."}
+                </p>
+              </section>
+
+              <section>
+                <h3 className="text-[13px] font-semibold mb-1.5">{lang === "pt" ? "Transparência" : "Transparency"}</h3>
+                <p className="text-muted-foreground">
+                  {lang === "pt"
+                    ? "Cada card exibe a origem dos dados e justificativas qualitativas. Os usuários podem dar feedback (👍 👎 🚩) para calibrar o algoritmo. Nenhum dado pessoal é coletado sem consentimento."
+                    : "Each card shows data origin and qualitative justifications. Users can give feedback (👍 👎 🚩) to calibrate the algorithm. No personal data is collected without consent."}
+                </p>
+              </section>
+              <div className="pt-2 border-t border-border/30">
+                <Link to="/metodologia" onClick={() => setAboutOpen(false)}
+                  className="text-[11px] font-semibold text-primary hover:underline">
+                  {lang === "pt" ? "Ver metodologia completa →" : "View full methodology →"}
+                </Link>
+              </div>
             </div>
-          </div>
+          </motion.div>
         </DialogContent>
       </Dialog>
 
