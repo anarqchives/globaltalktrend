@@ -1,11 +1,9 @@
 const ALLOWED_ORIGINS = [
-  'https://globaltalktrend.lovable.app',
   'https://gttmonitor.com',
   'https://www.gttmonitor.com',
   'http://localhost:8080',
   'http://localhost:5173',
 ];
-
 function getCorsHeaders(req: Request) {
   const origin = req.headers.get('origin') || '';
   const isAllowed = ALLOWED_ORIGINS.includes(origin) || origin.endsWith('.lovableproject.com') || origin.endsWith('.lovable.app');
@@ -16,15 +14,12 @@ function getCorsHeaders(req: Request) {
     'Access-Control-Allow-Methods': 'POST, GET, OPTIONS',
   };
 }
-
 const langNames: Record<string, string> = {
   pt: "Portuguese", en: "English", es: "Spanish", fr: "French",
   de: "German", it: "Italian", zh: "Chinese", ja: "Japanese",
   ko: "Korean", ar: "Arabic", hi: "Hindi", ru: "Russian",
 };
-
 const BATCH_SIZE = 12;
-
 function extractJsonFromText(text: string): any {
   try { return JSON.parse(text); } catch {}
   const cleaned = text.replace(/```json\s*/gi, "").replace(/```\s*/g, "").trim();
@@ -35,7 +30,6 @@ function extractJsonFromText(text: string): any {
   }
   return null;
 }
-
 async function translateBatch(
   batch: { title: string; details?: string }[],
   langLabel: string,
@@ -47,10 +41,8 @@ async function translateBatch(
       return `${i + 1}. ${item.title.slice(0, 200)}${d}`;
     })
     .join("\n");
-
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), 15000);
-
   try {
     const aiRes = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
@@ -72,27 +64,21 @@ async function translateBatch(
       }),
       signal: controller.signal,
     });
-
     clearTimeout(timeout);
-
     if (!aiRes.ok) {
       console.error(`AI batch error [${aiRes.status}]`);
       return batch;
     }
-
     const rawText = await aiRes.text();
     const aiData = extractJsonFromText(rawText);
     if (!aiData) {
       console.error("Non-JSON AI response, len:", rawText.length);
       return batch;
     }
-
     const content: string = aiData?.choices?.[0]?.message?.content || "";
     if (!content) return batch;
-
     const lines = content.split("\n").filter((l: string) => l.trim());
     const results: { title: string; details?: string }[] = [];
-
     for (let i = 0; i < batch.length; i++) {
       const prefix = `${i + 1}.`;
       const line = lines.find((l: string) => l.trim().startsWith(prefix));
@@ -115,13 +101,11 @@ async function translateBatch(
     return batch;
   }
 }
-
 Deno.serve(async (req) => {
   const corsHeaders = getCorsHeaders(req);
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
-
   try {
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) {
@@ -129,17 +113,13 @@ Deno.serve(async (req) => {
         status: 500, headers: corsHeaders,
       });
     }
-
     const body = await req.json();
     const items: { title: string; details?: string }[] = body?.items;
     const targetLang: string = body?.targetLang;
-
     if (!items || !Array.isArray(items) || items.length === 0 || !targetLang) {
       return Response.json({ translations: [] }, { headers: corsHeaders });
     }
-
     const langLabel = langNames[targetLang] || targetLang;
-
     // For Portuguese: only translate items with non-Latin scripts (CJK, Cyrillic, Arabic, Thai, etc.)
     const NON_LATIN = /[\u3000-\u9FFF\u1100-\u11FF\uAC00-\uD7AF\u0400-\u04FF\u0600-\u06FF\u0E00-\u0E7F\u3040-\u309F\u30A0-\u30FF\uFF00-\uFFEF]/;
     if (targetLang === "pt") {
@@ -177,18 +157,15 @@ Deno.serve(async (req) => {
       }
       return Response.json({ translations: finalItems }, { headers: corsHeaders });
     }
-
     // Split into batches
     const batches: { title: string; details?: string }[][] = [];
     for (let i = 0; i < items.length; i += BATCH_SIZE) {
       batches.push(items.slice(i, i + BATCH_SIZE));
     }
-
     // Process up to 4 batches concurrently
     const CONCURRENCY = 4;
     const results: { title: string; details?: string }[][] = new Array(batches.length);
     let nextIdx = 0;
-
     async function worker() {
       while (true) {
         const idx = nextIdx++;
@@ -196,20 +173,16 @@ Deno.serve(async (req) => {
         results[idx] = await translateBatch(batches[idx], langLabel, LOVABLE_API_KEY!);
       }
     }
-
     await Promise.all(
       Array.from({ length: Math.min(CONCURRENCY, batches.length) }, () => worker())
     );
-
     const allTranslations: { title: string; details?: string }[] = [];
     for (const batch of results) {
       if (batch) allTranslations.push(...batch);
     }
-
     while (allTranslations.length < items.length) {
       allTranslations.push(items[allTranslations.length]);
     }
-
     return Response.json({ translations: allTranslations }, { headers: corsHeaders });
   } catch (error) {
     console.error("Translation top-level error:", error);

@@ -1,13 +1,10 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-
 const ALLOWED_ORIGINS = [
-  'https://globaltalktrend.lovable.app',
   'https://gttmonitor.com',
   'https://www.gttmonitor.com',
   'http://localhost:8080',
   'http://localhost:5173',
 ];
-
 function getCorsHeaders(req: Request) {
   const origin = req.headers.get('origin') || '';
   const isAllowed = ALLOWED_ORIGINS.includes(origin) || origin.endsWith('.lovableproject.com') || origin.endsWith('.lovable.app');
@@ -18,19 +15,15 @@ function getCorsHeaders(req: Request) {
     'Access-Control-Allow-Methods': 'POST, GET, OPTIONS',
   };
 }
-
 serve(async (req) => {
   const corsHeaders = getCorsHeaders(req);
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
-
   try {
     const { trends, filters, criticalMoments, crossPlatformClusters, sourcesStatus, reportMode } = await req.json();
-
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
-
     const top20 = (trends || []).slice(0, 25).map((t: any, i: number) => ({
       rank: i + 1,
       title: (t.title || "").slice(0, 100),
@@ -40,21 +33,18 @@ serve(async (req) => {
       category: t.category,
       country: t.countryCode,
     }));
-
     const criticalSummary = (criticalMoments || []).slice(0, 5).map((m: any) => ({
       title: (m.title || "").slice(0, 80),
       platform: m.platform,
       change: m.change,
       volume: m.volume,
     }));
-
     const clusterSummary = (crossPlatformClusters || []).slice(0, 5).map((c: any) => ({
       topic: (c.topic || "").slice(0, 80),
       platforms: c.platforms,
       platformCount: c.platformCount,
       totalVolume: c.totalVolume,
     }));
-
     const catCounts: Record<string, number> = {};
     const countryCounts: Record<string, number> = {};
     const platformCounts: Record<string, number> = {};
@@ -65,12 +55,9 @@ serve(async (req) => {
       countryCounts[cc] = (countryCounts[cc] || 0) + 1;
       platformCounts[t.platform] = (platformCounts[t.platform] || 0) + 1;
     }
-
     const isAcademic = reportMode === "academic";
-
     const prompt = isAcademic
       ? `Você é um pesquisador acadêmico sênior especializado em análise de tendências digitais e comunicação de massa. Produza um relatório acadêmico completo em português brasileiro com rigor metodológico.
-
 DADOS:
 - Total de trends: ${(trends || []).length}
 - Filtros: País=${filters?.country || "global"}, Categoria=${filters?.category || "Todas"}, Período=${filters?.period || "Hoje"}
@@ -80,7 +67,6 @@ DADOS:
 - Distribuição por categoria: ${JSON.stringify(catCounts)}
 - Distribuição por país: ${JSON.stringify(countryCounts)}
 - Distribuição por plataforma: ${JSON.stringify(platformCounts)}
-
 Responda em JSON com a seguinte estrutura:
 {
   "executiveSummary": "Resumo acadêmico de 4-5 parágrafos com contextualização teórica, análise dos dados, discussão e conclusões. Cite frameworks teóricos como Agenda Setting (McCombs & Shaw, 1972), Spiral of Silence (Noelle-Neumann, 1974), ou Gatekeeping Theory quando aplicável.",
@@ -110,7 +96,6 @@ Responda em JSON com a seguinte estrutura:
   "theoreticalFramework": "Breve enquadramento teórico de 2-3 parágrafos conectando os dados observados a teorias de comunicação, sociologia digital e análise de redes. Referencie autores como Castells (2009) sobre comunicação em rede, Jenkins (2006) sobre cultura convergente, e Benkler (2006) sobre produção colaborativa."
 }`
       : `Você é um analista sênior de tendências globais e inteligência de dados. Analise os dados abaixo e gere um relatório executivo completo e de alta qualidade em português brasileiro.
-
 DADOS:
 - Total de trends: ${(trends || []).length}
 - Filtros: País=${filters?.country || "global"}, Categoria=${filters?.category || "Todas"}, Período=${filters?.period || "Hoje"}
@@ -120,7 +105,6 @@ DADOS:
 - Distribuição por categoria: ${JSON.stringify(catCounts)}
 - Distribuição por país: ${JSON.stringify(countryCounts)}
 - Distribuição por plataforma: ${JSON.stringify(platformCounts)}
-
 Responda em JSON com a seguinte estrutura:
 {
   "executiveSummary": "4 parágrafos: panorama geral com dados quantitativos, destaques principais com métricas, análise de padrões emergentes, conclusão com recomendações estratégicas",
@@ -149,7 +133,6 @@ Responda em JSON com a seguinte estrutura:
     {"author": "Google Trends", "year": "${new Date().getFullYear()}", "title": "Dados de volume de buscas", "source": "trends.google.com", "doi": ""}
   ]
 }`;
-
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
       headers: {
@@ -164,7 +147,6 @@ Responda em JSON com a seguinte estrutura:
         ],
       }),
     });
-
     if (!response.ok) {
       if (response.status === 429) {
         return new Response(JSON.stringify({ error: "Rate limit exceeded. Try again later." }), {
@@ -180,10 +162,8 @@ Responda em JSON com a seguinte estrutura:
       console.error("AI gateway error:", response.status, t);
       throw new Error("AI gateway error");
     }
-
     const aiData = await response.json();
     const content = aiData.choices?.[0]?.message?.content || "";
-
     let parsed;
     try {
       const jsonMatch = content.match(/\{[\s\S]*\}/);
@@ -191,7 +171,6 @@ Responda em JSON com a seguinte estrutura:
     } catch {
       parsed = null;
     }
-
     if (!parsed) {
       parsed = {
         executiveSummary: content || "Não foi possível gerar o resumo.",
@@ -199,19 +178,16 @@ Responda em JSON com a seguinte estrutura:
         sentimentByCategory: {}, methodology: "", bibliography: [],
       };
     }
-
     // Ensure bibliography and methodology exist
     if (!parsed.bibliography) parsed.bibliography = [];
     if (!parsed.methodology) parsed.methodology = "";
     if (!parsed.theoreticalFramework) parsed.theoreticalFramework = "";
-
     parsed.stats = {
       totalTrends: (trends || []).length,
       catCounts, countryCounts, platformCounts,
       criticalCount: (criticalMoments || []).length,
       crossPlatformCount: (crossPlatformClusters || []).length,
     };
-
     return new Response(JSON.stringify(parsed), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });

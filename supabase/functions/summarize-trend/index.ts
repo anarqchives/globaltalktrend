@@ -1,13 +1,10 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-
 const ALLOWED_ORIGINS = [
-  'https://globaltalktrend.lovable.app',
   'https://gttmonitor.com',
   'https://www.gttmonitor.com',
   'http://localhost:8080',
   'http://localhost:5173',
 ];
-
 function getCorsHeaders(req: Request) {
   const origin = req.headers.get('origin') || '';
   const isAllowed = ALLOWED_ORIGINS.includes(origin) || origin.endsWith('.lovableproject.com') || origin.endsWith('.lovable.app');
@@ -18,28 +15,21 @@ function getCorsHeaders(req: Request) {
     'Access-Control-Allow-Methods': 'POST, GET, OPTIONS',
   };
 }
-
 serve(async (req) => {
   const corsHeaders = getCorsHeaders(req);
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
-
   try {
     const { title, details, platform, volume } = await req.json();
-
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
-
     const prompt = `Analise esta tendência e forneça um resumo conciso em 2-3 frases, incluindo análise de sentimento (positivo/negativo/neutro) e possível impacto:
-
 Título: ${title}
 Plataforma: ${platform}
 Volume: ${volume}
 Detalhes: ${details || "Não disponível"}
-
 Responda em JSON: {"summary": "resumo aqui", "sentiment": "positive|negative|neutral", "impact": "low|medium|high"}`;
-
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
       headers: {
@@ -54,7 +44,6 @@ Responda em JSON: {"summary": "resumo aqui", "sentiment": "positive|negative|neu
         ],
       }),
     });
-
     if (!response.ok) {
       if (response.status === 429) {
         return new Response(JSON.stringify({ error: "Rate limit exceeded. Try again later." }), {
@@ -72,10 +61,8 @@ Responda em JSON: {"summary": "resumo aqui", "sentiment": "positive|negative|neu
       console.error("AI gateway error:", response.status, t);
       throw new Error("AI gateway error");
     }
-
     const aiData = await response.json();
     const content = aiData.choices?.[0]?.message?.content || "";
-
     // Parse JSON from response
     let parsed;
     try {
@@ -84,7 +71,6 @@ Responda em JSON: {"summary": "resumo aqui", "sentiment": "positive|negative|neu
     } catch {
       parsed = { summary: content, sentiment: "neutral", impact: "medium" };
     }
-
     return new Response(JSON.stringify(parsed), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });

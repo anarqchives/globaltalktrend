@@ -1,13 +1,10 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-
 const ALLOWED_ORIGINS = [
-  'https://globaltalktrend.lovable.app',
   'https://gttmonitor.com',
   'https://www.gttmonitor.com',
   'http://localhost:8080',
   'http://localhost:5173',
 ];
-
 function getCorsHeaders(req: Request) {
   const origin = req.headers.get('origin') || '';
   const isAllowed = ALLOWED_ORIGINS.includes(origin) || origin.endsWith('.lovableproject.com') || origin.endsWith('.lovable.app');
@@ -18,7 +15,6 @@ function getCorsHeaders(req: Request) {
     'Access-Control-Allow-Methods': 'POST, GET, OPTIONS',
   };
 }
-
 interface TrendItem {
   icon: string;
   platform: string;
@@ -36,7 +32,6 @@ interface TrendItem {
   historicalData?: { hour: string; value: number }[];
   metricLabel?: string;
 }
-
 function generateHistorical(baseValue: number, label: string) {
   const now = new Date();
   const data = [];
@@ -50,14 +45,11 @@ function generateHistorical(baseValue: number, label: string) {
   }
   return { historicalData: data, metricLabel: label };
 }
-
 function sparkRandom() {
   return Array.from({ length: 10 }, () => Math.floor(Math.random() * 70 + 30));
 }
-
 let cachedResponse: { data: string; timestamp: number } | null = null;
 const CACHE_TTL = 5 * 60 * 1000;
-
 // ── The Guardian ──
 async function fetchGuardian(): Promise<TrendItem[]> {
   const key = Deno.env.get("GUARDIAN_API_KEY");
@@ -115,7 +107,6 @@ async function fetchGuardian(): Promise<TrendItem[]> {
     return [];
   }
 }
-
 // ── World Bank ──
 async function fetchWorldBank(): Promise<TrendItem[]> {
   try {
@@ -162,7 +153,6 @@ async function fetchWorldBank(): Promise<TrendItem[]> {
     return results.slice(0, 12);
   } catch (e) { console.error("World Bank fetch error:", e); return []; }
 }
-
 // ── IBGE ──
 async function fetchIBGE(): Promise<TrendItem[]> {
   try {
@@ -192,7 +182,6 @@ async function fetchIBGE(): Promise<TrendItem[]> {
     });
   } catch (e) { console.error("IBGE fetch error:", e); return []; }
 }
-
 // ── OpenAlex ──
 async function fetchOpenAlex(): Promise<TrendItem[]> {
   try {
@@ -226,33 +215,27 @@ async function fetchOpenAlex(): Promise<TrendItem[]> {
     });
   } catch (e) { console.error("OpenAlex fetch error:", e); return []; }
 }
-
 serve(async (req) => {
   const corsHeaders = getCorsHeaders(req);
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
-
   try {
     if (cachedResponse && Date.now() - cachedResponse.timestamp < CACHE_TTL) {
       return new Response(cachedResponse.data, {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
-
     const [guardian, worldBank, ibge, openAlex] = await Promise.all([
       fetchGuardian(),
       fetchWorldBank(),
       fetchIBGE(),
       fetchOpenAlex(),
     ]);
-
     const trends = [...guardian, ...worldBank, ...ibge, ...openAlex];
     console.log(`fetch-extra-sources: ${guardian.length} Guardian, ${worldBank.length} WorldBank, ${ibge.length} IBGE, ${openAlex.length} OpenAlex`);
-
     const responseData = JSON.stringify({ trends });
     cachedResponse = { data: responseData, timestamp: Date.now() };
-
     return new Response(responseData, {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });

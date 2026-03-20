@@ -1,12 +1,10 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-
 const ALLOWED_ORIGINS = [
   "https://gttmonitor.com",
   "https://www.gttmonitor.com",
   "http://localhost:8080",
   "http://localhost:5173",
 ];
-
 function getCorsHeaders(req: Request) {
   const origin = req.headers.get("origin") || "";
   const allowed = ALLOWED_ORIGINS.includes(origin) ||
@@ -18,7 +16,6 @@ function getCorsHeaders(req: Request) {
     "Access-Control-Allow-Methods": "POST, GET, OPTIONS",
   };
 }
-
 interface TrendItem {
   icon: string;
   platform: string;
@@ -37,14 +34,11 @@ interface TrendItem {
   publishedAt?: string;
   thumbnail?: string;
 }
-
 const CACHE_TTL = 5 * 60 * 1000;
 let cached: { data: string; ts: number } | null = null;
-
 function spark(): number[] {
   return Array.from({ length: 10 }, () => Math.floor(Math.random() * 80) + 20);
 }
-
 function detectCategory(title: string, desc: string): string {
   const text = `${title} ${desc}`.toLowerCase();
   // ⚠️ Entertainment FIRST — catches reality shows before "voto"/"eliminação" trigger politics
@@ -59,7 +53,6 @@ function detectCategory(title: string, desc: string): string {
   if (/politic|election|government|president|congress|parliament/i.test(text)) return "Política";
   return "Geral";
 }
-
 function mapCountry(locale: string | undefined): string {
   if (!locale) return "GL";
   const map: Record<string, string> = {
@@ -69,31 +62,25 @@ function mapCountry(locale: string | undefined): string {
   };
   return map[locale.toLowerCase().slice(0, 2)] || "GL";
 }
-
 serve(async (req) => {
   const cors = getCorsHeaders(req);
   if (req.method === "OPTIONS") return new Response(null, { headers: cors });
-
   try {
     if (cached && Date.now() - cached.ts < CACHE_TTL) {
       return new Response(cached.data, { headers: { ...cors, "Content-Type": "application/json" } });
     }
-
     const apiKey = Deno.env.get("THENEWSAPI_KEY");
     if (!apiKey) {
       console.error("THENEWSAPI_KEY not configured");
       return new Response(JSON.stringify({ trends: [] }), { headers: { ...cors, "Content-Type": "application/json" } });
     }
-
     const trends: TrendItem[] = [];
-
     // Fetch top stories
     const urls = [
       `https://api.thenewsapi.com/v1/news/top?api_token=${apiKey}&language=en&limit=10`,
       `https://api.thenewsapi.com/v1/news/top?api_token=${apiKey}&language=pt&limit=8`,
       `https://api.thenewsapi.com/v1/news/top?api_token=${apiKey}&language=es&limit=5`,
     ];
-
     const results = await Promise.allSettled(
       urls.map(async (url) => {
         const res = await fetch(url, { signal: AbortSignal.timeout(8000) });
@@ -102,7 +89,6 @@ serve(async (req) => {
         return json.data || [];
       })
     );
-
     for (const r of results) {
       if (r.status !== "fulfilled") continue;
       for (const article of r.value) {
@@ -111,7 +97,6 @@ serve(async (req) => {
         const desc = article.description || article.snippet || "";
         const pub = article.published_at || new Date().toISOString();
         const ago = Math.floor((Date.now() - new Date(pub).getTime()) / 3600000);
-
         trends.push({
           icon: "📰",
           platform: "The News API",
@@ -132,7 +117,6 @@ serve(async (req) => {
         });
       }
     }
-
     const body = JSON.stringify({ trends });
     cached = { data: body, ts: Date.now() };
     return new Response(body, { headers: { ...cors, "Content-Type": "application/json" } });
