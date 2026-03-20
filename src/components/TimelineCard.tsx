@@ -225,6 +225,7 @@ export interface TimelineCardProps extends TrendCardProps {
   compact?: boolean;
   isSelected?: boolean;
   isMultiplatform?: boolean;
+  aiContext?: string;
 }
 
 const TimelineCard = ({
