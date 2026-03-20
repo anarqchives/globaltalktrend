@@ -278,7 +278,7 @@ function generateContextualFallback(filters: FilterState): TrendCardProps[] {
   if (results.length < 5) {
     const genericFallbacks: TrendCardProps[] = [
       { icon: "🌍", platform: "Google Trends", title: "Tendências globais em tempo real", category: "Geral", time: timeStr, volume: "Global", change: "+ativo", changePositive: true, sparkData: [20, 30, 40, 50, 60, 70, 75, 80, 85, 90], details: "Fontes temporariamente limitadas. Mostrando dados contextuais. Atualize em breve para conteúdo ao vivo.", countryCode: cc || "GL" },
-      { icon: "📰", platform: "Reuters", title: "Notícias internacionais em destaque", category: "Política", time: timeStr, volume: "Destaque", change: "+novo", changePositive: true, sparkData: [15, 25, 35, 50, 55, 65, 75, 80, 85, 88], details: "Acompanhe as manchetes mais relevantes do momento.", countryCode: cc || "GL", trustBadge: "verified" as any },
+      { icon: "📰", platform: "Reuters", title: "Notícias internacionais em destaque", category: "Geopolítica", time: timeStr, volume: "Destaque", change: "+novo", changePositive: true, sparkData: [15, 25, 35, 50, 55, 65, 75, 80, 85, 88], details: "Acompanhe as manchetes mais relevantes do momento.", countryCode: cc || "GL", trustBadge: "verified" as any },
       { icon: "💬", platform: "Reddit", title: "Discussões mais populares da comunidade", category: "Geral", time: timeStr, volume: "Popular", change: "+hot", changePositive: true, sparkData: [10, 20, 35, 45, 55, 60, 70, 80, 85, 90], details: "Os tópicos mais discutidos nas redes sociais.", countryCode: "US" },
     ];
     for (const fb of genericFallbacks) {
