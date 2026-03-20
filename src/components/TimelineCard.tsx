@@ -280,7 +280,7 @@ const TimelineCard = ({
 
       {/* ③ Description */}
       {contextSnippet && !compact && (
-        <p className="text-[9px] text-muted-foreground leading-relaxed line-clamp-2 mb-1.5">{decodeEntities(contextSnippet)}</p>
+        <p className="text-[11px] text-muted-foreground leading-relaxed line-clamp-2 mb-1.5">{decodeEntities(contextSnippet)}</p>
       )}
 
       {/* ④ Tags */}
