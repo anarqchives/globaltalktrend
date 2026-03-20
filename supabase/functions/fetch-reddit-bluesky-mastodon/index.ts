@@ -316,16 +316,17 @@ serve(async (req) => {
       });
     }
 
+    const redditEnabled = isRedditEnabled();
     const [redditItems, blueskyItems, mastodonItems] = await Promise.all([
-      fetchReddit(),
+      redditEnabled ? fetchReddit() : Promise.resolve([]),
       fetchBluesky(),
       fetchMastodon(),
     ]);
 
-    console.log(`fetch-reddit-bluesky-mastodon: ${redditItems.length} Reddit, ${blueskyItems.length} Bluesky, ${mastodonItems.length} Mastodon`);
+    console.log(`fetch-reddit-bluesky-mastodon: Reddit ${redditEnabled ? redditItems.length : "DISABLED"}, ${blueskyItems.length} Bluesky, ${mastodonItems.length} Mastodon`);
 
     const trends = [...redditItems, ...blueskyItems, ...mastodonItems];
-    const body = JSON.stringify({ trends });
+    const body = JSON.stringify({ trends, sources: { reddit: redditEnabled, bluesky: true, mastodon: true } });
     cachedResponse = { data: body, timestamp: Date.now() };
 
     return new Response(body, {
