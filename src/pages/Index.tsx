@@ -324,10 +324,18 @@ const Index = () => {
             )}
             <TagLegend />
             <div className="flex items-center overflow-hidden rounded-[10px] border border-border">
-              <button onClick={() => setCompactMode(false)} className={`flex items-center justify-center w-7 h-[26px] transition-all ${!compactMode ? "bg-foreground text-background" : "bg-card text-muted-foreground hover:bg-muted"}`}>
+              <button
+                onClick={() => setCompactMode(false)}
+                title={lang === "pt" ? "Expandido" : "Expanded"}
+                className={`flex items-center justify-center w-7 h-[26px] transition-all ${!compactMode ? "bg-primary text-primary-foreground" : "bg-card text-muted-foreground hover:bg-muted"}`}
+              >
                 <LayoutGrid size={12} />
               </button>
-              <button onClick={() => setCompactMode(true)} className={`flex items-center justify-center w-7 h-[26px] transition-all ${compactMode ? "bg-foreground text-background" : "bg-card text-muted-foreground hover:bg-muted"}`}>
+              <button
+                onClick={() => setCompactMode(true)}
+                title={lang === "pt" ? "Comprimido" : "Compressed"}
+                className={`flex items-center justify-center w-7 h-[26px] transition-all ${compactMode ? "bg-primary text-primary-foreground" : "bg-card text-muted-foreground hover:bg-muted"}`}
+              >
                 <List size={12} />
               </button>
             </div>
@@ -453,17 +461,17 @@ const Index = () => {
                   <p className="text-[10px]">{lang === "pt" ? "Todos os painéis foram arquivados." : "All panels archived."}</p>
                 </div>
               ) : (
-                <ResizablePanelGroup direction="horizontal" className="flex-1 min-h-0" key={`h-${panelVisibility.timeline}-${panelVisibility.map}`}>
+                <ResizablePanelGroup direction="horizontal" className="flex-1 min-h-0" key={`h-${panelVisibility.timeline}-${panelVisibility.map}-${compactMode}`}>
                   {panelVisibility.timeline && (
                     <>
-                      <ResizablePanel defaultSize={panelVisibility.map ? 42 : 100} minSize={25} maxSize={panelVisibility.map ? 60 : 100}>
+                      <ResizablePanel defaultSize={panelVisibility.map ? (compactMode ? 30 : 42) : 100} minSize={20} maxSize={panelVisibility.map ? 65 : 100}>
                         <div className="h-full min-h-0 overflow-hidden relative">{renderTimeline()}</div>
                       </ResizablePanel>
                       {panelVisibility.map && <ResizableHandle withHandle />}
                     </>
                   )}
                   {panelVisibility.map && (
-                    <ResizablePanel defaultSize={panelVisibility.timeline ? 58 : 100} minSize={15} maxSize={panelVisibility.timeline ? 75 : 100}>
+                    <ResizablePanel defaultSize={panelVisibility.timeline ? (compactMode ? 70 : 58) : 100} minSize={15} maxSize={panelVisibility.timeline ? 80 : 100}>
                       <div className="h-full relative">{renderMap()}</div>
                     </ResizablePanel>
                   )}

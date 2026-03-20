@@ -217,14 +217,14 @@ const GoogleMapView = ({
 
       heatmapRef.current = new HeatmapLayer({
         data: heatmapData, map: googleMapRef.current,
-        radius: 55, opacity: 0.65, maxIntensity: 1,
+        radius: 60, opacity: 0.75, maxIntensity: 1,
         gradient: [
-          "rgba(201, 213, 220, 0)",
-          "rgba(37, 87, 214, 0.2)",
-          "rgba(37, 87, 214, 0.5)",
-          "rgba(217, 119, 6, 0.6)",
-          "rgba(217, 119, 6, 0.8)",
-          "rgba(224, 60, 49, 0.9)",
+          "rgba(0, 0, 0, 0)",
+          "rgba(0, 200, 255, 0.3)",
+          "rgba(0, 150, 255, 0.5)",
+          "rgba(255, 200, 0, 0.6)",
+          "rgba(255, 120, 0, 0.8)",
+          "rgba(255, 40, 40, 0.95)",
         ],
       });
 
@@ -234,8 +234,8 @@ const GoogleMapView = ({
         const dest = countryPoints.find(p => p.id === arc.destId);
         if (!origin || !dest) return;
         const isCritical = arc.volume > maxCount * 0.7;
-        const color = isCritical ? "#E03C31" : "#2557D6";
-        const weight = 0.8 + (arc.volume / maxCount) * 1.5;
+        const color = isCritical ? "#FF2D55" : "#007AFF";
+        const weight = 1.2 + (arc.volume / maxCount) * 2;
 
         const line = new google.maps.Polyline({
           path: [{ lat: origin.lat, lng: origin.lng }, { lat: dest.lat, lng: dest.lng }],
@@ -285,8 +285,8 @@ const GoogleMapView = ({
         const intensity = Math.min(c.count / maxCount, 1);
         const marker = new google.maps.Marker({
           position: { lat: c.lat, lng: c.lng }, map: googleMapRef.current,
-          icon: { path: google.maps.SymbolPath.CIRCLE, scale: 5 + intensity * 10, fillColor: "#FFFFFF", fillOpacity: 0.9, strokeColor: "#2557D6", strokeWeight: 2 },
-          label: { text: String(c.count), color: "#2557D6", fontSize: "9px", fontWeight: "800" },
+          icon: { path: google.maps.SymbolPath.CIRCLE, scale: 6 + intensity * 12, fillColor: "#007AFF", fillOpacity: 0.95, strokeColor: "#fff", strokeWeight: 2.5 },
+          label: { text: String(c.count), color: "#fff", fontSize: "10px", fontWeight: "800" },
           zIndex: Math.floor(intensity * 1000),
         });
         marker.addListener("click", () => onSelectCountry(c.id));
@@ -317,7 +317,7 @@ const GoogleMapView = ({
       const cp = countryPoints.find(c => c.id === b.countryId);
       if (!cp) return;
       const sentColors: Record<string, string> = {
-        positive: "#22c55e", neutral: "#94a3b8", negative: "#E03C31", mixed: "#f59e0b",
+        positive: "#34C759", neutral: "#8E8E93", negative: "#FF3B30", mixed: "#FF9500",
       };
       const color = sentColors[b.dominantSentiment] || sentColors.neutral;
       const intensity = Math.min(b.trendCount / maxCount, 1);
@@ -391,7 +391,7 @@ const GoogleMapView = ({
       const cp = countryPoints.find(c => c.id === cc);
       if (!cp) return;
       const sourceTypesCount = [data.press > 0, data.official > 0, data.academic > 0, data.social > 0].filter(Boolean).length;
-      const coverageColors = ["#94a3b8", "#f59e0b", "#22c55e", "#2557D6"];
+      const coverageColors = ["#8E8E93", "#FF9500", "#34C759", "#007AFF"];
       const color = coverageColors[Math.min(sourceTypesCount - 1, 3)];
       const intensity = Math.min(data.total / maxCount, 1);
 
@@ -463,17 +463,25 @@ const GoogleMapView = ({
     <div className="w-full h-full relative" style={{ isolation: "isolate" }}>
       {/* Tab selector */}
       <div className="absolute top-3 left-3 z-20 flex gap-1 bg-card/90 backdrop-blur-xl rounded-2xl p-1 border border-border/30 shadow-[var(--shadow-md)]">
-        {tabs.map(({ key, icon: Icon, label }) => (
-          <button key={key} onClick={() => setActiveTab(key)}
-            className={`relative px-2.5 py-1.5 rounded-xl text-[9px] font-bold uppercase tracking-wider transition-colors ${
-              activeTab === key ? "bg-foreground text-background shadow-sm" : "text-muted-foreground hover:text-foreground hover:bg-muted"
-            }`}>
-            <span className="flex items-center gap-1">
-              <Icon className="w-3 h-3" />
-              {!isMobile && (label[lang as "pt" | "en"] || label.en)}
-            </span>
-          </button>
-        ))}
+        {tabs.map(({ key, icon: Icon, label }) => {
+          const vivid: Record<MapTab, string> = {
+            panorama: "bg-[#007AFF] text-white",
+            sentiment: "bg-[#FF3B30] text-white",
+            verification: "bg-[#34C759] text-white",
+            trending: "bg-[#FF9500] text-white",
+          };
+          return (
+            <button key={key} onClick={() => setActiveTab(key)}
+              className={`relative px-2.5 py-1.5 rounded-xl text-[9px] font-bold uppercase tracking-wider transition-all ${
+                activeTab === key ? `${vivid[key]} shadow-md` : "text-muted-foreground hover:text-foreground hover:bg-muted"
+              }`}>
+              <span className="flex items-center gap-1">
+                <Icon className="w-3 h-3" />
+                {!isMobile && (label[lang as "pt" | "en"] || label.en)}
+              </span>
+            </button>
+          );
+        })}
         {selectedCountry !== "global" && (
           <button onClick={() => onSelectCountry("global")}
             className="px-2.5 py-1.5 rounded-xl text-[9px] font-semibold text-muted-foreground hover:text-foreground hover:bg-muted flex items-center gap-1 transition-colors uppercase tracking-wider">
@@ -589,28 +597,28 @@ const GoogleMapView = ({
           {activeTab === "panorama" && (
             <div className="space-y-1">
               <div className="flex items-center gap-1.5">
-                <div className="w-20 h-1.5 rounded-full bg-gradient-to-r from-[#2557D6] via-[#D97706] to-[#E03C31]" />
+                <div className="w-20 h-1.5 rounded-full bg-gradient-to-r from-[#00C8FF] via-[#FFB800] to-[#FF2828]" />
                 <span className="text-[7px] text-muted-foreground">{lang === "pt" ? "Baixo → Alto" : "Low → High"}</span>
               </div>
               <div className="flex items-center gap-2">
-                <div className="flex items-center gap-1"><div className="w-4 h-0.5 bg-[#2557D6]" /><span className="text-[7px] text-muted-foreground">{lang === "pt" ? "Fluxo" : "Flow"}</span></div>
-                <div className="flex items-center gap-1"><div className="w-4 h-0.5 bg-[#E03C31]" /><span className="text-[7px] text-muted-foreground">{lang === "pt" ? "Crítico" : "Critical"}</span></div>
+                <div className="flex items-center gap-1"><div className="w-4 h-0.5 bg-[#007AFF]" /><span className="text-[7px] text-muted-foreground">{lang === "pt" ? "Fluxo" : "Flow"}</span></div>
+                <div className="flex items-center gap-1"><div className="w-4 h-0.5 bg-[#FF2D55]" /><span className="text-[7px] text-muted-foreground">{lang === "pt" ? "Crítico" : "Critical"}</span></div>
               </div>
             </div>
           )}
           {activeTab === "sentiment" && (
             <div className="flex items-center gap-2">
-              <span className="flex items-center gap-0.5 text-[7px]"><span className="w-2 h-2 rounded-full bg-emerald-500" />+</span>
-              <span className="flex items-center gap-0.5 text-[7px]"><span className="w-2 h-2 rounded-full bg-slate-400" />~</span>
-              <span className="flex items-center gap-0.5 text-[7px]"><span className="w-2 h-2 rounded-full bg-[#E03C31]" />-</span>
+              <span className="flex items-center gap-0.5 text-[7px]"><span className="w-2 h-2 rounded-full bg-[#34C759]" />+</span>
+              <span className="flex items-center gap-0.5 text-[7px]"><span className="w-2 h-2 rounded-full bg-[#8E8E93]" />~</span>
+              <span className="flex items-center gap-0.5 text-[7px]"><span className="w-2 h-2 rounded-full bg-[#FF3B30]" />-</span>
             </div>
           )}
           {activeTab === "verification" && (
             <div className="flex items-center gap-2">
-              <span className="flex items-center gap-1 text-[7px]"><span className="w-2 h-2 rounded-full bg-[#94a3b8]" />{lang === "pt" ? "1 tipo" : "1 type"}</span>
-              <span className="flex items-center gap-1 text-[7px]"><span className="w-2 h-2 rounded-full bg-[#f59e0b]" />2</span>
-              <span className="flex items-center gap-1 text-[7px]"><span className="w-2 h-2 rounded-full bg-[#22c55e]" />3</span>
-              <span className="flex items-center gap-1 text-[7px]"><span className="w-2 h-2 rounded-full bg-[#2557D6]" />4+</span>
+              <span className="flex items-center gap-1 text-[7px]"><span className="w-2 h-2 rounded-full bg-[#8E8E93]" />{lang === "pt" ? "1 tipo" : "1 type"}</span>
+              <span className="flex items-center gap-1 text-[7px]"><span className="w-2 h-2 rounded-full bg-[#FF9500]" />2</span>
+              <span className="flex items-center gap-1 text-[7px]"><span className="w-2 h-2 rounded-full bg-[#34C759]" />3</span>
+              <span className="flex items-center gap-1 text-[7px]"><span className="w-2 h-2 rounded-full bg-[#007AFF]" />4+</span>
             </div>
           )}
 

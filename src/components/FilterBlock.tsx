@@ -1,5 +1,5 @@
-import React, { useState, useMemo } from "react";
-import { X, ChevronDown, Search } from "lucide-react";
+import React, { useState, useMemo, useRef, useEffect } from "react";
+import { X, ChevronDown, Search, MapPin, Clock, Layers, Radio } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { FilterState, countries } from "@/components/FilterBar";
@@ -52,11 +52,205 @@ const QUICK_COUNTRIES = [
 
 const defaultFilters: FilterState = { country: "global", period: "Hoje", category: "Todas", type: "Todas mídias", query: "" };
 
+/* Dropdown pill component */
+function FilterDropdown({ 
+  icon: Icon, label, value, defaultValue, options, onSelect, align = "left" 
+}: { 
+  icon: React.ElementType; label: string; value: string; defaultValue: string;
+  options: { value: string; label: string; emoji?: string }[];
+  onSelect: (v: string) => void; align?: "left" | "right";
+}) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+  const isActive = value !== defaultValue;
+  const displayLabel = options.find(o => o.value === value)?.label || label;
+
+  useEffect(() => {
+    if (!open) return;
+    const handler = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, [open]);
+
+  return (
+    <div ref={ref} className="relative">
+      <button
+        onClick={() => setOpen(!open)}
+        className={`flex items-center gap-1.5 h-8 px-3 rounded-full text-[11px] font-medium transition-all border ${
+          isActive
+            ? "bg-primary/10 text-primary border-primary/30 shadow-sm"
+            : "bg-card text-muted-foreground border-border/40 hover:border-border hover:text-foreground"
+        }`}
+      >
+        <Icon className="w-3 h-3 shrink-0" />
+        <span className="truncate max-w-[100px]">{displayLabel}</span>
+        <ChevronDown className={`w-3 h-3 shrink-0 transition-transform ${open ? "rotate-180" : ""}`} />
+        {isActive && (
+          <button
+            onClick={(e) => { e.stopPropagation(); onSelect(defaultValue); }}
+            className="ml-0.5 p-0.5 rounded-full hover:bg-primary/20 transition-colors"
+          >
+            <X className="w-2.5 h-2.5" />
+          </button>
+        )}
+      </button>
+
+      <AnimatePresence>
+        {open && (
+          <motion.div
+            initial={{ opacity: 0, y: -4, scale: 0.97 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: -4, scale: 0.97 }}
+            transition={{ duration: 0.15 }}
+            className={`absolute top-full mt-1.5 z-50 min-w-[160px] max-h-[280px] overflow-y-auto rounded-xl border border-border/50 bg-popover shadow-lg backdrop-blur-xl scrollbar-thin ${
+              align === "right" ? "right-0" : "left-0"
+            }`}
+          >
+            <div className="p-1">
+              {options.map(opt => (
+                <button
+                  key={opt.value}
+                  onClick={() => { onSelect(opt.value); setOpen(false); }}
+                  className={`w-full flex items-center gap-2 px-3 py-2 rounded-lg text-[11px] font-medium transition-all ${
+                    value === opt.value
+                      ? "bg-primary text-primary-foreground"
+                      : "text-foreground hover:bg-muted"
+                  }`}
+                >
+                  {opt.emoji && <span className="text-sm">{opt.emoji}</span>}
+                  {opt.label}
+                </button>
+              ))}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+}
+
+/* Country dropdown with search */
+function CountryDropdown({ value, onSelect }: { value: string; onSelect: (v: string) => void }) {
+  const { lang } = useLanguage();
+  const [open, setOpen] = useState(false);
+  const [search, setSearch] = useState("");
+  const ref = useRef<HTMLDivElement>(null);
+  const isActive = value !== "global";
+  
+  const currentLabel = useMemo(() => {
+    if (value === "global") return "Global";
+    const quick = QUICK_COUNTRIES.find(c => c.value === value);
+    if (quick) return `${quick.emoji} ${quick.label}`;
+    const all = countries.flatMap(g => g.items);
+    const found = all.find(c => c.value === value);
+    return found?.label || value;
+  }, [value]);
+
+  const filteredCountries = useMemo(() =>
+    countries.map(g => ({
+      ...g,
+      items: g.items.filter(c => !search || c.label.toLowerCase().includes(search.toLowerCase())),
+    })).filter(g => g.items.length > 0),
+    [search]
+  );
+
+  useEffect(() => {
+    if (!open) return;
+    const handler = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, [open]);
+
+  return (
+    <div ref={ref} className="relative">
+      <button
+        onClick={() => setOpen(!open)}
+        className={`flex items-center gap-1.5 h-8 px-3 rounded-full text-[11px] font-medium transition-all border ${
+          isActive
+            ? "bg-primary/10 text-primary border-primary/30 shadow-sm"
+            : "bg-card text-muted-foreground border-border/40 hover:border-border hover:text-foreground"
+        }`}
+      >
+        <MapPin className="w-3 h-3 shrink-0" />
+        <span className="truncate max-w-[100px]">{currentLabel}</span>
+        <ChevronDown className={`w-3 h-3 shrink-0 transition-transform ${open ? "rotate-180" : ""}`} />
+        {isActive && (
+          <button
+            onClick={(e) => { e.stopPropagation(); onSelect("global"); }}
+            className="ml-0.5 p-0.5 rounded-full hover:bg-primary/20 transition-colors"
+          >
+            <X className="w-2.5 h-2.5" />
+          </button>
+        )}
+      </button>
+
+      <AnimatePresence>
+        {open && (
+          <motion.div
+            initial={{ opacity: 0, y: -4, scale: 0.97 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: -4, scale: 0.97 }}
+            transition={{ duration: 0.15 }}
+            className="absolute top-full mt-1.5 left-0 z-50 w-[260px] rounded-xl border border-border/50 bg-popover shadow-lg backdrop-blur-xl"
+          >
+            <div className="p-2 border-b border-border/30">
+              <div className="relative">
+                <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3 h-3 text-muted-foreground pointer-events-none" />
+                <input
+                  type="text"
+                  autoFocus
+                  placeholder={lang === "pt" ? "Buscar país..." : "Search country..."}
+                  value={search}
+                  onChange={e => setSearch(e.target.value)}
+                  className="w-full h-8 pl-7 pr-2 rounded-lg border border-border bg-background text-[11px] text-foreground placeholder:text-muted-foreground outline-none focus:border-primary/40"
+                />
+              </div>
+              {/* Quick picks */}
+              <div className="flex flex-wrap gap-1 mt-2">
+                {QUICK_COUNTRIES.map(c => (
+                  <button
+                    key={c.value}
+                    onClick={() => { onSelect(c.value); setOpen(false); setSearch(""); }}
+                    className={`flex items-center gap-1 px-2 py-1 rounded-md text-[10px] font-medium transition-all ${
+                      value === c.value ? "bg-primary text-primary-foreground" : "bg-muted/50 text-muted-foreground hover:bg-muted"
+                    }`}
+                  >
+                    <span className="text-xs">{c.emoji}</span> {c.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+            <div className="max-h-[200px] overflow-y-auto scrollbar-thin p-1">
+              {filteredCountries.map(g => (
+                <div key={g.group}>
+                  <div className="px-3 py-1.5 text-[9px] font-bold uppercase tracking-wider text-muted-foreground/60">{g.group}</div>
+                  {g.items.map(c => (
+                    <button
+                      key={c.value}
+                      onClick={() => { onSelect(c.value); setOpen(false); setSearch(""); }}
+                      className={`w-full flex items-center gap-2 px-3 py-1.5 rounded-lg text-[11px] font-medium transition-all ${
+                        value === c.value ? "bg-primary text-primary-foreground" : "text-foreground hover:bg-muted"
+                      }`}
+                    >
+                      {c.label}
+                    </button>
+                  ))}
+                </div>
+              ))}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+}
+
 const FilterBlock = ({ filters, onChange, onReset }: FilterBlockProps) => {
   const { lang } = useLanguage();
-  const [moreCountries, setMoreCountries] = useState(false);
-  const [countrySearch, setCountrySearch] = useState("");
-
   const update = (key: keyof FilterState, value: string) => onChange({ ...filters, [key]: value });
 
   const hasActive = filters.country !== defaultFilters.country ||
@@ -64,159 +258,61 @@ const FilterBlock = ({ filters, onChange, onReset }: FilterBlockProps) => {
     filters.category !== defaultFilters.category ||
     filters.type !== defaultFilters.type;
 
-  const activePills = useMemo(() => {
-    const pills: { key: keyof FilterState; label: string; def: string }[] = [];
-    if (filters.country !== "global") {
-      const all = countries.flatMap(g => g.items);
-      const found = all.find(c => c.value === filters.country);
-      pills.push({ key: "country", label: found?.label || filters.country, def: "global" });
-    }
-    if (filters.category !== "Todas") pills.push({ key: "category", label: filters.category, def: "Todas" });
-    if (filters.type !== "Todas mídias") pills.push({ key: "type", label: filters.type, def: "Todas mídias" });
-    if (filters.period !== "Hoje") pills.push({ key: "period", label: filters.period, def: "Hoje" });
-    return pills;
-  }, [filters]);
+  const categoryOptions = CATEGORIES.map(c => ({
+    value: c.value,
+    label: c.label[lang as keyof typeof c.label] || c.label.pt,
+  }));
 
-  const filteredCountries = useMemo(() =>
-    countries.map(g => ({
-      ...g,
-      items: g.items.filter(c => !countrySearch || c.label.toLowerCase().includes(countrySearch.toLowerCase())),
-    })).filter(g => g.items.length > 0),
-    [countrySearch]
-  );
+  const sourceOptions = SOURCE_TYPES.map(s => ({
+    value: s.v,
+    label: s.l[lang as keyof typeof s.l] || s.l.pt,
+  }));
+
+  const periodOptions = PERIODS.map(p => ({
+    value: p.v,
+    label: p.l[lang as keyof typeof p.l] || p.l.pt,
+  }));
 
   return (
     <div className="sticky top-12 z-40 bg-background/90 backdrop-blur-md border-b border-border/25">
       <div className="max-w-[1440px] mx-auto px-4 md:px-6 py-2">
-        {/* Row 1: Country pills + Category pills */}
-        <div className="flex items-center gap-3 flex-wrap">
-          {/* Country pills */}
-          <div className="flex items-center gap-1 overflow-x-auto scrollbar-none">
-            {QUICK_COUNTRIES.map(c => (
-              <button key={c.value} onClick={() => update("country", c.value)}
-                className={`flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-medium whitespace-nowrap transition-all shrink-0 ${
-                  filters.country === c.value
-                    ? "bg-foreground text-background shadow-sm"
-                    : "text-muted-foreground hover:text-foreground hover:bg-muted/60"
-                }`}>
-                <span className="text-[12px]">{c.emoji}</span>
-                <span>{c.label}</span>
-              </button>
-            ))}
-            <button onClick={() => setMoreCountries(!moreCountries)}
-              className="flex items-center gap-0.5 px-2 py-1 rounded-full text-[9px] font-medium text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-colors whitespace-nowrap shrink-0">
-              +{countries.flatMap(g => g.items).length - QUICK_COUNTRIES.length}
-              <ChevronDown className={`w-2.5 h-2.5 transition-transform ${moreCountries ? "rotate-180" : ""}`} />
-            </button>
-          </div>
-
-          <div className="w-px h-4 bg-border/40 hidden md:block" />
-
-          {/* Category pills */}
-          <div className="flex items-center gap-1 overflow-x-auto scrollbar-none">
-            {CATEGORIES.map(c => (
-              <button key={c.value} onClick={() => update("category", c.value)}
-                className={`px-2.5 py-1 rounded-full text-[10px] font-medium whitespace-nowrap transition-all shrink-0 ${
-                  filters.category === c.value
-                    ? "bg-foreground text-background shadow-sm"
-                    : "text-muted-foreground hover:text-foreground hover:bg-muted/60"
-                }`}>
-                {c.label[lang as keyof typeof c.label] || c.label.pt}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        {/* Row 2: Source type + Period + Active pills + Reset */}
-        <div className="flex items-center gap-2 mt-1.5 flex-wrap">
-          {/* Source type */}
-          <div className="flex items-center gap-0.5 overflow-x-auto scrollbar-none">
-            {SOURCE_TYPES.map(s => (
-              <button key={s.v} onClick={() => update("type", s.v)}
-                className={`px-2 py-0.5 rounded-md text-[9px] font-medium whitespace-nowrap transition-all shrink-0 ${
-                  filters.type === s.v
-                    ? "bg-secondary text-foreground"
-                    : "text-muted-foreground/60 hover:text-muted-foreground hover:bg-muted/40"
-                }`}>
-                {s.l[lang as keyof typeof s.l] || s.l.pt}
-              </button>
-            ))}
-          </div>
-
-          <div className="w-px h-3 bg-border/30" />
-
-          {/* Period */}
-          <div className="flex items-center gap-0.5 overflow-x-auto scrollbar-none">
-            {PERIODS.map(p => (
-              <button key={p.v} onClick={() => update("period", p.v)}
-                className={`px-2 py-0.5 rounded-md text-[9px] font-medium whitespace-nowrap transition-all shrink-0 ${
-                  filters.period === p.v
-                    ? "bg-secondary text-foreground"
-                    : "text-muted-foreground/60 hover:text-muted-foreground hover:bg-muted/40"
-                }`}>
-                {p.l[lang as keyof typeof p.l] || p.l.pt}
-              </button>
-            ))}
-          </div>
-
-          <div className="flex-1" />
-
-          {/* Active filter pills */}
-          {activePills.map(pill => (
-            <span key={pill.key} className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-foreground/5 border border-border/30 text-[9px] font-medium text-foreground">
-              {pill.label}
-              <button onClick={() => update(pill.key, pill.def)} className="hover:text-destructive transition-colors">
-                <X className="w-2.5 h-2.5" />
-              </button>
-            </span>
-          ))}
+        <div className="flex items-center gap-2 flex-wrap">
+          <CountryDropdown value={filters.country} onSelect={(v) => update("country", v)} />
+          
+          <FilterDropdown
+            icon={Clock}
+            label={lang === "pt" ? "Período" : "Period"}
+            value={filters.period}
+            defaultValue="Hoje"
+            options={periodOptions}
+            onSelect={(v) => update("period", v)}
+          />
+          
+          <FilterDropdown
+            icon={Layers}
+            label={lang === "pt" ? "Categorias" : "Categories"}
+            value={filters.category}
+            defaultValue="Todas"
+            options={categoryOptions}
+            onSelect={(v) => update("category", v)}
+          />
+          
+          <FilterDropdown
+            icon={Radio}
+            label={lang === "pt" ? "Mídia" : "Media"}
+            value={filters.type}
+            defaultValue="Todas mídias"
+            options={sourceOptions}
+            onSelect={(v) => update("type", v)}
+          />
 
           {hasActive && (
-            <button onClick={onReset} className="text-[9px] font-medium text-destructive hover:underline transition-colors">
+            <button onClick={onReset} className="h-8 px-3 rounded-full text-[10px] font-semibold text-destructive hover:bg-destructive/10 border border-destructive/20 transition-all">
               {lang === "pt" ? "Limpar" : "Clear"}
             </button>
           )}
         </div>
       </div>
-
-      {/* Expanded country picker */}
-      <AnimatePresence>
-        {moreCountries && (
-          <motion.div
-            initial={{ height: 0, opacity: 0 }}
-            animate={{ height: "auto", opacity: 1 }}
-            exit={{ height: 0, opacity: 0 }}
-            transition={{ duration: 0.2 }}
-            className="overflow-hidden border-t border-border/20"
-          >
-            <div className="max-w-[1440px] mx-auto px-4 md:px-6 py-3">
-              <div className="flex items-center gap-2 mb-2">
-                <div className="relative flex-1 max-w-xs">
-                  <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3 h-3 text-muted-foreground pointer-events-none" />
-                  <input type="text" placeholder={lang === "pt" ? "Buscar país..." : "Search country..."}
-                    value={countrySearch} onChange={e => setCountrySearch(e.target.value)}
-                    className="w-full h-7 pl-7 pr-2 rounded-md border border-border bg-card text-[10px] text-foreground placeholder:text-muted-foreground outline-none focus:border-primary/40" />
-                </div>
-                <button onClick={() => setMoreCountries(false)} className="p-1 text-muted-foreground hover:text-foreground">
-                  <X className="w-3.5 h-3.5" />
-                </button>
-              </div>
-              <div className="flex flex-wrap gap-1 max-h-[160px] overflow-y-auto scrollbar-thin">
-                {filteredCountries.flatMap(g => g.items).map(c => (
-                  <button key={c.value} onClick={() => { update("country", c.value); setMoreCountries(false); }}
-                    className={`px-2 py-1 rounded-md text-[10px] font-medium transition-all ${
-                      filters.country === c.value
-                        ? "bg-foreground text-background"
-                        : "text-muted-foreground hover:bg-muted hover:text-foreground"
-                    }`}>
-                    {c.label}
-                  </button>
-                ))}
-              </div>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
     </div>
   );
 };
