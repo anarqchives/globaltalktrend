@@ -276,9 +276,9 @@ const FilterBlock = ({ filters, onChange, onReset, onSaveFilter }: FilterBlockPr
 
 
   return (
-    <div className="sticky top-12 z-40 bg-background/90 backdrop-blur-md border-b border-border/25">
-      <div className="max-w-[1440px] mx-auto px-4 md:px-6 py-2">
-        <div className="flex items-center gap-2 flex-wrap">
+    <div className="sticky top-11 sm:top-12 z-40 bg-background/90 backdrop-blur-md border-b border-border/25" style={{ WebkitBackdropFilter: "blur(12px)" }}>
+      <div className="max-w-[1440px] mx-auto px-3 sm:px-6 py-1.5 sm:py-2">
+        <div className="flex items-center gap-1.5 sm:gap-2 overflow-x-auto scrollbar-none -mx-3 px-3 sm:mx-0 sm:px-0 sm:flex-wrap" style={{ WebkitOverflowScrolling: "touch" }}>
           <CountryDropdown value={filters.country} onSelect={(v) => update("country", v)} />
           
           <FilterDropdown
@@ -311,14 +311,14 @@ const FilterBlock = ({ filters, onChange, onReset, onSaveFilter }: FilterBlockPr
 
 
           {/* Separator */}
-          <div className="w-px h-4 bg-border/40 mx-0.5 hidden sm:block" />
+          <div className="w-px h-4 bg-border/40 mx-0.5 hidden sm:block flex-shrink-0" />
 
           {/* Reset */}
           <button
             onClick={onReset}
             disabled={!hasActive}
             title={lang === "pt" ? "Limpar filtros" : "Reset filters"}
-            className={`flex items-center gap-1 h-[26px] px-2 rounded-full text-[10px] font-medium transition-all ${
+            className={`flex items-center gap-1 h-[26px] px-2 rounded-full text-[10px] font-medium transition-all flex-shrink-0 touch-manipulation ${
               hasActive
                 ? "text-foreground bg-muted hover:bg-destructive/10 hover:text-destructive"
                 : "text-muted-foreground/30 cursor-not-allowed"
@@ -334,7 +334,7 @@ const FilterBlock = ({ filters, onChange, onReset, onSaveFilter }: FilterBlockPr
               onClick={onSaveFilter}
               disabled={!hasActive}
               title={lang === "pt" ? "Salvar filtro" : "Save filter"}
-              className={`flex items-center gap-1 h-[26px] px-2 rounded-full text-[10px] font-medium transition-all ${
+              className={`flex items-center gap-1 h-[26px] px-2 rounded-full text-[10px] font-medium transition-all flex-shrink-0 touch-manipulation ${
                 hasActive
                   ? "text-foreground bg-muted hover:bg-primary/10 hover:text-primary"
                   : "text-muted-foreground/30 cursor-not-allowed"

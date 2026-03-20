@@ -313,21 +313,21 @@ const Index = () => {
 
   const renderTimeline = () => (
     <div ref={timelineContainerRef} className="h-full flex flex-col min-h-0">
-      <div ref={scrollRef} className="flex-1 overflow-y-auto overflow-x-hidden" style={{ scrollbarWidth: "thin", scrollbarColor: "hsl(var(--border)) transparent" }}>
+      <div ref={scrollRef} className="flex-1 overflow-y-auto overflow-x-hidden" style={{ scrollbarWidth: "thin", scrollbarColor: "hsl(var(--border)) transparent", WebkitOverflowScrolling: "touch" }}>
         
 
         {/* Timeline header */}
-        <div className="px-3 py-2 flex items-center justify-between sticky top-0 z-10 bg-background/80 backdrop-blur-sm border-b border-border">
+        <div className="px-2 sm:px-3 py-1.5 sm:py-2 flex items-center justify-between sticky top-0 z-10 bg-background/80 backdrop-blur-sm border-b border-border">
           <div className="flex items-center gap-1.5">
-            <FileText className="w-3.5 h-3.5 text-muted-foreground" />
+            <FileText className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-muted-foreground" />
             <span className="text-[9px] font-semibold text-muted-foreground uppercase tracking-[0.08em]">{t("timeline")}</span>
             <span className="text-[9px] text-muted-foreground/40">({diversifiedTrends.length})</span>
           </div>
-          <div className="flex items-center gap-1.5">
+          <div className="flex items-center gap-1">
             {updatePending && (
-              <button onClick={handleRefresh} className="flex items-center gap-1 px-2 py-1 rounded-lg text-[9px] text-muted-foreground hover:bg-muted transition-colors">
+              <button onClick={handleRefresh} className="flex items-center gap-1 px-2 py-1 rounded-lg text-[9px] text-muted-foreground hover:bg-muted transition-colors touch-manipulation">
                 <RefreshCw className={`w-3 h-3 ${refreshing ? "animate-spin" : ""}`} />
-                {lang === "pt" ? "Atualizar" : "Update"}
+                <span className="hidden sm:inline">{lang === "pt" ? "Atualizar" : "Update"}</span>
               </button>
             )}
             <TagLegend />
@@ -335,14 +335,14 @@ const Index = () => {
               <button
                 onClick={() => setCompactMode(false)}
                 title={lang === "pt" ? "Expandido" : "Expanded"}
-                className={`flex items-center justify-center w-7 h-[26px] transition-all ${!compactMode ? "bg-primary text-primary-foreground" : "bg-card text-muted-foreground hover:bg-muted"}`}
+                className={`flex items-center justify-center w-7 h-[26px] transition-all touch-manipulation ${!compactMode ? "bg-primary text-primary-foreground" : "bg-card text-muted-foreground hover:bg-muted"}`}
               >
                 <LayoutGrid size={12} />
               </button>
               <button
                 onClick={() => setCompactMode(true)}
                 title={lang === "pt" ? "Comprimido" : "Compressed"}
-                className={`flex items-center justify-center w-7 h-[26px] transition-all ${compactMode ? "bg-primary text-primary-foreground" : "bg-card text-muted-foreground hover:bg-muted"}`}
+                className={`flex items-center justify-center w-7 h-[26px] transition-all touch-manipulation ${compactMode ? "bg-primary text-primary-foreground" : "bg-card text-muted-foreground hover:bg-muted"}`}
               >
                 <List size={12} />
               </button>
@@ -357,15 +357,15 @@ const Index = () => {
 
         {/* Virtualized grid */}
         {(loading && isFirstLoad && diversifiedTrends.length === 0)
-          ? <div className="p-3 grid gap-2" style={{ gridTemplateColumns: `repeat(${gridColumns}, 1fr)` }}>{Array.from({ length: 6 }).map((_, i) => <TrendCardSkeleton key={i} index={i} />)}</div>
+          ? <div className="p-2 sm:p-3 grid gap-2" style={{ gridTemplateColumns: `repeat(${gridColumns}, 1fr)` }}>{Array.from({ length: 6 }).map((_, i) => <TrendCardSkeleton key={i} index={i} />)}</div>
           : (
-            <div style={{ height: `${rowVirtualizer.getTotalSize()}px`, position: 'relative' }} className="px-2 sm:px-3">
+            <div style={{ height: `${rowVirtualizer.getTotalSize()}px`, position: 'relative' }} className="px-1.5 sm:px-3">
               {rowVirtualizer.getVirtualItems().map((virtualRow) => {
                 const startIdx = virtualRow.index * gridColumns;
                 return (
                   <div key={virtualRow.key}
                     ref={rowVirtualizer.measureElement} data-index={virtualRow.index}
-                    style={{ position: 'absolute', top: 0, left: 0, width: '100%', transform: `translateY(${virtualRow.start}px)`, padding: '3px 0', display: 'grid', gridTemplateColumns: `repeat(${gridColumns}, 1fr)`, gap: '6px' }}
+                    style={{ position: 'absolute', top: 0, left: 0, width: '100%', transform: `translateY(${virtualRow.start}px)`, padding: '3px 0', display: 'grid', gridTemplateColumns: `repeat(${gridColumns}, 1fr)`, gap: isMobile ? '4px' : '6px' }}
                   >
                     {Array.from({ length: gridColumns }).map((_, colIdx) => {
                       const trendIdx = startIdx + colIdx;
@@ -404,7 +404,7 @@ const Index = () => {
           <div className="flex flex-col items-center justify-center py-12 px-4 text-center gap-2">
             <span className="text-3xl">🔍</span>
             <p className="text-[10px] font-medium text-foreground">{t("noTrends")}</p>
-            <button onClick={() => setFilters(defaultFilters)} className="mt-2 px-3 py-1 rounded-full bg-primary text-primary-foreground text-[9px] font-medium hover:bg-primary/90 transition-colors">
+            <button onClick={() => setFilters(defaultFilters)} className="mt-2 px-3 py-1 rounded-full bg-primary text-primary-foreground text-[9px] font-medium hover:bg-primary/90 transition-colors touch-manipulation">
               {lang === "pt" ? "Limpar filtros" : "Clear filters"}
             </button>
           </div>
@@ -416,7 +416,7 @@ const Index = () => {
               <span className="w-1 h-1 rounded-full bg-green-500" />
               {t("lastUpdate")}: {lastUpdated.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}
             </div>
-            <button onClick={() => setTransparencyOpen(true)} className="text-[8px] text-primary hover:underline cursor-pointer">
+            <button onClick={() => setTransparencyOpen(true)} className="text-[8px] text-primary hover:underline cursor-pointer touch-manipulation">
               🔍 {t("viewSourceStatus")}
             </button>
           </div>

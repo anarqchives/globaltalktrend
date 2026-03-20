@@ -113,21 +113,21 @@ const AppHeader = () => {
 
   return (
     <>
-      <header className="sticky top-0 z-50 bg-background/95 backdrop-blur-md border-b border-border/30" role="banner">
-        <div className="h-12 flex items-center px-4 md:px-6 max-w-[1440px] mx-auto">
-          <Link to="/welcome" className="flex items-center gap-1.5 shrink-0" aria-label="GTT Monitor">
-            <span className="text-[15px] font-bold tracking-tight text-foreground">GTT</span>
-            <span className="text-[15px] font-medium tracking-tight text-muted-foreground">Monitor</span>
+      <header className="sticky top-0 z-50 bg-background/80 backdrop-blur-xl border-b border-border/25" style={{ WebkitBackdropFilter: "blur(16px) saturate(1.5)" }} role="banner">
+        <div className="h-11 sm:h-12 flex items-center gap-1 sm:gap-2 px-3 sm:px-6 max-w-[1440px] mx-auto">
+          <Link to="/welcome" className="flex items-center gap-1 sm:gap-1.5 shrink-0" aria-label="GTT Monitor">
+            <span className="text-[14px] sm:text-[15px] font-bold tracking-tight text-foreground">GTT</span>
+            <span className="text-[12px] sm:text-[15px] font-medium tracking-tight text-muted-foreground hidden sm:inline">Monitor</span>
           </Link>
 
           <div className="flex-1" />
 
-          <div className="flex items-center gap-1.5">
+          <div className="flex items-center gap-1">
             {/* Language dropdown */}
             <div ref={langRef} className="relative">
               <button
                 onClick={() => setLangOpen(!langOpen)}
-                className="flex items-center gap-1 h-8 px-2 rounded-lg text-[11px] font-semibold text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+                className="flex items-center gap-0.5 sm:gap-1 h-7 sm:h-8 px-1.5 sm:px-2 rounded-lg text-[10px] sm:text-[11px] font-semibold text-muted-foreground hover:text-foreground hover:bg-muted transition-colors touch-manipulation"
               >
                 <Globe2 className="w-3.5 h-3.5" />
                 <span>{currentLang?.label || "PT"}</span>
@@ -164,47 +164,47 @@ const AppHeader = () => {
             {/* Dark/Light toggle */}
             <button
               onClick={() => setDark(!dark)}
-              className="flex items-center justify-center w-8 h-8 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+              className="flex items-center justify-center w-7 h-7 sm:w-8 sm:h-8 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted transition-colors touch-manipulation"
               aria-label={dark ? "Light mode" : "Dark mode"}
             >
-              {dark ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
+              {dark ? <Sun className="w-3.5 h-3.5 sm:w-4 sm:h-4" /> : <Moon className="w-3.5 h-3.5 sm:w-4 sm:h-4" />}
             </button>
 
-            <div className="w-px h-5 bg-border/40 mx-0.5 hidden sm:block" />
+            <div className="w-px h-4 bg-border/40 mx-0.5 hidden sm:block" />
 
-            {/* Support */}
+            {/* Support — VISIBLE ON ALL SIZES */}
             <a href="https://buy.stripe.com/fZu7sMgw6cHLeTnbWVdIA00" target="_blank" rel="noopener noreferrer"
-              className="apoie-pill compact-link hidden sm:flex">{t("support")}</a>
+              className="apoie-pill compact-link touch-manipulation">{t("support")}</a>
 
             {/* About / Methodology */}
             <button
               onClick={() => setAboutOpen(true)}
-              className="flex items-center justify-center w-8 h-8 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+              className="flex items-center justify-center w-7 h-7 sm:w-8 sm:h-8 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted transition-colors touch-manipulation"
               aria-label={lang === "pt" ? "Sobre" : "About"}
               title={lang === "pt" ? "Sobre / Metodologia" : "About / Methodology"}
             >
-              <Info className="w-4 h-4" />
+              <Info className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
             </button>
 
             {/* Avatar / Login */}
             {user ? (
-              <div className="flex items-center gap-1">
+              <div className="flex items-center gap-0.5 sm:gap-1">
                 <button onClick={() => navigate("/perfil")}
-                  className="compact-btn flex items-center justify-center w-8 h-8 rounded-full hover:ring-2 hover:ring-ring/20 transition-all">
+                  className="compact-btn flex items-center justify-center w-7 h-7 sm:w-8 sm:h-8 rounded-full hover:ring-2 hover:ring-ring/20 transition-all touch-manipulation">
                   <Avatar className="w-6 h-6">
                     {userAvatar && <AvatarImage src={userAvatar} alt={userName} />}
                     <AvatarFallback className="text-[9px] font-bold bg-foreground text-background">{userInitial}</AvatarFallback>
                   </Avatar>
                 </button>
                 <button onClick={handleLogout}
-                  className="flex items-center justify-center w-8 h-8 rounded-lg text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors"
+                  className="hidden sm:flex items-center justify-center w-7 h-7 sm:w-8 sm:h-8 rounded-lg text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors touch-manipulation"
                   title={lang === "pt" ? "Sair" : "Log out"}>
-                  <LogOut className="w-3.5 h-3.5" />
+                  <LogOut className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
                 </button>
               </div>
             ) : (
               <button onClick={() => setLoginOpen(true)}
-                className="compact-btn flex items-center gap-1 h-7 px-3 rounded-full text-[10px] font-semibold bg-foreground text-background hover:bg-foreground/90 transition-colors">
+                className="compact-btn flex items-center gap-1 h-7 px-2.5 sm:px-3 rounded-full text-[10px] font-semibold bg-foreground text-background hover:bg-foreground/90 transition-colors touch-manipulation">
                 <LogIn className="w-3 h-3" />
                 <span className="hidden sm:inline">{t("enter")}</span>
               </button>
