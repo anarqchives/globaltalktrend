@@ -317,7 +317,7 @@ const GoogleMapView = ({
       const cp = countryPoints.find(c => c.id === b.countryId);
       if (!cp) return;
       const sentColors: Record<string, string> = {
-        positive: "#22c55e", neutral: "#94a3b8", negative: "#E03C31", mixed: "#f59e0b",
+        positive: "#34C759", neutral: "#8E8E93", negative: "#FF3B30", mixed: "#FF9500",
       };
       const color = sentColors[b.dominantSentiment] || sentColors.neutral;
       const intensity = Math.min(b.trendCount / maxCount, 1);
