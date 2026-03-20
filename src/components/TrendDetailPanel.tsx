@@ -243,10 +243,10 @@ const TrendDetailPanel: React.FC<TrendDetailPanelProps> = ({
 
             {/* AI Context */}
             {showAiContext && (
-              <div className="rounded-xl bg-[#2557D6]/5 border border-[#2557D6]/10 p-4 mb-4">
+              <div className="rounded-lg bg-accent/5 border border-accent/10 p-4 mb-4">
                 <div className="flex items-center gap-1.5 mb-2">
-                  <Sparkles className="w-3.5 h-3.5 text-[#2557D6]" />
-                  <span className="text-[10px] font-bold text-[#2557D6] uppercase tracking-[0.08em]">
+                  <Sparkles className="w-3.5 h-3.5 text-foreground/60" />
+                  <span className="text-[10px] font-medium text-foreground/60 uppercase tracking-[0.08em]">
                     {lang === "pt" ? "Resumo por IA" : "AI Insight"}
                   </span>
                 </div>
