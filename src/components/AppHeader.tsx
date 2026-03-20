@@ -3,7 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import {
   Sun, Moon, LogOut, LogIn, ChevronRight, User, FileText,
   Loader2, Menu, X, BarChart3, BookOpen, RefreshCw,
-  Bell, Bookmark, Globe, Calendar, LayoutGrid, Layers, Filter
+  Bell, Bookmark, Globe, Calendar, LayoutGrid, Layers, Filter, Search
 } from "lucide-react";
 import { useLanguage, languages } from "@/contexts/LanguageContext";
 import { supabase } from "@/integrations/supabase/client";
