@@ -232,7 +232,7 @@ const TimelineCard = ({
     <motion.div
       variants={cardVariants}
       onClick={onClick}
-      className={`bg-card rounded-2xl border cursor-pointer w-full relative overflow-hidden
+      className={`bg-card rounded-lg border cursor-pointer w-full relative overflow-hidden
         transition-all duration-200 ease-[cubic-bezier(0.21,0.47,0.32,0.98)]
         ${isSelected
           ? "border-l-[3px] border-l-[#2557D6] border-[#2557D6]/20 shadow-[0_6px_24px_rgba(26,24,20,0.10)]"
@@ -248,15 +248,15 @@ const TimelineCard = ({
         <button onClick={(e) => { e.stopPropagation(); onFilterPlatform?.(platform); }}
           className="flex items-center gap-1 flex-shrink-0 hover:opacity-80 transition-opacity">
           <div className="w-1.5 h-1.5 rounded-full flex-shrink-0" style={{ backgroundColor: dotColor }} />
-          <span className="text-[8px] uppercase tracking-[0.08em] font-bold" style={{ color: dotColor }}>
+          <span className="text-[10px] uppercase tracking-[0.08em] font-bold" style={{ color: dotColor }}>
             {platform}
           </span>
         </button>
-        <span className="text-[8px] text-muted-foreground/30">·</span>
-        <span className="text-[8px] uppercase tracking-[0.06em] text-muted-foreground">{formattedTime}</span>
-        {flag && <span className="text-[9px]">{flag}</span>}
+        <span className="text-[10px] text-muted-foreground/30">·</span>
+        <span className="text-[10px] uppercase tracking-[0.06em] text-muted-foreground">{formattedTime}</span>
+        {flag && <span className="text-[11px]">{flag}</span>}
         {badge && (
-          <span className="text-[7px] font-semibold px-1.5 py-0.5 rounded-full ml-auto"
+          <span className="text-[9px] font-semibold px-1.5 py-0.5 rounded-full ml-auto"
             style={{ backgroundColor: `${badge.color}12`, color: badge.color, border: `1px solid ${badge.color}20` }}>
             {badge.icon} {badge.label[lang] || badge.label.en}
           </span>
@@ -273,21 +273,21 @@ const TimelineCard = ({
       </div>
 
       {/* ② Title */}
-      <h3 className={`font-semibold text-foreground leading-snug mb-1 ${compact ? "text-[10px] line-clamp-1" : "text-[11px] line-clamp-2"}`}
+      <h3 className={`font-semibold text-foreground leading-snug mb-1 ${compact ? "text-[12px] line-clamp-1" : "text-[13px] line-clamp-2"}`}
         style={{ wordBreak: "break-word", overflow: "hidden", textOverflow: "ellipsis" }}>
         {decodeEntities(title)}
       </h3>
 
       {/* ③ Description */}
       {contextSnippet && !compact && (
-        <p className="text-[9px] text-muted-foreground leading-relaxed line-clamp-2 mb-1.5">{decodeEntities(contextSnippet)}</p>
+        <p className="text-[11px] text-muted-foreground leading-relaxed line-clamp-2 mb-1.5">{decodeEntities(contextSnippet)}</p>
       )}
 
       {/* ④ Tags */}
       {tags.length > 0 && !compact && (
         <div className="flex items-center gap-1 flex-wrap mb-1.5">
           {tags.map((tag, i) => (
-            <span key={i} className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full text-[7px] font-semibold uppercase tracking-[0.06em]"
+            <span key={i} className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full text-[9px] font-semibold uppercase tracking-[0.06em]"
               style={{ backgroundColor: `${tag.color}12`, color: tag.color, border: `1px solid ${tag.color}18` }}>
               {tag.label}
             </span>
@@ -302,22 +302,22 @@ const TimelineCard = ({
         </div>
         <div className="flex items-center gap-2 flex-shrink-0">
           {showChange && (
-            <span className={`text-[9px] font-bold ${changePositive ? "text-[#059669]" : "text-[#E03C31]"}`}>
+            <span className={`text-[11px] font-bold ${changePositive ? "text-[#059669]" : "text-[#E03C31]"}`}>
               {changePositive ? "↗" : "↘"}{change}
             </span>
           )}
           {showVolume && (
-            <span className="text-[9px] font-semibold text-foreground tabular-nums">{volume}</span>
+            <span className="text-[11px] font-semibold text-foreground tabular-nums">{volume}</span>
           )}
           {sources && sources.length > 1 && (
-            <span className="text-[8px] text-muted-foreground tabular-nums">{sources.length}src</span>
+            <span className="text-[10px] text-muted-foreground tabular-nums">{sources.length}src</span>
           )}
         </div>
       </div>
 
       {/* Compact metrics */}
       {compact && (showVolume || showChange) && (
-        <div className="flex items-center gap-1.5 text-[8px] text-muted-foreground mt-0.5">
+        <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground mt-0.5">
           {showVolume && <span className="font-medium tabular-nums">{volume}</span>}
           {showChange && (
             <span className={`font-bold ${changePositive ? "text-[#059669]" : "text-[#E03C31]"}`}>{change}</span>
