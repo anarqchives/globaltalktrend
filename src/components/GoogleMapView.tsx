@@ -899,16 +899,24 @@ const GoogleMapView = ({
         </div>
       )}
 
-      {/* Error */}
+      {/* Error — SVG world map placeholder with auto-retry */}
       {mapError && (
-        <div className="absolute inset-0 flex items-center justify-center bg-background/30 backdrop-blur-sm z-10">
-          <div className="text-center p-5 bg-card/80 backdrop-blur-xl rounded-2xl border border-border/30 shadow-[var(--shadow-lg)] max-w-xs">
+        <div className="absolute inset-0 flex flex-col items-center justify-center bg-background/10 z-10">
+          {/* Static SVG world map placeholder */}
+          <svg viewBox="0 0 800 400" className="w-full h-full absolute inset-0 opacity-15" preserveAspectRatio="xMidYMid slice">
+            <ellipse cx="400" cy="200" rx="350" ry="170" fill="none" stroke="hsl(var(--border))" strokeWidth="1" />
+            <ellipse cx="250" cy="160" rx="80" ry="60" fill="hsl(var(--muted))" rx="80" />
+            <ellipse cx="420" cy="140" rx="90" ry="55" fill="hsl(var(--muted))" />
+            <ellipse cx="550" cy="170" rx="70" ry="50" fill="hsl(var(--muted))" />
+            <ellipse cx="350" cy="250" rx="60" ry="45" fill="hsl(var(--muted))" />
+            <ellipse cx="200" cy="200" rx="50" ry="80" fill="hsl(var(--muted))" />
+            <ellipse cx="620" cy="230" rx="40" ry="35" fill="hsl(var(--muted))" />
+          </svg>
+          <div className="relative z-10 text-center p-5 bg-card/80 backdrop-blur-xl rounded-2xl border border-border/30 shadow-[var(--shadow-lg)] max-w-xs">
             <div className="text-2xl mb-2">🗺️</div>
             <p className="text-[10px] font-medium text-foreground mb-1">{mapError}</p>
-            <button onClick={() => { setMapError(null); setMapRetry(r => r + 1); }}
-              className="mt-2 px-3 py-1.5 rounded-full bg-primary text-primary-foreground text-[9px] font-semibold hover:opacity-90 transition-opacity">
-              🔄 {lang === "pt" ? "Tentar novamente" : "Retry"}
-            </button>
+            <p className="text-[9px] text-muted-foreground mb-2">{lang === "pt" ? "Tentando reconectar automaticamente…" : "Auto-reconnecting…"}</p>
+            <div className="w-4 h-4 border-2 border-primary/30 border-t-primary rounded-full animate-spin mx-auto" />
           </div>
         </div>
       )}

@@ -404,18 +404,25 @@ const TimelineCard = ({
       {/* Accent line — priority tier */}
       <div className="absolute top-0 left-0 right-0 h-[2px] opacity-40" style={{ background: tierBorderColor || sparkHex }} />
 
-      {/* ① DECISION HEADER — Score + Lifecycle + Confidence (first reading level) */}
-      {priority && !compact && <DecisionHeader priority={priority} lang={lang} />}
-
-      {/* ② PRIORITY REASON — actionable microcopy explaining WHY this matters */}
-      {priority && !compact && priority.reason && (
-        <p className="text-[9.5px] font-medium leading-snug mb-1.5 px-2 py-1 rounded-md"
-          style={{ 
-            backgroundColor: `color-mix(in srgb, ${TIER_COLORS[priority.tier]} 6%, transparent)`,
-            color: TIER_COLORS[priority.tier],
-          }}>
-          {priority.reason}
-        </p>
+      {/* ① LIFECYCLE BADGE — single visual signal at top (score hidden, confidence/reason moved to expanded) */}
+      {priority && !compact && (
+        <div className="flex items-center gap-1.5 mb-1">
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <span className="text-[8px] font-semibold px-1.5 py-0.5 rounded-md cursor-help"
+                style={{ 
+                  backgroundColor: `hsl(var(--lifecycle-${priority.lifecycle}) / 0.1)`,
+                  color: `hsl(var(--lifecycle-${priority.lifecycle}))`,
+                }}>
+                {LIFECYCLE_LABELS[priority.lifecycle].icon} {LIFECYCLE_LABELS[priority.lifecycle][lang as "pt" | "en"] || LIFECYCLE_LABELS[priority.lifecycle].en}
+              </span>
+            </TooltipTrigger>
+            <TooltipContent side="top" className="text-[10px] max-w-[220px]">
+              {LIFECYCLE_LABELS[priority.lifecycle].desc[lang as "pt" | "en"] || LIFECYCLE_LABELS[priority.lifecycle].desc.en}
+              {priority.reason && <><br/><span className="text-muted-foreground">{priority.reason}</span></>}
+            </TooltipContent>
+          </Tooltip>
+        </div>
       )}
 
       {/* ③ Title + thumbnail — prominent but subordinate to decision context */}

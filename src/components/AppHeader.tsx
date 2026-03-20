@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useMemo } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import { Sun, Moon, LogOut, LogIn, Loader2, ChevronDown, Globe2, Info, CheckCircle2, XCircle, RefreshCw } from "lucide-react";
 import { useLanguage, languages } from "@/contexts/LanguageContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -28,9 +28,10 @@ const DATA_SOURCES: SourceDef[] = [
 ];
 
 const AppHeader = () => {
+  const location = useLocation();
   const { lang, setLang, t } = useLanguage();
   const navigate = useNavigate();
-  const [user, setUser] = useState<any>(null);
+  const [user, setUser] = useState<import("@supabase/supabase-js").User | null>(null);
   const [loginOpen, setLoginOpen] = useState(false);
   const [aboutOpen, setAboutOpen] = useState(false);
   const [loginLoading, setLoginLoading] = useState<"google" | "apple" | null>(null);
@@ -119,6 +120,27 @@ const AppHeader = () => {
             <span className="text-[14px] sm:text-[15px] font-bold tracking-tight text-foreground">GTT</span>
             <span className="text-[12px] sm:text-[15px] font-medium tracking-tight text-muted-foreground hidden sm:inline">Monitor</span>
           </Link>
+
+          {/* Desktop secondary navigation */}
+          <nav className="hidden md:flex items-center gap-0.5 ml-4" aria-label="Main navigation">
+            {[
+              { to: "/", label: "Feed" },
+              { to: "/discover", label: lang === "pt" ? "Explorar" : "Discover" },
+              { to: "/reports", label: lang === "pt" ? "Relatórios" : "Reports" },
+            ].map(item => {
+              const isActive = location.pathname === item.to;
+              return (
+                <Link key={item.to} to={item.to}
+                  className={`px-2.5 py-1 rounded-lg text-[11px] font-medium transition-colors ${
+                    isActive 
+                      ? "text-foreground underline underline-offset-4 decoration-2 decoration-primary" 
+                      : "text-muted-foreground hover:text-foreground hover:bg-muted"
+                  }`}>
+                  {item.label}
+                </Link>
+              );
+            })}
+          </nav>
 
           <div className="flex-1" />
 
