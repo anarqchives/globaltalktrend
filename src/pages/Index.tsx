@@ -500,7 +500,7 @@ const Index = () => {
   const closedPanelsList = (["timeline", "map"] as const).filter(p => !panelVisibility[p]);
 
   return (
-    <div className="h-screen flex flex-col bg-background overflow-hidden w-full max-w-[100vw]">
+    <div className="h-screen flex flex-col bg-background overflow-hidden w-full max-w-[100vw]" style={{ fontFamily: "'DM Sans', sans-serif" }}>
       <AppHeader />
       <FilterBar
         filters={filters}
