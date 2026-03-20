@@ -250,11 +250,11 @@ const TrendDetailPanel: React.FC<TrendDetailPanelProps> = ({
                       {lang === "pt" ? "Confiança" : "Confidence"}
                     </span>
                     <div className="flex items-center justify-center gap-1">
-                      <ShieldCheck className="w-3 h-3" style={{ color: priority.confidence > 0.7 ? "hsl(var(--success-fg))" : priority.confidence > 0.4 ? "hsl(var(--warning-fg))" : "hsl(var(--destructive))" }} />
-                      <span className="text-[11px] font-bold tabular-nums">{Math.round(priority.confidence * 100)}%</span>
+                      <ShieldCheck className="w-3 h-3" style={{ color: priority.confidenceScore > 0.7 ? "hsl(var(--success-fg))" : priority.confidenceScore > 0.4 ? "hsl(var(--warning-fg))" : "hsl(var(--destructive))" }} />
+                      <span className="text-[11px] font-bold tabular-nums">{Math.round(priority.confidenceScore * 100)}%</span>
                     </div>
                     <span className="text-[8px] text-muted-foreground/40 block mt-0.5">
-                      {getConfidenceLabel(priority.confidence, lang)}
+                      {getConfidenceLabel(priority.confidenceScore, lang)}
                     </span>
                   </div>
                   {/* Source nature */}
