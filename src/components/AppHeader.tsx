@@ -113,8 +113,8 @@ const AppHeader = () => {
 
   return (
     <>
-      <header className="sticky top-0 z-50 bg-background/95 backdrop-blur-md border-b border-border/30" role="banner">
-        <div className="h-12 flex items-center px-4 md:px-6 max-w-[1440px] mx-auto">
+      <header className="sticky top-0 z-50 bg-background/80 backdrop-blur-xl border-b border-border/25" style={{ WebkitBackdropFilter: "blur(16px) saturate(1.5)" }} role="banner">
+        <div className="h-11 sm:h-12 flex items-center gap-1 sm:gap-2 px-3 sm:px-6 max-w-[1440px] mx-auto">
           <Link to="/welcome" className="flex items-center gap-1.5 shrink-0" aria-label="GTT Monitor">
             <span className="text-[15px] font-bold tracking-tight text-foreground">GTT</span>
             <span className="text-[15px] font-medium tracking-tight text-muted-foreground">Monitor</span>
