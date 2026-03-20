@@ -415,22 +415,35 @@ const Index = () => {
           </div>
         </div>
 
-        {/* ═══ MAP SELECTION BANNER ═══ */}
+        {/* ═══ MAP SELECTION BANNER — operational feedback ═══ */}
         {mapSelectionLabel && (
-          <div className="mx-2 sm:mx-3 mt-2 flex items-center gap-2 px-3 py-2 rounded-lg bg-[hsl(var(--map-selection-bg))] border border-[hsl(var(--map-selection-border)/0.2)]">
-            <span className="text-sm">{mapSelectionLabel.flag}</span>
+          <div className="mx-2 sm:mx-3 mt-2 flex items-center gap-2 px-3 py-2.5 rounded-lg bg-[hsl(var(--map-selection-bg))] border border-[hsl(var(--map-selection-border)/0.2)]">
+            <span className="text-base">{mapSelectionLabel.flag}</span>
             <div className="flex-1 min-w-0">
-              <span className="text-[10px] font-semibold text-foreground">{mapSelectionLabel.name}</span>
-              <span className="text-[9px] text-muted-foreground ml-1.5">{mapSelectionLabel.count} {lang === "pt" ? "sinais" : "signals"}</span>
+              <span className="text-[11px] font-semibold text-foreground">{mapSelectionLabel.name}</span>
+              <span className="text-[9px] text-muted-foreground ml-1.5">
+                {mapSelectionLabel.count} {lang === "pt" ? "sinais ativos" : "active signals"}
+              </span>
+              {/* Show top priority item for this country */}
+              {(() => {
+                const cc = mapSelectedCountry?.toUpperCase();
+                const topItem = cc ? diversifiedTrends.find(s => s.trend.countryCode?.toUpperCase() === cc) : null;
+                if (!topItem) return null;
+                return (
+                  <div className="mt-1 text-[8px] text-muted-foreground/60 truncate">
+                    🔝 {topItem.trend.title.slice(0, 50)} — <span className="font-bold" style={{ color: topItem.priority.score >= 50 ? "hsl(var(--priority-high))" : "hsl(var(--priority-medium))" }}>{topItem.priority.score}</span>
+                  </div>
+                );
+              })()}
             </div>
             <button onClick={() => { setMapSelectedCountry(null); setFilters(f => ({ ...f, country: "global" })); }}
-              className="text-[9px] font-medium text-muted-foreground hover:text-foreground px-2 py-1 rounded-md hover:bg-muted transition-colors">
+              className="text-[9px] font-medium text-muted-foreground hover:text-foreground px-2 py-1 rounded-md hover:bg-muted transition-colors flex-shrink-0">
               ✕ {lang === "pt" ? "Limpar" : "Clear"}
             </button>
           </div>
         )}
 
-        {/* ═══ WATCHLIST PANEL ═══ */}
+        {/* ═══ WATCHLIST PANEL — retention loop with change tracking ═══ */}
         {showWatchlistPanel && watchlist.length > 0 && (
           <div className="mx-2 sm:mx-3 mt-2 rounded-lg border border-border bg-card p-2 space-y-1">
             <div className="flex items-center justify-between px-1 mb-1">
@@ -439,40 +452,56 @@ const Index = () => {
               </span>
               <span className="text-[8px] text-muted-foreground/50">{watchlist.length} {lang === "pt" ? "itens" : "items"}</span>
             </div>
-            {watchlistWithUpdates.slice(0, 8).map((w, i) => (
-              <div key={`${w.title}-${i}`} className="flex items-center gap-2 px-2 py-1.5 rounded-md hover:bg-muted/50 transition-colors group">
-                <div className="flex-1 min-w-0">
-                  <div className="text-[10px] font-medium text-foreground truncate">{w.title.slice(0, 50)}</div>
-                  <div className="flex items-center gap-1.5 text-[8px] text-muted-foreground">
-                    <span className="uppercase">{w.platform}</span>
-                    {w.isActive && w.currentScore !== undefined && (
-                      <span className="font-bold tabular-nums" style={{
-                        color: w.currentScore >= 75 ? "hsl(var(--priority-critical))" 
-                          : w.currentScore >= 50 ? "hsl(var(--priority-high))" 
-                          : "hsl(var(--priority-medium))"
-                      }}>
-                        {w.currentScore}
-                      </span>
-                    )}
-                    {w.scoreDelta !== undefined && w.scoreDelta !== 0 && (
-                      <span className={w.scoreDelta > 0 ? "text-[hsl(var(--success-fg))] font-bold" : "text-destructive font-bold"}>
-                        {w.scoreDelta > 0 ? "↗" : "↘"}{Math.abs(w.scoreDelta)}
-                      </span>
-                    )}
-                    {w.lifecycle && (
-                      <span className="text-[7px] uppercase">{w.lifecycle}</span>
-                    )}
-                    {!w.isActive && (
-                      <span className="text-[7px] italic text-warning-fg">{lang === "pt" ? "sem atualização" : "no update"}</span>
-                    )}
+            {watchlistWithUpdates.slice(0, 10).map((w, i) => {
+              const hasChanges = w.scoreDelta !== undefined && w.scoreDelta !== 0;
+              return (
+                <div key={`${w.title}-${i}`} className={`flex items-center gap-2 px-2 py-2 rounded-md transition-colors group ${hasChanges ? "bg-muted/30" : "hover:bg-muted/30"}`}>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-1.5">
+                      <div className="text-[10px] font-medium text-foreground truncate flex-1">{w.title.slice(0, 50)}</div>
+                      {hasChanges && (
+                        <span className={`text-[8px] font-bold flex-shrink-0 px-1 py-0.5 rounded ${w.scoreDelta! > 0 ? "bg-[hsl(var(--success-fg)/0.1)] text-[hsl(var(--success-fg))]" : "bg-destructive/10 text-destructive"}`}>
+                          {w.scoreDelta! > 0 ? "↗" : "↘"}{Math.abs(w.scoreDelta!)}
+                        </span>
+                      )}
+                    </div>
+                    <div className="flex items-center gap-1.5 mt-0.5 text-[8px] text-muted-foreground">
+                      <span className="uppercase font-medium" style={{ color: SOURCE_HEX_MAP[w.platform?.toLowerCase()] || undefined }}>{w.platform}</span>
+                      {w.isActive && w.currentScore !== undefined && (
+                        <span className="font-bold tabular-nums" style={{
+                          color: w.currentScore >= 75 ? "hsl(var(--priority-critical))" 
+                            : w.currentScore >= 50 ? "hsl(var(--priority-high))" 
+                            : "hsl(var(--priority-medium))"
+                        }}>
+                          {w.currentScore}
+                        </span>
+                      )}
+                      {w.lifecycle && (
+                        <span className="text-[7px] px-1 py-0.5 rounded"
+                          style={{ backgroundColor: `hsl(var(--lifecycle-${w.lifecycle}) / 0.1)`, color: `hsl(var(--lifecycle-${w.lifecycle}))` }}>
+                          {w.lifecycle === "emerging" ? "🌱" : w.lifecycle === "accelerating" ? "🚀" : w.lifecycle === "peak" ? "📈" : w.lifecycle === "declining" ? "📉" : "➡️"}
+                          {" "}{w.lifecycle === "emerging" ? (lang === "pt" ? "Emergente" : "Emerging") 
+                            : w.lifecycle === "accelerating" ? (lang === "pt" ? "Acelerando" : "Accel.") 
+                            : w.lifecycle === "peak" ? (lang === "pt" ? "Pico" : "Peak") 
+                            : w.lifecycle === "declining" ? (lang === "pt" ? "Declínio" : "Declining") 
+                            : (lang === "pt" ? "Estável" : "Stable")}
+                        </span>
+                      )}
+                      {!w.isActive && (
+                        <span className="text-[7px] italic text-warning-fg">{lang === "pt" ? "sem atualização" : "no update"}</span>
+                      )}
+                      {!hasChanges && w.isActive && (
+                        <span className="text-[7px] text-muted-foreground/40">{lang === "pt" ? "sem mudança" : "no change"}</span>
+                      )}
+                    </div>
                   </div>
+                  <button onClick={() => removeFromWatchlist(w.title, w.platform)}
+                    className="opacity-0 group-hover:opacity-100 p-1 text-muted-foreground hover:text-destructive transition-all flex-shrink-0">
+                    <EyeOff className="w-3 h-3" />
+                  </button>
                 </div>
-                <button onClick={() => removeFromWatchlist(w.title, w.platform)}
-                  className="opacity-0 group-hover:opacity-100 p-1 text-muted-foreground hover:text-destructive transition-all">
-                  <EyeOff className="w-3 h-3" />
-                </button>
-              </div>
-            ))}
+              );
+            })}
           </div>
         )}
         {showWatchlistPanel && watchlist.length === 0 && (
