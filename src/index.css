@@ -5,8 +5,8 @@
 @layer base {
   :root {
     /* ─── CORE SURFACE TOKENS ─── */
-    --background: 50 8% 95%;
-    --foreground: 220 15% 12%;
+    --background: 40 12% 93%;
+    --foreground: 30 12% 9%;
     --card: 0 0% 100%;
     --card-foreground: 220 15% 12%;
     --popover: 0 0% 100%;
