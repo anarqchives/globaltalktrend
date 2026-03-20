@@ -113,14 +113,16 @@ const Index = () => {
   const [trendContexts, setTrendContexts] = useState<Record<string, string>>({});
   const { translatedTrends, isTranslating } = useTranslatedTrends(rawFilteredTrends, lang);
 
-  // Responsive grid columns
+  // Responsive grid columns — follows user resize intelligently
   useEffect(() => {
     const el = timelineContainerRef.current;
     if (!el) return;
     const obs = new ResizeObserver((entries) => {
       const w = entries[0]?.contentRect.width || 0;
-      if (w >= 900) setGridColumns(3);
-      else if (w >= 500) setGridColumns(2);
+      // At narrowest (user compressed), single column stacked cards
+      // At medium, 2 columns; at wide (expanded), 3 columns
+      if (w >= 1000) setGridColumns(3);
+      else if (w >= 420) setGridColumns(2);
       else setGridColumns(1);
     });
     obs.observe(el);
