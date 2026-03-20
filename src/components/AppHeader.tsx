@@ -115,14 +115,14 @@ const AppHeader = () => {
     <>
       <header className="sticky top-0 z-50 bg-background/80 backdrop-blur-xl border-b border-border/25" style={{ WebkitBackdropFilter: "blur(16px) saturate(1.5)" }} role="banner">
         <div className="h-11 sm:h-12 flex items-center gap-1 sm:gap-2 px-3 sm:px-6 max-w-[1440px] mx-auto">
-          <Link to="/welcome" className="flex items-center gap-1.5 shrink-0" aria-label="GTT Monitor">
-            <span className="text-[15px] font-bold tracking-tight text-foreground">GTT</span>
-            <span className="text-[15px] font-medium tracking-tight text-muted-foreground">Monitor</span>
+          <Link to="/welcome" className="flex items-center gap-1 sm:gap-1.5 shrink-0" aria-label="GTT Monitor">
+            <span className="text-[14px] sm:text-[15px] font-bold tracking-tight text-foreground">GTT</span>
+            <span className="text-[12px] sm:text-[15px] font-medium tracking-tight text-muted-foreground hidden sm:inline">Monitor</span>
           </Link>
 
           <div className="flex-1" />
 
-          <div className="flex items-center gap-1.5">
+          <div className="flex items-center gap-1">
             {/* Language dropdown */}
             <div ref={langRef} className="relative">
               <button
