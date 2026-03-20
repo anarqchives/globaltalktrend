@@ -70,6 +70,7 @@ const Index = () => {
   const [user, setUser] = useState<any>(null);
   const [viewMode, setViewMode] = useState<"timeline" | "map">("timeline");
   const [compactMode, setCompactMode] = useState(false);
+  const [gridColumns, setGridColumns] = useState(2);
   const [panelVisibility, setPanelVisibility] = useState(() => {
     try {
       const saved = localStorage.getItem("map-panel-open");
@@ -105,6 +106,7 @@ const Index = () => {
   const [selectedCardIndex, setSelectedCardIndex] = useState<number | null>(null);
   const isMobile = useIsMobile();
   const scrollRef = useRef<HTMLDivElement>(null);
+  const timelineContainerRef = useRef<HTMLDivElement>(null);
 
   const { filteredTrends: rawFilteredTrends, allTrends, loading, isFirstLoad, fetchTrends, countriesCount, lastUpdated, sourcesStatus } = useTrends(filters, setTrendCounts, lang);
   const criticalMoments = useCriticalMoments(rawFilteredTrends.length > 5 ? rawFilteredTrends : allTrends);
@@ -114,6 +116,20 @@ const Index = () => {
 
   const [trendContexts, setTrendContexts] = useState<Record<string, string>>({});
   const { translatedTrends, isTranslating } = useTranslatedTrends(rawFilteredTrends, lang);
+
+  // Responsive grid columns based on timeline width
+  useEffect(() => {
+    const el = timelineContainerRef.current;
+    if (!el) return;
+    const obs = new ResizeObserver((entries) => {
+      const w = entries[0]?.contentRect.width || 0;
+      if (w >= 900) setGridColumns(3);
+      else if (w >= 500) setGridColumns(2);
+      else setGridColumns(1);
+    });
+    obs.observe(el);
+    return () => obs.disconnect();
+  }, []);
 
   // Lazy context fetching
   const contextFetchedRef = useRef<Set<string>>(new Set());
@@ -213,12 +229,13 @@ const Index = () => {
     return result;
   }, [filteredTrends, multiplatformTitles]);
 
-  // Virtualizer
+  // Virtualizer — rows = Math.ceil(items / columns)
+  const rowCount = useMemo(() => Math.ceil(diversifiedTrends.length / gridColumns), [diversifiedTrends.length, gridColumns]);
   const rowVirtualizer = useVirtualizer({
-    count: diversifiedTrends.length,
+    count: rowCount,
     getScrollElement: () => scrollRef.current,
-    estimateSize: () => compactMode ? 80 : 180,
-    overscan: 8,
+    estimateSize: () => compactMode ? 100 : 200,
+    overscan: 4,
   });
 
   const handleMapClick = useCallback((code: string) => {
@@ -315,98 +332,109 @@ const Index = () => {
   }, [diversifiedTrends]);
 
   const renderTimeline = () => (
-    <div ref={scrollRef} className="h-full overflow-y-auto overflow-x-hidden scrollbar-thin">
-      <RankingStrip trends={diversifiedTrends} onSelectTrend={handleCardClick} />
+    <div ref={timelineContainerRef} className="h-full flex flex-col min-h-0">
+      <div ref={scrollRef} className="flex-1 overflow-y-auto overflow-x-hidden" style={{ scrollbarWidth: "thin", scrollbarColor: "hsl(var(--border)) transparent" }}>
+        <RankingStrip trends={diversifiedTrends} onSelectTrend={handleCardClick} />
 
-      {/* Timeline header */}
-      <div className="px-3 py-2 flex items-center justify-between sticky top-0 z-10 bg-background/80 backdrop-blur-sm border-b border-border">
-        <div className="flex items-center gap-1.5">
-          <FileText className="w-3.5 h-3.5 text-muted-foreground" />
-          <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-[0.08em]">{t("timeline")}</span>
-          <span className="text-[10px] text-muted-foreground/40">({diversifiedTrends.length})</span>
-        </div>
-        <div className="flex items-center gap-1.5">
-          {updatePending && (
-            <button onClick={handleRefresh} className="flex items-center gap-1 px-2 py-1 rounded-lg text-[11px] text-muted-foreground hover:bg-muted transition-colors">
-              <RefreshCw className={`w-3 h-3 ${refreshing ? "animate-spin" : ""}`} />
-              {lang === "pt" ? "Atualizar" : "Update"}
-            </button>
-          )}
-          <TagLegend />
-          <div className="flex items-center overflow-hidden rounded-[10px] border border-border">
-            <button onClick={() => setCompactMode(false)} className={`flex items-center justify-center w-7 h-[26px] transition-all ${!compactMode ? "bg-foreground text-background" : "bg-card text-muted-foreground hover:bg-muted"}`}>
-              <LayoutGrid size={13} />
-            </button>
-            <button onClick={() => setCompactMode(true)} className={`flex items-center justify-center w-7 h-[26px] transition-all ${compactMode ? "bg-foreground text-background" : "bg-card text-muted-foreground hover:bg-muted"}`}>
-              <List size={13} />
-            </button>
+        {/* Timeline header */}
+        <div className="px-3 py-2 flex items-center justify-between sticky top-0 z-10 bg-background/80 backdrop-blur-sm border-b border-border">
+          <div className="flex items-center gap-1.5">
+            <FileText className="w-3.5 h-3.5 text-muted-foreground" />
+            <span className="text-[9px] font-semibold text-muted-foreground uppercase tracking-[0.08em]">{t("timeline")}</span>
+            <span className="text-[9px] text-muted-foreground/40">({diversifiedTrends.length})</span>
           </div>
-          {!isMobile && (
-            <button onClick={() => togglePanel("timeline")} className="flex items-center justify-center rounded-[10px] bg-muted text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-all w-7 h-7">
-              <X className="w-3.5 h-3.5" />
-            </button>
-          )}
+          <div className="flex items-center gap-1.5">
+            {updatePending && (
+              <button onClick={handleRefresh} className="flex items-center gap-1 px-2 py-1 rounded-lg text-[9px] text-muted-foreground hover:bg-muted transition-colors">
+                <RefreshCw className={`w-3 h-3 ${refreshing ? "animate-spin" : ""}`} />
+                {lang === "pt" ? "Atualizar" : "Update"}
+              </button>
+            )}
+            <TagLegend />
+            <div className="flex items-center overflow-hidden rounded-[10px] border border-border">
+              <button onClick={() => setCompactMode(false)} className={`flex items-center justify-center w-7 h-[26px] transition-all ${!compactMode ? "bg-foreground text-background" : "bg-card text-muted-foreground hover:bg-muted"}`}>
+                <LayoutGrid size={12} />
+              </button>
+              <button onClick={() => setCompactMode(true)} className={`flex items-center justify-center w-7 h-[26px] transition-all ${compactMode ? "bg-foreground text-background" : "bg-card text-muted-foreground hover:bg-muted"}`}>
+                <List size={12} />
+              </button>
+            </div>
+            {!isMobile && (
+              <button onClick={() => togglePanel("timeline")} className="flex items-center justify-center rounded-[10px] bg-muted text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-all w-7 h-7">
+                <X className="w-3.5 h-3.5" />
+              </button>
+            )}
+          </div>
         </div>
-      </div>
 
-      {/* Virtualized card list */}
-      {(loading && isFirstLoad && diversifiedTrends.length === 0)
-        ? <div className="p-3 space-y-3">{Array.from({ length: 6 }).map((_, i) => <TrendCardSkeleton key={i} index={i} />)}</div>
-        : (
-          <div style={{ height: `${rowVirtualizer.getTotalSize()}px`, position: 'relative' }} className="px-2 sm:px-3">
-            {rowVirtualizer.getVirtualItems().map((virtualRow) => {
-              const trend = diversifiedTrends[virtualRow.index];
-              if (!trend) return null;
-              const originalTitle = (trend as any)._originalTitle || trend.title;
-              const normalizedKey = originalTitle.toLowerCase().normalize("NFD").replace(/\p{Diacritic}/gu, "").replace(/[^a-z0-9\s]/g, "").trim().slice(0, 50);
-              const isMulti = multiplatformTitles.has(normalizedKey);
-              return (
-                <div key={virtualRow.key}
-                  style={{ position: 'absolute', top: 0, left: 0, width: '100%', transform: `translateY(${virtualRow.start}px)`, padding: '4px 0' }}
-                  ref={rowVirtualizer.measureElement} data-index={virtualRow.index}>
-                  <TimelineCard {...trend} compact={compactMode}
-                    staggerIndex={virtualRow.index < 10 ? virtualRow.index : 0}
-                    isMultiplatform={isMulti}
-                    isSelected={selectedCardIndex === virtualRow.index}
-                    onSaveCard={saveCard}
-                    onClick={() => handleCardClick(virtualRow.index)}
-                    onFilterPlatform={(p) => {
-                      const map: Record<string, string> = {
-                        "Reddit": "Redes sociais", "Bluesky": "Redes sociais", "Mastodon": "Redes sociais",
-                        "NewsAPI": "Imprensa", "NewsData": "Imprensa", "GNews": "Imprensa", "Bing News": "Imprensa", "The Guardian": "Imprensa",
-                        "Google Trends": "Buscas (Google)", "YouTube": "Todas mídias",
-                        "World Bank": "Dados oficiais", "IBGE": "Dados oficiais", "OpenAlex": "Dados oficiais",
-                      };
-                      setFilters((f) => ({ ...f, type: map[p] || "Todas mídias" }));
-                    }}
-                  />
-                </div>
-              );
-            })}
+        {/* Virtualized grid */}
+        {(loading && isFirstLoad && diversifiedTrends.length === 0)
+          ? <div className="p-3 grid gap-2" style={{ gridTemplateColumns: `repeat(${gridColumns}, 1fr)` }}>{Array.from({ length: 6 }).map((_, i) => <TrendCardSkeleton key={i} index={i} />)}</div>
+          : (
+            <div style={{ height: `${rowVirtualizer.getTotalSize()}px`, position: 'relative' }} className="px-2 sm:px-3">
+              {rowVirtualizer.getVirtualItems().map((virtualRow) => {
+                const startIdx = virtualRow.index * gridColumns;
+                return (
+                  <div key={virtualRow.key}
+                    style={{ position: 'absolute', top: 0, left: 0, width: '100%', transform: `translateY(${virtualRow.start}px)`, padding: '3px 0' }}
+                    ref={rowVirtualizer.measureElement} data-index={virtualRow.index}
+                    className="grid gap-2"
+                    {...{ style: { position: 'absolute', top: 0, left: 0, width: '100%', transform: `translateY(${virtualRow.start}px)`, padding: '3px 0', display: 'grid', gridTemplateColumns: `repeat(${gridColumns}, 1fr)`, gap: '6px' } }}
+                  >
+                    {Array.from({ length: gridColumns }).map((_, colIdx) => {
+                      const trendIdx = startIdx + colIdx;
+                      const trend = diversifiedTrends[trendIdx];
+                      if (!trend) return <div key={colIdx} />;
+                      const originalTitle = (trend as any)._originalTitle || trend.title;
+                      const normalizedKey = originalTitle.toLowerCase().normalize("NFD").replace(/\p{Diacritic}/gu, "").replace(/[^a-z0-9\s]/g, "").trim().slice(0, 50);
+                      const isMulti = multiplatformTitles.has(normalizedKey);
+                      return (
+                        <TimelineCard key={trendIdx} {...trend} compact={compactMode}
+                          staggerIndex={trendIdx < 10 ? trendIdx : 0}
+                          isMultiplatform={isMulti}
+                          isSelected={selectedCardIndex === trendIdx}
+                          onSaveCard={saveCard}
+                          onClick={() => handleCardClick(trendIdx)}
+                          onFilterPlatform={(p) => {
+                            const map: Record<string, string> = {
+                              "Reddit": "Redes sociais", "Bluesky": "Redes sociais", "Mastodon": "Redes sociais",
+                              "NewsAPI": "Imprensa", "NewsData": "Imprensa", "GNews": "Imprensa", "Bing News": "Imprensa", "The Guardian": "Imprensa",
+                              "Google Trends": "Buscas (Google)", "YouTube": "Todas mídias",
+                              "World Bank": "Dados oficiais", "IBGE": "Dados oficiais", "OpenAlex": "Dados oficiais",
+                            };
+                            setFilters((f) => ({ ...f, type: map[p] || "Todas mídias" }));
+                          }}
+                        />
+                      );
+                    })}
+                  </div>
+                );
+              })}
+            </div>
+          )}
+
+        {!loading && !isFirstLoad && diversifiedTrends.length === 0 && (
+          <div className="flex flex-col items-center justify-center py-12 px-4 text-center gap-2">
+            <span className="text-3xl">🔍</span>
+            <p className="text-[10px] font-medium text-foreground">{t("noTrends")}</p>
+            <button onClick={() => setFilters(defaultFilters)} className="mt-2 px-3 py-1 rounded-full bg-primary text-primary-foreground text-[9px] font-medium hover:bg-primary/90 transition-colors">
+              {lang === "pt" ? "Limpar filtros" : "Clear filters"}
+            </button>
           </div>
         )}
 
-      {!loading && !isFirstLoad && diversifiedTrends.length === 0 && (
-        <div className="flex flex-col items-center justify-center py-12 px-4 text-center gap-2">
-          <span className="text-3xl">🔍</span>
-          <p className="text-xs font-medium text-foreground">{t("noTrends")}</p>
-          <button onClick={() => setFilters(defaultFilters)} className="mt-2 px-3 py-1 rounded-full bg-primary text-primary-foreground text-[10px] font-medium hover:bg-primary/90 transition-colors">
-            {lang === "pt" ? "Limpar filtros" : "Clear filters"}
-          </button>
-        </div>
-      )}
-
-      {diversifiedTrends.length > 0 && lastUpdated && (
-        <div className="flex flex-col items-center py-4 gap-1">
-          <div className="flex items-center gap-1.5 text-[9px] text-muted-foreground">
-            <span className="w-1 h-1 rounded-full bg-green-500" />
-            {t("lastUpdate")}: {lastUpdated.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}
+        {diversifiedTrends.length > 0 && lastUpdated && (
+          <div className="flex flex-col items-center py-4 gap-1">
+            <div className="flex items-center gap-1.5 text-[8px] text-muted-foreground">
+              <span className="w-1 h-1 rounded-full bg-green-500" />
+              {t("lastUpdate")}: {lastUpdated.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}
+            </div>
+            <button onClick={() => setTransparencyOpen(true)} className="text-[8px] text-primary hover:underline cursor-pointer">
+              🔍 {t("viewSourceStatus")}
+            </button>
           </div>
-          <button onClick={() => setTransparencyOpen(true)} className="text-[9px] text-primary hover:underline cursor-pointer">
-            🔍 {t("viewSourceStatus")}
-          </button>
-        </div>
-      )}
+        )}
+      </div>
     </div>
   );
 
@@ -448,7 +476,7 @@ const Index = () => {
             </div>
             <button
               onClick={() => setViewMode(v => v === "timeline" ? "map" : "timeline")}
-              className="absolute bottom-4 right-4 z-30 flex items-center gap-2 px-4 py-3 rounded-full bg-foreground text-background text-xs font-semibold shadow-[0_4px_20px_rgba(0,0,0,0.15)] active:scale-95 transition-transform touch-manipulation"
+              className="absolute bottom-4 right-4 z-30 flex items-center gap-2 px-4 py-3 rounded-full bg-foreground text-background text-[10px] font-semibold shadow-[0_4px_20px_rgba(0,0,0,0.15)] active:scale-95 transition-transform touch-manipulation"
               style={{ minHeight: 48, minWidth: 48 }}
             >
               {viewMode === "timeline" ? <><Map className="w-4 h-4" /> {t("map")}</> : <><Newspaper className="w-4 h-4" /> {t("timeline")}</>}
@@ -460,7 +488,7 @@ const Index = () => {
             <div className="flex-1 min-h-0 flex flex-col">
               {!panelVisibility.timeline && !panelVisibility.map ? (
                 <div className="flex-1 flex items-center justify-center text-muted-foreground">
-                  <p className="text-sm">{lang === "pt" ? "Todos os painéis foram arquivados." : "All panels archived."}</p>
+                  <p className="text-[10px]">{lang === "pt" ? "Todos os painéis foram arquivados." : "All panels archived."}</p>
                 </div>
               ) : (
                 <ResizablePanelGroup direction="horizontal" className="flex-1 min-h-0" key={`h-${panelVisibility.timeline}-${panelVisibility.map}`}>
