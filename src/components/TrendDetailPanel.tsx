@@ -142,10 +142,10 @@ const TrendDetailPanel: React.FC<TrendDetailPanelProps> = ({
             {lang === "pt" ? "Detalhes" : "Details"}
           </span>
           <div className="flex-1" />
-          <button onClick={onPrev} disabled={!hasPrev} className="p-1.5 rounded-xl hover:bg-muted text-muted-foreground disabled:opacity-30">
+          <button onClick={onPrev} disabled={!hasPrev} className="p-1.5 rounded-lg hover:bg-muted text-muted-foreground disabled:opacity-30">
             <ChevronLeft className="w-4 h-4" />
           </button>
-          <button onClick={onNext} disabled={!hasNext} className="p-1.5 rounded-xl hover:bg-muted text-muted-foreground disabled:opacity-30">
+          <button onClick={onNext} disabled={!hasNext} className="p-1.5 rounded-lg hover:bg-muted text-muted-foreground disabled:opacity-30">
             <ChevronRight className="w-4 h-4" />
           </button>
         </div>
