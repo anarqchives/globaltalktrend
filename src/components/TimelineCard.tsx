@@ -4,12 +4,12 @@ import { Bookmark } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { TrendCardProps } from "./TrendCard";
 
-/* ─── Source type mapping ─── */
+/* ─── Source classification ─── */
 const SOURCE_TYPE_MAP: Record<string, string> = {
   "the guardian": "imprensa", "npr": "imprensa", "newsapi": "imprensa", "gnews": "imprensa",
   "bing news": "imprensa", "newsdata": "imprensa", "thenewsapi": "imprensa", "the news api": "imprensa",
   "variety": "imprensa", "bbc": "imprensa", "reuters": "imprensa", "france 24": "imprensa",
-  "ap news": "imprensa", "bloomberg": "imprensa",
+  "ap news": "imprensa", "bloomberg": "imprensa", "nyt": "imprensa", "guardian": "imprensa",
   "reddit": "redes_sociais", "bluesky": "redes_sociais", "mastodon": "redes_sociais",
   "x (twitter)": "redes_sociais", "youtube": "redes_sociais", "hacker news": "redes_sociais",
   "lobsters": "redes_sociais",
@@ -23,51 +23,96 @@ const SOURCE_TYPE_MAP: Record<string, string> = {
 
 function getSourceType(platform: string): string {
   const p = platform.toLowerCase();
-  for (const [key, val] of Object.entries(SOURCE_TYPE_MAP)) {
-    if (p.includes(key)) return val;
-  }
+  for (const [key, val] of Object.entries(SOURCE_TYPE_MAP)) { if (p.includes(key)) return val; }
   return "imprensa";
 }
 
-const SOURCE_DOT_COLORS: Record<string, string> = {
-  imprensa: "#4A7FBF",
-  redes_sociais: "#8B7EC8",
-  google_trends: "#D97706",
-  dados_oficiais: "#7A9E7E",
-  cientifico: "#5BA8B5",
-  enciclopedico: "#5BA8B5",
+/* Source dot colors using CSS variable HSL values */
+const SOURCE_COLORS: Record<string, string> = {
+  imprensa: "var(--source-press)",
+  redes_sociais: "var(--source-social)",
+  google_trends: "var(--source-search)",
+  dados_oficiais: "var(--source-official)",
+  cientifico: "var(--source-academic)",
+  enciclopedico: "var(--source-encyclopedic)",
 };
 
-const SOURCE_BADGES: Record<string, { label: Record<string, string>; icon: string; color: string }> = {
-  imprensa: { label: { pt: "Imprensa Verificada", en: "Verified Press" }, icon: "✓", color: "#4A7FBF" },
-  dados_oficiais: { label: { pt: "Dados Oficiais", en: "Official Data" }, icon: "◆", color: "#7A9E7E" },
-  cientifico: { label: { pt: "Acadêmico", en: "Academic" }, icon: "◈", color: "#8B7EC8" },
-  enciclopedico: { label: { pt: "Enciclopédico", en: "Encyclopedic" }, icon: "◎", color: "#5BA8B5" },
-  redes_sociais: { label: { pt: "Social/Trending", en: "Social/Trending" }, icon: "◉", color: "#D97706" },
-  google_trends: { label: { pt: "Social/Trending", en: "Social/Trending" }, icon: "◉", color: "#D97706" },
+/* Fallback hex for SVG (CSS vars don't work in SVG attributes) */
+const SOURCE_HEX: Record<string, string> = {
+  imprensa: "#5580AA", redes_sociais: "#C08040", google_trends: "#C09020",
+  dados_oficiais: "#558855", cientifico: "#7070AA", enciclopedico: "#408888",
 };
 
-/* ─── Term explainers ─── */
+const SOURCE_BADGES: Record<string, { label: Record<string, string>; icon: string; css: string; explanation: Record<string, string> }> = {
+  imprensa: {
+    label: { pt: "Imprensa", en: "Press" }, icon: "✓", css: "source-badge-press",
+    explanation: { pt: "Veículos de imprensa profissional com equipe editorial", en: "Professional press outlets with editorial teams" },
+  },
+  dados_oficiais: {
+    label: { pt: "Dados Oficiais", en: "Official Data" }, icon: "◆", css: "source-badge-official",
+    explanation: { pt: "Instituições governamentais e organismos internacionais", en: "Government institutions and international organizations" },
+  },
+  cientifico: {
+    label: { pt: "Acadêmico", en: "Academic" }, icon: "◈", css: "source-badge-academic",
+    explanation: { pt: "Publicações científicas revisadas por pares", en: "Peer-reviewed scientific publications" },
+  },
+  enciclopedico: {
+    label: { pt: "Enciclopédico", en: "Encyclopedic" }, icon: "◎", css: "source-badge-encyclopedic",
+    explanation: { pt: "Plataformas de conhecimento colaborativo", en: "Collaborative knowledge platforms" },
+  },
+  redes_sociais: {
+    label: { pt: "Social", en: "Social" }, icon: "◉", css: "source-badge-social",
+    explanation: { pt: "Redes sociais e comunidades online", en: "Social networks and online communities" },
+  },
+  google_trends: {
+    label: { pt: "Buscas", en: "Searches" }, icon: "◉", css: "source-badge-search",
+    explanation: { pt: "Dados de volume de buscas em mecanismos de pesquisa", en: "Search engine volume data" },
+  },
+};
+
+/* ─── Term explanations — expanded ─── */
 const TERM_EXPLANATIONS: Record<string, Record<string, string>> = {
   pt: {
     "CPIAUCSL": "CPI = Consumer Price Index — Índice de Preços ao Consumidor dos EUA, principal medida de inflação",
-    "PMID": "PMID = PubMed Identifier — código único que identifica artigos científicos na base MEDLINE/PubMed",
-    "FRED": "FRED = Federal Reserve Economic Data — base de dados do Fed de St. Louis com +800 mil séries temporais",
-    "DOI": "DOI = Digital Object Identifier — identificador permanente para publicações acadêmicas",
-    "GDP": "GDP = Gross Domestic Product — Produto Interno Bruto, principal indicador de atividade econômica",
-    "CPI": "CPI = Consumer Price Index — Índice de Preços ao Consumidor, mede a inflação",
-    "WHO": "WHO = World Health Organization — Organização Mundial da Saúde",
-    "IMF": "IMF = International Monetary Fund — Fundo Monetário Internacional",
+    "PMID": "PMID = PubMed Identifier — código único que identifica artigos na base biomédica MEDLINE/PubMed mantida pela National Library of Medicine",
+    "FRED": "FRED = Federal Reserve Economic Data — base de dados do Fed de St. Louis com +800 mil séries temporais econômicas",
+    "DOI": "DOI = Digital Object Identifier — identificador permanente para publicações acadêmicas digitais",
+    "GDP": "GDP = Gross Domestic Product — Produto Interno Bruto, principal indicador de atividade econômica de um país",
+    "CPI": "CPI = Consumer Price Index — Índice de Preços ao Consumidor, mede a inflação nos gastos domésticos",
+    "WHO": "WHO = World Health Organization — Organização Mundial da Saúde, agência especializada da ONU",
+    "IMF": "IMF = International Monetary Fund — Fundo Monetário Internacional, monitora estabilidade financeira global",
+    "IBGE": "IBGE = Instituto Brasileiro de Geografia e Estatística — órgão oficial de dados demográficos e econômicos do Brasil",
+    "GDELT": "GDELT = Global Database of Events, Language, and Tone — monitora eventos globais em 65 idiomas em tempo real",
+    "ARXIV": "arXiv = repositório de preprints científicos em física, matemática, ciência da computação e áreas correlatas",
+    "OPENAL": "OpenAlex = índice aberto de publicações acadêmicas com metadados de citações e autores",
+    "CROSSREF": "Crossref = organização que registra metadados de publicações acadêmicas e atribui DOIs",
+    "SEMANTIC": "Semantic Scholar = mecanismo de busca acadêmica com IA para artigos científicos",
+    "WORLD BANK": "World Bank = Banco Mundial — organismo internacional que fornece dados socioeconômicos de 200+ países",
+    "PCE": "PCE = Personal Consumption Expenditures — índice de gastos de consumo pessoal, usado pelo Fed para metas de inflação",
+    "NFP": "NFP = Non-Farm Payrolls — relatório mensal de empregos dos EUA excluindo setor agrícola",
+    "ISM": "ISM = Institute for Supply Management — índice que mede atividade manufatureira",
+    "PMI": "PMI = Purchasing Managers' Index — índice de gerentes de compras, indicador antecedente da economia",
   },
   en: {
-    "CPIAUCSL": "CPI = Consumer Price Index — key US inflation measure published by BLS",
-    "PMID": "PMID = PubMed Identifier — unique code for scientific articles in MEDLINE/PubMed",
-    "FRED": "FRED = Federal Reserve Economic Data — St. Louis Fed database with 800K+ time series",
-    "DOI": "DOI = Digital Object Identifier — permanent identifier for academic publications",
-    "GDP": "GDP = Gross Domestic Product — primary measure of economic activity",
-    "CPI": "CPI = Consumer Price Index — measures inflation",
-    "WHO": "WHO = World Health Organization",
-    "IMF": "IMF = International Monetary Fund",
+    "CPIAUCSL": "CPI = Consumer Price Index — key US inflation measure published by the Bureau of Labor Statistics",
+    "PMID": "PMID = PubMed Identifier — unique code for scientific articles in the MEDLINE/PubMed biomedical database",
+    "FRED": "FRED = Federal Reserve Economic Data — St. Louis Fed database with 800K+ economic time series",
+    "DOI": "DOI = Digital Object Identifier — permanent identifier for academic digital publications",
+    "GDP": "GDP = Gross Domestic Product — primary measure of economic output for a country",
+    "CPI": "CPI = Consumer Price Index — measures inflation in household spending",
+    "WHO": "WHO = World Health Organization — UN specialized health agency",
+    "IMF": "IMF = International Monetary Fund — monitors global financial stability",
+    "IBGE": "IBGE = Brazilian Institute of Geography and Statistics — official demographic and economic data agency",
+    "GDELT": "GDELT = Global Database of Events, Language, and Tone — monitors global events in 65 languages in real time",
+    "ARXIV": "arXiv = scientific preprint repository for physics, mathematics, computer science and related fields",
+    "OPENAL": "OpenAlex = open index of academic publications with citation and author metadata",
+    "CROSSREF": "Crossref = organization that registers academic publication metadata and assigns DOIs",
+    "SEMANTIC": "Semantic Scholar = AI-powered academic search engine for scientific papers",
+    "WORLD BANK": "World Bank = international organization providing socioeconomic data from 200+ countries",
+    "PCE": "PCE = Personal Consumption Expenditures — consumer spending index used by the Fed for inflation targets",
+    "NFP": "NFP = Non-Farm Payrolls — monthly US employment report excluding the agricultural sector",
+    "ISM": "ISM = Institute for Supply Management — index measuring manufacturing activity",
+    "PMI": "PMI = Purchasing Managers' Index — leading economic indicator",
   },
 };
 
@@ -101,7 +146,6 @@ const relativeTimeFormats: Record<string, { now: string; min: string; h: string;
   de: { now: "jetzt", min: "vor {n}min", h: "vor {n}h", d: "vor {n}T" },
 };
 
-/* ─── Tag validation ─── */
 const SPORTS_TERMS = ["esportes", "sports", "jogo", "copa", "game", "nba", "nfl", "fifa", "gol", "futebol", "football", "soccer"];
 const POLITICS_TERMS = ["política", "politics", "eleição", "governo", "election", "trump", "biden", "congress"];
 
@@ -133,23 +177,19 @@ const SparklineChart = React.memo(({ data, color }: { data: number[]; color: str
     return { pathD: d, areaD: `${d} L ${pts[pts.length - 1].x} ${h} L ${pts[0].x} ${h} Z`, lastPt: pts[pts.length - 1] };
   }, [data]);
 
-  if (!data || data.length < 2) return (
-    <div className="flex items-center justify-center h-full">
-      <span className="text-[8px] text-muted-foreground/40 italic">—</span>
-    </div>
-  );
+  if (!data || data.length < 2) return <span className="text-[8px] text-muted-foreground/30 italic">—</span>;
 
   return (
     <svg width={100} height={24} viewBox="0 0 100 24" className="w-full h-full" style={{ overflow: "visible" }}>
       <defs>
         <linearGradient id={id} x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor={color} stopOpacity={0.2} />
+          <stop offset="0%" stopColor={color} stopOpacity={0.18} />
           <stop offset="100%" stopColor={color} stopOpacity={0} />
         </linearGradient>
       </defs>
       <path d={areaD} fill={`url(#${id})`} />
       <motion.path d={pathD} stroke={color} strokeWidth={1.5} fill="none" strokeLinecap="round"
-        initial={{ pathLength: 0 }} animate={{ pathLength: 1 }} transition={{ duration: 0.8, ease: "easeInOut" }} />
+        initial={{ pathLength: 0 }} animate={{ pathLength: 1 }} transition={{ duration: 0.6, ease: "easeInOut" }} />
       <circle cx={lastPt.x} cy={lastPt.y} r="1.5" fill={color}>
         <animate attributeName="r" values="1.5;2.5;1.5" dur="2s" repeatCount="indefinite" />
       </circle>
@@ -158,13 +198,11 @@ const SparklineChart = React.memo(({ data, color }: { data: number[]; color: str
 });
 SparklineChart.displayName = "SparklineChart";
 
-/* ─── Framer variants ─── */
 export const cardVariants = {
   hidden: { opacity: 0, y: 12 },
   show: { opacity: 1, y: 0, transition: { duration: 0.3, ease: [0.21, 0.47, 0.32, 0.98] as [number, number, number, number] } },
 };
 
-/* ─── Props ─── */
 export interface TimelineCardProps extends TrendCardProps {
   onClick?: () => void;
   onFilterPlatform?: (platform: string) => void;
@@ -175,7 +213,6 @@ export interface TimelineCardProps extends TrendCardProps {
   isMultiplatform?: boolean;
 }
 
-/* ─── Component ─── */
 const TimelineCard = ({
   platform, title, category, time, volume, change, changePositive,
   historicalData, countryCode, sources, sourceUrl, trustBadge, thumbnail,
@@ -186,11 +223,10 @@ const TimelineCard = ({
   const { lang } = useLanguage();
 
   const sourceType = getSourceType(platform);
-  const dotColor = SOURCE_DOT_COLORS[sourceType] || "#6B6560";
+  const sparkHex = SOURCE_HEX[sourceType] || "#6B6560";
   const flag = countryCodeToFlag(countryCode);
   const badge = SOURCE_BADGES[sourceType];
 
-  /* Time */
   const formattedTime = useMemo(() => {
     if (!publishedAt) {
       if (!time) return time;
@@ -218,29 +254,26 @@ const TimelineCard = ({
     } catch { return time; }
   }, [publishedAt, time, lang]);
 
-  /* Tags — only real, validated */
   const tags = useMemo(() => {
-    const result: { label: string; color: string; verified?: boolean }[] = [];
+    const result: { label: string; css: string }[] = [];
     if (trustBadge === "verified" || trustBadge === "press") {
-      result.push({ label: "✓ " + (lang === "pt" ? "Imprensa" : "Press"), color: "#059669", verified: true });
+      result.push({ label: "✓ " + (lang === "pt" ? "Verificado" : "Verified"), css: "source-badge-press" });
     } else if (trustBadge === "scientific") {
-      result.push({ label: "🔬 " + (lang === "pt" ? "Científico" : "Scientific"), color: "#0891B2", verified: true });
+      result.push({ label: "🔬 " + (lang === "pt" ? "Científico" : "Scientific"), css: "source-badge-academic" });
     }
     const ch = Math.abs(parseFloat(change?.replace(/[^0-9.\-]/g, "") || "0"));
-    if (ch > 200) result.push({ label: "+trending", color: "#D97706" });
-    else if (changePositive && ch > 50) result.push({ label: "+popular", color: "#2557D6" });
-    if (isMultiplatform) result.push({ label: "🌐 Multi", color: "#6B6560" });
+    if (ch > 200) result.push({ label: "+trending", css: "source-badge-search" });
+    else if (changePositive && ch > 50) result.push({ label: "+popular", css: "source-badge-press" });
+    if (isMultiplatform) result.push({ label: "🌐 Multi", css: "source-badge-official" });
     return result.filter(tag => validateTag(tag.label, title));
   }, [trustBadge, change, changePositive, isMultiplatform, title, lang]);
 
-  /* Sparkline data */
   const sparkData = useMemo(() => {
     if (historicalData && historicalData.length >= 2) return historicalData.slice(-12).map(d => d.value);
     if (rawSparkData && rawSparkData.length >= 2) return rawSparkData.slice(-12);
     return null;
   }, [historicalData, rawSparkData]);
 
-  /* Volume + Growth */
   const volStr = (volume || "0").toLowerCase();
   let vol = parseFloat(volStr.replace(/[^0-9.]/g, "")) || 0;
   if (volStr.includes("m")) vol *= 1_000_000;
@@ -249,56 +282,52 @@ const TimelineCard = ({
   const changeNum = Math.abs(parseFloat(change?.replace(/[^0-9.\-]/g, "") || "0"));
   const showChange = changeNum > 0;
 
-  /* Description snippet */
   const contextSnippet = useMemo(() => {
     const raw = description || details || "";
     const normTitle = title.toLowerCase().trim();
     const normDesc = raw.toLowerCase().trim();
     if (!normDesc || normDesc === normTitle || normDesc.startsWith(normTitle.slice(0, 30))) return null;
-    return raw.slice(0, 120) + (raw.length > 120 ? "…" : "");
+    return raw.slice(0, 140) + (raw.length > 140 ? "…" : "");
   }, [description, details, title]);
 
-  /* Term explanation */
   const termExplanation = useMemo(() => findTermExplanation(title, lang), [title, lang]);
 
-  /* Propagation line */
   const propagationSources = useMemo(() => {
     if (!sources || sources.length <= 1) return null;
     return sources.slice(0, 4).map(s => typeof s === "string" ? s : (s as any).name || (s as any).platform || "");
   }, [sources]);
 
-  const sparkColor = dotColor;
-
   return (
     <motion.div
       variants={cardVariants}
       onClick={onClick}
-      className={`bg-card/90 dark:bg-card/60 backdrop-blur-sm rounded-md border cursor-pointer w-full relative overflow-hidden
+      className={`bg-card rounded-md border cursor-pointer w-full relative overflow-hidden
         transition-all duration-200 ease-[cubic-bezier(0.21,0.47,0.32,0.98)]
         ${isSelected
-          ? "border-l-[3px] border-l-[var(--accent-blue)] border-border/40 shadow-elevation-md"
-          : "border-border/30 shadow-elevation-xs hover:shadow-elevation-sm hover:-translate-y-[1px]"}
-        `}
-      style={{ padding: compact ? "8px 10px" : "10px 12px" }}
+          ? "border-l-[3px] shadow-elevation-md" : "border-border/25 shadow-elevation-xs hover:shadow-elevation-sm hover:-translate-y-[1px]"}`}
+      style={{
+        padding: compact ? "8px 10px" : "10px 12px",
+        borderLeftColor: isSelected ? `hsl(${SOURCE_COLORS[sourceType] || "var(--source-press)"})` : undefined,
+      }}
     >
-      {/* Accent top border */}
-      <div className="absolute top-0 left-0 right-0 h-[2px]" style={{ backgroundColor: dotColor }} />
+      {/* Accent line */}
+      <div className="absolute top-0 left-0 right-0 h-[2px]" style={{ background: `hsl(${SOURCE_COLORS[sourceType] || "var(--source-press)"})` }} />
 
       {/* ① Source · time · country · badge */}
       <div className="flex items-center gap-1.5 mb-1.5 flex-wrap">
         <button onClick={(e) => { e.stopPropagation(); onFilterPlatform?.(platform); }}
-          className="flex items-center gap-1 flex-shrink-0 hover:opacity-80 transition-opacity">
-          <div className="w-1.5 h-1.5 rounded-full flex-shrink-0" style={{ backgroundColor: dotColor }} />
-          <span className="text-[10px] uppercase tracking-[0.06em] font-bold" style={{ color: dotColor }}>
+          className="flex items-center gap-1 flex-shrink-0 hover:opacity-80 transition-opacity compact-btn">
+          <div className="w-[5px] h-[5px] rounded-full flex-shrink-0" style={{ background: `hsl(${SOURCE_COLORS[sourceType]})` }} />
+          <span className="text-[10px] uppercase tracking-[0.06em] font-bold" style={{ color: `hsl(${SOURCE_COLORS[sourceType]})` }}>
             {platform}
           </span>
         </button>
-        <span className="text-[10px] text-muted-foreground/30">·</span>
-        <span className="text-[10px] text-muted-foreground">{formattedTime}</span>
-        {flag && <span className="text-[11px]">{flag}</span>}
+        <span className="text-[9px] text-muted-foreground/25">·</span>
+        <span className="text-[9px] text-muted-foreground">{formattedTime}</span>
+        {flag && <span className="text-[11px]" title={countryCode}>{flag}</span>}
         {badge && (
-          <span className="text-[8px] font-semibold px-1.5 py-0.5 rounded-md ml-auto"
-            style={{ backgroundColor: `${badge.color}15`, color: badge.color, border: `1px solid ${badge.color}20` }}>
+          <span className={`text-[8px] font-semibold px-1.5 py-0.5 rounded-md ml-auto ${badge.css}`}
+            title={badge.explanation[lang] || badge.explanation.en}>
             {badge.icon} {badge.label[lang] || badge.label.en}
           </span>
         )}
@@ -306,7 +335,7 @@ const TimelineCard = ({
         <button onClick={(e) => {
           e.stopPropagation();
           onSaveCard?.({ title, platform, category, country_code: countryCode, source_url: sourceUrl, description: contextSnippet || "" });
-        }} className="p-0.5 rounded-md text-muted-foreground/20 hover:text-[#2557D6] transition-colors flex-shrink-0">
+        }} className="compact-btn p-0.5 rounded-md text-muted-foreground/15 hover:text-foreground/50 transition-colors flex-shrink-0">
           <Bookmark className="w-3 h-3" />
         </button>
       </div>
@@ -317,15 +346,14 @@ const TimelineCard = ({
         {decodeEntities(title)}
       </h3>
 
-      {/* ③ Description / Context */}
+      {/* ③ Context */}
       {contextSnippet && !compact && (
         <p className="text-[10px] text-muted-foreground leading-relaxed line-clamp-3 mb-1.5">{decodeEntities(contextSnippet)}</p>
       )}
 
-      {/* ④ Term explanation box */}
+      {/* ④ Term explanation */}
       {termExplanation && !compact && (
-        <div className="flex items-start gap-1.5 mb-1.5 px-2 py-1.5 rounded-md text-[9px] leading-relaxed"
-          style={{ backgroundColor: "hsl(var(--info-bg))", borderLeft: "2px solid hsl(var(--info-fg))", color: "hsl(var(--info-fg))" }}>
+        <div className="flex items-start gap-1.5 mb-1.5 px-2 py-1.5 rounded-md text-[9px] leading-relaxed bg-info-bg border-l-2 border-info-fg text-info-fg">
           <span className="flex-shrink-0">💡</span>
           <span className="line-clamp-2">{termExplanation}</span>
         </div>
@@ -335,8 +363,7 @@ const TimelineCard = ({
       {tags.length > 0 && !compact && (
         <div className="flex items-center gap-1 flex-wrap mb-1.5">
           {tags.map((tag, i) => (
-            <span key={i} className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-md text-[8px] font-semibold uppercase tracking-[0.04em]"
-              style={{ backgroundColor: `${tag.color}12`, color: tag.color, border: `1px solid ${tag.color}18` }}>
+            <span key={i} className={`inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-md text-[8px] font-semibold uppercase tracking-[0.04em] ${tag.css}`}>
               {tag.label}
             </span>
           ))}
@@ -346,11 +373,11 @@ const TimelineCard = ({
       {/* ⑥ Sparkline + Metrics */}
       <div className="flex items-end gap-2 mt-1">
         <div className="flex-1 min-w-0" style={{ height: 22 }}>
-          <SparklineChart data={sparkData || []} color={sparkColor} />
+          <SparklineChart data={sparkData || []} color={sparkHex} />
         </div>
         <div className="flex items-center gap-2 flex-shrink-0">
           {showChange && (
-            <span className={`text-[10px] font-bold ${changePositive ? "text-[#059669]" : "text-[#E03C31]"}`}>
+            <span className={`text-[10px] font-bold ${changePositive ? "text-success-fg" : "text-destructive"}`}>
               {changePositive ? "↗" : "↘"}{change}
             </span>
           )}
@@ -358,19 +385,24 @@ const TimelineCard = ({
             <span className="text-[10px] font-semibold text-foreground tabular-nums">{volume}</span>
           )}
           {sources && sources.length > 1 && (
-            <span className="text-[9px] text-muted-foreground tabular-nums">{sources.length}src</span>
+            <span className="text-[8px] text-muted-foreground tabular-nums" title={lang === "pt" ? `${sources.length} fontes confirmam` : `${sources.length} sources confirm`}>
+              {sources.length}src
+            </span>
           )}
         </div>
       </div>
 
-      {/* ⑦ Propagation line */}
+      {/* ⑦ Propagation */}
       {propagationSources && !compact && (
-        <div className="flex items-center gap-1 mt-1.5 pt-1.5 border-t border-border/20 overflow-hidden">
-          <span className="text-[7px] text-muted-foreground/50 uppercase tracking-wider flex-shrink-0">PROP</span>
+        <div className="flex items-center gap-1 mt-1.5 pt-1.5 border-t border-border/15 overflow-hidden">
+          <span className="text-[7px] text-muted-foreground/40 uppercase tracking-wider flex-shrink-0"
+            title={lang === "pt" ? "Propagação: caminho entre fontes que cobrem esta tendência" : "Propagation: path between sources covering this trend"}>
+            PROP
+          </span>
           {propagationSources.map((s, i) => (
             <React.Fragment key={i}>
-              {i > 0 && <span className="text-[8px] text-muted-foreground/30">→</span>}
-              <span className="text-[8px] font-medium text-muted-foreground px-1 py-0.5 rounded bg-muted/50 truncate max-w-[60px]">{s}</span>
+              {i > 0 && <span className="text-[8px] text-muted-foreground/25">→</span>}
+              <span className="text-[8px] font-medium text-muted-foreground px-1 py-0.5 rounded bg-muted/40 truncate max-w-[60px]">{s}</span>
             </React.Fragment>
           ))}
         </div>
@@ -380,9 +412,7 @@ const TimelineCard = ({
       {compact && (showVolume || showChange) && (
         <div className="flex items-center gap-1.5 text-[9px] text-muted-foreground mt-0.5">
           {showVolume && <span className="font-medium tabular-nums">{volume}</span>}
-          {showChange && (
-            <span className={`font-bold ${changePositive ? "text-[#059669]" : "text-[#E03C31]"}`}>{change}</span>
-          )}
+          {showChange && <span className={`font-bold ${changePositive ? "text-success-fg" : "text-destructive"}`}>{change}</span>}
         </div>
       )}
     </motion.div>
