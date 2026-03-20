@@ -15,9 +15,44 @@ function getCorsHeaders(req: Request) {
     'Access-Control-Allow-Methods': 'POST, GET, OPTIONS',
   };
 }
-// ─── In-memory cache (5 min) ───────────────────────────────────────
+
+// ─── In-memory cache (5 min) + last-good fallback ──────────────────
 let cache: { ts: number; data: any[] } | null = null;
+let lastGoodCache: { ts: number; data: any[] } | null = null;
 const CACHE_TTL = 5 * 60 * 1000;
+
+// ─── Throttle: min 5s between GDELT requests ──────────────────────
+let lastRequestTs = 0;
+const THROTTLE_MS = 5000;
+
+// ─── Retry with exponential backoff ────────────────────────────────
+async function fetchWithRetry(url: string, opts: RequestInit, maxRetries = 2): Promise<Response> {
+  let lastError: Error | null = null;
+  for (let attempt = 0; attempt <= maxRetries; attempt++) {
+    try {
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 12000);
+      const res = await fetch(url, { ...opts, signal: controller.signal });
+      clearTimeout(timeout);
+      if (res.status === 429) {
+        const backoff = Math.min(2000 * Math.pow(2, attempt), 10000);
+        console.log(`GDELT rate limited (429), retry ${attempt + 1} in ${backoff}ms`);
+        await new Promise(r => setTimeout(r, backoff));
+        continue;
+      }
+      return res;
+    } catch (e) {
+      lastError = e as Error;
+      if (attempt < maxRetries) {
+        const backoff = Math.min(1000 * Math.pow(2, attempt), 8000);
+        console.log(`GDELT fetch error, retry ${attempt + 1} in ${backoff}ms: ${String(e)}`);
+        await new Promise(r => setTimeout(r, backoff));
+      }
+    }
+  }
+  throw lastError || new Error("GDELT fetch failed after retries");
+}
+
 // ─── FIPS to ISO country code mapping ──────────────────────────────
 const FIPS_TO_ISO: Record<string, string> = {
   US: "US", UK: "GB", FR: "FR", GM: "DE", IT: "IT", SP: "ES", BR: "BR",
@@ -32,7 +67,6 @@ function fipsToIso(fips?: string): string {
   const code = fips.toUpperCase().slice(0, 2);
   return FIPS_TO_ISO[code] || "GL";
 }
-// ─── Sentiment from GDELT tone ─────────────────────────────────────
 function toneToSentiment(tone?: number): string {
   if (tone === undefined || tone === null) return "neutro";
   if (tone > 2) return "positivo";
@@ -44,7 +78,6 @@ function sentimentEmoji(sentiment: string): string {
   if (sentiment === "negativo") return "📉";
   return "➡️";
 }
-// ─── Category inference from domain/theme ──────────────────────────
 function inferCategory(title: string, domain?: string): string {
   const t = (title + " " + (domain || "")).toLowerCase();
   if (/politi|elect|govern|president|congress|senat|parliament|diplomac/i.test(t)) return "Política";
@@ -59,29 +92,35 @@ function inferCategory(title: string, domain?: string): string {
   if (/culture|art|museum|festival|religion|tradition/i.test(t)) return "Cultura";
   return "Geral";
 }
+
 serve(async (req) => {
   const cors = getCorsHeaders(req);
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: cors });
   }
   try {
-    // Check cache
+    // Check fresh cache
     if (cache && Date.now() - cache.ts < CACHE_TTL) {
       return new Response(JSON.stringify({ trends: cache.data }), {
         headers: { ...cors, "Content-Type": "application/json" },
       });
     }
-    // GDELT DOC 2.0 — single request with broad query  
+
+    // Throttle: wait if too soon since last request
+    const sinceLastReq = Date.now() - lastRequestTs;
+    if (sinceLastReq < THROTTLE_MS) {
+      const wait = THROTTLE_MS - sinceLastReq;
+      console.log(`GDELT throttle: waiting ${wait}ms`);
+      await new Promise(r => setTimeout(r, wait));
+    }
+    lastRequestTs = Date.now();
+
     const gdeltUrl = "https://api.gdeltproject.org/api/v2/doc/doc?query=(world OR crisis OR election OR economy OR technology OR climate OR health OR war)&mode=ArtList&maxrecords=30&format=json&sort=HybridRel&timespan=60min";
     let articles: any[] = [];
     try {
-      const controller = new AbortController();
-      const timeout = setTimeout(() => controller.abort(), 8000);
-      const response = await fetch(gdeltUrl, {
+      const response = await fetchWithRetry(gdeltUrl, {
         headers: { "User-Agent": "GTTMonitor/1.0" },
-        signal: controller.signal,
       });
-      clearTimeout(timeout);
       if (response.ok) {
         const text = await response.text();
         if (text.startsWith("{") || text.startsWith("[")) {
@@ -95,16 +134,25 @@ serve(async (req) => {
         console.log("GDELT HTTP error:", response.status, errText.slice(0, 200));
       }
     } catch (e) {
-      console.log("GDELT fetch error:", String(e));
+      console.log("GDELT fetch error after retries:", String(e));
     }
+
     console.log("GDELT articles:", articles.length);
+
     if (!Array.isArray(articles) || articles.length === 0) {
-      console.log("GDELT: No articles returned");
+      console.log("GDELT: No articles returned, using last-good cache");
+      // Fallback to last-good cache
+      if (lastGoodCache && lastGoodCache.data.length > 0) {
+        const staleData = lastGoodCache.data.map((t: any) => ({ ...t, time: "cache" }));
+        return new Response(JSON.stringify({ trends: staleData }), {
+          headers: { ...cors, "Content-Type": "application/json" },
+        });
+      }
       return new Response(JSON.stringify({ trends: [] }), {
         headers: { ...cors, "Content-Type": "application/json" },
       });
     }
-    // Map articles to TrendCardProps
+
     const trends = articles.slice(0, 25).map((article: any) => {
       const title = (article.title || "").trim();
       const tone = article.tone !== undefined ? parseFloat(article.tone) : undefined;
@@ -112,12 +160,10 @@ serve(async (req) => {
       const countryCode = fipsToIso(article.sourcecountry);
       const category = inferCategory(title, article.domain);
       const domain = article.domain || "";
-      // Extract time info — GDELT seendate format: "20260310T232600Z"
       const seenDate = article.seendate || "";
       let timeStr = "agora";
       if (seenDate) {
         try {
-          // Parse GDELT compact date format
           const match = seenDate.match(/(\d{4})(\d{2})(\d{2})T(\d{2})(\d{2})(\d{2})/);
           let d: Date;
           if (match) {
@@ -136,12 +182,10 @@ serve(async (req) => {
           timeStr = "recente";
         }
       }
-      // Generate sparkline from tone variations
       const sparkData = Array.from({ length: 10 }, (_, i) => {
         const base = 40 + (tone ? Math.abs(tone) * 5 : 0);
         return Math.round(base + Math.random() * 30 + i * 3);
       });
-      // Volume indicator
       const socialImage = article.socialimage;
       const volume = socialImage ? "Alto impacto" : "Monitorado";
       return {
@@ -163,15 +207,25 @@ serve(async (req) => {
         tone: tone !== undefined ? tone : null,
       };
     }).filter((t: any) => t.title && t.title.length > 10);
-    // Update cache
+
+    // Update both caches
     cache = { ts: Date.now(), data: trends };
+    lastGoodCache = { ts: Date.now(), data: trends };
+
     return new Response(JSON.stringify({ trends }), {
       headers: { ...cors, "Content-Type": "application/json" },
     });
   } catch (error) {
-    console.error("GDELT fetch error:", error);
+    console.error("GDELT handler error:", error);
+    // Fallback to last-good cache on any error
+    if (lastGoodCache && lastGoodCache.data.length > 0) {
+      const staleData = lastGoodCache.data.map((t: any) => ({ ...t, time: "cache" }));
+      return new Response(JSON.stringify({ trends: staleData }), {
+        headers: { ...getCorsHeaders(req), "Content-Type": "application/json" },
+      });
+    }
     return new Response(JSON.stringify({ trends: [] }), {
-      headers: { ...cors, "Content-Type": "application/json" },
+      headers: { ...getCorsHeaders(req), "Content-Type": "application/json" },
     });
   }
 });
