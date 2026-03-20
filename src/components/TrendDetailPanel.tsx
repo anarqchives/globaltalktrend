@@ -1,6 +1,6 @@
 import React from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, ChevronLeft, ChevronRight, Share2, Bookmark, Bell, ExternalLink, Sparkles, Info } from "lucide-react";
+import { X, ChevronLeft, ChevronRight, Share2, Bookmark, Bell, ExternalLink, Sparkles, Info, TrendingUp, Clock, ShieldCheck } from "lucide-react";
 import { AreaChart, Area, ResponsiveContainer, XAxis, YAxis, Tooltip as RechartsTooltip, CartesianGrid } from "recharts";
 import { TrendCardProps } from "./TrendCard";
 import { CrossPlatformCluster } from "@/hooks/use-cross-platform";
@@ -9,6 +9,7 @@ import { toast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import AlertModal from "./AlertModal";
 import TrendFeedback from "./TrendFeedback";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 
 const countryCodeToFlag = (code?: string) => {
   if (!code || code.length !== 2) return null;
@@ -23,11 +24,6 @@ const decodeEntities = (text: string): string => {
   return el.value;
 };
 
-const SOURCE_COLORS: Record<string, string> = {
-  imprensa: "var(--source-press)", redes_sociais: "var(--source-social)",
-  google_trends: "var(--source-search)", dados_oficiais: "var(--source-official)",
-  cientifico: "var(--source-academic)", enciclopedico: "var(--source-encyclopedic)",
-};
 const SOURCE_HEX: Record<string, string> = {
   imprensa: "#5580AA", redes_sociais: "#C08040", google_trends: "#C09020",
   dados_oficiais: "#558855", cientifico: "#7070AA", enciclopedico: "#408888",
@@ -43,38 +39,44 @@ const SOURCE_LABELS: Record<string, Record<string, string>> = {
 
 function getSourceType(p: string): string {
   const l = p.toLowerCase();
-  if (["guardian","npr","newsapi","gnews","bing","newsdata","thenewsapi","bbc","variety","reuters","nyt","bloomberg","ap"].some(s => l.includes(s))) return "imprensa";
+  if (["guardian","npr","newsapi","gnews","bing","newsdata","thenewsapi","bbc","variety","reuters","nyt","bloomberg","ap","folha","estadão","le monde","el país","al jazeera"].some(s => l.includes(s))) return "imprensa";
   if (["reddit","bluesky","mastodon","twitter","youtube","hacker","lobster"].some(s => l.includes(s))) return "redes_sociais";
   if (l.includes("google trends")) return "google_trends";
-  if (["world bank","fred","ibge","imf","who"].some(s => l.includes(s))) return "dados_oficiais";
+  if (["world bank","fred","ibge","imf","who","noaa"].some(s => l.includes(s))) return "dados_oficiais";
   if (["arxiv","pubmed","openal","crossref","semantic"].some(s => l.includes(s))) return "cientifico";
   if (l.includes("wikipedia")) return "enciclopedico";
   return "imprensa";
 }
 
-/* Term explanations — same as TimelineCard */
 const TERM_EXPLAIN: Record<string, Record<string, string>> = {
   pt: {
     "PMID": "PMID = PubMed Identifier — código único de artigo na base biomédica MEDLINE/PubMed",
-    "FRED": "FRED = Federal Reserve Economic Data — base de dados econômicos do Fed de St. Louis",
+    "FRED": "FRED = Federal Reserve Economic Data — base de dados econômicos do Fed de St. Louis com +800 mil séries temporais",
     "CPI": "CPI = Consumer Price Index — mede a inflação nos gastos domésticos",
-    "GDP": "GDP = Produto Interno Bruto — principal indicador econômico",
-    "WHO": "WHO = Organização Mundial da Saúde",
-    "IMF": "IMF = Fundo Monetário Internacional",
+    "GDP": "GDP = Produto Interno Bruto — principal indicador econômico de um país",
+    "WHO": "WHO = Organização Mundial da Saúde — agência especializada da ONU",
+    "IMF": "IMF = Fundo Monetário Internacional — monitora estabilidade financeira global",
     "DOI": "DOI = Identificador digital permanente para publicações acadêmicas",
-    "CPIAUCSL": "CPI-U = Índice de Preços ao Consumidor dos EUA",
+    "CPIAUCSL": "CPI-U = Índice de Preços ao Consumidor dos EUA publicado pelo Bureau of Labor Statistics",
+    "IBGE": "IBGE = Instituto Brasileiro de Geografia e Estatística — dados oficiais do Brasil",
+    "PMI": "PMI = Purchasing Managers' Index — indicador antecedente da economia",
+    "ARXIV": "arXiv = repositório de preprints científicos em física, matemática e computação",
   },
   en: {
-    "PMID": "PMID = PubMed Identifier — unique code for articles in MEDLINE/PubMed",
-    "FRED": "FRED = Federal Reserve Economic Data — St. Louis Fed database",
+    "PMID": "PMID = PubMed Identifier — unique code for articles in MEDLINE/PubMed biomedical database",
+    "FRED": "FRED = Federal Reserve Economic Data — St. Louis Fed database with 800K+ economic time series",
     "CPI": "CPI = Consumer Price Index — measures household inflation",
-    "GDP": "GDP = Gross Domestic Product — primary economic indicator",
-    "WHO": "WHO = World Health Organization",
-    "IMF": "IMF = International Monetary Fund",
+    "GDP": "GDP = Gross Domestic Product — primary measure of economic output",
+    "WHO": "WHO = World Health Organization — UN specialized health agency",
+    "IMF": "IMF = International Monetary Fund — monitors global financial stability",
     "DOI": "DOI = Digital Object Identifier for academic publications",
-    "CPIAUCSL": "CPI-U = US Consumer Price Index",
+    "CPIAUCSL": "CPI-U = US Consumer Price Index published by the Bureau of Labor Statistics",
+    "IBGE": "IBGE = Brazilian Institute of Geography and Statistics — official data agency",
+    "PMI": "PMI = Purchasing Managers' Index — leading economic indicator",
+    "ARXIV": "arXiv = scientific preprint repository for physics, mathematics and computing",
   },
 };
+
 function findTermExplanation(title: string, lang: string): string | null {
   const terms = TERM_EXPLAIN[lang] || TERM_EXPLAIN.pt;
   const upper = title.toUpperCase();
@@ -104,7 +106,7 @@ const TrendDetailPanel: React.FC<TrendDetailPanelProps> = ({
 
   const {
     platform, title, category, time, volume, change, changePositive,
-    historicalData, sources, sourceUrl, trustBadge,
+    historicalData, sources, sourceUrl, trustBadge, thumbnail,
     countryCode, description, details, publishedAt, aiContext,
     isMultiplatform, crossPlatformCluster,
   } = trend;
@@ -115,6 +117,7 @@ const TrendDetailPanel: React.FC<TrendDetailPanelProps> = ({
   const srcCount = sources?.length || 1;
   const sourceLabel = SOURCE_LABELS[sourceType]?.[lang] || SOURCE_LABELS[sourceType]?.en || "";
   const termExplanation = findTermExplanation(title, lang);
+  const hasThumbnail = thumbnail && thumbnail.startsWith("http");
 
   const realDescription = (() => {
     const raw = description || details || "";
@@ -147,8 +150,16 @@ const TrendDetailPanel: React.FC<TrendDetailPanelProps> = ({
       if (diffMin < 60) return lang === "pt" ? `há ${diffMin}min` : `${diffMin}min ago`;
       const diffH = Math.floor(diffMin / 60);
       if (diffH < 24) return lang === "pt" ? `há ${diffH}h` : `${diffH}h ago`;
-      return date.toLocaleDateString(lang === "pt" ? "pt-BR" : "en-US", { day: "2-digit", month: "short" });
+      return date.toLocaleDateString(lang === "pt" ? "pt-BR" : "en-US", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" });
     } catch { return time; }
+  })();
+
+  // Reliability indicator
+  const reliability = (() => {
+    if (trustBadge === "scientific" || trustBadge === "official") return { level: "high", label: lang === "pt" ? "Alta confiabilidade" : "High reliability", color: "text-success-fg" };
+    if (trustBadge === "verified" || trustBadge === "press" || trustBadge === "international") return { level: "medium", label: lang === "pt" ? "Fonte verificada" : "Verified source", color: "text-info-fg" };
+    if (srcCount >= 3) return { level: "medium", label: lang === "pt" ? "Múltiplas fontes" : "Multiple sources", color: "text-info-fg" };
+    return { level: "low", label: lang === "pt" ? "Fonte única" : "Single source", color: "text-muted-foreground" };
   })();
 
   const handleShare = () => {
@@ -183,7 +194,7 @@ const TrendDetailPanel: React.FC<TrendDetailPanelProps> = ({
             <X className="w-4 h-4" />
           </button>
           <span className="text-[10px] uppercase tracking-[0.08em] font-semibold text-muted-foreground">
-            {lang === "pt" ? "Detalhes" : "Details"}
+            {lang === "pt" ? "Análise" : "Analysis"}
           </span>
           <div className="flex-1" />
           <button onClick={onPrev} disabled={!hasPrev} className="compact-btn p-1.5 rounded-lg hover:bg-muted text-muted-foreground disabled:opacity-30">
@@ -198,8 +209,8 @@ const TrendDetailPanel: React.FC<TrendDetailPanelProps> = ({
           <motion.div key={title} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -8 }} transition={{ duration: 0.2 }} className="p-5">
 
-            {/* Source + time */}
-            <div className="flex items-center gap-2 mb-3">
+            {/* Source + time + reliability */}
+            <div className="flex items-center gap-2 mb-2">
               <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: dotHex }} />
               <span className="text-[11px] uppercase tracking-[0.08em] font-bold" style={{ color: dotHex }}>{platform}</span>
               <span className="text-[11px] text-muted-foreground/30">·</span>
@@ -209,9 +220,24 @@ const TrendDetailPanel: React.FC<TrendDetailPanelProps> = ({
 
             {/* Source type explanation */}
             {sourceLabel && (
-              <div className="flex items-center gap-1.5 mb-3 text-[9px] text-muted-foreground/60">
+              <div className="flex items-center gap-1.5 mb-2 text-[9px] text-muted-foreground/60">
                 <Info className="w-3 h-3 flex-shrink-0" />
                 <span>{sourceLabel}</span>
+              </div>
+            )}
+
+            {/* Reliability badge */}
+            <div className="flex items-center gap-1.5 mb-3">
+              <ShieldCheck className={`w-3 h-3 ${reliability.color}`} />
+              <span className={`text-[9px] font-medium ${reliability.color}`}>{reliability.label}</span>
+              {category && <span className="text-[9px] px-1.5 py-0.5 rounded bg-muted text-muted-foreground">{category}</span>}
+            </div>
+
+            {/* Thumbnail */}
+            {hasThumbnail && (
+              <div className="w-full h-32 rounded-lg overflow-hidden bg-muted mb-4">
+                <img src={thumbnail} alt="" className="w-full h-full object-cover" loading="lazy"
+                  onError={(e) => { (e.target as HTMLImageElement).parentElement!.style.display = 'none'; }} />
               </div>
             )}
 
@@ -226,37 +252,55 @@ const TrendDetailPanel: React.FC<TrendDetailPanelProps> = ({
               </div>
             )}
 
-            {/* Metrics */}
+            {/* Metrics row */}
             {hasMetrics && (
               <div className="grid grid-cols-3 gap-2 mb-5">
                 {showVolume && (
-                  <div className="rounded-md bg-background p-3 text-center">
-                    <span className="text-[9px] uppercase tracking-[0.08em] text-muted-foreground block mb-0.5"
-                      title={lang === "pt" ? "Volume total de menções ou buscas" : "Total volume of mentions or searches"}>
-                      Volume
-                    </span>
-                    <span className="text-[15px] font-bold text-foreground">{volume}</span>
-                  </div>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <div className="rounded-md bg-background p-3 text-center cursor-help">
+                        <span className="text-[9px] uppercase tracking-[0.08em] text-muted-foreground block mb-0.5">
+                          Volume
+                        </span>
+                        <span className="text-[15px] font-bold text-foreground">{volume}</span>
+                      </div>
+                    </TooltipTrigger>
+                    <TooltipContent className="text-[10px] max-w-[200px]">
+                      {lang === "pt" ? "Volume total de menções, buscas ou interações registradas" : "Total volume of mentions, searches or interactions"}
+                    </TooltipContent>
+                  </Tooltip>
                 )}
                 {showChange && (
-                  <div className="rounded-md bg-background p-3 text-center">
-                    <span className="text-[9px] uppercase tracking-[0.08em] text-muted-foreground block mb-0.5"
-                      title={lang === "pt" ? "Variação percentual em relação ao período anterior" : "Percentage change vs. previous period"}>
-                      {lang === "pt" ? "Cresc." : "Growth"}
-                    </span>
-                    <span className={`text-[15px] font-bold ${changePositive ? "text-success-fg" : "text-destructive"}`}>
-                      {changePositive ? "+" : ""}{change}
-                    </span>
-                  </div>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <div className="rounded-md bg-background p-3 text-center cursor-help">
+                        <span className="text-[9px] uppercase tracking-[0.08em] text-muted-foreground block mb-0.5">
+                          {lang === "pt" ? "Cresc." : "Growth"}
+                        </span>
+                        <span className={`text-[15px] font-bold ${changePositive ? "text-success-fg" : "text-destructive"}`}>
+                          {changePositive ? "+" : ""}{change}
+                        </span>
+                      </div>
+                    </TooltipTrigger>
+                    <TooltipContent className="text-[10px] max-w-[200px]">
+                      {lang === "pt" ? "Variação percentual em relação ao período anterior" : "Percentage change vs. previous period"}
+                    </TooltipContent>
+                  </Tooltip>
                 )}
                 {srcCount > 1 && (
-                  <div className="rounded-md bg-background p-3 text-center">
-                    <span className="text-[9px] uppercase tracking-[0.08em] text-muted-foreground block mb-0.5"
-                      title={lang === "pt" ? "Número de fontes independentes cobrindo esta tendência" : "Number of independent sources covering this trend"}>
-                      {lang === "pt" ? "Fontes" : "Sources"}
-                    </span>
-                    <span className="text-[15px] font-bold text-foreground">{srcCount}</span>
-                  </div>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <div className="rounded-md bg-background p-3 text-center cursor-help">
+                        <span className="text-[9px] uppercase tracking-[0.08em] text-muted-foreground block mb-0.5">
+                          {lang === "pt" ? "Fontes" : "Sources"}
+                        </span>
+                        <span className="text-[15px] font-bold text-foreground">{srcCount}</span>
+                      </div>
+                    </TooltipTrigger>
+                    <TooltipContent className="text-[10px] max-w-[200px]">
+                      {lang === "pt" ? "Número de fontes independentes cobrindo esta tendência" : "Number of independent sources covering this trend"}
+                    </TooltipContent>
+                  </Tooltip>
                 )}
               </div>
             )}
@@ -264,15 +308,14 @@ const TrendDetailPanel: React.FC<TrendDetailPanelProps> = ({
             {/* 24h chart */}
             {hasEvolution && (
               <div className="mb-5">
-                <span className="text-[10px] uppercase tracking-[0.08em] font-semibold text-muted-foreground mb-2 block"
-                  title={lang === "pt" ? "Gráfico de evolução do volume nas últimas 24 horas" : "Volume evolution chart over the last 24 hours"}>
+                <span className="text-[10px] uppercase tracking-[0.08em] font-semibold text-muted-foreground mb-2 block">
                   {lang === "pt" ? "Evolução 24h" : "24h Evolution"}
                 </span>
                 <div style={{ height: 120 }}>
                   <ResponsiveContainer width="100%" height="100%">
                     <AreaChart data={historicalData}>
                       <defs>
-                        <linearGradient id="dg" x1="0" y1="0" x2="0" y2="1">
+                        <linearGradient id="detail-gradient" x1="0" y1="0" x2="0" y2="1">
                           <stop offset="0%" stopColor={dotHex} stopOpacity={0.12} />
                           <stop offset="100%" stopColor={dotHex} stopOpacity={0} />
                         </linearGradient>
@@ -282,7 +325,7 @@ const TrendDetailPanel: React.FC<TrendDetailPanelProps> = ({
                       <YAxis tick={{ fontSize: 9, fill: "hsl(var(--muted-foreground))" }} tickLine={false} axisLine={false} width={30}
                         tickFormatter={(v) => v >= 1000 ? `${(v/1000).toFixed(0)}K` : v} />
                       <RechartsTooltip contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: "8px", fontSize: 11 }} />
-                      <Area type="monotone" dataKey="value" stroke={dotHex} strokeWidth={1.5} fill="url(#dg)" />
+                      <Area type="monotone" dataKey="value" stroke={dotHex} strokeWidth={1.5} fill="url(#detail-gradient)" />
                     </AreaChart>
                   </ResponsiveContainer>
                 </div>
@@ -292,9 +335,8 @@ const TrendDetailPanel: React.FC<TrendDetailPanelProps> = ({
             {/* Propagation */}
             {showPropagation && crossPlatformCluster && (
               <div className="mb-4">
-                <span className="text-[10px] uppercase tracking-[0.08em] font-semibold text-muted-foreground mb-2 block"
-                  title={lang === "pt" ? "Como esta tendência se propagou entre plataformas diferentes" : "How this trend propagated across different platforms"}>
-                  {lang === "pt" ? "Propagação" : "Propagation"}
+                <span className="text-[10px] uppercase tracking-[0.08em] font-semibold text-muted-foreground mb-2 block">
+                  {lang === "pt" ? "Propagação entre plataformas" : "Cross-platform propagation"}
                 </span>
                 <div className="flex items-center gap-1.5 flex-wrap text-xs">
                   <span className="px-2 py-0.5 rounded-full text-[10px] font-medium" style={{ backgroundColor: `${dotHex}15`, color: dotHex }}>
@@ -305,6 +347,11 @@ const TrendDetailPanel: React.FC<TrendDetailPanelProps> = ({
                     <span key={i} className="px-2 py-0.5 rounded-full bg-muted text-muted-foreground font-medium text-[10px]">{p}</span>
                   ))}
                 </div>
+                <p className="text-[9px] text-muted-foreground/50 mt-1">
+                  {lang === "pt"
+                    ? `Detectada em ${crossPlatformCluster.platformCount} plataformas com volume total de ${crossPlatformCluster.totalVolume.toLocaleString()}`
+                    : `Detected across ${crossPlatformCluster.platformCount} platforms with total volume of ${crossPlatformCluster.totalVolume.toLocaleString()}`}
+                </p>
               </div>
             )}
 

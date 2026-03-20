@@ -30,17 +30,17 @@ interface AppHeaderProps {
 }
 
 const CATEGORIES = [
-  { value: "Todas", label: { pt: "Todas", en: "All" } },
-  { value: "Geopolítica", label: { pt: "Geopolítica", en: "Geopolitics" } },
-  { value: "Economia", label: { pt: "Economia", en: "Economy" } },
-  { value: "Tecnologia", label: { pt: "Tecnologia", en: "Technology" } },
-  { value: "Ciência", label: { pt: "Ciência", en: "Science" } },
-  { value: "Saúde", label: { pt: "Saúde", en: "Health" } },
-  { value: "Entretenimento", label: { pt: "Entretenimento", en: "Entertainment" } },
-  { value: "Esportes", label: { pt: "Esportes", en: "Sports" } },
-  { value: "Cultura", label: { pt: "Cultura", en: "Culture" } },
-  { value: "Meio Ambiente", label: { pt: "Meio Ambiente", en: "Environment" } },
-  { value: "Educação", label: { pt: "Educação", en: "Education" } },
+  { value: "Todas", label: { pt: "Todas", en: "All", es: "Todas" } },
+  { value: "Geopolítica", label: { pt: "Geopolítica", en: "Geopolitics", es: "Geopolítica" } },
+  { value: "Economia", label: { pt: "Economia", en: "Economy", es: "Economía" } },
+  { value: "Tecnologia", label: { pt: "Tecnologia", en: "Technology", es: "Tecnología" } },
+  { value: "Ciência", label: { pt: "Ciência", en: "Science", es: "Ciencia" } },
+  { value: "Saúde", label: { pt: "Saúde", en: "Health", es: "Salud" } },
+  { value: "Entretenimento", label: { pt: "Entretenimento", en: "Entertainment", es: "Entretenimiento" } },
+  { value: "Esportes", label: { pt: "Esportes", en: "Sports", es: "Deportes" } },
+  { value: "Cultura", label: { pt: "Cultura", en: "Culture", es: "Cultura" } },
+  { value: "Meio Ambiente", label: { pt: "Meio Ambiente", en: "Environment", es: "Medio Ambiente" } },
+  { value: "Educação", label: { pt: "Educação", en: "Education", es: "Educación" } },
 ];
 
 const SOURCE_TYPES = [
@@ -114,7 +114,6 @@ const AppHeader = ({ minimal = false, filters, onFilterChange, onForceReset, onS
     filters.type !== defaultFilters.type
   );
 
-  // Build active filter pills for display
   const activeFilterPills: { key: keyof FilterState; label: string; defaultValue: string }[] = [];
   if (filters) {
     if (filters.country !== "global") {
@@ -147,7 +146,8 @@ const AppHeader = ({ minimal = false, filters, onFilterChange, onForceReset, onS
           <div className="w-full max-w-[1440px] mx-auto flex items-center">
             {/* Logo */}
             <Link to="/welcome" className="flex items-center gap-1.5 shrink-0" aria-label="GTT Monitor">
-              <span className="text-[12px] font-bold tracking-tight text-foreground">GTTMonitor</span>
+              <span className="text-[13px] font-bold tracking-tight text-foreground">GTT</span>
+              <span className="text-[13px] font-medium tracking-tight text-muted-foreground">Monitor</span>
             </Link>
 
             {/* Active filter pills */}
@@ -155,10 +155,10 @@ const AppHeader = ({ minimal = false, filters, onFilterChange, onForceReset, onS
               <div className="flex items-center gap-1 ml-3 overflow-x-auto scrollbar-none">
                 {activeFilterPills.map(pill => (
                   <span key={pill.key}
-                    className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium bg-foreground/8 text-foreground border border-border/40 flex-shrink-0">
+                    className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium bg-foreground/8 text-foreground border border-border/40 flex-shrink-0 whitespace-nowrap">
                     {pill.label}
                     <button onClick={() => update(pill.key, pill.defaultValue)}
-                      className="hover:text-destructive transition-colors">
+                      className="hover:text-destructive transition-colors ml-0.5">
                       <X className="w-2.5 h-2.5" />
                     </button>
                   </span>
@@ -168,20 +168,8 @@ const AppHeader = ({ minimal = false, filters, onFilterChange, onForceReset, onS
 
             <div className="flex-1" />
 
-            {/* Controls */}
+            {/* Right controls — single clean row */}
             <div className="flex items-center gap-1.5">
-              {/* Filter button — opens drawer */}
-              {filters && onFilterChange && (
-                <button onClick={() => setDrawerOpen(true)}
-                  className={`compact-btn flex items-center gap-1 h-7 px-2.5 rounded-lg text-[10px] font-semibold transition-all ${
-                    hasActiveFilters ? "bg-foreground text-background" : "text-muted-foreground hover:text-foreground hover:bg-muted"
-                  }`}>
-                  <Filter className="w-3 h-3" />
-                  <span className="hidden sm:inline">{lang === "pt" ? "Filtros" : "Filters"}</span>
-                  {hasActiveFilters && <span className="w-1.5 h-1.5 rounded-full bg-background/60" />}
-                </button>
-              )}
-
               <a href="https://buy.stripe.com/fZu7sMgw6cHLeTnbWVdIA00" target="_blank" rel="noopener noreferrer"
                 className="hidden sm:flex apoie-pill compact-link">{t("support")}</a>
 
@@ -195,27 +183,31 @@ const AppHeader = ({ minimal = false, filters, onFilterChange, onForceReset, onS
                 </button>
               ) : (
                 <button onClick={() => setLoginOpen(true)}
-                  className="compact-btn flex items-center gap-1 h-6 px-2.5 rounded-full text-[10px] font-semibold bg-foreground text-background">
+                  className="compact-btn flex items-center gap-1 h-6 px-2.5 rounded-full text-[10px] font-semibold bg-foreground text-background hover:bg-foreground/90 transition-colors">
                   <span className="hidden sm:inline">{t("enter")}</span>
                   <LogIn className="w-3 h-3 sm:hidden" />
                 </button>
               )}
 
+              {/* Single menu button that opens the drawer */}
               <button onClick={() => setDrawerOpen(true)}
-                className="compact-btn flex items-center justify-center w-7 h-7 rounded-lg text-muted-foreground hover:text-foreground transition-colors">
+                className={`compact-btn flex items-center justify-center w-7 h-7 rounded-lg transition-colors ${
+                  hasActiveFilters ? "bg-foreground text-background" : "text-muted-foreground hover:text-foreground hover:bg-muted"
+                }`}>
                 <Menu className="w-4 h-4" />
+                {hasActiveFilters && <span className="absolute -top-0.5 -right-0.5 w-1.5 h-1.5 rounded-full bg-destructive" />}
               </button>
             </div>
           </div>
         </div>
       </header>
 
-      {/* Filter & Navigation Drawer */}
+      {/* Unified Navigation Drawer */}
       <Sheet open={drawerOpen} onOpenChange={setDrawerOpen}>
         <SheetContent side="right" className="w-[320px] sm:w-[360px] p-0">
           <SheetHeader className="p-4 pb-3 border-b border-border/30">
             <SheetTitle className="text-[14px] font-bold">
-              {lang === "pt" ? "Filtros & Navegação" : "Filters & Navigation"}
+              {lang === "pt" ? "Filtros & Navegação" : lang === "es" ? "Filtros y Navegación" : "Filters & Navigation"}
             </SheetTitle>
           </SheetHeader>
           <ScrollArea className="h-[calc(100vh-60px)]">
@@ -223,9 +215,10 @@ const AppHeader = ({ minimal = false, filters, onFilterChange, onForceReset, onS
               {/* FILTERS SECTION */}
               {filters && onFilterChange && (
                 <>
+                  {/* Country / Region */}
                   <div>
                     <h4 className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground mb-2">
-                      {lang === "pt" ? "País / Região" : "Country / Region"}
+                      {lang === "pt" ? "País / Região" : lang === "es" ? "País / Región" : "Country / Region"}
                     </h4>
                     <input type="text" placeholder={lang === "pt" ? "Buscar país..." : "Search country..."}
                       value={countrySearch} onChange={(e) => setCountrySearch(e.target.value)}
@@ -249,6 +242,7 @@ const AppHeader = ({ minimal = false, filters, onFilterChange, onForceReset, onS
                     </div>
                   </div>
 
+                  {/* Categories */}
                   <div>
                     <h4 className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground mb-2">
                       {lang === "pt" ? "Categoria" : "Category"}
@@ -259,12 +253,13 @@ const AppHeader = ({ minimal = false, filters, onFilterChange, onForceReset, onS
                           className={`px-2.5 py-1 rounded-md text-[10px] font-medium transition-all ${
                             filters.category === c.value ? "bg-foreground text-background" : "bg-muted/50 text-muted-foreground hover:bg-muted hover:text-foreground"
                           }`}>
-                          {c.label[lang as "pt" | "en"] || c.label.pt}
+                          {c.label[lang as keyof typeof c.label] || c.label.pt}
                         </button>
                       ))}
                     </div>
                   </div>
 
+                  {/* Period */}
                   <div>
                     <h4 className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground mb-2">
                       {lang === "pt" ? "Período" : "Period"}
@@ -281,6 +276,7 @@ const AppHeader = ({ minimal = false, filters, onFilterChange, onForceReset, onS
                     </div>
                   </div>
 
+                  {/* Source Type */}
                   <div>
                     <h4 className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground mb-2">
                       {lang === "pt" ? "Tipo de Fonte" : "Source Type"}
@@ -345,78 +341,87 @@ const AppHeader = ({ minimal = false, filters, onFilterChange, onForceReset, onS
                 <div className="space-y-0.5">
                   <Link to="/dashboard" onClick={() => setDrawerOpen(false)}
                     className="flex items-center justify-between px-3 py-2 rounded-md hover:bg-muted transition-colors text-[11px] font-medium">
-                    <span className="flex items-center gap-2"><BarChart3 className="w-3.5 h-3.5" /> Dashboard</span>
-                    <ChevronRight className="w-3 h-3 text-muted-foreground" />
+                    <span className="flex items-center gap-2"><BarChart3 className="w-3.5 h-3.5 text-muted-foreground" /> Dashboard</span>
+                    <ChevronRight className="w-3 h-3 text-muted-foreground/30" />
                   </Link>
-                  <button onClick={() => { onSaveFilter?.(); setDrawerOpen(false); }}
-                    className="w-full flex items-center justify-between px-3 py-2 rounded-md hover:bg-muted transition-colors text-[11px] font-medium">
-                    <span className="flex items-center gap-2"><Bell className="w-3.5 h-3.5" /> {lang === "pt" ? "Alertas" : "Alerts"}</span>
-                    <ChevronRight className="w-3 h-3 text-muted-foreground" />
-                  </button>
-                  <button onClick={() => { onOpenSavedCollections?.(); setDrawerOpen(false); }}
-                    className="w-full flex items-center justify-between px-3 py-2 rounded-md hover:bg-muted transition-colors text-[11px] font-medium">
-                    <span className="flex items-center gap-2"><Bookmark className="w-3.5 h-3.5" /> {lang === "pt" ? "Salvos" : "Saved"}</span>
-                    <ChevronRight className="w-3 h-3 text-muted-foreground" />
-                  </button>
-                  <Link to="/metodologia" onClick={() => setDrawerOpen(false)}
+                  <Link to="/historico" onClick={() => setDrawerOpen(false)}
                     className="flex items-center justify-between px-3 py-2 rounded-md hover:bg-muted transition-colors text-[11px] font-medium">
-                    <span className="flex items-center gap-2"><BookOpen className="w-3.5 h-3.5" /> {lang === "pt" ? "Metodologia" : "Methodology"}</span>
-                    <ChevronRight className="w-3 h-3 text-muted-foreground" />
+                    <span className="flex items-center gap-2"><BookOpen className="w-3.5 h-3.5 text-muted-foreground" /> {lang === "pt" ? "Histórico" : "History"}</span>
+                    <ChevronRight className="w-3 h-3 text-muted-foreground/30" />
                   </Link>
+                  <button onClick={() => { setDrawerOpen(false); onOpenSavedCollections?.(); }}
+                    className="w-full flex items-center justify-between px-3 py-2 rounded-md hover:bg-muted transition-colors text-[11px] font-medium text-left">
+                    <span className="flex items-center gap-2"><Bookmark className="w-3.5 h-3.5 text-muted-foreground" /> {lang === "pt" ? "Salvos" : "Saved"}</span>
+                    <ChevronRight className="w-3 h-3 text-muted-foreground/30" />
+                  </button>
                   <Link to="/reports" onClick={() => setDrawerOpen(false)}
                     className="flex items-center justify-between px-3 py-2 rounded-md hover:bg-muted transition-colors text-[11px] font-medium">
-                    <span className="flex items-center gap-2"><FileText className="w-3.5 h-3.5" /> {lang === "pt" ? "Relatórios" : "Reports"}</span>
-                    <ChevronRight className="w-3 h-3 text-muted-foreground" />
+                    <span className="flex items-center gap-2"><FileText className="w-3.5 h-3.5 text-muted-foreground" /> {lang === "pt" ? "Relatórios" : "Reports"}</span>
+                    <ChevronRight className="w-3 h-3 text-muted-foreground/30" />
                   </Link>
-                  {user ? (
-                    <>
-                      <Link to="/perfil" onClick={() => setDrawerOpen(false)}
-                        className="flex items-center justify-between px-3 py-2 rounded-md hover:bg-muted transition-colors text-[11px] font-medium">
-                        <span className="flex items-center gap-2"><User className="w-3.5 h-3.5" /> {lang === "pt" ? "Perfil" : "Profile"}</span>
-                        <ChevronRight className="w-3 h-3 text-muted-foreground" />
-                      </Link>
-                      <button onClick={() => { handleLogout(); setDrawerOpen(false); }}
-                        className="w-full flex items-center px-3 py-2 rounded-md hover:bg-destructive/5 transition-colors text-[11px] font-medium text-destructive">
-                        <LogOut className="w-3.5 h-3.5 mr-2" /> {lang === "pt" ? "Sair" : "Sign out"}
-                      </button>
-                    </>
-                  ) : (
-                    <button onClick={() => { setLoginOpen(true); setDrawerOpen(false); }}
-                      className="w-full flex items-center px-3 py-2 rounded-md hover:bg-muted transition-colors text-[11px] font-medium">
-                      <LogIn className="w-3.5 h-3.5 mr-2" /> {lang === "pt" ? "Entrar" : "Sign in"}
-                    </button>
-                  )}
+                  <Link to="/metodologia" onClick={() => setDrawerOpen(false)}
+                    className="flex items-center justify-between px-3 py-2 rounded-md hover:bg-muted transition-colors text-[11px] font-medium">
+                    <span className="flex items-center gap-2"><Globe className="w-3.5 h-3.5 text-muted-foreground" /> {lang === "pt" ? "Sobre / Metodologia" : "About / Methodology"}</span>
+                    <ChevronRight className="w-3 h-3 text-muted-foreground/30" />
+                  </Link>
                 </div>
+              </div>
+
+              {/* AUTH */}
+              <div className="border-t border-border/30 pt-4">
+                {user ? (
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-2 px-3 py-2">
+                      <Avatar className="w-6 h-6">
+                        {userAvatar && <AvatarImage src={userAvatar} alt={userName} />}
+                        <AvatarFallback className="text-[8px] font-bold bg-foreground text-background">{userInitial}</AvatarFallback>
+                      </Avatar>
+                      <div className="min-w-0">
+                        <div className="text-[11px] font-semibold truncate">{userName}</div>
+                        <div className="text-[9px] text-muted-foreground truncate">{user.email}</div>
+                      </div>
+                    </div>
+                    <button onClick={() => { handleLogout(); setDrawerOpen(false); }}
+                      className="w-full flex items-center gap-2 px-3 py-2 rounded-md text-destructive hover:bg-destructive/5 transition-colors text-[11px] font-medium">
+                      <LogOut className="w-3.5 h-3.5" /> {lang === "pt" ? "Sair" : "Log out"}
+                    </button>
+                  </div>
+                ) : (
+                  <button onClick={() => { setDrawerOpen(false); setLoginOpen(true); }}
+                    className="w-full flex items-center justify-center gap-2 py-2.5 rounded-md bg-foreground text-background text-[11px] font-semibold hover:bg-foreground/90 transition-colors">
+                    <LogIn className="w-3.5 h-3.5" /> {lang === "pt" ? "Entrar" : "Sign in"}
+                  </button>
+                )}
               </div>
             </div>
           </ScrollArea>
         </SheetContent>
       </Sheet>
 
-      {/* Login Dialog */}
+      {/* Login Modal */}
       <Dialog open={loginOpen} onOpenChange={setLoginOpen}>
-        <DialogContent className="max-w-sm w-[92vw] border-border shadow-lg rounded-xl overflow-hidden p-0">
-          <div className="p-6">
-            <DialogHeader className="text-center space-y-1.5 pb-5">
-              <DialogTitle className="text-[18px] font-semibold tracking-tight">
-                {lang === "en" ? "Sign in to GTT Monitor" : "Entrar no GTT Monitor"}
-              </DialogTitle>
-              <DialogDescription className="text-[13px] text-muted-foreground">
-                {lang === "en" ? "Save trends, create alerts and track your history" : "Salve trends, crie alertas e acompanhe seu histórico"}
-              </DialogDescription>
-            </DialogHeader>
-            <div className="space-y-3">
-              <button onClick={() => handleOAuthLogin("google")} disabled={loginLoading !== null}
-                className="w-full flex items-center justify-center gap-2.5 py-3 rounded-lg border border-border bg-card hover:bg-secondary/30 transition-colors text-[13px] font-medium disabled:opacity-60 min-h-[48px]">
-                {loginLoading === "google" ? <Loader2 className="w-4 h-4 animate-spin" /> : <svg className="w-4 h-4" viewBox="0 0 24 24"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 01-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/></svg>}
-                {lang === "en" ? "Continue with Google" : "Continuar com Google"}
-              </button>
-              <button onClick={() => handleOAuthLogin("apple")} disabled={loginLoading !== null}
-                className="w-full flex items-center justify-center gap-2.5 py-3 rounded-lg border border-border bg-card hover:bg-secondary/30 transition-colors text-[13px] font-medium disabled:opacity-60 min-h-[48px]">
-                {loginLoading === "apple" ? <Loader2 className="w-4 h-4 animate-spin" /> : <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M17.05 20.28c-.98.95-2.05.88-3.08.4-1.09-.5-2.08-.48-3.24 0-1.44.62-2.2.44-3.06-.4C2.79 15.25 3.51 7.59 9.05 7.31c1.35.07 2.29.74 3.08.8 1.18-.24 2.31-.93 3.57-.84 1.51.12 2.65.72 3.4 1.8-3.12 1.87-2.38 5.98.48 7.13-.57 1.5-1.31 2.99-2.54 4.09zM12.03 7.25c-.15-2.23 1.66-4.07 3.74-4.25.29 2.58-2.34 4.5-3.74 4.25z"/></svg>}
-                {lang === "en" ? "Continue with Apple" : "Continuar com Apple"}
-              </button>
-            </div>
+        <DialogContent className="sm:max-w-[360px] p-6 rounded-2xl border-border/50">
+          <DialogHeader>
+            <DialogTitle className="text-center text-[16px] font-bold">{lang === "pt" ? "Entrar" : "Sign in"}</DialogTitle>
+            <DialogDescription className="text-center text-[11px] text-muted-foreground">
+              {lang === "pt" ? "Acesse para salvar, alertar e personalizar." : "Sign in to save, alert and personalize."}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex flex-col gap-2 mt-3">
+            <button onClick={() => handleOAuthLogin("google")} disabled={!!loginLoading}
+              className="flex items-center justify-center gap-2 w-full py-2.5 rounded-lg border border-border text-[12px] font-medium hover:bg-muted transition-colors disabled:opacity-50">
+              {loginLoading === "google" ? <Loader2 className="w-4 h-4 animate-spin" /> : (
+                <svg className="w-4 h-4" viewBox="0 0 24 24"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/></svg>
+              )}
+              Google
+            </button>
+            <button onClick={() => handleOAuthLogin("apple")} disabled={!!loginLoading}
+              className="flex items-center justify-center gap-2 w-full py-2.5 rounded-lg bg-foreground text-background text-[12px] font-medium hover:bg-foreground/90 transition-colors disabled:opacity-50">
+              {loginLoading === "apple" ? <Loader2 className="w-4 h-4 animate-spin" /> : (
+                <svg className="w-4 h-4 fill-current" viewBox="0 0 24 24"><path d="M17.05 20.28c-.98.95-2.05.88-3.08.4-1.09-.5-2.08-.48-3.24 0-1.44.62-2.2.44-3.06-.4C2.79 15.25 3.51 7.59 9.05 7.31c1.35.07 2.29.74 3.08.8 1.18-.24 2.31-.93 3.57-.84 1.51.12 2.65.72 3.4 1.8-3.12 1.87-2.38 5.98.48 7.13-.57 1.5-1.31 2.99-2.54 4.09zM12.03 7.25c-.15-2.23 1.66-4.07 3.74-4.25.32 2.32-1.55 4.3-3.74 4.25z" /></svg>
+              )}
+              Apple
+            </button>
           </div>
         </DialogContent>
       </Dialog>
@@ -424,4 +429,4 @@ const AppHeader = ({ minimal = false, filters, onFilterChange, onForceReset, onS
   );
 };
 
-export default React.memo(AppHeader);
+export default AppHeader;
