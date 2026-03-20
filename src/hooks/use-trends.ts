@@ -228,7 +228,7 @@ function generateContextualFallback(filters: FilterState): TrendCardProps[] {
       { icon: "🇮🇳", platform: "Times of India", title: "India: technology boom and political developments", category: "Tecnologia", time: timeStr, volume: "Alto", change: "+180%", changePositive: true, sparkData: [22, 35, 48, 58, 68, 75, 82, 88, 92, 95], details: "Índia se destaca como potência tecnológica emergente.", countryCode: "IN" },
     ],
     JP: [
-      { icon: "🇯🇵", platform: "NHK", title: "Japan: economic recovery and innovation drive", category: "Negócios/Finanças", time: timeStr, volume: "Destaque", change: "+120%", changePositive: true, sparkData: [20, 30, 40, 50, 58, 65, 72, 78, 84, 88], details: "Japão investe em inovação e recuperação econômica.", countryCode: "JP" },
+      { icon: "🇯🇵", platform: "NHK", title: "Japan: economic recovery and innovation drive", category: "Economia", time: timeStr, volume: "Destaque", change: "+120%", changePositive: true, sparkData: [20, 30, 40, 50, 58, 65, 72, 78, 84, 88], details: "Japão investe em inovação e recuperação econômica.", countryCode: "JP" },
     ],
     EG: [
       { icon: "🇪🇬", platform: "Ahram Online", title: "Egito: economia do Canal de Suez e diplomacia regional", category: "Negócios/Finanças", time: timeStr, volume: "Destaque", change: "+100%", changePositive: true, sparkData: [18, 28, 38, 48, 55, 62, 68, 75, 80, 85], details: "Egito mantém papel central na diplomacia do Oriente Médio.", countryCode: "EG" },
