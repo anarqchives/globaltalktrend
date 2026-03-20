@@ -102,48 +102,22 @@ async function getRedditToken(): Promise<string | null> {
   }
 }
 
+function isRedditEnabled(): boolean {
+  const clientId = Deno.env.get("REDDIT_CLIENT_ID");
+  const clientSecret = Deno.env.get("REDDIT_CLIENT_SECRET");
+  return !!(clientId && clientSecret);
+}
+
 async function fetchReddit(): Promise<TrendItem[]> {
+  if (!isRedditEnabled()) {
+    console.log("ℹ️ Reddit integration skipped: missing credentials (REDDIT_CLIENT_ID / REDDIT_CLIENT_SECRET)");
+    return [];
+  }
+
   const token = await getRedditToken();
   if (!token) {
-    // Fallback: public JSON endpoint (no auth needed, lower rate limits)
-    console.log("⚠️ Reddit OAuth not configured, using public endpoint");
-    try {
-      const res = await fetch("https://www.reddit.com/r/all/hot.json?limit=12", {
-        headers: { "User-Agent": "GTTMonitor/1.0" },
-        signal: AbortSignal.timeout(8000),
-      });
-      if (!res.ok) { await res.text(); return []; }
-      const data = await res.json();
-      const posts = data?.data?.children || [];
-      console.log(`🟠 Reddit (public) retornou: ${posts.length} posts`);
-      return posts.slice(0, 12).map((p: any) => {
-        const d = p.data;
-        const score = d.score || 0;
-        const hist = generateHistorical(Math.max(score / 10, 20), "Upvotes/h");
-        return {
-          icon: "🟠",
-          platform: "Reddit",
-          title: d.title || "Sem título",
-          category: inferCategory(d.title || ""),
-          time: d.created_utc ? new Date(d.created_utc * 1000).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" }) : "agora",
-          volume: formatVolume(score),
-          change: d.num_comments > 100 ? `+${formatVolume(d.num_comments)} 💬` : `${d.num_comments} 💬`,
-          changePositive: score > 1000,
-          sparkData: sparkRandom(),
-          details: d.selftext?.substring(0, 200) || "",
-          sourceUrl: `https://reddit.com${d.permalink}`,
-          trustBadge: "community",
-          publishedAt: d.created_utc ? new Date(d.created_utc * 1000).toISOString() : new Date().toISOString(),
-          likeRatio: d.upvote_ratio,
-          commentCount: d.num_comments,
-          countryCode: "GL",
-          ...hist,
-        };
-      });
-    } catch (e) {
-      console.error("Reddit public fetch error:", e);
-      return [];
-    }
+    console.warn("⚠️ Reddit OAuth token failed, skipping Reddit");
+    return [];
   }
 
   // Authenticated path
