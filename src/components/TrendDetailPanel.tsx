@@ -164,7 +164,7 @@ const TrendDetailPanel: React.FC<TrendDetailPanelProps> = ({
             </div>
 
             {/* Title */}
-            <h2 className="text-[20px] font-bold leading-snug text-foreground mb-4">{decodeEntities(title)}</h2>
+            <h2 className="text-[20px] font-bold leading-snug text-foreground mb-4 font-serif">{decodeEntities(title)}</h2>
 
             {/* Metrics */}
             {hasMetrics && (
