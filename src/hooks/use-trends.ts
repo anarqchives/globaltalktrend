@@ -222,7 +222,7 @@ function generateContextualFallback(filters: FilterState): TrendCardProps[] {
       { icon: "🇮🇱", platform: "Haaretz", title: "Israel: tensões regionais e política doméstica", category: "Geopolítica", time: timeStr, volume: "Alto", change: "+200%", changePositive: false, sparkData: [35, 48, 58, 68, 75, 82, 88, 92, 95, 97], details: "Análise das dinâmicas políticas e de segurança em Israel.", countryCode: "IL" },
     ],
     CN: [
-      { icon: "🇨🇳", platform: "South China Morning Post", title: "China: economia e relações internacionais em foco", category: "Negócios/Finanças", time: timeStr, volume: "Destaque", change: "+150%", changePositive: true, sparkData: [25, 38, 48, 58, 65, 72, 78, 84, 88, 92], details: "As últimas notícias sobre a economia e geopolítica chinesa.", countryCode: "CN" },
+      { icon: "🇨🇳", platform: "South China Morning Post", title: "China: economia e relações internacionais em foco", category: "Economia", time: timeStr, volume: "Destaque", change: "+150%", changePositive: true, sparkData: [25, 38, 48, 58, 65, 72, 78, 84, 88, 92], details: "As últimas notícias sobre a economia e geopolítica chinesa.", countryCode: "CN" },
     ],
     IN: [
       { icon: "🇮🇳", platform: "Times of India", title: "India: technology boom and political developments", category: "Tecnologia", time: timeStr, volume: "Alto", change: "+180%", changePositive: true, sparkData: [22, 35, 48, 58, 68, 75, 82, 88, 92, 95], details: "Índia se destaca como potência tecnológica emergente.", countryCode: "IN" },
