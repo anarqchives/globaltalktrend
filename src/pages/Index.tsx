@@ -324,10 +324,18 @@ const Index = () => {
             )}
             <TagLegend />
             <div className="flex items-center overflow-hidden rounded-[10px] border border-border">
-              <button onClick={() => setCompactMode(false)} className={`flex items-center justify-center w-7 h-[26px] transition-all ${!compactMode ? "bg-foreground text-background" : "bg-card text-muted-foreground hover:bg-muted"}`}>
+              <button
+                onClick={() => setCompactMode(false)}
+                title={lang === "pt" ? "Expandido" : "Expanded"}
+                className={`flex items-center justify-center w-7 h-[26px] transition-all ${!compactMode ? "bg-primary text-primary-foreground" : "bg-card text-muted-foreground hover:bg-muted"}`}
+              >
                 <LayoutGrid size={12} />
               </button>
-              <button onClick={() => setCompactMode(true)} className={`flex items-center justify-center w-7 h-[26px] transition-all ${compactMode ? "bg-foreground text-background" : "bg-card text-muted-foreground hover:bg-muted"}`}>
+              <button
+                onClick={() => setCompactMode(true)}
+                title={lang === "pt" ? "Comprimido" : "Compressed"}
+                className={`flex items-center justify-center w-7 h-[26px] transition-all ${compactMode ? "bg-primary text-primary-foreground" : "bg-card text-muted-foreground hover:bg-muted"}`}
+              >
                 <List size={12} />
               </button>
             </div>
