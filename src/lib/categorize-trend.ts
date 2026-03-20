@@ -1,30 +1,47 @@
 /**
- * Unified trend categorization using multilingual keyword matching.
- * Returns a standardized category that matches the filter options.
- * 
- * ⚠️ CRITICAL: categoryKeywords order matters! More specific categories
- * (Entretenimento, Esportes) MUST come BEFORE generic ones (Política)
- * to prevent false positives like "BBB eliminação com 55% dos votos" → Política.
+ * Unified trend categorization — 10 canonical categories.
+ *
+ * CANONICAL TAXONOMY (do NOT add others):
+ *   Geopolítica | Economia | Tecnologia | Ciência | Saúde
+ *   Entretenimento | Esportes | Cultura | Meio Ambiente | Educação | Geral
+ *
+ * Old → New mappings:
+ *   Política → Geopolítica
+ *   Conflitos/Crises → Geopolítica
+ *   Negócios/Finanças → Economia
+ *   Clima/Meio Ambiente → Meio Ambiente
+ *   Conhecimento → Cultura
  */
 
-// Map common source categories (English) to standard categories
+const LEGACY_TO_CANONICAL: Record<string, string> = {
+  "Política": "Geopolítica",
+  "Conflitos/Crises": "Geopolítica",
+  "Negócios/Finanças": "Economia",
+  "Clima/Meio Ambiente": "Meio Ambiente",
+  "Conhecimento": "Cultura",
+};
+
+export function canonicalizeCategory(cat: string): string {
+  return LEGACY_TO_CANONICAL[cat] || cat;
+}
+
 const categoryAliasMap: Record<string, string> = {
-  "politics": "Política", "political": "Política", "us news": "Política", "uk news": "Política",
-  "world news": "Política", "us politics": "Política", "uk politics": "Política", "world": "Política",
-  "policy": "Política", "law": "Política", "diplomacy": "Política", "defense": "Política",
+  "politics": "Geopolítica", "political": "Geopolítica", "us news": "Geopolítica", "uk news": "Geopolítica",
+  "world news": "Geopolítica", "us politics": "Geopolítica", "uk politics": "Geopolítica", "world": "Geopolítica",
+  "policy": "Geopolítica", "law": "Geopolítica", "diplomacy": "Geopolítica", "defense": "Geopolítica",
   "news": "Geral", "notícias": "Geral", "noticias": "Geral",
-  "global development": "Política", "international": "Política", "foreign affairs": "Política",
-  "government": "Política", "congress": "Política", "senate": "Política",
-  "national security": "Política", "homeland": "Política", "geopolitics": "Política",
-  "elections": "Política", "voting": "Política", "legislation": "Política",
+  "global development": "Geopolítica", "international": "Geopolítica", "foreign affairs": "Geopolítica",
+  "government": "Geopolítica", "congress": "Geopolítica", "senate": "Geopolítica",
+  "national security": "Geopolítica", "homeland": "Geopolítica", "geopolitics": "Geopolítica",
+  "elections": "Geopolítica", "voting": "Geopolítica", "legislation": "Geopolítica",
   "australia news": "Geral", "europe": "Geral", "asia pacific": "Geral",
-  "americas": "Geral", "middle east": "Geral", "africa": "Geral",
+  "americas": "Geral", "middle east": "Geopolítica", "africa": "Geral",
   "global": "Geral", "breaking news": "Geral", "top stories": "Geral",
   "headlines": "Geral", "latest": "Geral", "general": "Geral",
   "technology": "Tecnologia", "tech": "Tecnologia", "digital": "Tecnologia",
   "computing": "Tecnologia", "artificial intelligence": "Tecnologia", "cybersecurity": "Tecnologia",
-  "science": "Ciência", "environment": "Clima/Meio Ambiente", "climate": "Clima/Meio Ambiente",
-  "climate crisis": "Clima/Meio Ambiente", "green": "Clima/Meio Ambiente", "sustainability": "Clima/Meio Ambiente",
+  "science": "Ciência", "environment": "Meio Ambiente", "climate": "Meio Ambiente",
+  "climate crisis": "Meio Ambiente", "green": "Meio Ambiente", "sustainability": "Meio Ambiente",
   "sport": "Esportes", "sports": "Esportes", "football": "Esportes", "soccer": "Esportes",
   "cricket": "Esportes", "rugby": "Esportes", "tennis": "Esportes", "f1": "Esportes",
   "culture": "Cultura", "arts": "Cultura", "books": "Cultura", "stage": "Cultura",
@@ -32,32 +49,29 @@ const categoryAliasMap: Record<string, string> = {
   "film": "Entretenimento", "movies": "Entretenimento", "music": "Entretenimento", "tv": "Entretenimento",
   "media": "Entretenimento", "television": "Entretenimento", "entertainment": "Entretenimento",
   "games": "Entretenimento", "gaming": "Entretenimento", "celebrities": "Entretenimento",
-  "business": "Negócios/Finanças", "economy": "Negócios/Finanças", "finance": "Negócios/Finanças", "money": "Negócios/Finanças",
-  "markets": "Negócios/Finanças", "stocks": "Negócios/Finanças", "banking": "Negócios/Finanças",
+  "business": "Economia", "economy": "Economia", "finance": "Economia", "money": "Economia",
+  "markets": "Economia", "stocks": "Economia", "banking": "Economia",
   "health": "Saúde", "wellbeing": "Saúde", "mental health": "Saúde", "medicine": "Saúde",
-  "society": "Cultura", "education": "Cultura",
+  "society": "Cultura", "education": "Educação",
   "opinion": "Geral", "editorial": "Geral", "analysis": "Geral",
   "comment": "Geral", "debate": "Geral", "investigation": "Geral",
   "trending": "Geral", "social": "Geral", "fediverso": "Geral",
   "miscellaneous": "Geral", "other": "Geral", "uncategorized": "Geral",
+  "conflict": "Geopolítica", "war": "Geopolítica", "crisis": "Geopolítica",
 };
 
-// ⚠️ ORDER MATTERS: Entretenimento/Esportes BEFORE Política
+// ⚠️ ORDER MATTERS: Entretenimento/Esportes BEFORE Geopolítica
 const categoryKeywords: Record<string, string[]> = {
   Entretenimento: [
-    // Reality shows & TV — must match BEFORE "voto"/"eliminação" trigger Política
     "bbb", "big brother", "big brother brasil", "reality show", "reality tv", "paredão", "sincerão",
     "eliminado do bbb", "participante", "confinamento", "casa de vidro", "prova do líder", "prova do anjo",
     "masterchef", "the voice", "a fazenda", "ilha da tentação", "survivor", "bachelor", "bachelorette", "love island",
     "rupaul", "drag race", "american idol", "x factor", "got talent", "the masked",
     "k-drama", "kdrama", "doramas", "telenovela", "streaming", "hbo", "prime video",
     "globoplay", "paramount", "crunchyroll", "tiktoker", "influencer", "youtuber",
-    // General entertainment
     "filme", "série", "música", "cinema", "ator", "atriz", "novela", "show", "celebridade", "estrela",
     "movie", "music", "entertainment", "actor", "actress", "celebrity", "film", "star", "trailer", "album", "song", "concert", "award", "oscar", "grammy", "netflix", "disney", "anime", "manga",
-    "película", "cine", "música",
-    "film", "musique", "divertissement",
-    "unterhaltung", "musik", "schauspieler",
+    "película", "cine", "música", "film", "musique", "divertissement", "unterhaltung", "musik", "schauspieler",
     "娱乐", "映画", "엔터테인먼트", "ترفيه", "मनोरंजन", "развлечения",
   ],
   Esportes: [
@@ -65,8 +79,7 @@ const categoryKeywords: Record<string, string[]> = {
     "sports", "game", "match", "football", "soccer", "basketball", "tennis", "nba", "nfl", "fifa", "championship", "league", "world cup", "olympic", "goal", "player", "team", "score",
     "champions league", "bundesliga", "premier league", "la liga", "serie a", "ligue 1", "taekwondo", "cricket", "rugby",
     "borussia", "atalanta", "barcelona", "real madrid", "manchester", "liverpool", "arsenal", "chelsea", "juventus",
-    "deporte", "fútbol", "partido",
-    "sport", "fußball", "spiel",
+    "deporte", "fútbol", "partido", "sport", "fußball", "spiel",
     "体育", "スポーツ", "스포츠", "رياضة", "खेल", "спорт",
   ],
   Tecnologia: [
@@ -78,8 +91,7 @@ const categoryKeywords: Record<string, string[]> = {
   Ciência: [
     "ciência", "cientista", "descoberta", "nasa", "espaço", "vacina", "laboratório",
     "science", "research", "study", "scientist", "discovery", "nasa", "space", "biology", "physics", "chemistry", "arxiv", "preprint",
-    "ciencia", "investigación",
-    "wissenschaft", "forschung", "studie",
+    "ciencia", "investigación", "wissenschaft", "forschung", "studie",
     "科学", "科學", "과학", "علوم", "विज्ञान", "наука",
   ],
   Saúde: [
@@ -88,71 +100,66 @@ const categoryKeywords: Record<string, string[]> = {
     "salud", "santé", "gesundheit",
     "健康", "건강", "صحة", "स्वास्थ्य", "здоровье",
   ],
-  "Negócios/Finanças": [
+  Economia: [
     "bolsa", "mercado", "economia", "inflação", "dólar", "real", "ações", "investimento", "pib", "banco", "imposto", "renda", "tributário", "fiscal",
     "desocupação", "desemprego", "emprego", "trabalho", "salário", "aposentadoria", "previdência", "orçamento",
     "market", "economy", "business", "finance", "stock", "wall street", "inflation", "gdp", "investment", "bank", "trade", "tariff", "dollar", "euro", "revenue", "profit", "capital gains", "tax", "budget", "treasury", "unemployment", "jobs", "wages",
-    "mercado", "economía", "negocio",
-    "marché", "économie", "affaire",
-    "wirtschaft", "markt", "geschäft",
+    "mercado", "economía", "negocio", "marché", "économie", "affaire", "wirtschaft", "markt", "geschäft",
     "经济", "経済", "경제", "اقتصاد", "अर्थव्यवस्था", "экономика",
   ],
-  "Clima/Meio Ambiente": [
+  "Meio Ambiente": [
     "clima", "aquecimento", "desmatamento", "queimada", "inundação", "furacão", "tempestade", "seca", "poluição", "emissões",
     "climate", "warming", "deforestation", "wildfire", "flood", "hurricane", "storm", "drought", "pollution", "emissions", "weather", "noaa", "tornado", "blizzard",
     "environnement", "klima", "umwelt",
     "气候", "環境", "기후", "مناخ", "जलवायु", "климат",
   ],
-  "Conflitos/Crises": [
-    "conflito", "guerra", "protesto", "crise", "refugiado", "sanção", "ataque", "bombardeio",
-    "conflict", "war", "protest", "crisis", "refugee", "sanction", "attack", "bombing", "gdelt", "acled", "violence", "militant",
-    "conflit", "krieg", "konflikt",
-    "冲突", "紛争", "분쟁", "صراع", "संघर्ष", "конфликт",
-  ],
   Cultura: [
-    "arte", "exposição", "museu", "cultura", "literatura", "livro", "teatro", "dança",
+    "arte", "exposição", "museu", "cultura", "literatura", "livro", "teatro", "dança", "wikipedia", "enciclopédia",
     "art", "culture", "exhibition", "museum", "literature", "book", "theater", "dance", "heritage", "festival",
-    "cultura", "arte", "exposición",
-    "kunst", "ausstellung", "museum",
+    "encyclopedia", "most viewed", "trending article", "pageviews",
+    "cultura", "arte", "exposición", "kunst", "ausstellung", "museum",
     "文化", "芸術", "문화", "ثقافة", "संस्कृति", "культура",
   ],
-  // ⚠️ Política LAST — to avoid false positives with "voto", "eliminação" in entertainment
-  Política: [
+  Educação: [
+    "educação", "escola", "universidade", "ensino", "professor", "aluno", "vestibular", "enem",
+    "education", "school", "university", "teaching", "student", "academic", "scholarship", "curriculum",
+    "educación", "éducation", "bildung",
+  ],
+  // ⚠️ Geopolítica LAST — to avoid false positives
+  Geopolítica: [
     "eleição", "eleitoral", "governo", "presidente", "congresso", "senado", "deputado", "voto", "partido", "ministro", "prefeito", "governador", "câmara", "plenário",
+    "conflito", "guerra", "protesto", "crise", "refugiado", "sanção", "ataque", "bombardeio",
     "election", "government", "president", "congress", "senate", "parliament", "minister", "political", "politics", "democrat", "republican", "byelection", "campaign",
     "policy", "legislation", "lawmaker", "diplomat", "sanctions", "nuclear talks", "state of the union", "oversight", "committee", "deposition", "impeach",
+    "conflict", "war", "protest", "crisis", "refugee", "sanction", "attack", "bombing", "gdelt", "acled", "violence", "militant",
     "trump", "biden", "obama", "clinton", "starmer", "sunak", "macron", "putin", "zelensky", "xi jinping", "modi",
     "pentagon", "nato", "eu summit", "un general assembly", "white house", "downing street", "capitol hill",
-    "elección", "gobierno", "presidente",
-    "élection", "gouvernement", "président",
-    "wahl", "regierung", "präsident",
-    "politica", "elezioni", "governo",
+    "elección", "gobierno", "presidente", "élection", "gouvernement", "président",
+    "wahl", "regierung", "präsident", "politica", "elezioni", "governo",
+    "conflit", "krieg", "konflikt",
     "政治", "選挙", "정치", "سياسة", "राजनीति", "политика",
-  ],
-  Conhecimento: [
-    "wikipedia", "enciclopédia", "artigo mais acessado", "pageviews",
-    "encyclopedia", "most viewed", "trending article",
+    "冲突", "紛争", "분쟁", "صراع", "संघर्ष", "конфликт",
   ],
 };
 
-// YouTube category ID mapping
 const youtubeCategoryMap: Record<string, string> = {
   "1": "Entretenimento", "2": "Entretenimento", "10": "Entretenimento",
   "15": "Entretenimento", "17": "Esportes", "18": "Entretenimento",
   "19": "Entretenimento", "20": "Entretenimento", "22": "Cultura",
-  "23": "Entretenimento", "24": "Entretenimento", "25": "Política",
-  "26": "Cultura", "27": "Cultura", "28": "Tecnologia", "29": "Entretenimento",
+  "23": "Entretenimento", "24": "Entretenimento", "25": "Geopolítica",
+  "26": "Cultura", "27": "Educação", "28": "Tecnologia", "29": "Entretenimento",
 };
 
-// Reddit subreddit mapping
 const subredditCategoryMap: Record<string, string> = {
-  politics: "Política", worldnews: "Política", news: "Política", uspolitics: "Política",
+  politics: "Geopolítica", worldnews: "Geopolítica", news: "Geopolítica", uspolitics: "Geopolítica",
   technology: "Tecnologia", programming: "Tecnologia", android: "Tecnologia", apple: "Tecnologia",
   science: "Ciência", askscience: "Ciência", space: "Ciência",
   sports: "Esportes", soccer: "Esportes", nba: "Esportes", nfl: "Esportes", formula1: "Esportes",
   movies: "Entretenimento", music: "Entretenimento", television: "Entretenimento", gaming: "Entretenimento",
   art: "Cultura", books: "Cultura", history: "Cultura",
-  economics: "Negócios/Finanças", finance: "Negócios/Finanças", wallstreetbets: "Negócios/Finanças", investing: "Negócios/Finanças",
+  economics: "Economia", finance: "Economia", wallstreetbets: "Economia", investing: "Economia",
+  education: "Educação",
+  environment: "Meio Ambiente", climate: "Meio Ambiente",
 };
 
 export function categorizeTrend(
@@ -174,8 +181,7 @@ export function categorizeTrend(
     if (mapped) return mapped;
   }
 
-  // Priority 3: ALWAYS do keyword analysis on title FIRST — this catches
-  // entertainment content that source categories would misclassify as "news"/"politics"
+  // Priority 3: Keyword analysis on title
   const searchText = `${title} ${existingCategory || ""}`.toLowerCase();
   for (const [category, keywords] of Object.entries(categoryKeywords)) {
     if (keywords.some((kw) => searchText.includes(kw))) {
@@ -183,29 +189,31 @@ export function categorizeTrend(
     }
   }
 
-  // Priority 4: Category alias mapping (e.g., "Politics" → "Política")
-  // Moved AFTER keyword analysis so content-based detection wins
+  // Priority 4: Category alias mapping
   if (existingCategory) {
     const alias = categoryAliasMap[existingCategory.toLowerCase().trim()];
     if (alias) return alias;
+    // Also check legacy → canonical
+    const canonical = LEGACY_TO_CANONICAL[existingCategory];
+    if (canonical) return canonical;
   }
 
-  // Priority 5: If existing category already matches a standard one, keep it
-  const standardCategories = Object.keys(categoryKeywords);
-  if (existingCategory && standardCategories.includes(existingCategory)) {
+  // Priority 5: If existing category already matches canonical, keep it
+  const canonicalCategories = new Set([...Object.keys(categoryKeywords), "Geral"]);
+  if (existingCategory && canonicalCategories.has(existingCategory)) {
     return existingCategory;
   }
 
   // Priority 6: Platform-based defaults
-  if (["World Bank", "IBGE", "IMF", "FRED", "FMI (IMF)"].includes(platform)) return "Negócios/Finanças";
+  if (["World Bank", "IBGE", "IMF", "FRED", "FMI (IMF)"].includes(platform)) return "Economia";
   if (["OpenAlex", "arXiv", "Crossref", "Semantic Scholar"].includes(platform)) return "Ciência";
   if (["PubMed", "OMS (WHO)"].includes(platform)) return "Saúde";
-  if (platform === "NOAA") return "Clima/Meio Ambiente";
-  if (["GDELT", "ACLED"].includes(platform)) return "Conflitos/Crises";
-  if (platform === "Wikipedia") return "Conhecimento";
+  if (platform === "NOAA") return "Meio Ambiente";
+  if (["GDELT", "ACLED", "GDELT DOC"].includes(platform)) return "Geopolítica";
+  if (platform === "Wikipedia") return "Cultura";
   if (platform === "Lobsters") return "Tecnologia";
 
-  return existingCategory || "Geral";
+  return existingCategory ? canonicalizeCategory(existingCategory) : "Geral";
 }
 
 // ---- Country detection from content + platform ----
@@ -241,19 +249,16 @@ const sourceCountryMap: Record<string, string> = {
   "Google News": "GL", "Reddit": "GL",
   "Semantic Scholar": "GL", "OMS (WHO)": "GL", "FMI (IMF)": "GL",
   "Lobsters": "US", "ACLED": "GL", "GDELT DOC": "GL",
+  "Carta Capital": "BR", "UOL": "BR",
+  "Tagesschau": "DE", "Ukrinform": "UA",
+  "Morocco World News": "MA", "Daily News Egypt": "EG", "Egypt Independent": "EG",
+  "Greek Reporter": "GR", "Russia Beyond": "RU", "TASS": "RU",
+  "Kyiv Post": "UA", "La Stampa": "IT", "Hindustan Times": "IN",
+  "ABC News AU": "AU", "Público": "PT",
 };
 
 const countryKeywordsMap: Record<string, string[]> = {
-  BR: [
-    "brasil", "brasileiro", "brasileira", "rio de janeiro", "são paulo", "brasília",
-    "governo federal", "lula", "bolsonaro", "real", "reais", "ibovespa", "petrobras",
-    "stf", "senado federal", "câmara dos deputados", "folha", "estadão", "globo",
-    "curitiba", "belo horizonte", "salvador", "recife", "fortaleza", "manaus",
-    // Brazilian entertainment & culture
-    "bbb", "big brother brasil", "paredão", "sincerão", "rede globo", "globoplay",
-    "carnaval", "sertanejo", "axé", "funk brasileiro", "samba", "pagode",
-    "novela da globo", "fantástico", "jornal nacional",
-  ],
+  BR: ["brasil", "brasileiro", "brasileira", "rio de janeiro", "são paulo", "brasília", "governo federal", "lula", "bolsonaro", "real", "reais", "ibovespa", "petrobras", "stf", "senado federal", "câmara dos deputados", "folha", "estadão", "globo", "curitiba", "belo horizonte", "salvador", "recife", "fortaleza", "manaus", "bbb", "big brother brasil", "paredão", "sincerão", "rede globo", "globoplay", "carnaval", "sertanejo", "axé", "funk brasileiro", "samba", "pagode", "novela da globo", "fantástico", "jornal nacional"],
   US: ["usa", "united states", "estados unidos", "biden", "trump", "white house", "casa branca", "washington", "new york", "wall street", "pentagon", "congress", "silicon valley", "california", "texas", "florida", "los angeles", "chicago", "boston", "seattle", "san francisco", "atlanta", "denver", "nba", "nfl", "mlb", "cia", "fbi", "supreme court", "oval office", "fed ", "federal reserve"],
   GB: ["uk", "united kingdom", "reino unido", "britain", "british", "london", "londres", "king charles", "parliament", "downing street", "bbc", "premier league", "manchester", "liverpool", "scotland", "wales", "northern ireland", "nhs", "westminster"],
   FR: ["france", "frança", "paris", "macron", "élysée", "ligue 1", "lyon", "marseille", "toulouse", "assemblée nationale"],
@@ -276,94 +281,46 @@ const countryKeywordsMap: Record<string, string[]> = {
   UA: ["ukraine", "ucrânia", "kiev", "kyiv", "zelensky", "odessa", "kharkiv", "crimea", "crimeia"],
   IL: ["israel", "tel aviv", "jerusalem", "jerusalém", "netanyahu", "knesset", "idf"],
   PS: ["palestina", "palestine", "palestinian", "palestino", "palestinos", "gaza", "cisjordânia", "west bank", "ramallah", "faixa de gaza", "hamas", "fatah", "al-quds", "nablus", "hebron"],
-  SA: ["saudi", "arábia saudita", "riyadh", "jeddah", "mecca", "meca"],
-  AE: ["emirates", "emirados", "dubai", "abu dhabi"],
+  IR: ["iran", "irã", "tehran", "teerã", "khamenei", "raisi"],
+  IQ: ["iraq", "iraque", "baghdad", "bagdá"],
   EG: ["egypt", "egito", "cairo", "suez"],
   NG: ["nigeria", "nigéria", "lagos", "abuja"],
-  ZA: ["south africa", "áfrica do sul", "cape town", "johannesburg", "pretoria"],
-  TR: ["turkey", "turquia", "türkiye", "istanbul", "ankara", "erdogan"],
-  PL: ["poland", "polônia", "warsaw", "varsóvia", "cracóvia", "krakow"],
+  ZA: ["south africa", "áfrica do sul", "johannesburg", "cape town"],
+  SA: ["saudi", "saudita", "riyadh"],
+  TR: ["turkey", "turquia", "istanbul", "istambul", "erdogan", "ankara"],
+  VE: ["venezuela", "caracas", "maduro"],
+  PL: ["poland", "polônia", "warsaw", "varsóvia"],
+  NL: ["netherlands", "holanda", "amsterdam", "rotterdam"],
   SE: ["sweden", "suécia", "stockholm", "estocolmo"],
   NO: ["norway", "noruega", "oslo"],
-  VE: ["venezuela", "venezuelan", "venezuelano", "venezuelana", "caracas", "maduro", "guaidó", "guaido", "oposición venezolana", "oposição venezuelana", "pdvsa", "petróleo venezuela", "maracaibo", "mérida", "barquisimeto", "valencia venezuela", "chavismo", "chavista"],
-  CU: ["cuba", "cubano", "cubana", "havana", "habana", "díaz-canel"],
-  EC: ["ecuador", "equador", "quito", "guayaquil", "noboa"],
-  UY: ["uruguay", "uruguai", "montevideo", "montevidéu"],
-  PY: ["paraguay", "paraguai", "asunción", "assunção"],
-  BO: ["bolivia", "bolívia", "la paz", "santa cruz bolivia"],
-  CR: ["costa rica", "san josé costa"],
-  PA: ["panama", "panamá", "canal de panamá"],
-  GT: ["guatemala", "cidade da guatemala"],
-  HN: ["honduras", "tegucigalpa"],
-  SV: ["el salvador", "bukele", "san salvador"],
-  NI: ["nicaragua", "nicarágua", "managua", "ortega nicaragua"],
-  DO: ["república dominicana", "dominican republic", "santo domingo"],
-  PE: ["peru", "lima", "peruvian", "peruano"],
-  PH: ["philippines", "filipinas", "manila"],
-  TH: ["thailand", "tailândia", "bangkok"],
-  VN: ["vietnam", "vietnã", "hanoi"],
-  ID: ["indonesia", "indonésia", "jakarta"],
-  PK: ["pakistan", "paquistão", "islamabad", "karachi", "lahore"],
-  KE: ["kenya", "quênia", "nairobi"],
-  MA: ["morocco", "marrocos", "rabat", "casablanca"],
-  ET: ["ethiopia", "etiópia", "addis ababa"],
-  IR: ["iran", "irã", "tehran", "teerã", "khamenei", "iranian"],
-  IQ: ["iraq", "iraque", "baghdad", "bagdá"],
-  SY: ["syria", "síria", "damascus", "damasco"],
-  LB: ["lebanon", "líbano", "beirut", "hezbollah"],
-  JO: ["jordan", "jordânia", "amman"],
 };
 
-/**
- * Detect country code from trend content using multi-layer analysis:
- * 1. Content keyword analysis (HIGHEST priority — content always wins)
- * 2. Source-based (e.g., The Guardian → GB)
- * 3. Existing countryCode validation
- */
-export function detectCountryFromContent(
-  title: string,
-  platform: string,
-  description?: string,
-  existingCode?: string
-): string | undefined {
+export function detectCountryFromContent(title: string, platform: string, description?: string, existingCode?: string): string | undefined {
   const text = `${title} ${description || ""}`.toLowerCase();
-
-  // Layer 1: Content keyword analysis ALWAYS first — content overrides source
   for (const [code, keywords] of Object.entries(countryKeywordsMap)) {
-    if (keywords.some(k => text.includes(k))) return code;
+    if (keywords.some(kw => text.includes(kw))) return code;
   }
-
-  // Layer 2: Known source mapping (only if content didn't match)
-  const sourceCountry = sourceCountryMap[platform];
-  if (sourceCountry && sourceCountry !== "GL") {
-    return sourceCountry;
+  const mapped = sourceCountryMap[platform];
+  if (mapped && mapped !== "GL") return mapped;
+  if (existingCode) {
+    const cleaned = existingCode.toUpperCase().replace(/[^A-Z]/g, "");
+    if (cleaned.length === 2 && cleaned !== "GL") return cleaned;
   }
-
-  // Layer 3: Return existing code if valid
-  if (existingCode && existingCode.length >= 2) {
-    return existingCode.slice(0, 2).toUpperCase();
-  }
-
   return undefined;
 }
 
-// Country code to flag emoji
 export function countryCodeToFlag(code?: string): string | null {
-  if (!code || code.length < 2) return null;
-  const cc = code.slice(0, 2).toUpperCase();
-  const codePoints = [...cc].map((c) => 0x1f1e6 + c.charCodeAt(0) - 65);
-  try {
-    return String.fromCodePoint(...codePoints);
-  } catch {
-    return null;
-  }
+  if (!code || code.length !== 2) return null;
+  const upper = code.toUpperCase();
+  if (upper === "GL") return "🌐";
+  return String.fromCodePoint(...[...upper].map(c => 0x1F1E6 + c.charCodeAt(0) - 65));
 }
 
-// Format volume for display (e.g., 100000 → "100K")
 export function formatVolume(volume: string): string {
-  const num = parseInt(volume.replace(/[^0-9]/g, ""), 10);
+  if (!volume) return "";
+  const num = parseInt(volume, 10);
   if (isNaN(num)) return volume;
   if (num >= 1_000_000) return `${(num / 1_000_000).toFixed(1)}M`;
   if (num >= 1_000) return `${(num / 1_000).toFixed(0)}K`;
-  return volume;
+  return String(num);
 }
