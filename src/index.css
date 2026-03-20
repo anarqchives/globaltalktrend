@@ -273,12 +273,31 @@
 
   /* ─── APOIE ─── */
   .apoie-pill {
-    background: linear-gradient(135deg, #f0c040, #fb923c);
-    color: #ffffff;
-    @apply h-8 px-3 rounded-full text-[9px] font-bold inline-flex items-center justify-center;
-    transition: filter 0.15s ease, transform 0.15s ease;
+    @apply h-6 px-3 rounded-full text-[10px] font-bold inline-flex items-center justify-center;
+    background: linear-gradient(135deg, rgba(240,192,64,0.25), rgba(251,146,60,0.3));
+    color: hsl(var(--foreground));
+    border: 1px solid rgba(240,192,64,0.3);
+    backdrop-filter: blur(16px) saturate(1.6);
+    -webkit-backdrop-filter: blur(16px) saturate(1.6);
+    box-shadow: 0 0 12px rgba(240,192,64,0.15), inset 0 1px 0 rgba(255,255,255,0.25);
+    transition: filter 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+    animation: apoiePulse 2.5s ease-in-out infinite;
   }
-  .apoie-pill:hover { filter: brightness(1.08); transform: scale(1.02); }
+  .apoie-pill:hover {
+    filter: brightness(1.12);
+    transform: scale(1.04);
+    box-shadow: 0 0 20px rgba(240,192,64,0.3), inset 0 1px 0 rgba(255,255,255,0.3);
+  }
+  .dark .apoie-pill {
+    background: linear-gradient(135deg, rgba(240,192,64,0.18), rgba(251,146,60,0.22));
+    border-color: rgba(240,192,64,0.25);
+    box-shadow: 0 0 16px rgba(240,192,64,0.12), inset 0 1px 0 rgba(255,255,255,0.08);
+  }
+
+  @keyframes apoiePulse {
+    0%, 100% { box-shadow: 0 0 12px rgba(240,192,64,0.15), inset 0 1px 0 rgba(255,255,255,0.25); }
+    50% { box-shadow: 0 0 22px rgba(240,192,64,0.35), inset 0 1px 0 rgba(255,255,255,0.3); }
+  }
 
   /* ─── ANIMATIONS ─── */
   @keyframes livePulse {
