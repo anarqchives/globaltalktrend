@@ -79,15 +79,15 @@ function FilterDropdown({
     <div ref={ref} className="relative">
       <button
         onClick={() => setOpen(!open)}
-        className={`flex items-center gap-1.5 h-8 px-3 rounded-full text-[11px] font-medium transition-all border ${
+        className={`flex items-center gap-1 h-[26px] px-2.5 rounded-full text-[10px] font-medium transition-all border ${
           isActive
             ? "bg-primary/10 text-primary border-primary/30 shadow-sm"
             : "bg-card text-muted-foreground border-border/40 hover:border-border hover:text-foreground"
         }`}
       >
-        <Icon className="w-3 h-3 shrink-0" />
-        <span className="truncate max-w-[100px]">{displayLabel}</span>
-        <ChevronDown className={`w-3 h-3 shrink-0 transition-transform ${open ? "rotate-180" : ""}`} />
+        <Icon className="w-2.5 h-2.5 shrink-0" />
+        <span className="truncate max-w-[90px]">{displayLabel}</span>
+        <ChevronDown className={`w-2.5 h-2.5 shrink-0 transition-transform ${open ? "rotate-180" : ""}`} />
         {isActive && (
           <button
             onClick={(e) => { e.stopPropagation(); onSelect(defaultValue); }}
@@ -170,15 +170,15 @@ function CountryDropdown({ value, onSelect }: { value: string; onSelect: (v: str
     <div ref={ref} className="relative">
       <button
         onClick={() => setOpen(!open)}
-        className={`flex items-center gap-1.5 h-8 px-3 rounded-full text-[11px] font-medium transition-all border ${
+        className={`flex items-center gap-1 h-[26px] px-2.5 rounded-full text-[10px] font-medium transition-all border ${
           isActive
             ? "bg-primary/10 text-primary border-primary/30 shadow-sm"
             : "bg-card text-muted-foreground border-border/40 hover:border-border hover:text-foreground"
         }`}
       >
-        <MapPin className="w-3 h-3 shrink-0" />
-        <span className="truncate max-w-[100px]">{currentLabel}</span>
-        <ChevronDown className={`w-3 h-3 shrink-0 transition-transform ${open ? "rotate-180" : ""}`} />
+        <MapPin className="w-2.5 h-2.5 shrink-0" />
+        <span className="truncate max-w-[90px]">{currentLabel}</span>
+        <ChevronDown className={`w-2.5 h-2.5 shrink-0 transition-transform ${open ? "rotate-180" : ""}`} />
         {isActive && (
           <button
             onClick={(e) => { e.stopPropagation(); onSelect("global"); }}
@@ -311,20 +311,21 @@ const FilterBlock = ({ filters, onChange, onReset, onSaveFilter }: FilterBlockPr
 
 
           {/* Separator */}
-          <div className="w-px h-5 bg-border/40 mx-0.5 hidden sm:block" />
+          <div className="w-px h-4 bg-border/40 mx-0.5 hidden sm:block" />
 
           {/* Reset */}
           <button
             onClick={onReset}
             disabled={!hasActive}
             title={lang === "pt" ? "Limpar filtros" : "Reset filters"}
-            className={`flex items-center justify-center w-8 h-8 rounded-full border transition-all ${
+            className={`flex items-center gap-1 h-[26px] px-2 rounded-full text-[10px] font-medium transition-all ${
               hasActive
-                ? "border-destructive/30 text-destructive hover:bg-destructive/10"
-                : "border-border/30 text-muted-foreground/30 cursor-not-allowed"
+                ? "text-foreground bg-muted hover:bg-destructive/10 hover:text-destructive"
+                : "text-muted-foreground/30 cursor-not-allowed"
             }`}
           >
-            <RotateCcw className="w-3.5 h-3.5" />
+            <RotateCcw className="w-3 h-3" />
+            <span className="hidden sm:inline">{lang === "pt" ? "Limpar" : "Reset"}</span>
           </button>
 
           {/* Save filter */}
@@ -333,13 +334,14 @@ const FilterBlock = ({ filters, onChange, onReset, onSaveFilter }: FilterBlockPr
               onClick={onSaveFilter}
               disabled={!hasActive}
               title={lang === "pt" ? "Salvar filtro" : "Save filter"}
-              className={`flex items-center justify-center w-8 h-8 rounded-full border transition-all ${
+              className={`flex items-center gap-1 h-[26px] px-2 rounded-full text-[10px] font-medium transition-all ${
                 hasActive
-                  ? "border-primary/30 text-primary hover:bg-primary/10"
-                  : "border-border/30 text-muted-foreground/30 cursor-not-allowed"
+                  ? "text-foreground bg-muted hover:bg-primary/10 hover:text-primary"
+                  : "text-muted-foreground/30 cursor-not-allowed"
               }`}
             >
-              <Bookmark className="w-3.5 h-3.5" />
+              <Bookmark className="w-3 h-3" />
+              <span className="hidden sm:inline">{lang === "pt" ? "Salvar" : "Save"}</span>
             </button>
           )}
         </div>
