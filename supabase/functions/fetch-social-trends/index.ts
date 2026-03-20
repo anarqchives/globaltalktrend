@@ -197,7 +197,7 @@ async function fetchGitHubTrending(): Promise<TrendItem[]> {
       {
         headers: {
           Accept: "application/vnd.github.v3+json",
-          "User-Agent": "GlobalTalkTrends/1.0",
+          "User-Agent": "GTTMonitor/1.0",
         },
       }
     );
