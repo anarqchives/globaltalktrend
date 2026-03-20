@@ -206,57 +206,67 @@ const GoogleMapView = ({
     clearLayers();
     try {
       const { HeatmapLayer } = (await google.maps.importLibrary("visualization")) as any;
+
+      // Soft organic gradient blobs — scattered points with warm palette
       const heatmapData = countryPoints
         .filter(c => trendCounts[c.id] > 0)
         .flatMap(c => {
           const count = trendCounts[c.id];
           const intensity = Math.min(count / maxCount, 1);
-          return Array(Math.max(2, Math.ceil(intensity * 15))).fill(null).map(() => ({
-            location: new google.maps.LatLng(c.lat + (Math.random() - 0.5) * 3, c.lng + (Math.random() - 0.5) * 3),
-            weight: intensity,
+          // More spread-out points for organic blob feel
+          return Array(Math.max(4, Math.ceil(intensity * 25))).fill(null).map(() => ({
+            location: new google.maps.LatLng(
+              c.lat + (Math.random() - 0.5) * 6,
+              c.lng + (Math.random() - 0.5) * 6
+            ),
+            weight: intensity * (0.4 + Math.random() * 0.6),
           }));
         });
 
       heatmapRef.current = new HeatmapLayer({
         data: heatmapData, map: googleMapRef.current,
-        radius: 65, opacity: 0.6, maxIntensity: 1,
+        radius: isMobile ? 80 : 100, opacity: 0.55, maxIntensity: 0.85,
         gradient: [
           "rgba(0, 0, 0, 0)",
-          "rgba(120, 200, 255, 0.15)",
-          "rgba(100, 180, 255, 0.25)",
-          "rgba(160, 120, 255, 0.35)",
-          "rgba(255, 160, 200, 0.45)",
-          "rgba(255, 120, 100, 0.55)",
-          "rgba(255, 80, 60, 0.7)",
+          "rgba(255, 228, 200, 0.08)",
+          "rgba(255, 200, 160, 0.15)",
+          "rgba(255, 170, 120, 0.22)",
+          "rgba(245, 140, 90, 0.32)",
+          "rgba(230, 120, 160, 0.40)",
+          "rgba(200, 140, 220, 0.48)",
+          "rgba(170, 130, 240, 0.52)",
         ],
       });
 
-      // Flow arcs overlaid on heatmap
+      // Soft flow arcs — translucent gradient-like lines
       flowArcs.slice(0, 15).forEach(arc => {
         const origin = countryPoints.find(p => p.id === arc.originId);
         const dest = countryPoints.find(p => p.id === arc.destId);
         if (!origin || !dest) return;
-        const isCritical = arc.volume > maxCount * 0.7;
-        const color = isCritical ? "#FF2D55" : "#007AFF";
-        const weight = 1.2 + (arc.volume / maxCount) * 2;
+        const warmth = arc.volume / maxCount;
+        // Gradient feel: warm amber for strong, soft lavender for light
+        const color = warmth > 0.6 ? "rgba(245, 158, 80, 0.35)" : "rgba(180, 150, 230, 0.30)";
+        const weight = 2 + warmth * 3;
 
         const line = new google.maps.Polyline({
           path: [{ lat: origin.lat, lng: origin.lng }, { lat: dest.lat, lng: dest.lng }],
-          geodesic: true, strokeColor: color, strokeOpacity: 0.25, strokeWeight: weight,
+          geodesic: true, strokeColor: warmth > 0.6 ? "#F59E50" : "#B496E6", strokeOpacity: 0.18, strokeWeight: weight,
           map: googleMapRef.current, zIndex: 1,
         });
+
+        // Subtle animated dot along the arc
         const arrowLine = new google.maps.Polyline({
           path: [{ lat: origin.lat, lng: origin.lng }, { lat: dest.lat, lng: dest.lng }],
           geodesic: true, strokeOpacity: 0, strokeWeight: 0,
           icons: [{
-            icon: { path: google.maps.SymbolPath.FORWARD_CLOSED_ARROW, scale: 2.5, strokeColor: "#fff", strokeWeight: 1, fillColor: color, fillOpacity: 0.9 },
+            icon: { path: google.maps.SymbolPath.CIRCLE, scale: 3, fillColor: warmth > 0.6 ? "#F5A060" : "#C4A8F0", fillOpacity: 0.7, strokeWeight: 0 },
             offset: "0%",
           }],
           map: googleMapRef.current, zIndex: 3,
         });
         let offset = 0;
         const animate = () => {
-          offset = (offset + 0.3) % 100;
+          offset = (offset + 0.2) % 100;
           const icons = arrowLine.get("icons");
           if (icons?.[0]) { icons[0].offset = offset + "%"; arrowLine.set("icons", icons); }
           animFramesRef.current.push(requestAnimationFrame(animate));
@@ -282,18 +292,41 @@ const GoogleMapView = ({
         polylinesRef.current.push(line, arrowLine);
       });
 
-      // Top country markers
-      const sorted = countryPoints.map(c => ({ ...c, count: trendCounts[c.id] || 0 })).filter(c => c.count > 0).sort((a, b) => b.count - a.count).slice(0, 10);
-      sorted.forEach(c => {
+      // Soft blob markers for top countries — layered for organic feel
+      const sorted = countryPoints.map(c => ({ ...c, count: trendCounts[c.id] || 0 })).filter(c => c.count > 0).sort((a, b) => b.count - a.count).slice(0, 12);
+      const blobPalette = ["#F5A060", "#E88B9C", "#C4A8F0", "#90C8E8", "#F0D070", "#A8D8B0"];
+      sorted.forEach((c, idx) => {
         const intensity = Math.min(c.count / maxCount, 1);
-        const marker = new google.maps.Marker({
+        const blobColor = blobPalette[idx % blobPalette.length];
+
+        // Outer glow — large, very soft
+        const outerGlow = new google.maps.Marker({
           position: { lat: c.lat, lng: c.lng }, map: googleMapRef.current,
-          icon: { path: google.maps.SymbolPath.CIRCLE, scale: 6 + intensity * 12, fillColor: "#007AFF", fillOpacity: 0.95, strokeColor: "#fff", strokeWeight: 2.5 },
-          label: { text: String(c.count), color: "#fff", fontSize: "10px", fontWeight: "800" },
-          zIndex: Math.floor(intensity * 1000),
+          icon: { path: google.maps.SymbolPath.CIRCLE, scale: 18 + intensity * 28, fillColor: blobColor, fillOpacity: 0.08, strokeWeight: 0 },
+          zIndex: 1, clickable: false,
         });
-        marker.addListener("click", () => onSelectCountry(c.id));
-        marker.addListener("mouseover", () => {
+        // Mid glow
+        const midGlow = new google.maps.Marker({
+          position: { lat: c.lat, lng: c.lng }, map: googleMapRef.current,
+          icon: { path: google.maps.SymbolPath.CIRCLE, scale: 12 + intensity * 18, fillColor: blobColor, fillOpacity: 0.15, strokeWeight: 0 },
+          zIndex: 2, clickable: false,
+        });
+        // Inner core — slightly more visible
+        const core = new google.maps.Marker({
+          position: { lat: c.lat, lng: c.lng }, map: googleMapRef.current,
+          icon: { path: google.maps.SymbolPath.CIRCLE, scale: 6 + intensity * 8, fillColor: blobColor, fillOpacity: 0.35, strokeWeight: 0 },
+          zIndex: 3,
+        });
+        // Small label
+        const label = new google.maps.Marker({
+          position: { lat: c.lat, lng: c.lng }, map: googleMapRef.current,
+          icon: { path: google.maps.SymbolPath.CIRCLE, scale: 0.01, fillOpacity: 0, strokeWeight: 0 },
+          label: { text: String(c.count), color: isDark ? "#e2e8f0" : "#1a1a1a", fontSize: "9px", fontWeight: "700", fontFamily: "'Helvetica Neue', sans-serif" },
+          zIndex: 10,
+        });
+
+        core.addListener("click", () => onSelectCountry(c.id));
+        core.addListener("mouseover", () => {
           showTooltip(buildTooltipHtml(`
             <div style="display:flex;align-items:center;gap:6px;margin-bottom:4px">
               <span style="font-size:18px">${flagEmoji(c.id)}</span>
@@ -302,11 +335,11 @@ const GoogleMapView = ({
             </div>
           `, isDark), { lat: c.lat, lng: c.lng });
         });
-        marker.addListener("mouseout", () => infoRef.current?.close());
-        markersRef.current.push(marker);
+        core.addListener("mouseout", () => infoRef.current?.close());
+        markersRef.current.push(outerGlow, midGlow, core, label);
       });
     } catch (err) { console.error("Panorama render error:", err); }
-  }, [trendCounts, maxCount, flowArcs, onSelectCountry, showTooltip, isDark, clearLayers, lang]);
+  }, [trendCounts, maxCount, flowArcs, onSelectCountry, showTooltip, isDark, clearLayers, lang, isMobile]);
 
   /* ═══ TAB 2: SENTIMENT — country colored by sentiment with explanations ═══ */
   const renderSentiment = useCallback(() => {
