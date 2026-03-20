@@ -45,11 +45,6 @@ const legendText: Record<string, Record<string, string>> = {
     en: "The 20 most discussed topics right now — sorted by total volume.",
     es: "Los 20 temas más discutidos ahora — ordenados por volumen total.",
   },
-  weekly: {
-    pt: "Painel semanal de inteligência — volume, categorias e tendências dos últimos 7 dias.",
-    en: "Weekly intelligence dashboard — volume, categories and trends from the last 7 days.",
-    es: "Panel semanal de inteligencia — volumen, categorías y tendencias de los últimos 7 días.",
-  },
 };
 
 function Legend({ tab, lang }: { tab: string; lang: string }) {
