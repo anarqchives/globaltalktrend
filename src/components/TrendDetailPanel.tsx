@@ -261,7 +261,7 @@ const TrendDetailPanel: React.FC<TrendDetailPanelProps> = ({
 
             {/* Actions */}
             <div className="flex items-center gap-2 pt-4 border-t border-border flex-wrap">
-              <button onClick={handleShare} className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-background hover:bg-muted text-[12px] font-medium transition-colors">
+              <button onClick={handleShare} className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-background hover:bg-muted text-[12px] font-medium transition-colors">
                 <Share2 className="w-3.5 h-3.5" /> {lang === "pt" ? "Compartilhar" : "Share"}
               </button>
               <button onClick={() => onSaveCard?.({ title, platform, category, country_code: countryCode, source_url: sourceUrl, description: realDescription || aiContext || "" })}
