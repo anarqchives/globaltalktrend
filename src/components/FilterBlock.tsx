@@ -178,7 +178,7 @@ function CountryDropdown({ value, onSelect }: { value: string; onSelect: (v: str
       >
         <MapPin className="w-2.5 h-2.5 shrink-0" />
         <span className="truncate max-w-[90px]">{currentLabel}</span>
-        <ChevronDown className={`w-3 h-3 shrink-0 transition-transform ${open ? "rotate-180" : ""}`} />
+        <ChevronDown className={`w-2.5 h-2.5 shrink-0 transition-transform ${open ? "rotate-180" : ""}`} />
         {isActive && (
           <button
             onClick={(e) => { e.stopPropagation(); onSelect("global"); }}
