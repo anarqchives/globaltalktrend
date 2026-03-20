@@ -2,11 +2,11 @@ import { useState, useRef, useCallback, useEffect, useMemo, lazy, Suspense } fro
 import { AnimatePresence } from "framer-motion";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import AppHeader from "@/components/AppHeader";
+import FilterBlock from "@/components/FilterBlock";
 import { FilterState } from "@/components/FilterBar";
 import TimelineCard from "@/components/TimelineCard";
 import TrendCardSkeleton from "@/components/TrendCardSkeleton";
 import TransparencyPanel from "@/components/TransparencyPanel";
-import TrendDetailPanel from "@/components/TrendDetailPanel";
 import RankingStrip from "@/components/RankingStrip";
 import { TrendCardProps } from "@/components/TrendCard";
 import { useTrends } from "@/hooks/use-trends";
@@ -21,7 +21,7 @@ import { useGamification } from "@/hooks/use-gamification";
 import { useSavedCards } from "@/hooks/use-saved-cards";
 import { useSavedFilters } from "@/hooks/use-saved-filters";
 import { supabase } from "@/integrations/supabase/client";
-import { ChevronRight, X, Map, Newspaper, RefreshCw, FileText, LayoutGrid, List } from "lucide-react";
+import { X, Map, Newspaper, RefreshCw, FileText, LayoutGrid, List } from "lucide-react";
 import ArchiveDrawer from "@/components/ArchiveDrawer";
 import TagLegend from "@/components/TagLegend";
 import { toast } from "@/hooks/use-toast";
@@ -45,11 +45,7 @@ const MapFallback = () => (
 );
 
 const defaultFilters: FilterState = {
-  country: "global",
-  period: "Hoje",
-  category: "Todas",
-  type: "Todas mídias",
-  query: "",
+  country: "global", period: "Hoje", category: "Todas", type: "Todas mídias", query: "",
 };
 
 function getInitialFilters(): FilterState {
@@ -71,6 +67,7 @@ const Index = () => {
   const [viewMode, setViewMode] = useState<"timeline" | "map">("timeline");
   const [compactMode, setCompactMode] = useState(false);
   const [gridColumns, setGridColumns] = useState(2);
+  const [expandedCardIndex, setExpandedCardIndex] = useState<number | null>(null);
   const [panelVisibility, setPanelVisibility] = useState(() => {
     try {
       const saved = localStorage.getItem("map-panel-open");
@@ -103,7 +100,6 @@ const Index = () => {
   const [collectionsOpen, setCollectionsOpen] = useState(false);
   const { saveFilter } = useSavedFilters(user?.id ?? null);
   const [trendCounts, setTrendCounts] = useState<Record<string, number>>({});
-  const [selectedCardIndex, setSelectedCardIndex] = useState<number | null>(null);
   const isMobile = useIsMobile();
   const scrollRef = useRef<HTMLDivElement>(null);
   const timelineContainerRef = useRef<HTMLDivElement>(null);
@@ -117,7 +113,7 @@ const Index = () => {
   const [trendContexts, setTrendContexts] = useState<Record<string, string>>({});
   const { translatedTrends, isTranslating } = useTranslatedTrends(rawFilteredTrends, lang);
 
-  // Responsive grid columns based on timeline width
+  // Responsive grid columns
   useEffect(() => {
     const el = timelineContainerRef.current;
     if (!el) return;
@@ -229,12 +225,12 @@ const Index = () => {
     return result;
   }, [filteredTrends, multiplatformTitles]);
 
-  // Virtualizer — rows = Math.ceil(items / columns)
+  // Virtualizer
   const rowCount = useMemo(() => Math.ceil(diversifiedTrends.length / gridColumns), [diversifiedTrends.length, gridColumns]);
   const rowVirtualizer = useVirtualizer({
     count: rowCount,
     getScrollElement: () => scrollRef.current,
-    estimateSize: () => compactMode ? 100 : 200,
+    estimateSize: () => compactMode ? 100 : 220,
     overscan: 4,
   });
 
@@ -259,56 +255,37 @@ const Index = () => {
     const interval = setInterval(() => {
       timeSinceLastFetchRef.current += 10;
       if (timeSinceLastFetchRef.current >= 90) {
-        if (!isActive && selectedCardIndex === null) {
+        if (!isActive && expandedCardIndex === null) {
           fetchTrends().then(() => { timeSinceLastFetchRef.current = 0; setUpdatePending(false); });
         } else if (!updatePending) setUpdatePending(true);
       }
     }, 10000);
     return () => clearInterval(interval);
-  }, [isActive, selectedCardIndex, fetchTrends, updatePending]);
+  }, [isActive, expandedCardIndex, fetchTrends, updatePending]);
 
-  // Debounced filter change
   const filterTimeoutRef = useRef<ReturnType<typeof setTimeout>>();
   const handleFilterChange = useCallback((newFilters: FilterState) => {
     clearTimeout(filterTimeoutRef.current);
     filterTimeoutRef.current = setTimeout(() => setFilters(newFilters), 300);
   }, []);
 
-  // Side panel navigation
+  // Card click → toggle inline expansion
   const handleCardClick = useCallback((index: number) => {
-    setSelectedCardIndex(index);
+    setExpandedCardIndex(prev => prev === index ? null : index);
     const trend = diversifiedTrends[index];
     if (trend) trackView(trend.title, trend.platform, { volume: trend.volume, category: trend.category, countryCode: trend.countryCode });
   }, [diversifiedTrends, trackView]);
 
-  const handlePrevCard = useCallback(() => {
-    setSelectedCardIndex(prev => prev !== null && prev > 0 ? prev - 1 : prev);
-  }, []);
-  const handleNextCard = useCallback(() => {
-    setSelectedCardIndex(prev => prev !== null && prev < diversifiedTrends.length - 1 ? prev + 1 : prev);
-  }, [diversifiedTrends.length]);
-
-  const selectedTrend = useMemo(() => {
-    if (selectedCardIndex === null) return null;
-    const trend = diversifiedTrends[selectedCardIndex];
-    if (!trend) return null;
-    const originalTitle = (trend as any)._originalTitle || trend.title;
-    const normalizedKey = originalTitle.toLowerCase().normalize("NFD").replace(/\p{Diacritic}/gu, "").replace(/[^a-z0-9\s]/g, "").trim().slice(0, 50);
-    const isMulti = multiplatformTitles.has(normalizedKey);
-    const cluster = isMulti ? clusters.find(c => c.trends.some(ct => ct.title.toLowerCase().normalize("NFD").replace(/\p{Diacritic}/gu, "").replace(/[^a-z0-9\s]/g, "").trim().slice(0, 50) === normalizedKey)) || null : null;
-    return {
-      ...trend,
-      aiContext: trendContexts[trend.title] || trendContexts[(trend as any)._originalTitle],
-      isMultiplatform: isMulti,
-      crossPlatformCluster: cluster,
-    };
-  }, [selectedCardIndex, diversifiedTrends, multiplatformTitles, clusters, trendContexts]);
+  const handleSelectTrend = useCallback((trend: TrendCardProps) => {
+    const idx = diversifiedTrends.findIndex(t => t.platform === trend.platform && t.title === trend.title);
+    if (idx >= 0) setExpandedCardIndex(prev => prev === idx ? null : idx);
+  }, [diversifiedTrends]);
 
   const expandedTrendCountry = useMemo(() => {
-    if (selectedCardIndex === null) return null;
-    const trend = diversifiedTrends[selectedCardIndex];
+    if (expandedCardIndex === null) return null;
+    const trend = diversifiedTrends[expandedCardIndex];
     return trend?.countryCode?.slice(0, 2).toUpperCase() || null;
-  }, [selectedCardIndex, diversifiedTrends]);
+  }, [expandedCardIndex, diversifiedTrends]);
 
   // Resilient fallback
   useEffect(() => {
@@ -325,11 +302,6 @@ const Index = () => {
       }
     }
   }, [loading, isFirstLoad, filteredTrends.length, filters.period, lang]);
-
-  const handleSelectTrend = useCallback((trend: TrendCardProps) => {
-    const idx = diversifiedTrends.findIndex(t => t.platform === trend.platform && t.title === trend.title);
-    if (idx >= 0) setSelectedCardIndex(idx);
-  }, [diversifiedTrends]);
 
   const renderTimeline = () => (
     <div ref={timelineContainerRef} className="h-full flex flex-col min-h-0">
@@ -376,10 +348,8 @@ const Index = () => {
                 const startIdx = virtualRow.index * gridColumns;
                 return (
                   <div key={virtualRow.key}
-                    style={{ position: 'absolute', top: 0, left: 0, width: '100%', transform: `translateY(${virtualRow.start}px)`, padding: '3px 0' }}
                     ref={rowVirtualizer.measureElement} data-index={virtualRow.index}
-                    className="grid gap-2"
-                    {...{ style: { position: 'absolute', top: 0, left: 0, width: '100%', transform: `translateY(${virtualRow.start}px)`, padding: '3px 0', display: 'grid', gridTemplateColumns: `repeat(${gridColumns}, 1fr)`, gap: '6px' } }}
+                    style={{ position: 'absolute', top: 0, left: 0, width: '100%', transform: `translateY(${virtualRow.start}px)`, padding: '3px 0', display: 'grid', gridTemplateColumns: `repeat(${gridColumns}, 1fr)`, gap: '6px' }}
                   >
                     {Array.from({ length: gridColumns }).map((_, colIdx) => {
                       const trendIdx = startIdx + colIdx;
@@ -388,11 +358,14 @@ const Index = () => {
                       const originalTitle = (trend as any)._originalTitle || trend.title;
                       const normalizedKey = originalTitle.toLowerCase().normalize("NFD").replace(/\p{Diacritic}/gu, "").replace(/[^a-z0-9\s]/g, "").trim().slice(0, 50);
                       const isMulti = multiplatformTitles.has(normalizedKey);
+                      const aiContext = trendContexts[trend.title] || trendContexts[(trend as any)._originalTitle];
                       return (
                         <TimelineCard key={trendIdx} {...trend} compact={compactMode}
                           staggerIndex={trendIdx < 10 ? trendIdx : 0}
                           isMultiplatform={isMulti}
-                          isSelected={selectedCardIndex === trendIdx}
+                          isSelected={expandedCardIndex === trendIdx}
+                          isExpanded={expandedCardIndex === trendIdx}
+                          aiContext={aiContext}
                           onSaveCard={saveCard}
                           onClick={() => handleCardClick(trendIdx)}
                           onFilterPlatform={(p) => {
@@ -456,17 +429,8 @@ const Index = () => {
 
   return (
     <div className="h-screen flex flex-col bg-background overflow-hidden w-full max-w-[100vw]">
-      <AppHeader
-        filters={filters}
-        onFilterChange={handleFilterChange}
-        onForceReset={() => setFilters(defaultFilters)}
-        isLoggedIn={!!user}
-        onSaveFilter={() => {
-          const name = prompt("Nome do filtro:");
-          if (name?.trim()) saveFilter(name.trim(), filters);
-        }}
-        onOpenSavedCollections={() => setCollectionsOpen(true)}
-      />
+      <AppHeader onOpenSavedCollections={() => setCollectionsOpen(true)} />
+      <FilterBlock filters={filters} onChange={handleFilterChange} onReset={() => setFilters(defaultFilters)} />
 
       <div className="flex-1 overflow-hidden flex flex-col min-h-0">
         {isMobile ? (
@@ -511,23 +475,6 @@ const Index = () => {
           </div>
         )}
       </div>
-
-      {/* Side panel for card details */}
-      <AnimatePresence>
-        {selectedCardIndex !== null && (
-          <TrendDetailPanel
-            trend={selectedTrend}
-            onClose={() => setSelectedCardIndex(null)}
-            onPrev={handlePrevCard}
-            onNext={handleNextCard}
-            hasPrev={selectedCardIndex > 0}
-            hasNext={selectedCardIndex < diversifiedTrends.length - 1}
-            userId={user?.id}
-            onSaveCard={saveCard}
-            onTrackAction={trackAction}
-          />
-        )}
-      </AnimatePresence>
 
       <TransparencyPanel
         open={transparencyOpen}
