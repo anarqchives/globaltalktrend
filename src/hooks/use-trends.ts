@@ -213,7 +213,7 @@ function generateContextualFallback(filters: FilterState): TrendCardProps[] {
       { icon: "🇦🇷", platform: "Clarín", title: "Argentina: Milei anuncia novas reformas econômicas", category: "Geopolítica", time: timeStr, volume: "Alto", change: "+200%", changePositive: true, sparkData: [25, 38, 50, 60, 70, 78, 85, 90, 93, 96], details: "Presidente argentino avança com agenda de reformas.", countryCode: "AR" },
     ],
     MX: [
-      { icon: "🇲🇽", platform: "El Universal MX", title: "México: economia e segurança dominam a agenda", category: "Política", time: timeStr, volume: "Alto", change: "+150%", changePositive: true, sparkData: [22, 35, 45, 55, 65, 72, 78, 84, 88, 92], details: "Principais temas em discussão no cenário mexicano.", countryCode: "MX" },
+      { icon: "🇲🇽", platform: "El Universal MX", title: "México: economia e segurança dominam a agenda", category: "Geopolítica", time: timeStr, volume: "Alto", change: "+150%", changePositive: true, sparkData: [22, 35, 45, 55, 65, 72, 78, 84, 88, 92], details: "Principais temas em discussão no cenário mexicano.", countryCode: "MX" },
     ],
     CO: [
       { icon: "🇨🇴", platform: "El Tiempo", title: "Colômbia: processo de paz e reformas sociais avançam", category: "Política", time: timeStr, volume: "Destaque", change: "+130%", changePositive: true, sparkData: [20, 30, 42, 52, 60, 68, 75, 80, 85, 88], details: "Governo colombiano prossegue com agenda de reformas.", countryCode: "CO" },
