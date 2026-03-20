@@ -19,7 +19,7 @@ const Welcome = () => {
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
-      <AppHeader minimal />
+      <AppHeader />
 
       {/* ═══ HERO ═══ */}
       <main className="flex-1 flex items-center justify-center px-4 md:px-8">

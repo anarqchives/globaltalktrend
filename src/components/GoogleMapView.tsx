@@ -6,7 +6,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { TrendCardProps } from "./TrendCard";
-import { Flame, GitBranch, Heart, ShieldCheck, TrendingUp, Plus, Minus, Globe } from "lucide-react";
+import { Flame, GitBranch, Heart, ShieldCheck, TrendingUp, Plus, Minus, Globe, Share2, Bookmark, ThumbsUp, Bug, ExternalLink } from "lucide-react";
+import { toast } from "@/hooks/use-toast";
 import {
   computeFlowArcs,
   computeSentimentBubbles,
@@ -217,14 +218,15 @@ const GoogleMapView = ({
 
       heatmapRef.current = new HeatmapLayer({
         data: heatmapData, map: googleMapRef.current,
-        radius: 60, opacity: 0.75, maxIntensity: 1,
+        radius: 65, opacity: 0.6, maxIntensity: 1,
         gradient: [
           "rgba(0, 0, 0, 0)",
-          "rgba(0, 200, 255, 0.3)",
-          "rgba(0, 150, 255, 0.5)",
-          "rgba(255, 200, 0, 0.6)",
-          "rgba(255, 120, 0, 0.8)",
-          "rgba(255, 40, 40, 0.95)",
+          "rgba(120, 200, 255, 0.15)",
+          "rgba(100, 180, 255, 0.25)",
+          "rgba(160, 120, 255, 0.35)",
+          "rgba(255, 160, 200, 0.45)",
+          "rgba(255, 120, 100, 0.55)",
+          "rgba(255, 80, 60, 0.7)",
         ],
       });
 
@@ -506,7 +508,7 @@ const GoogleMapView = ({
             <h3 className="text-[13px] font-bold text-foreground mb-3">
               🔥 {lang === "pt" ? "Mais vistos agora" : "Trending now"}
             </h3>
-            <div className="grid gap-2" style={{ gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr" }}>
+            <div className="grid gap-3" style={{ gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr" }}>
               {trendingNow.map((t, i) => {
                 const cc = t.countryCode?.toUpperCase();
                 const flag = cc && cc.length === 2 ? flagEmoji(cc) : "";
@@ -515,33 +517,100 @@ const GoogleMapView = ({
                     initial={{ opacity: 0, y: 8 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: i * 0.04 }}
-                    className="bg-card/80 backdrop-blur-sm border border-border/30 rounded-lg p-3 cursor-pointer hover:shadow-[var(--shadow-sm)] transition-all"
-                    onClick={() => onSelectTrend?.(t)}
+                    className="bg-card/80 backdrop-blur-sm border border-border/30 rounded-xl p-3.5 select-text"
                   >
-                    <div className="flex items-start gap-2">
-                      <span className="text-[16px] font-bold text-muted-foreground/30 tabular-nums">{i + 1}</span>
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-1.5 mb-1">
-                          <span className="text-[9px] font-bold uppercase tracking-wider text-muted-foreground">{t.platform}</span>
-                          {flag && <span className="text-[10px]">{flag}</span>}
-                          <span className="text-[8px] text-muted-foreground/40">{t.category}</span>
-                        </div>
-                        <h4 className="text-[11px] font-semibold text-foreground line-clamp-2 leading-snug mb-1">{t.title}</h4>
-                        {t.description && (
-                          <p className="text-[9px] text-muted-foreground line-clamp-2 leading-relaxed mb-1.5">{t.description.slice(0, 120)}</p>
-                        )}
-                        <div className="flex items-center gap-2 text-[9px]">
-                          {t.volume && <span className="font-semibold text-foreground">{t.volume}</span>}
-                          {t.change && (
-                            <span className={`font-bold ${t.changePositive ? "text-[hsl(var(--success-fg))]" : "text-destructive"}`}>
-                              {t.changePositive ? "↗" : "↘"}{t.change}
-                            </span>
-                          )}
-                          {t.sources && t.sources.length > 1 && (
-                            <span className="text-muted-foreground">{t.sources.length} {lang === "pt" ? "fontes" : "sources"}</span>
-                          )}
-                        </div>
+                    {/* Header: rank + platform + flag + category */}
+                    <div className="flex items-center gap-2 mb-2">
+                      <span className="text-[18px] font-extrabold text-muted-foreground/20 tabular-nums leading-none">{i + 1}</span>
+                      <div className="flex items-center gap-1.5 flex-wrap">
+                        <span className="px-1.5 py-0.5 rounded bg-primary/10 text-primary text-[8px] font-bold uppercase tracking-wider">{t.platform}</span>
+                        {flag && <span className="text-[11px]">{flag}</span>}
+                        {t.category && <span className="px-1.5 py-0.5 rounded bg-muted text-muted-foreground text-[8px] font-medium">{t.category}</span>}
                       </div>
+                    </div>
+
+                    {/* Title */}
+                    <h4 className="text-[12px] font-bold text-foreground leading-snug mb-1.5">{t.title}</h4>
+
+                    {/* Context / Description — no duplicate text */}
+                    {t.description && t.description.toLowerCase().trim() !== t.title.toLowerCase().trim() && (
+                      <p className="text-[10px] text-muted-foreground leading-relaxed mb-2 line-clamp-3">{t.description}</p>
+                    )}
+                    {t.details && t.details !== t.description && t.details.toLowerCase().trim() !== t.title.toLowerCase().trim() && (
+                      <p className="text-[9px] text-muted-foreground/70 leading-relaxed mb-2 line-clamp-2 italic">{t.details.slice(0, 200)}</p>
+                    )}
+
+                    {/* Thumbnail if available */}
+                    {t.thumbnail && (
+                      <img src={t.thumbnail} alt="" className="w-full h-24 object-cover rounded-lg mb-2 bg-muted" loading="lazy" />
+                    )}
+
+                    {/* Metrics row */}
+                    <div className="flex items-center gap-2 text-[9px] mb-2">
+                      {t.volume && <span className="font-semibold text-foreground">{t.volume}</span>}
+                      {t.change && (
+                        <span className={`font-bold ${t.changePositive ? "text-emerald-500" : "text-destructive"}`}>
+                          {t.changePositive ? "↗" : "↘"}{t.change}
+                        </span>
+                      )}
+                      {t.sources && t.sources.length > 1 && (
+                        <span className="text-muted-foreground">{t.sources.length} {lang === "pt" ? "fontes" : "sources"}</span>
+                      )}
+                    </div>
+
+                    {/* Source */}
+                    {t.sourceUrl && (
+                      <a href={t.sourceUrl} target="_blank" rel="noopener noreferrer"
+                        className="inline-flex items-center gap-1 text-[8px] text-primary hover:underline mb-2">
+                        <ExternalLink className="w-2.5 h-2.5" />
+                        {lang === "pt" ? "Fonte original" : "Original source"}
+                      </a>
+                    )}
+
+                    {/* Action icons */}
+                    <div className="flex items-center gap-1 pt-2 border-t border-border/20">
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          const url = t.sourceUrl || window.location.href;
+                          navigator.clipboard.writeText(`${t.title} — ${url}`);
+                          toast({ title: lang === "pt" ? "Link copiado!" : "Link copied!" });
+                        }}
+                        className="flex items-center justify-center w-7 h-7 rounded-lg hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
+                        title={lang === "pt" ? "Compartilhar" : "Share"}
+                      >
+                        <Share2 className="w-3 h-3" />
+                      </button>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          toast({ title: lang === "pt" ? "Salvo!" : "Saved!" });
+                        }}
+                        className="flex items-center justify-center w-7 h-7 rounded-lg hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
+                        title={lang === "pt" ? "Salvar" : "Save"}
+                      >
+                        <Bookmark className="w-3 h-3" />
+                      </button>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          toast({ title: "👍" });
+                        }}
+                        className="flex items-center justify-center w-7 h-7 rounded-lg hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
+                        title={lang === "pt" ? "Curtir" : "Like"}
+                      >
+                        <ThumbsUp className="w-3 h-3" />
+                      </button>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          toast({ title: lang === "pt" ? "Bug reportado" : "Bug reported", description: t.title });
+                        }}
+                        className="flex items-center justify-center w-7 h-7 rounded-lg hover:bg-muted text-muted-foreground hover:text-destructive transition-colors"
+                        title={lang === "pt" ? "Reportar bug" : "Report bug"}
+                      >
+                        <Bug className="w-3 h-3" />
+                      </button>
                     </div>
                   </motion.div>
                 );

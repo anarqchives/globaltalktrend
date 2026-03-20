@@ -1,27 +1,19 @@
 import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { Sun, Moon, LogOut, LogIn, ChevronRight, User, Loader2, Menu, X, BarChart3, BookOpen, Globe, Bookmark, FileText } from "lucide-react";
-import { useLanguage, languages } from "@/contexts/LanguageContext";
+import { Sun, Moon, LogOut, LogIn, Loader2 } from "lucide-react";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable/index";
 import { toast } from "@/hooks/use-toast";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
-import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
-import { ScrollArea } from "@/components/ui/scroll-area";
 
-interface AppHeaderProps {
-  minimal?: boolean;
-  onOpenSavedCollections?: () => void;
-}
-
-const AppHeader = ({ minimal = false, onOpenSavedCollections }: AppHeaderProps) => {
-  const { lang, setLang, t } = useLanguage();
+const AppHeader = () => {
+  const { lang, t } = useLanguage();
   const navigate = useNavigate();
   const [user, setUser] = useState<any>(null);
   const [loginOpen, setLoginOpen] = useState(false);
   const [loginLoading, setLoginLoading] = useState<"google" | "apple" | null>(null);
-  const [drawerOpen, setDrawerOpen] = useState(false);
   const [dark, setDark] = useState(() => {
     if (typeof window !== "undefined") {
       const saved = localStorage.getItem("theme");
@@ -55,9 +47,6 @@ const AppHeader = ({ minimal = false, onOpenSavedCollections }: AppHeaderProps) 
   const userName = user?.user_metadata?.full_name || user?.email?.split("@")[0] || "";
   const userInitial = userName.charAt(0).toUpperCase();
 
-  // Show top 4 languages as pills
-  const topLangs = languages.slice(0, 4);
-
   return (
     <>
       <header className="sticky top-0 z-50 bg-background/95 backdrop-blur-md border-b border-border/30" role="banner">
@@ -70,25 +59,8 @@ const AppHeader = ({ minimal = false, onOpenSavedCollections }: AppHeaderProps) 
 
           <div className="flex-1" />
 
-          {/* Right controls: Language + Theme + Apoie + Avatar + Menu */}
+          {/* Right: Theme + Apoie + Avatar */}
           <div className="flex items-center gap-1.5">
-            {/* Language pills */}
-            <div className="hidden sm:flex items-center gap-0.5 mr-1">
-              {topLangs.map(l => (
-                <button
-                  key={l.code}
-                  onClick={() => { setLang(l.code); window.dispatchEvent(new Event("trend-refresh")); }}
-                  className={`px-2 py-1 rounded-md text-[10px] font-semibold transition-all ${
-                    lang === l.code
-                      ? "bg-foreground text-background"
-                      : "text-muted-foreground hover:text-foreground hover:bg-muted/60"
-                  }`}
-                >
-                  {l.label}
-                </button>
-              ))}
-            </div>
-
             {/* Dark/Light toggle */}
             <button
               onClick={() => setDark(!dark)}
@@ -106,13 +78,20 @@ const AppHeader = ({ minimal = false, onOpenSavedCollections }: AppHeaderProps) 
 
             {/* Avatar / Login */}
             {user ? (
-              <button onClick={() => navigate("/perfil")}
-                className="compact-btn flex items-center justify-center w-8 h-8 rounded-full hover:ring-2 hover:ring-ring/20 transition-all">
-                <Avatar className="w-6 h-6">
-                  {userAvatar && <AvatarImage src={userAvatar} alt={userName} />}
-                  <AvatarFallback className="text-[9px] font-bold bg-foreground text-background">{userInitial}</AvatarFallback>
-                </Avatar>
-              </button>
+              <div className="flex items-center gap-1">
+                <button onClick={() => navigate("/perfil")}
+                  className="compact-btn flex items-center justify-center w-8 h-8 rounded-full hover:ring-2 hover:ring-ring/20 transition-all">
+                  <Avatar className="w-6 h-6">
+                    {userAvatar && <AvatarImage src={userAvatar} alt={userName} />}
+                    <AvatarFallback className="text-[9px] font-bold bg-foreground text-background">{userInitial}</AvatarFallback>
+                  </Avatar>
+                </button>
+                <button onClick={handleLogout}
+                  className="flex items-center justify-center w-8 h-8 rounded-lg text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors"
+                  title={lang === "pt" ? "Sair" : "Log out"}>
+                  <LogOut className="w-3.5 h-3.5" />
+                </button>
+              </div>
             ) : (
               <button onClick={() => setLoginOpen(true)}
                 className="compact-btn flex items-center gap-1 h-7 px-3 rounded-full text-[10px] font-semibold bg-foreground text-background hover:bg-foreground/90 transition-colors">
@@ -120,109 +99,9 @@ const AppHeader = ({ minimal = false, onOpenSavedCollections }: AppHeaderProps) 
                 <span className="hidden sm:inline">{t("enter")}</span>
               </button>
             )}
-
-            {/* Menu */}
-            <button onClick={() => setDrawerOpen(true)}
-              className="compact-btn flex items-center justify-center w-8 h-8 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted transition-colors">
-              <Menu className="w-4.5 h-4.5" />
-            </button>
           </div>
         </div>
       </header>
-
-      {/* Drawer — secondary: account, preferences, navigation */}
-      <Sheet open={drawerOpen} onOpenChange={setDrawerOpen}>
-        <SheetContent side="right" className="w-[320px] sm:w-[360px] p-0">
-          <SheetHeader className="p-4 pb-3 border-b border-border/30">
-            <SheetTitle className="text-[14px] font-bold">{lang === "pt" ? "Menu" : "Menu"}</SheetTitle>
-          </SheetHeader>
-          <ScrollArea className="h-[calc(100vh-60px)]">
-            <div className="p-4 space-y-5">
-              {/* Settings */}
-              <div>
-                <h4 className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground mb-2">
-                  {lang === "pt" ? "Configurações" : "Settings"}
-                </h4>
-                <div className="space-y-1">
-                  {/* All languages in drawer */}
-                  <div className="px-3 py-2">
-                    <span className="text-[10px] font-medium text-muted-foreground mb-1 block">{lang === "pt" ? "Idioma" : "Language"}</span>
-                    <div className="flex flex-wrap gap-1 mt-1">
-                      {languages.map(l => (
-                        <button key={l.code} onClick={() => { setLang(l.code); window.dispatchEvent(new Event("trend-refresh")); }}
-                          className={`px-2 py-1 rounded text-[10px] font-medium transition-all ${lang === l.code ? "bg-foreground text-background" : "bg-muted/50 text-muted-foreground hover:bg-muted"}`}>
-                          {l.label}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Navigation */}
-              <div className="border-t border-border/30 pt-4">
-                <h4 className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground mb-2">
-                  {lang === "pt" ? "Navegação" : "Navigation"}
-                </h4>
-                <div className="space-y-0.5">
-                  <Link to="/dashboard" onClick={() => setDrawerOpen(false)}
-                    className="flex items-center justify-between px-3 py-2 rounded-md hover:bg-muted transition-colors text-[11px] font-medium">
-                    <span className="flex items-center gap-2"><BarChart3 className="w-3.5 h-3.5 text-muted-foreground" /> Dashboard</span>
-                    <ChevronRight className="w-3 h-3 text-muted-foreground/30" />
-                  </Link>
-                  <Link to="/historico" onClick={() => setDrawerOpen(false)}
-                    className="flex items-center justify-between px-3 py-2 rounded-md hover:bg-muted transition-colors text-[11px] font-medium">
-                    <span className="flex items-center gap-2"><BookOpen className="w-3.5 h-3.5 text-muted-foreground" /> {lang === "pt" ? "Histórico" : "History"}</span>
-                    <ChevronRight className="w-3 h-3 text-muted-foreground/30" />
-                  </Link>
-                  <button onClick={() => { setDrawerOpen(false); onOpenSavedCollections?.(); }}
-                    className="w-full flex items-center justify-between px-3 py-2 rounded-md hover:bg-muted transition-colors text-[11px] font-medium text-left">
-                    <span className="flex items-center gap-2"><Bookmark className="w-3.5 h-3.5 text-muted-foreground" /> {lang === "pt" ? "Salvos" : "Saved"}</span>
-                    <ChevronRight className="w-3 h-3 text-muted-foreground/30" />
-                  </button>
-                  <Link to="/reports" onClick={() => setDrawerOpen(false)}
-                    className="flex items-center justify-between px-3 py-2 rounded-md hover:bg-muted transition-colors text-[11px] font-medium">
-                    <span className="flex items-center gap-2"><FileText className="w-3.5 h-3.5 text-muted-foreground" /> {lang === "pt" ? "Relatórios" : "Reports"}</span>
-                    <ChevronRight className="w-3 h-3 text-muted-foreground/30" />
-                  </Link>
-                  <Link to="/metodologia" onClick={() => setDrawerOpen(false)}
-                    className="flex items-center justify-between px-3 py-2 rounded-md hover:bg-muted transition-colors text-[11px] font-medium">
-                    <span className="flex items-center gap-2"><Globe className="w-3.5 h-3.5 text-muted-foreground" /> {lang === "pt" ? "Sobre / Metodologia" : "About / Methodology"}</span>
-                    <ChevronRight className="w-3 h-3 text-muted-foreground/30" />
-                  </Link>
-                </div>
-              </div>
-
-              {/* Auth */}
-              <div className="border-t border-border/30 pt-4">
-                {user ? (
-                  <div className="space-y-2">
-                    <div className="flex items-center gap-2 px-3 py-2">
-                      <Avatar className="w-6 h-6">
-                        {userAvatar && <AvatarImage src={userAvatar} alt={userName} />}
-                        <AvatarFallback className="text-[8px] font-bold bg-foreground text-background">{userInitial}</AvatarFallback>
-                      </Avatar>
-                      <div className="min-w-0">
-                        <div className="text-[11px] font-semibold truncate">{userName}</div>
-                        <div className="text-[9px] text-muted-foreground truncate">{user.email}</div>
-                      </div>
-                    </div>
-                    <button onClick={() => { handleLogout(); setDrawerOpen(false); }}
-                      className="w-full flex items-center gap-2 px-3 py-2 rounded-md text-destructive hover:bg-destructive/5 transition-colors text-[11px] font-medium">
-                      <LogOut className="w-3.5 h-3.5" /> {lang === "pt" ? "Sair" : "Log out"}
-                    </button>
-                  </div>
-                ) : (
-                  <button onClick={() => { setDrawerOpen(false); setLoginOpen(true); }}
-                    className="w-full flex items-center justify-center gap-2 py-2.5 rounded-md bg-foreground text-background text-[11px] font-semibold hover:bg-foreground/90 transition-colors">
-                    <LogIn className="w-3.5 h-3.5" /> {lang === "pt" ? "Entrar" : "Sign in"}
-                  </button>
-                )}
-              </div>
-            </div>
-          </ScrollArea>
-        </SheetContent>
-      </Sheet>
 
       {/* Login Modal */}
       <Dialog open={loginOpen} onOpenChange={setLoginOpen}>
