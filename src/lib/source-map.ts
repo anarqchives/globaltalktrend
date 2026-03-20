@@ -157,6 +157,11 @@ export const SOURCE_MAP: Record<string, SourceInfo> = {
   // ─── Dados Oficiais Internacionais ─────────────────
   "OMS (WHO)":            { country: "GL", mediaType: "dados-oficiais", category: "Saúde", reliability: 1.0 },
   "FMI (IMF)":            { country: "GL", mediaType: "dados-oficiais", category: "Negócios/Finanças", reliability: 1.0 },
+
+  // ─── Aggregator Client-Side Sources ────────────────
+  "Alpha Vantage":        { country: "US", mediaType: "dados-oficiais", category: "Economia", reliability: 0.9 },
+  "Fixer.io":             { country: "GL", mediaType: "dados-oficiais", category: "Economia", reliability: 0.85 },
+  "NewsData":             { country: "GL", mediaType: "imprensa", reliability: 0.7 },
 };
 
 // Map filter type values to source map mediaType values
