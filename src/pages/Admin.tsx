@@ -82,6 +82,7 @@ export default function Admin() {
     API_ENDPOINTS.map(e => ({ name: e.name, functionName: e.functionName, status: "checking" as const, responseTime: null, trendCount: 0, lastCheck: null }))
   );
   const [liveChecking, setLiveChecking] = useState(false);
+  const [aggDiag, setAggDiag] = useState<AggregatorSourceStatus[]>([]);
 
   // ─── Live API Health Check ─────────────────────────────────────
   const checkLiveAPIs = useCallback(async () => {
