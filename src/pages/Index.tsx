@@ -27,6 +27,7 @@ import TagLegend from "@/components/TagLegend";
 import { toast } from "@/hooks/use-toast";
 import { useUserActivity } from "@/hooks/use-user-activity";
 import { computePriority, PriorityResult } from "@/lib/priority-engine";
+import { useWatchlist } from "@/hooks/use-watchlist";
 import {
   ResizablePanelGroup,
   ResizablePanel,
