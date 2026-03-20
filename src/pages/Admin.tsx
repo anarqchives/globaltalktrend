@@ -393,6 +393,61 @@ export default function Admin() {
           </CardContent>
         </Card>
 
+        {/* ─── CLIENT-SIDE AGGREGATOR STATUS ───────────────────────── */}
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-sm font-semibold flex items-center gap-2">
+              <Layers className="w-4 h-4" /> Aggregator Client-Side (6 APIs diretas)
+              <Button
+                size="sm" variant="ghost" className="ml-auto h-6 px-2 text-[10px]"
+                onClick={() => setAggDiag(getAggregatorDiagnostics())}
+              >
+                <RefreshCw className="w-3 h-3 mr-1" /> Atualizar
+              </Button>
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-1.5">
+            {aggDiag.map((src) => (
+              <div key={src.name} className="flex items-center gap-3 p-2.5 rounded-lg border border-border/30 hover:bg-muted/20 transition-colors">
+                <div className={`w-2.5 h-2.5 rounded-full flex-shrink-0 ${src.enabled ? (src.lastFetchCount && src.lastFetchCount > 0 ? "bg-emerald-500" : "bg-amber-500") : "bg-muted-foreground/40"}`} />
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm font-medium text-foreground">{src.name}</span>
+                    {src.enabled ? (
+                      <Badge variant="default" className="text-[9px] px-1.5 py-0">
+                        {src.lastFetchCount !== null && src.lastFetchCount > 0 ? "Ativo" : "Habilitado"}
+                      </Badge>
+                    ) : (
+                      <Badge variant="secondary" className="text-[9px] px-1.5 py-0">Desabilitado</Badge>
+                    )}
+                    {src.cached && (
+                      <Badge variant="outline" className="text-[9px] px-1.5 py-0">Cached</Badge>
+                    )}
+                  </div>
+                  <div className="flex items-center gap-3 mt-0.5 text-[10px] text-muted-foreground">
+                    {src.lastFetchCount !== null ? (
+                      <span>{src.lastFetchCount} itens</span>
+                    ) : (
+                      <span>Sem dados ainda</span>
+                    )}
+                    {src.lastFetchTime && (
+                      <span>{formatTime(src.lastFetchTime)}</span>
+                    )}
+                    {src.reason && (
+                      <span className="text-amber-500">{src.reason}</span>
+                    )}
+                  </div>
+                </div>
+              </div>
+            ))}
+            {aggDiag.length === 0 && (
+              <p className="text-xs text-muted-foreground text-center py-4">
+                Carregue a página principal primeiro para gerar dados do aggregator.
+              </p>
+            )}
+          </CardContent>
+        </Card>
+
         {/* Country coverage */}
         <Card>
           <CardHeader className="pb-3">
