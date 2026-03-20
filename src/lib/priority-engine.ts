@@ -8,10 +8,11 @@ import { TrendCardProps } from "@/components/TrendCard";
 export interface PriorityResult {
   score: number;           // 0–100
   tier: "critical" | "high" | "medium" | "low";
-  reason: string;          // short microcopy in pt/en
+  reason: string;          // short microcopy in pt/en — WHY this matters
   lifecycle: "emerging" | "accelerating" | "peak" | "declining" | "stable";
   normalizedVolume: number; // 0–1 cross-source comparable
   confidence: number;       // 0–1
+  sourceNature: string;     // human-readable source type label
 }
 
 /* ─── Source weight map: how much we trust each source type ─── */
@@ -39,13 +40,23 @@ const SOURCE_TYPE_MAP: Record<string, string> = {
   "wikipedia": "enciclopedico",
 };
 
-function getSourceType(platform: string): string {
+export function getSourceType(platform: string): string {
   const p = platform.toLowerCase();
   for (const [key, val] of Object.entries(SOURCE_TYPE_MAP)) {
     if (p.includes(key)) return val;
   }
   return "imprensa";
 }
+
+/* ─── Source nature labels (for card display) ─── */
+const SOURCE_NATURE_LABELS: Record<string, Record<string, string>> = {
+  imprensa: { pt: "Imprensa editorial", en: "Editorial press" },
+  dados_oficiais: { pt: "Dados oficiais", en: "Official data" },
+  cientifico: { pt: "Pesquisa acadêmica", en: "Academic research" },
+  enciclopedico: { pt: "Referência enciclopédica", en: "Encyclopedic reference" },
+  redes_sociais: { pt: "Rede social", en: "Social network" },
+  google_trends: { pt: "Volume de buscas", en: "Search volume" },
+};
 
 function parseVolume(volume: string): number {
   const v = (volume || "0").toLowerCase();
@@ -87,13 +98,12 @@ function detectLifecycle(sparkData: number[] | undefined, changeNum: number, age
   if (ageH < 3 && changeNum > 30) return "emerging";
   if (ratio > 1.5 && changeNum > 50) return "accelerating";
   if (ratio < 0.6) return "declining";
-  // Peak: high volume but flattening
   const lastTwo = sparkData.slice(-2);
   if (lastTwo.length === 2 && Math.abs(lastTwo[1] - lastTwo[0]) / (lastTwo[0] || 1) < 0.1 && avgLast > avgFirst) return "peak";
   return "stable";
 }
 
-/* ─── Reason generator ─── */
+/* ─── Reason generator — actionable microcopy ─── */
 interface ReasonCtx {
   lang: string;
   lifecycle: PriorityResult["lifecycle"];
@@ -104,48 +114,61 @@ interface ReasonCtx {
   confidence: number;
   sourceType: string;
   ageH: number;
+  normalizedVolume: number;
 }
 
 function generateReason(ctx: ReasonCtx): string {
   const pt = ctx.lang === "pt";
   const reasons: string[] = [];
 
+  // Lifecycle-driven primary reason
   if (ctx.lifecycle === "emerging" && ctx.ageH < 3) {
-    reasons.push(pt ? "sinal emergente nas últimas horas" : "emerging signal in the last hours");
+    reasons.push(pt ? "Sinal emergente detectado nas últimas horas" : "Emerging signal detected in the last hours");
+  } else if (ctx.lifecycle === "accelerating") {
+    reasons.push(pt ? "Acelerando rapidamente — monitorar evolução" : "Accelerating rapidly — monitor evolution");
+  } else if (ctx.lifecycle === "peak") {
+    reasons.push(pt ? "No pico de atenção agora" : "At peak attention now");
+  } else if (ctx.lifecycle === "declining") {
+    reasons.push(pt ? "Desacelerando — perda de momentum" : "Decelerating — losing momentum");
   }
-  if (ctx.lifecycle === "accelerating") {
-    reasons.push(pt ? "acelerando rapidamente" : "accelerating rapidly");
-  }
+
+  // Growth anomaly
   if (ctx.changeNum > 200) {
-    reasons.push(pt ? `crescimento de ${ctx.changeNum.toFixed(0)}% acima do padrão` : `${ctx.changeNum.toFixed(0)}% growth above baseline`);
-  } else if (ctx.changeNum > 80) {
-    reasons.push(pt ? "crescimento recente significativo" : "significant recent growth");
+    reasons.push(pt ? `Crescimento anômalo de ${ctx.changeNum.toFixed(0)}%` : `Anomalous ${ctx.changeNum.toFixed(0)}% growth`);
+  } else if (ctx.changeNum > 80 && reasons.length === 0) {
+    reasons.push(pt ? "Crescimento recente significativo" : "Significant recent growth");
   }
+
+  // Multi-platform confirmation
   if (ctx.isMulti) {
-    reasons.push(pt ? "confirmado em múltiplas plataformas" : "confirmed across multiple platforms");
+    reasons.push(pt ? "Confirmado em múltiplas plataformas" : "Confirmed across multiple platforms");
   }
+
+  // Source coverage
   if (ctx.sourceCount > 3) {
-    reasons.push(pt ? `${ctx.sourceCount} fontes cobrindo` : `${ctx.sourceCount} sources covering`);
+    reasons.push(pt ? `Coberto por ${ctx.sourceCount} fontes independentes` : `Covered by ${ctx.sourceCount} independent sources`);
   }
-  if (ctx.confidence > 0.85) {
-    reasons.push(pt ? "alta confiança editorial" : "high editorial confidence");
-  } else if (ctx.confidence < 0.5) {
-    reasons.push(pt ? "confiança baixa — verificar" : "low confidence — verify");
+
+  // Confidence warning
+  if (ctx.confidence < 0.4) {
+    reasons.push(pt ? "Baixa confiança — requer verificação" : "Low confidence — requires verification");
   }
-  if (ctx.lifecycle === "declining") {
-    reasons.push(pt ? "desacelerando" : "decelerating");
+
+  // High volume with low confidence
+  if (ctx.normalizedVolume > 0.7 && ctx.confidence < 0.5) {
+    reasons.push(pt ? "Grande volume com baixa confiança" : "High volume with low confidence");
   }
-  if (ctx.lifecycle === "peak") {
-    reasons.push(pt ? "no pico de atenção" : "at peak attention");
+
+  // High confidence from trusted source
+  if (ctx.confidence > 0.85 && (ctx.sourceType === "dados_oficiais" || ctx.sourceType === "cientifico")) {
+    reasons.push(pt ? "Alta confiança editorial" : "High editorial confidence");
   }
 
   if (reasons.length === 0) {
-    reasons.push(pt ? "relevância moderada" : "moderate relevance");
+    reasons.push(pt ? "Relevância moderada no momento" : "Moderate relevance at this time");
   }
 
-  // Capitalize first letter and join
-  const text = reasons.slice(0, 2).join(" · ");
-  return text.charAt(0).toUpperCase() + text.slice(1);
+  return reasons.slice(0, 2).join(" · ");
 }
 
 /* ─── Main scoring function ─── */
@@ -176,36 +199,26 @@ export function computePriority(
   const isMulti = opts.multiplatformTitles.has(normKey);
 
   // ─── SCORE COMPUTATION ───
-  // Volume component (0-25)
   const volScore = normalizedVolume * 25;
-  
-  // Growth component (0-25)
   const growthScore = Math.min(changeNum / 200, 1) * 25;
-  
-  // Confidence component (0-20)
   const confScore = confidence * 20;
-  
-  // Freshness component (0-15) — newer = higher
   const freshnessScore = Math.max(0, 15 - (ageH * 0.8));
-  
-  // Lifecycle bonus (0-15)
   const lifecycleBonus = lifecycle === "accelerating" ? 15
     : lifecycle === "emerging" ? 12
     : lifecycle === "peak" ? 8
     : lifecycle === "declining" ? 2
     : 5;
-
-  // Multiplatform bonus
   const multiBonus = isMulti ? 10 : 0;
 
   const raw = volScore + growthScore + confScore + freshnessScore + lifecycleBonus + multiBonus;
   const score = Math.min(Math.round(raw), 100);
 
-  // Tier
   const tier: PriorityResult["tier"] = score >= 75 ? "critical"
     : score >= 50 ? "high"
     : score >= 30 ? "medium"
     : "low";
+
+  const sourceNature = SOURCE_NATURE_LABELS[sourceType]?.[opts.lang] || SOURCE_NATURE_LABELS[sourceType]?.en || "";
 
   const reason = generateReason({
     lang: opts.lang,
@@ -217,18 +230,19 @@ export function computePriority(
     confidence,
     sourceType,
     ageH,
+    normalizedVolume,
   });
 
-  return { score, tier, reason, lifecycle, normalizedVolume, confidence };
+  return { score, tier, reason, lifecycle, normalizedVolume, confidence, sourceNature };
 }
 
 /* ─── Lifecycle labels ─── */
-export const LIFECYCLE_LABELS: Record<PriorityResult["lifecycle"], { pt: string; en: string; icon: string }> = {
-  emerging: { pt: "Emergente", en: "Emerging", icon: "🌱" },
-  accelerating: { pt: "Acelerando", en: "Accelerating", icon: "🚀" },
-  peak: { pt: "Pico", en: "Peak", icon: "📈" },
-  declining: { pt: "Declínio", en: "Declining", icon: "📉" },
-  stable: { pt: "Estável", en: "Stable", icon: "➡️" },
+export const LIFECYCLE_LABELS: Record<PriorityResult["lifecycle"], { pt: string; en: string; icon: string; desc: { pt: string; en: string } }> = {
+  emerging: { pt: "Emergente", en: "Emerging", icon: "🌱", desc: { pt: "Detectado recentemente, ainda ganhando forma", en: "Recently detected, still taking shape" } },
+  accelerating: { pt: "Acelerando", en: "Accelerating", icon: "🚀", desc: { pt: "Crescimento rápido e consistente", en: "Fast and consistent growth" } },
+  peak: { pt: "Pico", en: "Peak", icon: "📈", desc: { pt: "Atingiu o ponto máximo de atenção", en: "Reached maximum attention" } },
+  declining: { pt: "Declínio", en: "Declining", icon: "📉", desc: { pt: "Perdendo momentum gradualmente", en: "Gradually losing momentum" } },
+  stable: { pt: "Estável", en: "Stable", icon: "➡️", desc: { pt: "Volume constante, sem grandes variações", en: "Steady volume, no major changes" } },
 };
 
 /* ─── Tier labels ─── */
@@ -238,3 +252,16 @@ export const TIER_LABELS: Record<PriorityResult["tier"], { pt: string; en: strin
   medium: { pt: "Prioridade Média", en: "Medium Priority" },
   low: { pt: "Baixa Prioridade", en: "Low Priority" },
 };
+
+/* ─── Confidence labels ─── */
+export const CONFIDENCE_LABELS = {
+  high: { pt: "Alta confiança", en: "High confidence", threshold: 0.7 },
+  medium: { pt: "Confiança moderada", en: "Moderate confidence", threshold: 0.4 },
+  low: { pt: "Baixa confiança", en: "Low confidence", threshold: 0 },
+} as const;
+
+export function getConfidenceLabel(confidence: number, lang: string): string {
+  if (confidence >= 0.7) return lang === "pt" ? CONFIDENCE_LABELS.high.pt : CONFIDENCE_LABELS.high.en;
+  if (confidence >= 0.4) return lang === "pt" ? CONFIDENCE_LABELS.medium.pt : CONFIDENCE_LABELS.medium.en;
+  return lang === "pt" ? CONFIDENCE_LABELS.low.pt : CONFIDENCE_LABELS.low.en;
+}
