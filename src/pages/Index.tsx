@@ -436,7 +436,10 @@ const Index = () => {
   return (
     <div className="h-screen flex flex-col bg-background overflow-hidden w-full max-w-[100vw]">
       <AppHeader />
-      <FilterBlock filters={filters} onChange={handleFilterChange} onReset={() => setFilters(defaultFilters)} />
+      <FilterBlock filters={filters} onChange={handleFilterChange} onReset={() => setFilters(defaultFilters)} onSaveFilter={user ? () => {
+        const name = prompt(lang === "pt" ? "Nome do filtro:" : "Filter name:");
+        if (name) saveFilter(name, filters);
+      } : undefined} />
 
       <div className="flex-1 overflow-hidden flex flex-col min-h-0">
         {isMobile ? (
