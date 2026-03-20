@@ -273,10 +273,7 @@ const FilterBlock = ({ filters, onChange, onReset, onSaveFilter }: FilterBlockPr
     label: p.l[lang as keyof typeof p.l] || p.l.pt,
   }));
 
-  const langOptions = languages.map(l => ({
-    value: l.code,
-    label: l.label,
-  }));
+
 
   return (
     <div className="sticky top-12 z-40 bg-background/90 backdrop-blur-md border-b border-border/25">
