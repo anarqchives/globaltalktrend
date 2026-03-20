@@ -2,7 +2,7 @@ import { useState, useRef, useCallback, useEffect, useMemo, lazy, Suspense } fro
 import { AnimatePresence } from "framer-motion";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import AppHeader from "@/components/AppHeader";
-import FilterBar, { FilterState, countries } from "@/components/FilterBar";
+import { FilterState } from "@/components/FilterBar";
 import TimelineCard from "@/components/TimelineCard";
 import TrendCardSkeleton from "@/components/TrendCardSkeleton";
 import TransparencyPanel from "@/components/TransparencyPanel";
@@ -52,15 +52,6 @@ const defaultFilters: FilterState = {
   query: "",
 };
 
-const SOURCE_PRIORITY: Record<string, number> = {
-  "The Guardian": 1, "NPR": 1, "NewsAPI": 2, "GNews": 2, "Bing News": 2, "NewsData": 2,
-  "The News API": 2, "TheNewsAPI": 2,
-  "Reddit": 3, "Bluesky": 3, "Mastodon": 3, "X (Twitter)": 3, "YouTube": 4,
-  "Hacker News": 5, "Stack Overflow": 5, "GitHub": 5,
-  "Wikipedia": 6, "OpenAlex": 6, "World Bank": 6, "IBGE": 6, "FRED": 6,
-  "Google Trends": 99,
-};
-
 function getInitialFilters(): FilterState {
   if (typeof window === "undefined") return defaultFilters;
   const params = new URLSearchParams(window.location.search);
@@ -78,7 +69,6 @@ const Index = () => {
   const [filters, setFilters] = useState<FilterState>(getInitialFilters);
   const [user, setUser] = useState<any>(null);
   const [viewMode, setViewMode] = useState<"timeline" | "map">("timeline");
-  const [workspaceMode, setWorkspaceMode] = useState<"explorer" | "analyst">("analyst");
   const [compactMode, setCompactMode] = useState(false);
   const [panelVisibility, setPanelVisibility] = useState(() => {
     try {
@@ -99,15 +89,6 @@ const Index = () => {
       return next;
     });
   };
-
-  useEffect(() => {
-    if (workspaceMode === "explorer") {
-      setPanelVisibility({ map: false, timeline: true });
-      setCompactMode(false);
-    } else {
-      setPanelVisibility({ map: true, timeline: true });
-    }
-  }, [workspaceMode]);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => setUser(session?.user ?? null));
@@ -132,7 +113,6 @@ const Index = () => {
   const [transparencyOpen, setTransparencyOpen] = useState(false);
 
   const [trendContexts, setTrendContexts] = useState<Record<string, string>>({});
-
   const { translatedTrends, isTranslating } = useTranslatedTrends(rawFilteredTrends, lang);
 
   // Lazy context fetching
@@ -146,10 +126,8 @@ const Index = () => {
         return needsCtx && !contextFetchedRef.current.has(t.title) && !trendContexts[t.title];
       })
       .slice(0, 15);
-
     if (trendsNeedingContext.length === 0) return;
     trendsNeedingContext.forEach(t => contextFetchedRef.current.add(t.title));
-
     supabase.functions.invoke("analyze-trend-context", {
       body: {
         trends: trendsNeedingContext.map(t => ({
@@ -164,9 +142,7 @@ const Index = () => {
         for (const ctx of data.contexts) {
           if (ctx.title && ctx.context) newContexts[ctx.title] = ctx.context;
         }
-        if (Object.keys(newContexts).length > 0) {
-          setTrendContexts(prev => ({ ...prev, ...newContexts }));
-        }
+        if (Object.keys(newContexts).length > 0) setTrendContexts(prev => ({ ...prev, ...newContexts }));
       }
     }).catch(() => {});
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -174,21 +150,15 @@ const Index = () => {
 
   const filteredTrends = useMemo(() => {
     const normKey = (title: string) => title.toLowerCase().normalize("NFD").replace(/\p{Diacritic}/gu, "").replace(/[^a-z0-9\s]/g, "").trim().slice(0, 50);
-
     let baseTrends = translatedTrends;
-
     if (filters.type === "Multiplataforma") {
       const getOriginalKey = (t: TranslatedTrendCardProps) => normKey((t as any)._originalTitle || t.title);
-      if (multiplatformTitles.size > 0) {
-        baseTrends = translatedTrends.filter(t => multiplatformTitles.has(getOriginalKey(t)));
-      }
+      if (multiplatformTitles.size > 0) baseTrends = translatedTrends.filter(t => multiplatformTitles.has(getOriginalKey(t)));
     }
-
     if (filters.query) {
       const q = filters.query.toLowerCase();
       return baseTrends.filter(t => t.title.toLowerCase().includes(q) || (t.description && t.description.toLowerCase().includes(q)));
     }
-
     return baseTrends;
   }, [translatedTrends, filters.type, filters.query, multiplatformTitles]);
 
@@ -210,13 +180,11 @@ const Index = () => {
     const isGT = (t: TrendCardProps) => t.platform?.toLowerCase().includes("google trends");
     const now = Date.now();
     const ONE_HOUR = 3600000;
-
     const getAge = (t: TrendCardProps): number => {
       if (t.publishedAt) return (now - new Date(t.publishedAt).getTime()) / ONE_HOUR;
       if (t.firstSeenAt) return (now - new Date(t.firstSeenAt).getTime()) / ONE_HOUR;
       return 12;
     };
-
     const getScore = (t: TrendCardProps): number => {
       const volStr = (t.volume || "0").toLowerCase();
       let vol = parseFloat(volStr.replace(/[^0-9.]/g, "")) || 0;
@@ -227,34 +195,21 @@ const Index = () => {
       const growthNorm = Math.min(ch, 100);
       const normalizedKey = t.title.toLowerCase().normalize("NFD").replace(/\p{Diacritic}/gu, "").replace(/[^a-z0-9\s]/g, "").trim().slice(0, 50);
       const isMulti = multiplatformTitles.has(normalizedKey);
-
-      // Filter out zero-volume + zero-growth cards
       if (vol === 0 && ch === 0) return -1000;
-
       return (volNorm * 0.3) + (growthNorm * 0.4) + (isMulti ? 150 : 0) + ((t.sources?.length || 1) * 10) - (getAge(t) * 10);
     };
-
     const scored = filteredTrends.map(t => ({ t, score: getScore(t) })).filter(s => s.score > -500);
     scored.sort((a, b) => b.score - a.score);
-
     const nonGT = scored.filter(s => !isGT(s.t)).map(s => s.t);
     const gt = scored.filter(s => isGT(s.t)).map(s => s.t);
-
     const result: TrendCardProps[] = [];
-    let gtIdx = 0;
-    let nonGTCount = 0;
-
+    let gtIdx = 0, nonGTCount = 0;
     for (const t of nonGT) {
       result.push(t);
       nonGTCount++;
-      if (nonGTCount % 4 === 0 && gtIdx < gt.length) {
-        result.push(gt[gtIdx++]);
-      }
+      if (nonGTCount % 4 === 0 && gtIdx < gt.length) result.push(gt[gtIdx++]);
     }
-    while (gtIdx < gt.length) {
-      result.push(gt[gtIdx++]);
-    }
-
+    while (gtIdx < gt.length) result.push(gt[gtIdx++]);
     return result;
   }, [filteredTrends, multiplatformTitles]);
 
@@ -288,13 +243,8 @@ const Index = () => {
       timeSinceLastFetchRef.current += 10;
       if (timeSinceLastFetchRef.current >= 90) {
         if (!isActive && selectedCardIndex === null) {
-          fetchTrends().then(() => {
-            timeSinceLastFetchRef.current = 0;
-            setUpdatePending(false);
-          });
-        } else if (!updatePending) {
-          setUpdatePending(true);
-        }
+          fetchTrends().then(() => { timeSinceLastFetchRef.current = 0; setUpdatePending(false); });
+        } else if (!updatePending) setUpdatePending(true);
       }
     }, 10000);
     return () => clearInterval(interval);
@@ -304,18 +254,14 @@ const Index = () => {
   const filterTimeoutRef = useRef<ReturnType<typeof setTimeout>>();
   const handleFilterChange = useCallback((newFilters: FilterState) => {
     clearTimeout(filterTimeoutRef.current);
-    filterTimeoutRef.current = setTimeout(() => {
-      setFilters(newFilters);
-    }, 300);
+    filterTimeoutRef.current = setTimeout(() => setFilters(newFilters), 300);
   }, []);
 
   // Side panel navigation
   const handleCardClick = useCallback((index: number) => {
     setSelectedCardIndex(index);
     const trend = diversifiedTrends[index];
-    if (trend) {
-      trackView(trend.title, trend.platform, { volume: trend.volume, category: trend.category, countryCode: trend.countryCode });
-    }
+    if (trend) trackView(trend.title, trend.platform, { volume: trend.volume, category: trend.category, countryCode: trend.countryCode });
   }, [diversifiedTrends, trackView]);
 
   const handlePrevCard = useCallback(() => {
@@ -370,16 +316,13 @@ const Index = () => {
 
   const renderTimeline = () => (
     <div ref={scrollRef} className="h-full overflow-y-auto overflow-x-hidden scrollbar-thin">
-      {/* Ranking strip */}
       <RankingStrip trends={diversifiedTrends} onSelectTrend={handleCardClick} />
 
       {/* Timeline header */}
       <div className="px-3 py-2 flex items-center justify-between sticky top-0 z-10 bg-background/80 backdrop-blur-sm border-b border-border">
         <div className="flex items-center gap-1.5">
           <FileText className="w-3.5 h-3.5 text-muted-foreground" />
-          <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-[0.08em]">
-            {t("timeline")}
-          </span>
+          <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-[0.08em]">{t("timeline")}</span>
           <span className="text-[10px] text-muted-foreground/40">({diversifiedTrends.length})</span>
         </div>
         <div className="flex items-center gap-1.5">
@@ -410,34 +353,18 @@ const Index = () => {
       {(loading && isFirstLoad && diversifiedTrends.length === 0)
         ? <div className="p-3 space-y-3">{Array.from({ length: 6 }).map((_, i) => <TrendCardSkeleton key={i} index={i} />)}</div>
         : (
-          <div
-            style={{ height: `${rowVirtualizer.getTotalSize()}px`, position: 'relative' }}
-            className="px-2 sm:px-3"
-          >
+          <div style={{ height: `${rowVirtualizer.getTotalSize()}px`, position: 'relative' }} className="px-2 sm:px-3">
             {rowVirtualizer.getVirtualItems().map((virtualRow) => {
               const trend = diversifiedTrends[virtualRow.index];
               if (!trend) return null;
               const originalTitle = (trend as any)._originalTitle || trend.title;
               const normalizedKey = originalTitle.toLowerCase().normalize("NFD").replace(/\p{Diacritic}/gu, "").replace(/[^a-z0-9\s]/g, "").trim().slice(0, 50);
               const isMulti = multiplatformTitles.has(normalizedKey);
-
               return (
-                <div
-                  key={virtualRow.key}
-                  style={{
-                    position: 'absolute',
-                    top: 0,
-                    left: 0,
-                    width: '100%',
-                    transform: `translateY(${virtualRow.start}px)`,
-                    padding: '4px 0',
-                  }}
-                  ref={rowVirtualizer.measureElement}
-                  data-index={virtualRow.index}
-                >
-                  <TimelineCard
-                    {...trend}
-                    compact={compactMode}
+                <div key={virtualRow.key}
+                  style={{ position: 'absolute', top: 0, left: 0, width: '100%', transform: `translateY(${virtualRow.start}px)`, padding: '4px 0' }}
+                  ref={rowVirtualizer.measureElement} data-index={virtualRow.index}>
+                  <TimelineCard {...trend} compact={compactMode}
                     staggerIndex={virtualRow.index < 10 ? virtualRow.index : 0}
                     isMultiplatform={isMulti}
                     isSelected={selectedCardIndex === virtualRow.index}
@@ -501,18 +428,15 @@ const Index = () => {
 
   return (
     <div className="h-screen flex flex-col bg-background overflow-hidden w-full max-w-[100vw]" style={{ fontFamily: "'DM Sans', sans-serif" }}>
-      <AppHeader />
-      <FilterBar
+      <AppHeader
         filters={filters}
-        onChange={handleFilterChange}
+        onFilterChange={handleFilterChange}
         onForceReset={() => setFilters(defaultFilters)}
         isLoggedIn={!!user}
         onSaveFilter={() => {
           const name = prompt("Nome do filtro:");
           if (name?.trim()) saveFilter(name.trim(), filters);
         }}
-        workspaceMode={workspaceMode}
-        onChangeWorkspaceMode={setWorkspaceMode}
         onOpenSavedCollections={() => setCollectionsOpen(true)}
       />
 
@@ -543,9 +467,7 @@ const Index = () => {
                   {panelVisibility.timeline && (
                     <>
                       <ResizablePanel defaultSize={panelVisibility.map ? 42 : 100} minSize={25} maxSize={panelVisibility.map ? 60 : 100}>
-                        <div className="h-full min-h-0 overflow-hidden relative">
-                          {renderTimeline()}
-                        </div>
+                        <div className="h-full min-h-0 overflow-hidden relative">{renderTimeline()}</div>
                       </ResizablePanel>
                       {panelVisibility.map && <ResizableHandle withHandle />}
                     </>

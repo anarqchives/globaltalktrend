@@ -559,11 +559,11 @@ const GoogleMapView = ({
   }, [mapMode, mapLoaded, renderHeatmap, renderChoropleth, renderFlow, renderSentiment]);
 
   /* ─── Mode selector config ─── */
-  const mapModes: { key: MapMode; icon: typeof Flame; label: string; activeColor: string }[] = [
-    { key: "heatmap", icon: Flame, label: "Heatmap", activeColor: "bg-[#2557D6]" },
-    { key: "choropleth", icon: MapIcon, label: lang === "pt" ? "Coroplético" : "Choropleth", activeColor: "bg-[#2557D6]" },
-    { key: "flow", icon: GitBranch, label: lang === "pt" ? "Fluxo" : "Flow", activeColor: "bg-violet-600" },
-    { key: "sentiment", icon: Heart, label: lang === "pt" ? "Sentimento" : "Sentiment", activeColor: "bg-emerald-600" },
+  const mapModes: { key: MapMode; icon: typeof Flame; label: string }[] = [
+    { key: "heatmap", icon: Flame, label: "Heatmap" },
+    { key: "choropleth", icon: MapIcon, label: lang === "pt" ? "Coroplético" : "Choropleth" },
+    { key: "flow", icon: GitBranch, label: lang === "pt" ? "Fluxo" : "Flow" },
+    { key: "sentiment", icon: Heart, label: lang === "pt" ? "Sentimento" : "Sentiment" },
   ];
 
   return (
