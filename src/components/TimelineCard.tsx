@@ -273,11 +273,11 @@ const TimelineCard = ({
     <motion.div
       variants={cardVariants}
       onClick={onClick}
-      className={`bg-card/90 dark:bg-card/60 backdrop-blur-sm rounded-lg border cursor-pointer w-full relative overflow-hidden
+      className={`bg-card/90 dark:bg-card/60 backdrop-blur-sm rounded-md border cursor-pointer w-full relative overflow-hidden
         transition-all duration-200 ease-[cubic-bezier(0.21,0.47,0.32,0.98)]
         ${isSelected
-          ? "border-l-[3px] border-l-[#2557D6] border-[#2557D6]/20 shadow-[0_6px_24px_rgba(26,24,20,0.10)]"
-          : "border-border/40 shadow-[0_1px_4px_rgba(26,24,20,0.04)] hover:shadow-[0_4px_16px_rgba(26,24,20,0.08)] hover:-translate-y-[1px]"}
+          ? "border-l-[3px] border-l-[var(--accent-blue)] border-border/40 shadow-elevation-md"
+          : "border-border/30 shadow-elevation-xs hover:shadow-elevation-sm hover:-translate-y-[1px]"}
         `}
       style={{ padding: compact ? "8px 10px" : "10px 12px" }}
     >
