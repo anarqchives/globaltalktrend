@@ -4,8 +4,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, RefreshCw, CheckCircle2, XCircle, AlertTriangle, Globe, Activity, Clock, Server, Wifi, WifiOff, Zap } from "lucide-react";
+import { ArrowLeft, RefreshCw, CheckCircle2, XCircle, AlertTriangle, Globe, Activity, Clock, Server, Wifi, WifiOff, Zap, Layers } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { getAggregatorDiagnostics, type AggregatorSourceStatus } from "@/services/aggregatorService";
 
 interface SourceHealth {
   name: string;

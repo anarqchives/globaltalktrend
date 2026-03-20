@@ -157,6 +157,8 @@ export async function fetchAggregatedTrends(
   const allUnified: UnifiedTrend[] = [];
 
   results.forEach((r, i) => {
+    const count = r.status === "fulfilled" ? r.value.length : 0;
+    recordSourceStat(labels[i], count);
     if (r.status === "fulfilled") {
       if (import.meta.env.DEV) console.log(`✅ Aggregator/${labels[i]}: ${r.value.length} itens`);
       allUnified.push(...r.value);
