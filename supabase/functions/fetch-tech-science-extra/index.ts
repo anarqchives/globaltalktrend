@@ -1,13 +1,10 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-
 const ALLOWED_ORIGINS = [
-  'https://globaltalktrend.lovable.app',
   'https://gttmonitor.com',
   'https://www.gttmonitor.com',
   'http://localhost:8080',
   'http://localhost:5173',
 ];
-
 function getCorsHeaders(req: Request) {
   const origin = req.headers.get('origin') || '';
   const isAllowed = ALLOWED_ORIGINS.includes(origin) || origin.endsWith('.lovableproject.com') || origin.endsWith('.lovable.app');
@@ -18,10 +15,8 @@ function getCorsHeaders(req: Request) {
     'Access-Control-Allow-Methods': 'POST, GET, OPTIONS',
   };
 }
-
 let cache: { ts: number; data: any[] } | null = null;
 const CACHE_TTL = 5 * 60 * 1000;
-
 async function fetchLobsters(): Promise<any[]> {
   try {
     const controller = new AbortController();
@@ -51,7 +46,6 @@ async function fetchLobsters(): Promise<any[]> {
     }));
   } catch { return []; }
 }
-
 async function fetchArxiv(): Promise<any[]> {
   try {
     const url = "http://export.arxiv.org/api/query?search_query=cat:cs.AI+OR+cat:cs.CL+OR+cat:cs.LG&sortBy=submittedDate&sortOrder=descending&max_results=8";
@@ -64,7 +58,6 @@ async function fetchArxiv(): Promise<any[]> {
     clearTimeout(timeout);
     if (!res.ok) return [];
     const xml = await res.text();
-
     // Parse Atom XML with regex
     const entries: any[] = [];
     const entryRegex = /<entry>([\s\S]*?)<\/entry>/g;
@@ -76,7 +69,6 @@ async function fetchArxiv(): Promise<any[]> {
       const id = entry.match(/<id>([\s\S]*?)<\/id>/)?.[1]?.trim() || "";
       const published = entry.match(/<published>([\s\S]*?)<\/published>/)?.[1]?.trim() || "";
       const categories = Array.from(entry.matchAll(/category term="([^"]+)"/g)).map(m => m[1]);
-
       if (title) {
         entries.push({
           icon: "📄",
@@ -100,23 +92,18 @@ async function fetchArxiv(): Promise<any[]> {
     return entries.slice(0, 8);
   } catch { return []; }
 }
-
 serve(async (req) => {
   const cors = getCorsHeaders(req);
   if (req.method === "OPTIONS") return new Response(null, { headers: cors });
-
   try {
     if (cache && Date.now() - cache.ts < CACHE_TTL) {
       return new Response(JSON.stringify({ trends: cache.data }), {
         headers: { ...cors, "Content-Type": "application/json" },
       });
     }
-
     const [lobsters, arxiv] = await Promise.all([fetchLobsters(), fetchArxiv()]);
     const trends = [...lobsters, ...arxiv];
-
     cache = { ts: Date.now(), data: trends };
-
     return new Response(JSON.stringify({ trends }), {
       headers: { ...cors, "Content-Type": "application/json" },
     });

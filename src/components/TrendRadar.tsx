@@ -27,7 +27,7 @@ interface TrendRadarProps {
   onToggleCollapse?: () => void;
 }
 
-const RADAR_STORAGE_KEY = "globaltalktrend-radar-collapsed";
+const RADAR_STORAGE_KEY = "gttmonitor-radar-collapsed";
 
 const legendText: Record<string, Record<string, string>> = {
   signals: {

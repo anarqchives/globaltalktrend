@@ -1,13 +1,10 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-
 const ALLOWED_ORIGINS = [
-  'https://globaltalktrend.lovable.app',
   'https://gttmonitor.com',
   'https://www.gttmonitor.com',
   'http://localhost:8080',
   'http://localhost:5173',
 ];
-
 function getCorsHeaders(req: Request) {
   const origin = req.headers.get('origin') || '';
   const isAllowed = ALLOWED_ORIGINS.includes(origin) || origin.endsWith('.lovableproject.com') || origin.endsWith('.lovable.app');
@@ -18,7 +15,6 @@ function getCorsHeaders(req: Request) {
     'Access-Control-Allow-Methods': 'POST, GET, OPTIONS',
   };
 }
-
 interface TrendItem {
   icon: string;
   platform: string;
@@ -39,7 +35,6 @@ interface TrendItem {
   historicalData?: { hour: string; value: number }[];
   metricLabel?: string;
 }
-
 function generateHistorical(baseValue: number, label: string) {
   const now = new Date();
   const data = [];
@@ -53,16 +48,13 @@ function generateHistorical(baseValue: number, label: string) {
   }
   return { historicalData: data, metricLabel: label };
 }
-
 function sparkRandom() {
   return Array.from({ length: 10 }, () => Math.floor(Math.random() * 70 + 30));
 }
-
 // Lang-aware caches
 let cachedResponses: Record<string, { data: string; timestamp: number }> = {};
 const CACHE_TTL = 60 * 60 * 1000;
 const langToGNewsLang: Record<string, string> = { pt: "pt", en: "en", es: "es", fr: "fr", de: "de", it: "it", ar: "ar", ru: "ru", zh: "zh", ja: "ja", ko: "ko", hi: "hi" };
-
 // ── NewsData ──
 async function fetchNewsData(lang = "pt"): Promise<TrendItem[]> {
   const key = Deno.env.get("NEWSDATA_API_KEY");
@@ -89,7 +81,6 @@ async function fetchNewsData(lang = "pt"): Promise<TrendItem[]> {
     });
   } catch (e) { console.error("NewsData fetch error:", e); return []; }
 }
-
 // ── GNews ──
 async function fetchGNews(lang = "pt"): Promise<TrendItem[]> {
   const key = Deno.env.get("GNEWS_API_KEY");
@@ -110,7 +101,6 @@ async function fetchGNews(lang = "pt"): Promise<TrendItem[]> {
     return mapGNewsArticles(data.articles || []);
   } catch (e) { console.error("GNews fetch error:", e); return []; }
 }
-
 function mapGNewsArticles(articles: any[]): TrendItem[] {
   return articles.map((a: any) => {
     const src = a.source?.name || "GNews";
@@ -125,7 +115,6 @@ function mapGNewsArticles(articles: any[]): TrendItem[] {
     };
   });
 }
-
 // ── Bing News ──
 async function fetchBingNews(lang = "pt"): Promise<TrendItem[]> {
   const key = Deno.env.get("BING_NEWS_API_KEY");
@@ -170,7 +159,6 @@ async function fetchBingNews(lang = "pt"): Promise<TrendItem[]> {
     });
   } catch (e) { console.error("Bing News fetch error:", e); return []; }
 }
-
 // ── New York Times (Top Stories + Article Search) ──
 async function fetchNYTimes(lang = "pt"): Promise<TrendItem[]> {
   const key = Deno.env.get("NYT_API_KEY");
@@ -178,16 +166,13 @@ async function fetchNYTimes(lang = "pt"): Promise<TrendItem[]> {
   try {
     const controller = new AbortController();
     setTimeout(() => controller.abort(), 8000);
-
     // Fetch Top Stories from multiple sections
     const sections = ["world", "technology", "science", "business", "health"];
     const sectionToCategory: Record<string, string> = {
       world: "Política", technology: "Tecnologia", science: "Ciência",
       business: "Negócios/Finanças", health: "Saúde",
     };
-
     const results: TrendItem[] = [];
-
     // Top Stories - pick 2 from each section
     for (const section of sections) {
       try {
@@ -215,18 +200,15 @@ async function fetchNYTimes(lang = "pt"): Promise<TrendItem[]> {
         }
       } catch { /* skip section */ }
     }
-
     console.log(`📰 NYT retornou: ${results.length} itens`);
     return results.slice(0, 12);
   } catch (e) { console.error("NYT fetch error:", e); return []; }
 }
-
 // ── NPR (RSS feed - no API key needed) ──
 async function fetchNPR(): Promise<TrendItem[]> {
   try {
     const controller = new AbortController();
     setTimeout(() => controller.abort(), 8000);
-
     // NPR provides RSS feeds for news
     const feeds = [
       { url: "https://feeds.npr.org/1001/rss.xml", category: "Notícias", name: "News" },
@@ -234,9 +216,7 @@ async function fetchNPR(): Promise<TrendItem[]> {
       { url: "https://feeds.npr.org/1007/rss.xml", category: "Ciência", name: "Science" },
       { url: "https://feeds.npr.org/1006/rss.xml", category: "Saúde", name: "Health" },
     ];
-
     const results: TrendItem[] = [];
-
     for (const feed of feeds) {
       try {
         const res = await fetch(feed.url, {
@@ -245,7 +225,6 @@ async function fetchNPR(): Promise<TrendItem[]> {
         });
         if (!res.ok) continue;
         const xml = await res.text();
-
         // Parse RSS items
         const itemRegex = /<item>([\s\S]*?)<\/item>/g;
         let match;
@@ -260,9 +239,7 @@ async function fetchNPR(): Promise<TrendItem[]> {
           const pubDate = block.match(/<pubDate>(.*?)<\/pubDate>/)?.[1] || "";
           const mediaUrl = block.match(/<media:content[^>]*url="([^"]+)"/)?.[1]
             || block.match(/<enclosure[^>]*url="([^"]+)"/)?.[1] || "";
-
           if (!title) continue;
-
           const { historicalData, metricLabel } = generateHistorical(Math.floor(Math.random() * 15 + 5), "ouvintes");
           results.push({
             icon: "🎙️", platform: "NPR", title: title.replace(/<[^>]*>/g, ""),
@@ -277,12 +254,10 @@ async function fetchNPR(): Promise<TrendItem[]> {
         }
       } catch { /* skip feed */ }
     }
-
     console.log(`🎙️ NPR retornou: ${results.length} itens`);
     return results;
   } catch (e) { console.error("NPR fetch error:", e); return []; }
 }
-
 // ── RSS Feeds – Global sources organized by region ──
 const RSS_FEEDS = [
   // ── AMÉRICA LATINA ──
@@ -307,7 +282,6 @@ const RSS_FEEDS = [
   { url: "https://efe.com/feed", name: "EFE News", icon: "🌐", country: "ES", category: "Notícias" },
   { url: "https://www.france24.com/es/rss", name: "France 24 ES", icon: "🇫🇷", country: "FR", category: "Notícias" },
   { url: "https://rss.dw.com/rdf/rss-es-all", name: "DW Español", icon: "🇩🇪", country: "DE", category: "Notícias" },
-
   // ── EUROPA ──
   { url: "http://feeds.bbci.co.uk/news/rss.xml", name: "BBC News", icon: "🇬🇧", country: "GB", category: "Notícias" },
   { url: "http://feeds.bbci.co.uk/portuguese/rss.xml", name: "BBC Brasil", icon: "🇧🇷", country: "BR", category: "Notícias" },
@@ -346,7 +320,6 @@ const RSS_FEEDS = [
   { url: "https://www.ekathimerini.com/rss", name: "Kathimerini", icon: "🇬🇷", country: "GR", category: "Notícias" },
   { url: "https://www.zeit.de/index.rss", name: "Die Zeit", icon: "🇩🇪", country: "DE", category: "Notícias" },
   { url: "https://www.tagesschau.de/xml/rss2", name: "Tagesschau", icon: "🇩🇪", country: "DE", category: "Notícias" },
-
   // ── ÁSIA ──
   { url: "https://www3.nhk.or.jp/rss/news/cat0.xml", name: "NHK", icon: "🇯🇵", country: "JP", category: "Notícias" },
   { url: "https://www.japantimes.co.jp/feed", name: "The Japan Times", icon: "🇯🇵", country: "JP", category: "Notícias" },
@@ -369,29 +342,24 @@ const RSS_FEEDS = [
   { url: "https://en.antaranews.com/rss", name: "Antara News", icon: "🇮🇩", country: "ID", category: "Notícias" },
   { url: "https://www.dailysabah.com/rss", name: "Daily Sabah", icon: "🇹🇷", country: "TR", category: "Notícias" },
   { url: "https://www.hurriyetdailynews.com/rss", name: "Hurriyet Daily News", icon: "🇹🇷", country: "TR", category: "Notícias" },
-
   // ── PALESTINA ──
   { url: "https://english.wafa.ps/rss", name: "WAFA News", icon: "🇵🇸", country: "PS", category: "Notícias" },
   { url: "https://www.palestinechronicle.com/feed", name: "Palestine Chronicle", icon: "🇵🇸", country: "PS", category: "Notícias" },
   { url: "https://electronicintifada.net/rss.xml", name: "Electronic Intifada", icon: "🇵🇸", country: "PS", category: "Notícias" },
   { url: "https://www.middleeastmonitor.com/feed", name: "Middle East Monitor", icon: "🇵🇸", country: "PS", category: "Notícias" },
   { url: "https://www.maannews.net/rss", name: "Ma'an News", icon: "🇵🇸", country: "PS", category: "Notícias" },
-
   // ── ISRAEL ──
   { url: "https://www.haaretz.com/cmlink/haaretz-en-rss-1.0", name: "Haaretz", icon: "🇮🇱", country: "IL", category: "Notícias" },
   { url: "https://www.jpost.com/Rss/RssFeedsHeadlines.aspx", name: "The Jerusalem Post", icon: "🇮🇱", country: "IL", category: "Notícias" },
   { url: "https://www.ynetnews.com/feed", name: "Ynetnews", icon: "🇮🇱", country: "IL", category: "Notícias" },
   { url: "https://www.timesofisrael.com/feed", name: "Times of Israel", icon: "🇮🇱", country: "IL", category: "Notícias" },
-
   // ── ORIENTE MÉDIO ──
   { url: "https://www.aljazeera.com/xml/rss/all.xml", name: "Al Jazeera", icon: "🇶🇦", country: "QA", category: "Notícias" },
-
   // ── RÚSSIA / EURÁSIA ──
   { url: "https://tass.com/rss/v2.xml", name: "TASS", icon: "🇷🇺", country: "RU", category: "Notícias" },
   { url: "https://www.rt.com/rss/news/", name: "RT", icon: "🇷🇺", country: "RU", category: "Notícias" },
   { url: "https://www.themoscowtimes.com/rss/news", name: "Moscow Times", icon: "🇷🇺", country: "RU", category: "Notícias" },
   { url: "https://www.rbth.com/rss", name: "Russia Beyond", icon: "🇷🇺", country: "RU", category: "Notícias" },
-
   // ── ÁFRICA ──
   { url: "https://www.news24.com/rss", name: "News24", icon: "🇿🇦", country: "ZA", category: "Notícias" },
   { url: "https://www.timeslive.co.za/feed", name: "Times Live", icon: "🇿🇦", country: "ZA", category: "Notícias" },
@@ -411,7 +379,6 @@ const RSS_FEEDS = [
   { url: "https://www.moroccoworldnews.com/feed", name: "Morocco World News", icon: "🇲🇦", country: "MA", category: "Notícias" },
   { url: "https://www.aps.dz/en/rss", name: "Algeria Press Service", icon: "🇩🇿", country: "DZ", category: "Notícias" },
   { url: "https://inforpress.cv/rss", name: "Inforpress", icon: "🇨🇻", country: "CV", category: "Notícias" },
-
   // ── OCEANIA ──
   { url: "https://www.abc.net.au/news/feed/51120/rss.xml", name: "ABC News AU", icon: "🇦🇺", country: "AU", category: "Notícias" },
   { url: "https://www.theguardian.com/australia-news/rss", name: "Guardian Australia", icon: "🇦🇺", country: "AU", category: "Notícias" },
@@ -420,42 +387,34 @@ const RSS_FEEDS = [
   { url: "https://www.nzherald.co.nz/arc/outboundfeeds/rss/curated/78/?outputType=xml", name: "NZ Herald", icon: "🇳🇿", country: "NZ", category: "Notícias" },
   { url: "https://www.stuff.co.nz/rss", name: "Stuff NZ", icon: "🇳🇿", country: "NZ", category: "Notícias" },
   { url: "https://www.rnz.co.nz/rss/national.xml", name: "RNZ", icon: "🇳🇿", country: "NZ", category: "Notícias" },
-
   // ── AGREGADORES GLOBAIS ──
   { url: "https://feeds.reuters.com/reuters/worldnews", name: "Reuters", icon: "🌐", country: "US", category: "Política" },
   { url: "https://feeds.reuters.com/reuters/technologyNews", name: "Reuters", icon: "🌐", country: "US", category: "Tecnologia" },
   { url: "https://feeds.reuters.com/reuters/businessNews", name: "Reuters", icon: "🌐", country: "US", category: "Negócios/Finanças" },
   { url: "https://rss.app/feeds/v1.1/ap-top-news.rss", name: "AP News", icon: "🇺🇸", country: "US", category: "Notícias" },
-
   // ── ESPECIALIZADAS: TECNOLOGIA ──
   { url: "https://techcrunch.com/feed", name: "TechCrunch", icon: "💻", country: "US", category: "Tecnologia" },
   { url: "https://www.theverge.com/rss/index.xml", name: "The Verge", icon: "💻", country: "US", category: "Tecnologia" },
   { url: "https://www.wired.com/feed/rss", name: "Wired", icon: "💻", country: "US", category: "Tecnologia" },
   { url: "https://feeds.arstechnica.com/arstechnica/index", name: "Ars Technica", icon: "💻", country: "US", category: "Tecnologia" },
   { url: "https://www.engadget.com/rss.xml", name: "Engadget", icon: "💻", country: "US", category: "Tecnologia" },
-
   // ── ESPECIALIZADAS: CIÊNCIA ──
   { url: "https://www.eurekalert.org/rss.xml", name: "EurekAlert!", icon: "🔬", country: "US", category: "Ciência" },
   { url: "https://www.sciencedaily.com/rss/all.xml", name: "ScienceDaily", icon: "🔬", country: "US", category: "Ciência" },
   { url: "https://www.nature.com/nature.rss", name: "Nature", icon: "🔬", country: "GB", category: "Ciência" },
-
   // ── ESPECIALIZADAS: NEGÓCIOS ──
   { url: "https://www.forbes.com/real-time/feed2/", name: "Forbes", icon: "💰", country: "US", category: "Negócios/Finanças" },
   { url: "https://www.businessinsider.com/rss", name: "Business Insider", icon: "💰", country: "US", category: "Negócios/Finanças" },
-
   // ── ESPECIALIZADAS: ESPORTES ──
   { url: "https://www.espn.com/espn/rss/news", name: "ESPN", icon: "⚽", country: "US", category: "Esportes" },
   { url: "https://www.skysports.com/rss/12040", name: "Sky Sports", icon: "⚽", country: "GB", category: "Esportes" },
-
   // ── ESPECIALIZADAS: ENTRETENIMENTO ──
   { url: "https://variety.com/feed/", name: "Variety", icon: "🎬", country: "US", category: "Entretenimento" },
   { url: "https://www.hollywoodreporter.com/feed/", name: "Hollywood Reporter", icon: "🎬", country: "US", category: "Entretenimento" },
-
   // ── AGREGADORES ──
   { url: "https://news.google.com/rss", name: "Google News", icon: "🌐", country: "GL", category: "Geral" },
   { url: "https://www.reddit.com/r/all/.rss", name: "Reddit", icon: "🟠", country: "GL", category: "Geral" },
 ];
-
 function inferCategoryFromContent(title: string, feedCategory: string): string {
   const t = title.toLowerCase();
   if (/tech|digital|cyber|ai |artificial|software|hardware|app\b|startup/i.test(t)) return "Tecnologia";
@@ -467,15 +426,12 @@ function inferCategoryFromContent(title: string, feedCategory: string): string {
   if (/cultur|movie|film|music|art|book|museum|festival/i.test(t)) return "Entretenimento";
   return feedCategory;
 }
-
 async function fetchRSSFeeds(): Promise<TrendItem[]> {
   const controller = new AbortController();
   setTimeout(() => controller.abort(), 15000);
-
   // Shuffle and pick up to 30 feeds per invocation to stay fast
   const shuffled = [...RSS_FEEDS].sort(() => Math.random() - 0.5);
   const selected = shuffled.slice(0, 30);
-
   const fetches = selected.map(async (feed) => {
     try {
       const res = await fetch(feed.url, {
@@ -484,7 +440,6 @@ async function fetchRSSFeeds(): Promise<TrendItem[]> {
       });
       if (!res.ok) return [];
       const xml = await res.text();
-
       const items: TrendItem[] = [];
       const itemRegex = /<item>([\s\S]*?)<\/item>/g;
       let match;
@@ -500,14 +455,11 @@ async function fetchRSSFeeds(): Promise<TrendItem[]> {
         const mediaUrl = block.match(/<media:thumbnail[^>]*url="([^"]+)"/)?.[1]
           || block.match(/<media:content[^>]*url="([^"]+)"/)?.[1]
           || block.match(/<enclosure[^>]*url="([^"]+)"/)?.[1] || "";
-
         if (!title || title.length < 5) continue;
-
         const cleanTitle = title.replace(/<[^>]*>/g, "").trim();
         const cleanDesc = desc.replace(/<[^>]*>/g, "").trim();
         const category = inferCategoryFromContent(cleanTitle, feed.category);
         const { historicalData, metricLabel } = generateHistorical(Math.floor(Math.random() * 20 + 5), "artigos");
-
         items.push({
           icon: feed.icon, platform: feed.name, title: cleanTitle,
           category, time: "agora", volume: feed.name,
@@ -523,13 +475,11 @@ async function fetchRSSFeeds(): Promise<TrendItem[]> {
       return [];
     }
   });
-
   const allResults = await Promise.all(fetches);
   const results = allResults.flat();
   console.log(`📡 RSS Feeds retornou: ${results.length} itens de ${selected.length} feeds (${RSS_FEEDS.length} total disponíveis)`);
   return results;
 }
-
 // ── Guardian as primary fallback ──
 async function fetchGuardianFallback(): Promise<TrendItem[]> {
   const key = Deno.env.get("GUARDIAN_API_KEY");
@@ -559,17 +509,14 @@ async function fetchGuardianFallback(): Promise<TrendItem[]> {
     return items;
   } catch (e) { console.error("Guardian fallback error:", e); return []; }
 }
-
 serve(async (req) => {
   const corsHeaders = getCorsHeaders(req);
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
-
   try {
     let lang = "pt";
     try { const body = await req.json(); lang = body?.lang || "pt"; } catch { /* no body */ }
-
     const cacheKey = `news_extra_v2_${lang}`;
     const cached = cachedResponses[cacheKey];
     if (cached && Date.now() - cached.timestamp < CACHE_TTL) {
@@ -577,7 +524,6 @@ serve(async (req) => {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
-
     // Fetch all sources in parallel
     const [newsData, gnews, bing, nyt, npr, rss] = await Promise.all([
       fetchNewsData(lang),
@@ -587,19 +533,15 @@ serve(async (req) => {
       fetchNPR(),
       fetchRSSFeeds(),
     ]);
-    
     let trends = [...newsData, ...gnews, ...bing, ...nyt, ...npr, ...rss];
     console.log(`fetch-news-extra [${lang}]: ${newsData.length} NewsData, ${gnews.length} GNews, ${bing.length} Bing, ${nyt.length} NYT, ${npr.length} NPR, ${rss.length} RSS`);
-    
     // If all primary APIs returned empty, use Guardian fallback
     if (trends.length === 0) {
       console.log("All news APIs returned empty, using Guardian fallback");
       trends = await fetchGuardianFallback();
     }
-
     const responseData = JSON.stringify({ trends });
     cachedResponses[cacheKey] = { data: responseData, timestamp: Date.now() };
-
     return new Response(responseData, {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });

@@ -1,13 +1,10 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-
 const ALLOWED_ORIGINS = [
-  'https://globaltalktrend.lovable.app',
   'https://gttmonitor.com',
   'https://www.gttmonitor.com',
   'http://localhost:8080',
   'http://localhost:5173',
 ];
-
 function getCorsHeaders(req: Request) {
   const origin = req.headers.get('origin') || '';
   const isAllowed = ALLOWED_ORIGINS.includes(origin) || origin.endsWith('.lovableproject.com') || origin.endsWith('.lovable.app');
@@ -18,11 +15,9 @@ function getCorsHeaders(req: Request) {
     'Access-Control-Allow-Methods': 'POST, GET, OPTIONS',
   };
 }
-
 // ─── In-memory cache (5 min) ───────────────────────────────────────
 let cache: { ts: number; data: any[] } | null = null;
 const CACHE_TTL = 5 * 60 * 1000;
-
 // ─── FIPS to ISO country code mapping ──────────────────────────────
 const FIPS_TO_ISO: Record<string, string> = {
   US: "US", UK: "GB", FR: "FR", GM: "DE", IT: "IT", SP: "ES", BR: "BR",
@@ -32,13 +27,11 @@ const FIPS_TO_ISO: Record<string, string> = {
   TH: "TH", VM: "VN", PL: "PL", UP: "UA", SZ: "CH", AU: "AT", BE: "BE",
   NL: "NL", SW: "SE", NO: "NO", DA: "DK", FI: "FI", PO: "PT", GR: "GR",
 };
-
 function fipsToIso(fips?: string): string {
   if (!fips) return "GL";
   const code = fips.toUpperCase().slice(0, 2);
   return FIPS_TO_ISO[code] || "GL";
 }
-
 // ─── Sentiment from GDELT tone ─────────────────────────────────────
 function toneToSentiment(tone?: number): string {
   if (tone === undefined || tone === null) return "neutro";
@@ -46,13 +39,11 @@ function toneToSentiment(tone?: number): string {
   if (tone < -2) return "negativo";
   return "neutro";
 }
-
 function sentimentEmoji(sentiment: string): string {
   if (sentiment === "positivo") return "📈";
   if (sentiment === "negativo") return "📉";
   return "➡️";
 }
-
 // ─── Category inference from domain/theme ──────────────────────────
 function inferCategory(title: string, domain?: string): string {
   const t = (title + " " + (domain || "")).toLowerCase();
@@ -68,14 +59,11 @@ function inferCategory(title: string, domain?: string): string {
   if (/culture|art|museum|festival|religion|tradition/i.test(t)) return "Cultura";
   return "Geral";
 }
-
 serve(async (req) => {
   const cors = getCorsHeaders(req);
-
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: cors });
   }
-
   try {
     // Check cache
     if (cache && Date.now() - cache.ts < CACHE_TTL) {
@@ -83,10 +71,8 @@ serve(async (req) => {
         headers: { ...cors, "Content-Type": "application/json" },
       });
     }
-
     // GDELT DOC 2.0 — single request with broad query  
     const gdeltUrl = "https://api.gdeltproject.org/api/v2/doc/doc?query=(world OR crisis OR election OR economy OR technology OR climate OR health OR war)&mode=ArtList&maxrecords=30&format=json&sort=HybridRel&timespan=60min";
-    
     let articles: any[] = [];
     try {
       const controller = new AbortController();
@@ -96,7 +82,6 @@ serve(async (req) => {
         signal: controller.signal,
       });
       clearTimeout(timeout);
-      
       if (response.ok) {
         const text = await response.text();
         if (text.startsWith("{") || text.startsWith("[")) {
@@ -112,16 +97,13 @@ serve(async (req) => {
     } catch (e) {
       console.log("GDELT fetch error:", String(e));
     }
-    
     console.log("GDELT articles:", articles.length);
-
     if (!Array.isArray(articles) || articles.length === 0) {
       console.log("GDELT: No articles returned");
       return new Response(JSON.stringify({ trends: [] }), {
         headers: { ...cors, "Content-Type": "application/json" },
       });
     }
-
     // Map articles to TrendCardProps
     const trends = articles.slice(0, 25).map((article: any) => {
       const title = (article.title || "").trim();
@@ -130,7 +112,6 @@ serve(async (req) => {
       const countryCode = fipsToIso(article.sourcecountry);
       const category = inferCategory(title, article.domain);
       const domain = article.domain || "";
-
       // Extract time info — GDELT seendate format: "20260310T232600Z"
       const seenDate = article.seendate || "";
       let timeStr = "agora";
@@ -155,17 +136,14 @@ serve(async (req) => {
           timeStr = "recente";
         }
       }
-
       // Generate sparkline from tone variations
       const sparkData = Array.from({ length: 10 }, (_, i) => {
         const base = 40 + (tone ? Math.abs(tone) * 5 : 0);
         return Math.round(base + Math.random() * 30 + i * 3);
       });
-
       // Volume indicator
       const socialImage = article.socialimage;
       const volume = socialImage ? "Alto impacto" : "Monitorado";
-
       return {
         icon: sentimentEmoji(sentiment),
         platform: "GDELT",
@@ -185,10 +163,8 @@ serve(async (req) => {
         tone: tone !== undefined ? tone : null,
       };
     }).filter((t: any) => t.title && t.title.length > 10);
-
     // Update cache
     cache = { ts: Date.now(), data: trends };
-
     return new Response(JSON.stringify({ trends }), {
       headers: { ...cors, "Content-Type": "application/json" },
     });

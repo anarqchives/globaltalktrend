@@ -1,13 +1,10 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-
 const ALLOWED_ORIGINS = [
-  'https://globaltalktrend.lovable.app',
   'https://gttmonitor.com',
   'https://www.gttmonitor.com',
   'http://localhost:8080',
   'http://localhost:5173',
 ];
-
 function getCorsHeaders(req: Request) {
   const origin = req.headers.get('origin') || '';
   const isAllowed = ALLOWED_ORIGINS.includes(origin) || origin.endsWith('.lovableproject.com') || origin.endsWith('.lovable.app');
@@ -18,7 +15,6 @@ function getCorsHeaders(req: Request) {
     'Access-Control-Allow-Methods': 'POST, GET, OPTIONS',
   };
 }
-
 interface TrendItem {
   icon: string;
   platform: string;
@@ -40,7 +36,6 @@ interface TrendItem {
   historicalData?: { hour: string; value: number }[];
   metricLabel?: string;
 }
-
 // Countries to fetch Google Trends for
 const GOOGLE_TRENDS_GEOS: { geo: string; region: string }[] = [
   { geo: "BR", region: "Brasil" },
@@ -69,7 +64,6 @@ const GOOGLE_TRENDS_GEOS: { geo: string; region: string }[] = [
   { geo: "ZA", region: "África do Sul" },
   { geo: "PH", region: "Filipinas" },
 ];
-
 function generateHistorical(baseValue: number, label: string): { historicalData: { hour: string; value: number }[]; metricLabel: string } {
   const now = new Date();
   const data = [];
@@ -83,21 +77,17 @@ function generateHistorical(baseValue: number, label: string): { historicalData:
   }
   return { historicalData: data, metricLabel: label };
 }
-
 let cachedResponse: Record<string, { data: string; timestamp: number }> = {};
 const CACHE_TTL = 5 * 60 * 1000;
-
 // Map lang codes to YouTube/NewsAPI region codes
 const langToYTRegion: Record<string, string> = { pt: "BR", en: "US", es: "MX", fr: "FR", de: "DE", it: "IT", ja: "JP", ko: "KR", ar: "SA", hi: "IN", ru: "RU", zh: "CN" };
 const langToNewsAPILang: Record<string, string> = { pt: "pt", en: "en", es: "es", fr: "fr", de: "de", it: "it", ar: "ar", ru: "ru", zh: "zh" };
-
 async function fetchYouTubeTrends(lang = "pt"): Promise<TrendItem[]> {
   const API_KEY = Deno.env.get("YOUTUBE_API_KEY");
   if (!API_KEY) {
     console.error("YOUTUBE_API_KEY not set");
     return [];
   }
-
   try {
     const regionCode = langToYTRegion[lang] || "BR";
     const res = await fetch(
@@ -108,14 +98,12 @@ async function fetchYouTubeTrends(lang = "pt"): Promise<TrendItem[]> {
       return [];
     }
     const data = await res.json();
-
     return (data.items || []).map((item: any) => {
       const views = parseInt(item.statistics?.viewCount || "0", 10);
       const likes = parseInt(item.statistics?.likeCount || "0", 10);
       const comments = parseInt(item.statistics?.commentCount || "0", 10);
       const likeRatio = views > 0 ? Math.round((likes / views) * 1000) / 10 : 0;
       const { historicalData, metricLabel } = generateHistorical(views / 24, "views/hora");
-
       return {
         icon: "▶",
         platform: "YouTube",
@@ -145,11 +133,9 @@ async function fetchYouTubeTrends(lang = "pt"): Promise<TrendItem[]> {
     return [];
   }
 }
-
 function detectCategoryFromGoogleTrend(trend: { title?: string; description?: string }): string {
   const title = (trend.title || "").toLowerCase();
   const description = (trend.description || "").toLowerCase();
-
   const categories: Record<string, string[]> = {
     Entretenimento: ["filme", "série", "musica", "música", "trailer", "celebridade", "oscar", "netflix"],
     Esportes: ["futebol", "copa", "jogo", "campeonato", "time", "clube", "partida"],
@@ -158,16 +144,13 @@ function detectCategoryFromGoogleTrend(trend: { title?: string; description?: st
     "Negócios/Finanças": ["inflação", "pib", "bolsa", "mercado", "dólar", "euro", "ações"],
     Cultura: ["história", "cultura", "arte", "exposição", "museu"],
   };
-
   for (const [cat, keywords] of Object.entries(categories)) {
     if (keywords.some((k) => title.includes(k) || description.includes(k))) {
       return cat;
     }
   }
-
   return "Geral";
 }
-
 async function fetchGoogleTrendsForGeo(geo: string, region: string, maxItems = 3): Promise<TrendItem[]> {
   try {
     const res = await fetch(
@@ -181,7 +164,6 @@ async function fetchGoogleTrendsForGeo(geo: string, region: string, maxItems = 3
     );
     if (!res.ok) return [];
     const xml = await res.text();
-
     const items: TrendItem[] = [];
     const itemRegex = /<item>([\s\S]*?)<\/item>/g;
     let match;
@@ -194,18 +176,14 @@ async function fetchGoogleTrendsForGeo(geo: string, region: string, maxItems = 3
       const traffic = block.match(/<ht:approx_traffic>(.*?)<\/ht:approx_traffic>/)?.[1] || "N/A";
       const newsTitle = block.match(/<ht:news_item_title><!\[CDATA\[(.*?)\]\]>/)?.[1]
         || block.match(/<ht:news_item_title>(.*?)<\/ht:news_item_title>/)?.[1] || "";
-      
       const newsUrl = block.match(/<ht:news_item_url><!\[CDATA\[(.*?)\]\]>/)?.[1]
         || block.match(/<ht:news_item_url>(.*?)<\/ht:news_item_url>/)?.[1] || "";
-
       const trafficNum = parseInt(traffic.replace(/[^0-9]/g, "")) || 500;
       const { historicalData, metricLabel } = generateHistorical(trafficNum, "índice de busca");
-
       const detectedCategory = detectCategoryFromGoogleTrend({
         title,
         description: newsTitle,
       });
-
       items.push({
         icon: "🔍",
         platform: "Google Trends",
@@ -230,13 +208,11 @@ async function fetchGoogleTrendsForGeo(geo: string, region: string, maxItems = 3
     return [];
   }
 }
-
 async function fetchAllGoogleTrends(): Promise<TrendItem[]> {
   // Fetch BR with more items (primary), others with wider coverage
   const promises = GOOGLE_TRENDS_GEOS.map(({ geo, region }) =>
     fetchGoogleTrendsForGeo(geo, region, geo === "BR" ? 10 : 6)
   );
-
   const results = await Promise.allSettled(promises);
   const allItems: TrendItem[] = [];
   for (const result of results) {
@@ -247,14 +223,12 @@ async function fetchAllGoogleTrends(): Promise<TrendItem[]> {
   console.log(`Google Trends multi-geo: found ${allItems.length} items from ${GOOGLE_TRENDS_GEOS.length} countries`);
   return allItems;
 }
-
 async function fetchNewsAPI(lang = "pt"): Promise<TrendItem[]> {
   const API_KEY = Deno.env.get("NEWSAPI_KEY");
   if (!API_KEY) {
     console.error("NEWSAPI_KEY not set - skipping NewsAPI");
     return [];
   }
-
   try {
     const newsLang = langToNewsAPILang[lang] || "pt";
     let url = `https://newsapi.org/v2/top-headlines?language=${newsLang}&pageSize=12&apiKey=${API_KEY}`;
@@ -266,11 +240,9 @@ async function fetchNewsAPI(lang = "pt"): Promise<TrendItem[]> {
       res = await fetch(url);
       data = await res.json();
     }
-
     return (data.articles || []).map((article: any) => {
       const sourceName = article.source?.name || "fonte desconhecida";
       const { historicalData, metricLabel } = generateHistorical(Math.floor(Math.random() * 20 + 5), "artigos publicados");
-
       return {
         icon: "📰",
         platform: "NewsAPI",
@@ -298,17 +270,14 @@ async function fetchNewsAPI(lang = "pt"): Promise<TrendItem[]> {
     return [];
   }
 }
-
 serve(async (req) => {
   const corsHeaders = getCorsHeaders(req);
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
-
   try {
     let lang = "pt";
     try { const body = await req.json(); lang = body?.lang || "pt"; } catch { /* no body */ }
-    
     const cacheKey = `trends_${lang}`;
     const cached = cachedResponse[cacheKey];
     if (cached && Date.now() - cached.timestamp < CACHE_TTL) {
@@ -317,7 +286,6 @@ serve(async (req) => {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
-
     const [youtube, news, googleTrends] = await Promise.all([
       fetchYouTubeTrends(lang),
       fetchNewsAPI(lang),
@@ -325,9 +293,7 @@ serve(async (req) => {
     ]);
     const trends = [...youtube, ...news, ...googleTrends];
     const responseData = JSON.stringify({ trends });
-
     cachedResponse[cacheKey] = { data: responseData, timestamp: Date.now() };
-
     return new Response(responseData, {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });

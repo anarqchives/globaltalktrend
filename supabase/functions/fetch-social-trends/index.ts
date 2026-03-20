@@ -1,13 +1,10 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-
 const ALLOWED_ORIGINS = [
-  'https://globaltalktrend.lovable.app',
   'https://gttmonitor.com',
   'https://www.gttmonitor.com',
   'http://localhost:8080',
   'http://localhost:5173',
 ];
-
 function getCorsHeaders(req: Request) {
   const origin = req.headers.get('origin') || '';
   const isAllowed = ALLOWED_ORIGINS.includes(origin) || origin.endsWith('.lovableproject.com') || origin.endsWith('.lovable.app');
@@ -18,7 +15,6 @@ function getCorsHeaders(req: Request) {
     'Access-Control-Allow-Methods': 'POST, GET, OPTIONS',
   };
 }
-
 interface TrendItem {
   icon: string;
   platform: string;
@@ -39,7 +35,6 @@ interface TrendItem {
   historicalData?: { hour: string; value: number }[];
   metricLabel?: string;
 }
-
 function generateHistorical(baseValue: number, label: string) {
   const now = new Date();
   const data = [];
@@ -53,14 +48,11 @@ function generateHistorical(baseValue: number, label: string) {
   }
   return { historicalData: data, metricLabel: label };
 }
-
 function sparkRandom() {
   return Array.from({ length: 10 }, () => Math.floor(Math.random() * 70 + 30));
 }
-
 let cachedResponse: { data: string; timestamp: number } | null = null;
 const CACHE_TTL = 5 * 60 * 1000;
-
 // ── Hacker News ──
 async function fetchHackerNews(): Promise<TrendItem[]> {
   try {
@@ -68,7 +60,6 @@ async function fetchHackerNews(): Promise<TrendItem[]> {
     if (!res.ok) return [];
     const ids: number[] = await res.json();
     const top = ids.slice(0, 15);
-
     const items = await Promise.all(
       top.map(async (id) => {
         const r = await fetch(`https://hacker-news.firebaseio.com/v0/item/${id}.json`);
@@ -76,7 +67,6 @@ async function fetchHackerNews(): Promise<TrendItem[]> {
         return r.json();
       })
     );
-
     return items.filter(Boolean).map((item: any) => {
       const score = item.score || 0;
       const comments = item.descendants || 0;
@@ -106,7 +96,6 @@ async function fetchHackerNews(): Promise<TrendItem[]> {
     return [];
   }
 }
-
 // ── Wikipedia Most Read ──
 async function fetchWikipediaTrending(lang = "en"): Promise<TrendItem[]> {
   try {
@@ -115,7 +104,6 @@ async function fetchWikipediaTrending(lang = "en"): Promise<TrendItem[]> {
     const y = yesterday.getFullYear();
     const m = String(yesterday.getMonth() + 1).padStart(2, "0");
     const d = String(yesterday.getDate()).padStart(2, "0");
-
     const wikiLang = ["pt", "en", "es", "fr", "de", "it", "ja", "ko", "ru", "zh", "ar", "hi"].includes(lang) ? lang : "en";
     const res = await fetch(
       `https://wikimedia.org/api/rest_v1/metrics/pageviews/top/${wikiLang}.wikipedia/all-access/${y}/${m}/${d}`
@@ -123,12 +111,10 @@ async function fetchWikipediaTrending(lang = "en"): Promise<TrendItem[]> {
     if (!res.ok) return [];
     const data = await res.json();
     const articles = data.items?.[0]?.articles || [];
-
     // Filter out main page and special pages
     const filtered = articles
       .filter((a: any) => !["Main_Page", "Special:Search", "-"].includes(a.article))
       .slice(0, 15);
-
     return filtered.map((a: any) => {
       const views = a.views || 0;
       const { historicalData, metricLabel } = generateHistorical(views / 24, "views/hora");
@@ -161,7 +147,6 @@ async function fetchWikipediaTrending(lang = "en"): Promise<TrendItem[]> {
     return [];
   }
 }
-
 // ── Stack Overflow Hot Questions ──
 async function fetchStackOverflow(): Promise<TrendItem[]> {
   try {
@@ -170,7 +155,6 @@ async function fetchStackOverflow(): Promise<TrendItem[]> {
     );
     if (!res.ok) return [];
     const data = await res.json();
-
     return (data.items || []).map((q: any) => {
       const score = q.score || 0;
       const answers = q.answer_count || 0;
@@ -202,7 +186,6 @@ async function fetchStackOverflow(): Promise<TrendItem[]> {
     return [];
   }
 }
-
 // ── GitHub Trending (scraping the JSON endpoint) ──
 async function fetchGitHubTrending(): Promise<TrendItem[]> {
   try {
@@ -214,13 +197,12 @@ async function fetchGitHubTrending(): Promise<TrendItem[]> {
       {
         headers: {
           Accept: "application/vnd.github.v3+json",
-          "User-Agent": "GlobalTalkTrends/1.0",
+          "User-Agent": "GTTMonitor/1.0",
         },
       }
     );
     if (!res.ok) return [];
     const data = await res.json();
-
     return (data.items || []).map((repo: any) => {
       const stars = repo.stargazers_count || 0;
       const forks = repo.forks_count || 0;
@@ -251,27 +233,22 @@ async function fetchGitHubTrending(): Promise<TrendItem[]> {
     return [];
   }
 }
-
 // ── RSS Bridge (Twitter fallback) ──
 async function fetchRSSBridge(): Promise<TrendItem[]> {
   const instances = [
     "https://rss-bridge.org/bridge01/",
     "https://rss-bridge.bb8.fun/",
   ];
-
   for (const baseUrl of instances) {
     try {
       const url = `${baseUrl}?action=display&bridge=TwitterV2Bridge&context=By+keyword&search=trending+OR+viral+OR+breaking&norep=on&noretweet=on&format=Json`;
       const controller = new AbortController();
       const timeout = setTimeout(() => controller.abort(), 8000);
-
       const res = await fetch(url, { signal: controller.signal });
       clearTimeout(timeout);
-
       if (!res.ok) continue;
       const data = await res.json();
       const items = data.items || [];
-
       return items.slice(0, 12).map((item: any) => {
         const { historicalData, metricLabel } = generateHistorical(
           Math.floor(Math.random() * 50 + 10),
@@ -304,23 +281,19 @@ async function fetchRSSBridge(): Promise<TrendItem[]> {
   }
   return [];
 }
-
 serve(async (req) => {
   const corsHeaders = getCorsHeaders(req);
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
-
   try {
     let lang = "pt";
     try { const body = await req.json(); lang = body?.lang || "pt"; } catch { /* no body */ }
-
     if (cachedResponse && Date.now() - cachedResponse.timestamp < CACHE_TTL) {
       return new Response(cachedResponse.data, {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
-
     const [hackerNews, wikipedia, stackoverflow, github, rssBridge] = await Promise.all([
       fetchHackerNews(),
       fetchWikipediaTrending(lang),
@@ -328,15 +301,12 @@ serve(async (req) => {
       fetchGitHubTrending(),
       fetchRSSBridge(),
     ]);
-
     const trends = [...hackerNews, ...wikipedia, ...stackoverflow, ...github, ...rssBridge];
     console.log(
       `fetch-social-trends: ${hackerNews.length} HN, ${wikipedia.length} Wiki, ${stackoverflow.length} SO, ${github.length} GH, ${rssBridge.length} RSS`
     );
-
     const responseData = JSON.stringify({ trends });
     cachedResponse = { data: responseData, timestamp: Date.now() };
-
     return new Response(responseData, {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });

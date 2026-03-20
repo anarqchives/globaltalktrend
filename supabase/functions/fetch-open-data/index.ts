@@ -1,13 +1,10 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-
 const ALLOWED_ORIGINS = [
-  'https://globaltalktrend.lovable.app',
   'https://gttmonitor.com',
   'https://www.gttmonitor.com',
   'http://localhost:8080',
   'http://localhost:5173',
 ];
-
 function getCorsHeaders(req: Request) {
   const origin = req.headers.get('origin') || '';
   const isAllowed = ALLOWED_ORIGINS.includes(origin) || origin.endsWith('.lovableproject.com') || origin.endsWith('.lovable.app');
@@ -18,7 +15,6 @@ function getCorsHeaders(req: Request) {
     'Access-Control-Allow-Methods': 'POST, GET, OPTIONS',
   };
 }
-
 interface TrendItem {
   icon: string;
   platform: string;
@@ -37,7 +33,6 @@ interface TrendItem {
   historicalData?: { hour: string; value: number }[];
   metricLabel?: string;
 }
-
 function generateHistorical(baseValue: number, label: string) {
   const now = new Date();
   const data = [];
@@ -51,11 +46,9 @@ function generateHistorical(baseValue: number, label: string) {
   }
   return { historicalData: data, metricLabel: label };
 }
-
 function spark() {
   return Array.from({ length: 10 }, () => Math.floor(Math.random() * 70 + 30));
 }
-
 // ── Cache ──
 const cache: Record<string, { data: string; ts: number }> = {};
 function cached(key: string, ttlMs: number): string | null {
@@ -66,13 +59,11 @@ function cached(key: string, ttlMs: number): string | null {
 function setCache(key: string, data: string) {
   cache[key] = { data, ts: Date.now() };
 }
-
 // ── Wikipedia Pageviews (100% open, no key) ──
 async function fetchWikipediaPageviews(): Promise<TrendItem[]> {
   try {
     const yesterday = new Date(Date.now() - 86400000);
     const dateStr = `${yesterday.getFullYear()}/${String(yesterday.getMonth() + 1).padStart(2, "0")}/${String(yesterday.getDate()).padStart(2, "0")}`;
-    
     const projects = [
       { wiki: "en.wikipedia", cc: "US", lang: "en" },
       { wiki: "pt.wikipedia", cc: "BR", lang: "pt" },
@@ -80,7 +71,6 @@ async function fetchWikipediaPageviews(): Promise<TrendItem[]> {
       { wiki: "fr.wikipedia", cc: "FR", lang: "fr" },
       { wiki: "ja.wikipedia", cc: "JP", lang: "ja" },
     ];
-
     const results: TrendItem[] = [];
     for (const p of projects) {
       try {
@@ -95,7 +85,6 @@ async function fetchWikipediaPageviews(): Promise<TrendItem[]> {
         const filtered = articles
           .filter((a: any) => !a.article.startsWith("Special:") && a.article !== "Main_Page" && !a.article.startsWith("Wikipedia:"))
           .slice(0, 5);
-
         for (const a of filtered) {
           const views = a.views || 0;
           const { historicalData, metricLabel } = generateHistorical(views / 24, "views/hora");
@@ -127,7 +116,6 @@ async function fetchWikipediaPageviews(): Promise<TrendItem[]> {
     return [];
   }
 }
-
 // ── arXiv (100% open, no key) ──
 async function fetchArxiv(): Promise<TrendItem[]> {
   try {
@@ -147,12 +135,10 @@ async function fetchArxiv(): Promise<TrendItem[]> {
           const summaryMatch = entry.match(/<summary[^>]*>([\s\S]*?)<\/summary>/);
           const linkMatch = entry.match(/<id>([\s\S]*?)<\/id>/);
           const publishedMatch = entry.match(/<published>([\s\S]*?)<\/published>/);
-          
           const title = titleMatch?.[1]?.replace(/\s+/g, " ").trim() || "Artigo arXiv";
           const summary = summaryMatch?.[1]?.replace(/\s+/g, " ").trim().slice(0, 200) || "";
           const url = linkMatch?.[1]?.trim() || "";
           const published = publishedMatch?.[1]?.trim() || "";
-
           const { historicalData, metricLabel } = generateHistorical(Math.floor(Math.random() * 50 + 10), "downloads");
           results.push({
             icon: "📄",
@@ -181,7 +167,6 @@ async function fetchArxiv(): Promise<TrendItem[]> {
     return [];
   }
 }
-
 // ── PubMed Central (100% open, no key) ──
 async function fetchPubMed(): Promise<TrendItem[]> {
   try {
@@ -193,7 +178,6 @@ async function fetchPubMed(): Promise<TrendItem[]> {
     const data = await res.json();
     const ids = data?.esearchresult?.idlist || [];
     if (ids.length === 0) return [];
-
     // Fetch summaries
     const sumRes = await fetch(
       `https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esummary.fcgi?db=pubmed&retmode=json&id=${ids.join(",")}`
@@ -201,7 +185,6 @@ async function fetchPubMed(): Promise<TrendItem[]> {
     if (!sumRes.ok) return [];
     const sumData = await sumRes.json();
     const results: TrendItem[] = [];
-
     for (const id of ids.slice(0, 6)) {
       const article = sumData?.result?.[id];
       if (!article) continue;
@@ -232,7 +215,6 @@ async function fetchPubMed(): Promise<TrendItem[]> {
     return [];
   }
 }
-
 // ── IMF Data (100% open, no key) ──
 async function fetchIMF(): Promise<TrendItem[]> {
   try {
@@ -314,7 +296,6 @@ async function fetchIMF(): Promise<TrendItem[]> {
     return [];
   }
 }
-
 // ── FRED (needs key, graceful fallback) ──
 async function fetchFRED(): Promise<TrendItem[]> {
   const key = Deno.env.get("FRED_API_KEY");
@@ -365,7 +346,6 @@ async function fetchFRED(): Promise<TrendItem[]> {
     return [];
   }
 }
-
 // ── NOAA Climate Alerts (needs key, graceful fallback) ──
 async function fetchNOAA(): Promise<TrendItem[]> {
   // NOAA weather alerts API is actually open (no key needed for alerts)
@@ -406,7 +386,6 @@ async function fetchNOAA(): Promise<TrendItem[]> {
     return [];
   }
 }
-
 // ── GDELT (100% open, no key) ──
 async function fetchGDELT(): Promise<TrendItem[]> {
   try {
@@ -440,7 +419,6 @@ async function fetchGDELT(): Promise<TrendItem[]> {
     return [];
   }
 }
-
 // ── Crossref (100% open, no key) ──
 async function fetchCrossref(): Promise<TrendItem[]> {
   try {
@@ -477,13 +455,11 @@ async function fetchCrossref(): Promise<TrendItem[]> {
     return [];
   }
 }
-
 serve(async (req) => {
   const corsHeaders = getCorsHeaders(req);
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
-
   try {
     const cacheKey = "open-data-all";
     const cachedData = cached(cacheKey, 30 * 60 * 1000); // 30 min cache
@@ -492,7 +468,6 @@ serve(async (req) => {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
-
     const [wikipedia, arxiv, pubmed, imf, fred, noaa, gdelt, crossref] = await Promise.all([
       fetchWikipediaPageviews().catch(() => [] as TrendItem[]),
       fetchArxiv().catch(() => [] as TrendItem[]),
@@ -503,14 +478,10 @@ serve(async (req) => {
       fetchGDELT().catch(() => [] as TrendItem[]),
       fetchCrossref().catch(() => [] as TrendItem[]),
     ]);
-
     const trends = [...wikipedia, ...arxiv, ...pubmed, ...imf, ...fred, ...noaa, ...gdelt, ...crossref];
-
     console.log(`fetch-open-data: Wikipedia=${wikipedia.length}, arXiv=${arxiv.length}, PubMed=${pubmed.length}, IMF=${imf.length}, FRED=${fred.length}, NOAA=${noaa.length}, GDELT=${gdelt.length}, Crossref=${crossref.length}, Total=${trends.length}`);
-
     const responseData = JSON.stringify({ trends });
     setCache(cacheKey, responseData);
-
     return new Response(responseData, {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });

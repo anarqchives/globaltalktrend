@@ -1,13 +1,10 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-
 const ALLOWED_ORIGINS = [
-  'https://globaltalktrend.lovable.app',
   'https://gttmonitor.com',
   'https://www.gttmonitor.com',
   'http://localhost:8080',
   'http://localhost:5173',
 ];
-
 function getCorsHeaders(req: Request) {
   const origin = req.headers.get('origin') || '';
   const isAllowed = ALLOWED_ORIGINS.includes(origin) || origin.endsWith('.lovableproject.com') || origin.endsWith('.lovable.app');
@@ -18,10 +15,8 @@ function getCorsHeaders(req: Request) {
     'Access-Control-Allow-Methods': 'POST, GET, OPTIONS',
   };
 }
-
 let cache: { ts: number; data: any[] } | null = null;
 const CACHE_TTL = 5 * 60 * 1000;
-
 const TOPICS = [
   { query: "artificial+intelligence", label: "Inteligência Artificial" },
   { query: "climate+change", label: "Mudanças Climáticas" },
@@ -29,7 +24,6 @@ const TOPICS = [
   { query: "quantum+computing", label: "Computação Quântica" },
   { query: "renewable+energy", label: "Energia Renovável" },
 ];
-
 async function fetchCrossrefTopic(query: string, rows: number): Promise<any[]> {
   try {
     const url = `https://api.crossref.org/works?query=${query}&sort=is-referenced-by-count&order=desc&rows=${rows}`;
@@ -45,7 +39,6 @@ async function fetchCrossrefTopic(query: string, rows: number): Promise<any[]> {
     return data?.message?.items || [];
   } catch { return []; }
 }
-
 function parseDateParts(published: any): string {
   try {
     const parts = published?.["date-parts"]?.[0];
@@ -56,22 +49,18 @@ function parseDateParts(published: any): string {
     return `${y}-${m}-${d}`;
   } catch { return ""; }
 }
-
 serve(async (req) => {
   const cors = getCorsHeaders(req);
   if (req.method === "OPTIONS") return new Response(null, { headers: cors });
-
   try {
     if (cache && Date.now() - cache.ts < CACHE_TTL) {
       return new Response(JSON.stringify({ trends: cache.data }), {
         headers: { ...cors, "Content-Type": "application/json" },
       });
     }
-
     const results = await Promise.all(
       TOPICS.map(t => fetchCrossrefTopic(t.query, 4))
     );
-
     const trends: any[] = [];
     results.forEach((items, topicIdx) => {
       items.forEach((item: any) => {
@@ -79,11 +68,9 @@ serve(async (req) => {
         if (!title) return;
         const citations = item["is-referenced-by-count"] || 0;
         if (citations < 5) return;
-
         const journal = Array.isArray(item["container-title"]) ? item["container-title"][0] : "";
         const doi = item.DOI || "";
         const publishedAt = parseDateParts(item.published || item.created);
-
         trends.push({
           icon: "📄",
           platform: "Crossref",
@@ -103,7 +90,6 @@ serve(async (req) => {
         });
       });
     });
-
     // Sort by citations and limit
     trends.sort((a, b) => {
       const ca = parseInt(a.volume) || 0;
@@ -111,9 +97,7 @@ serve(async (req) => {
       return cb - ca;
     });
     const limited = trends.slice(0, 15);
-
     cache = { ts: Date.now(), data: limited };
-
     return new Response(JSON.stringify({ trends: limited }), {
       headers: { ...cors, "Content-Type": "application/json" },
     });
