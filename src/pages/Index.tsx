@@ -113,14 +113,16 @@ const Index = () => {
   const [trendContexts, setTrendContexts] = useState<Record<string, string>>({});
   const { translatedTrends, isTranslating } = useTranslatedTrends(rawFilteredTrends, lang);
 
-  // Responsive grid columns
+  // Responsive grid columns — follows user resize intelligently
   useEffect(() => {
     const el = timelineContainerRef.current;
     if (!el) return;
     const obs = new ResizeObserver((entries) => {
       const w = entries[0]?.contentRect.width || 0;
-      if (w >= 900) setGridColumns(3);
-      else if (w >= 500) setGridColumns(2);
+      // At narrowest (user compressed), single column stacked cards
+      // At medium, 2 columns; at wide (expanded), 3 columns
+      if (w >= 1000) setGridColumns(3);
+      else if (w >= 420) setGridColumns(2);
       else setGridColumns(1);
     });
     obs.observe(el);
@@ -197,6 +199,11 @@ const Index = () => {
       if (t.firstSeenAt) return (now - new Date(t.firstSeenAt).getTime()) / ONE_HOUR;
       return 12;
     };
+    const PRESS_PLATFORMS = ["guardian", "newsapi", "newsdata", "gnews", "bing news", "bbc", "reuters", "thenewsapi", "the guardian"];
+    const isVerifiedPress = (t: TrendCardProps): boolean => {
+      const p = t.platform?.toLowerCase() || "";
+      return PRESS_PLATFORMS.some(pp => p.includes(pp));
+    };
     const getScore = (t: TrendCardProps): number => {
       const volStr = (t.volume || "0").toLowerCase();
       let vol = parseFloat(volStr.replace(/[^0-9.]/g, "")) || 0;
@@ -208,7 +215,8 @@ const Index = () => {
       const normalizedKey = t.title.toLowerCase().normalize("NFD").replace(/\p{Diacritic}/gu, "").replace(/[^a-z0-9\s]/g, "").trim().slice(0, 50);
       const isMulti = multiplatformTitles.has(normalizedKey);
       if (vol === 0 && ch === 0) return -1000;
-      return (volNorm * 0.3) + (growthNorm * 0.4) + (isMulti ? 150 : 0) + ((t.sources?.length || 1) * 10) - (getAge(t) * 10);
+      const pressBonus = isVerifiedPress(t) ? 120 : 0;
+      return (volNorm * 0.3) + (growthNorm * 0.4) + (isMulti ? 150 : 0) + pressBonus + ((t.sources?.length || 1) * 10) - (getAge(t) * 10);
     };
     const scored = filteredTrends.map(t => ({ t, score: getScore(t) })).filter(s => s.score > -500);
     scored.sort((a, b) => b.score - a.score);
