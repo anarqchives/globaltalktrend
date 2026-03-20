@@ -560,7 +560,7 @@ const GoogleMapView = ({
   }, [sentimentBubbles, maxCount, onSelectCountry, showTooltip, isDark, trends]);
 
   // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-  // FLOW RENDERING
+  // FLOW RENDERING — animated polylines between countries
   // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
   const renderFlowArcs = useCallback(() => {
     if (!googleMapRef.current) return;
@@ -573,85 +573,87 @@ const GoogleMapView = ({
     particleAnimationsRef.current = [];
     if (googleMapRef.current && geoJsonLoadedRef.current) googleMapRef.current.data.setStyle({ visible: false });
 
-    // Renderizar arcos
     flowArcs.forEach((arc) => {
       const origin = countryPoints.find(p => p.id === arc.originId);
       const dest = countryPoints.find(p => p.id === arc.destId);
       if (!origin || !dest) return;
 
-      const curvePoints = computeCurvePoints(origin.lat, origin.lng, dest.lat, dest.lng, 50);
-      const color = sentimentColors[arc.sentiment];
-      const strokeWeight = 1.5 + (arc.volume / maxCount) * 3.5;
+      const isCritical = arc.volume > maxCount * 0.7;
+      const strokeColor = isCritical ? "#E03C31" : "#2557D6";
+      const strokeWeight = 1.5 + (arc.volume / maxCount) * 3;
 
+      // Main line (invisible, path holder)
       const polyline = new google.maps.Polyline({
-        path: curvePoints.map(p => new google.maps.LatLng(p.lat, p.lng)),
-        geodesic: false,
-        strokeColor: color,
-        strokeOpacity: 0.65,
+        path: [
+          { lat: origin.lat, lng: origin.lng },
+          { lat: dest.lat, lng: dest.lng },
+        ],
+        geodesic: true,
+        strokeColor,
+        strokeOpacity: 0,
         strokeWeight,
+        icons: [{
+          icon: {
+            path: google.maps.SymbolPath.FORWARD_CLOSED_ARROW,
+            scale: 3,
+            strokeColor,
+            fillColor: strokeColor,
+            fillOpacity: 0.8,
+          },
+          offset: '0%',
+          repeat: '80px',
+        }],
         map: googleMapRef.current,
         zIndex: 2,
       });
 
+      // Animate icons along the line
+      let count = 0;
+      const animateFlow = () => {
+        count = (count + 1) % 200;
+        const icons = polyline.get('icons');
+        if (icons && icons[0]) {
+          icons[0].offset = (count / 2) + '%';
+          polyline.set('icons', icons);
+        }
+        const id = requestAnimationFrame(animateFlow);
+        particleAnimationsRef.current.push(id);
+      };
+      animateFlow();
+
+      // Dashed line underneath for visibility
+      const dashLine = new google.maps.Polyline({
+        path: [
+          { lat: origin.lat, lng: origin.lng },
+          { lat: dest.lat, lng: dest.lng },
+        ],
+        geodesic: true,
+        strokeColor,
+        strokeOpacity: 0.25,
+        strokeWeight: strokeWeight * 0.6,
+        map: googleMapRef.current,
+        zIndex: 1,
+      });
+
       polyline.addListener("mouseover", () => {
-        polyline.setOptions({ strokeOpacity: 0.9 });
+        dashLine.setOptions({ strokeOpacity: 0.5 });
         showTooltip(
           <FlowTooltip arc={arc} isDark={isDark} />,
           { lat: (origin.lat + dest.lat) / 2, lng: (origin.lng + dest.lng) / 2 }
         );
       });
       polyline.addListener("mouseout", () => {
-        polyline.setOptions({ strokeOpacity: 0.65 });
+        dashLine.setOptions({ strokeOpacity: 0.25 });
         hoverInfoRef.current?.close();
       });
 
-      polylinesRef.current.push(polyline);
-
-      // Partículas fluindo
-      const particleCount = Math.max(2, Math.ceil((arc.volume / maxCount) * 6));
-      const duration = Math.max(2000, 4000 - arc.timeDelta * 100);
-
-      for (let i = 0; i < particleCount; i++) {
-        const particle = new google.maps.Marker({
-          position: { lat: origin.lat, lng: origin.lng },
-          map: googleMapRef.current,
-          icon: {
-            path: google.maps.SymbolPath.CIRCLE,
-            scale: 2.5 + (arc.volume / maxCount) * 2,
-            fillColor: color,
-            fillOpacity: 0.8,
-            strokeColor: "rgba(255,255,255,0.8)",
-            strokeWeight: 1,
-          },
-          zIndex: 10,
-        });
-
-        const delay = i * (duration / particleCount);
-        const animateParticle = (startTime: number) => {
-          const elapsed = Date.now() - startTime;
-          const progress = ((elapsed - delay) % duration) / duration;
-
-          if (progress >= 0 && progress <= 1) {
-            const pointIndex = Math.floor(progress * (curvePoints.length - 1));
-            const point = curvePoints[pointIndex];
-            if (point) {
-              particle.setPosition(new google.maps.LatLng(point.lat, point.lng));
-            }
-          }
-
-          const id = requestAnimationFrame(() => animateParticle(startTime));
-          particleAnimationsRef.current.push(id);
-        };
-
-        animateParticle(Date.now());
-      }
+      polylinesRef.current.push(polyline, dashLine);
     });
 
-    // Marcadores nos países
+    // Country markers
     countryPoints.forEach(c => {
       const count = trendCounts[c.id] || 0;
       if (count === 0) return;
-
       const intensity = Math.min(count / maxCount, 1);
       const marker = new google.maps.Marker({
         position: { lat: c.lat, lng: c.lng },
@@ -659,15 +661,13 @@ const GoogleMapView = ({
         icon: {
           path: google.maps.SymbolPath.CIRCLE,
           scale: 4 + intensity * 6,
-          fillColor: "#3b82f6",
+          fillColor: "#2557D6",
           fillOpacity: 0.7,
           strokeColor: "#ffffff",
           strokeWeight: 1.5,
         },
       });
-
       marker.addListener("click", () => onSelectCountry(c.id));
-
       markersRef.current.push(marker);
     });
   }, [flowArcs, trendCounts, maxCount, onSelectCountry, showTooltip, isDark]);
