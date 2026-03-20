@@ -465,31 +465,55 @@ const GoogleMapView = ({
   return (
     <div className="w-full h-full relative" style={{ isolation: "isolate" }}>
       {/* Tab selector */}
-      <div className="absolute top-3 left-3 z-20 flex gap-1 bg-card/90 backdrop-blur-xl rounded-2xl p-1 border border-border/30 shadow-[var(--shadow-md)]">
+      <div className="absolute top-3 left-3 z-20 flex gap-1 rounded-2xl p-1 border shadow-lg"
+        style={{
+          background: isDark ? "rgba(15,20,30,0.55)" : "rgba(255,255,255,0.45)",
+          backdropFilter: "blur(24px) saturate(1.8)",
+          WebkitBackdropFilter: "blur(24px) saturate(1.8)",
+          borderColor: isDark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.06)",
+          boxShadow: isDark
+            ? "0 8px 32px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.05)"
+            : "0 8px 32px rgba(0,0,0,0.08), inset 0 1px 0 rgba(255,255,255,0.7)",
+        }}
+      >
         {tabs.map(({ key, icon: Icon, label }) => {
-          const vivid: Record<MapTab, string> = {
-            panorama: "bg-[#007AFF] text-white",
-            sentiment: "bg-[#FF3B30] text-white",
-            verification: "bg-[#34C759] text-white",
-            trending: "bg-[#FF9500] text-white",
+          const vividColors: Record<MapTab, string> = {
+            panorama: "#007AFF", sentiment: "#FF3B30", verification: "#34C759", trending: "#FF9500",
           };
+          const isActive = activeTab === key;
           return (
-            <button key={key} onClick={() => setActiveTab(key)}
-              className={`relative px-2.5 py-1.5 rounded-xl text-[9px] font-bold uppercase tracking-wider transition-all ${
-                activeTab === key ? `${vivid[key]} shadow-md` : "text-muted-foreground hover:text-foreground hover:bg-muted"
-              }`}>
-              <span className="flex items-center gap-1">
+            <motion.button key={key} onClick={() => setActiveTab(key)}
+              whileHover={{ scale: 1.04 }}
+              whileTap={{ scale: 0.96 }}
+              className="relative px-2.5 py-1.5 rounded-xl text-[9px] font-bold uppercase tracking-wider transition-colors"
+              style={{
+                background: isActive ? vividColors[key] : "transparent",
+                color: isActive ? "#fff" : undefined,
+                boxShadow: isActive ? `0 2px 12px ${vividColors[key]}40` : "none",
+              }}
+            >
+              {isActive && (
+                <motion.div
+                  layoutId="map-tab-indicator"
+                  className="absolute inset-0 rounded-xl"
+                  style={{ background: vividColors[key], zIndex: -1 }}
+                  transition={{ type: "spring", stiffness: 400, damping: 30 }}
+                />
+              )}
+              <span className={`flex items-center gap-1 relative z-10 ${!isActive ? "text-muted-foreground hover:text-foreground" : ""}`}>
                 <Icon className="w-3 h-3" />
                 {!isMobile && (label[lang as "pt" | "en"] || label.en)}
               </span>
-            </button>
+            </motion.button>
           );
         })}
         {selectedCountry !== "global" && (
-          <button onClick={() => onSelectCountry("global")}
-            className="px-2.5 py-1.5 rounded-xl text-[9px] font-semibold text-muted-foreground hover:text-foreground hover:bg-muted flex items-center gap-1 transition-colors uppercase tracking-wider">
+          <motion.button onClick={() => onSelectCountry("global")}
+            whileHover={{ scale: 1.04 }}
+            whileTap={{ scale: 0.96 }}
+            className="px-2.5 py-1.5 rounded-xl text-[9px] font-semibold text-muted-foreground hover:text-foreground flex items-center gap-1 transition-colors uppercase tracking-wider">
             <Globe className="w-3 h-3" /> {!isMobile && "Global"}
-          </button>
+          </motion.button>
         )}
       </div>
 
