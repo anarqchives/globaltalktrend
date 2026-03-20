@@ -180,7 +180,7 @@ const TrendDetailPanel: React.FC<TrendDetailPanelProps> = ({
                     <span className="text-[9px] uppercase tracking-[0.08em] text-muted-foreground block mb-0.5">
                       {lang === "pt" ? "Cresc." : "Growth"}
                     </span>
-                    <span className={`text-[14px] font-bold ${changePositive ? "text-[#059669]" : "text-[#E03C31]"}`}>
+                    <span className={`text-[15px] font-bold ${changePositive ? "text-[#059669]" : "text-[#E03C31]"}`}>
                       {changePositive ? "+" : ""}{change}
                     </span>
                   </div>
