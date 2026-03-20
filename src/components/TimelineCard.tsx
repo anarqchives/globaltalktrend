@@ -393,8 +393,8 @@ const TimelineCard = ({
       whileHover={{ y: -2, transition: { duration: 0.2, ease: [0.21, 0.47, 0.32, 0.98] } }}
       whileTap={{ scale: 0.98 }}
       className={`bg-card rounded-lg border cursor-pointer w-full relative overflow-hidden
-        shadow-[0_1px_3px_0_hsl(var(--foreground)/0.04),0_1px_2px_-1px_hsl(var(--foreground)/0.06)]
-        hover:shadow-[0_2px_6px_0_hsl(var(--foreground)/0.06),0_1px_3px_-1px_hsl(var(--foreground)/0.08)]
+        shadow-[0_1px_4px_0_hsl(var(--foreground)/0.06),0_2px_8px_-2px_hsl(var(--foreground)/0.08)]
+        hover:shadow-[0_3px_12px_0_hsl(var(--foreground)/0.09),0_2px_6px_-2px_hsl(var(--foreground)/0.1)]
         transition-shadow duration-200 ease-[cubic-bezier(0.21,0.47,0.32,0.98)]
         ${mapSelected ? "ring-2 ring-[hsl(var(--map-selection-border))] bg-[hsl(var(--map-selection-bg))]" : ""}
         ${isSelected
