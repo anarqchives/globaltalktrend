@@ -669,13 +669,13 @@ const GoogleMapView = ({
       >
         {tabs.map(({ key, icon: Icon, label }) => {
           const tabGradients: Record<MapTab, string> = {
-            panorama: "linear-gradient(135deg, #7BB3FF 0%, #A8C8FF 100%)",
-            sentiment: "linear-gradient(135deg, #FF9A9E 0%, #FECFEF 100%)",
-            verification: "linear-gradient(135deg, #84DCC6 0%, #A8EDEA 100%)",
-            trending: "linear-gradient(135deg, #FFD89B 0%, #FFE8B8 100%)",
+            panorama: "linear-gradient(135deg, #60A5FA 0%, #C4B5FD 50%, #E0E7FF 100%)",
+            sentiment: "linear-gradient(135deg, #FB7185 0%, #FDBA74 50%, #FDE68A 100%)",
+            verification: "linear-gradient(135deg, #34D399 0%, #67E8F9 50%, #A5F3FC 100%)",
+            trending: "linear-gradient(135deg, #FBBF24 0%, #FB923C 50%, #FCA5A5 100%)",
           };
           const tabTextColors: Record<MapTab, string> = {
-            panorama: "#1A4B8C", sentiment: "#8C1A2A", verification: "#1A6B50", trending: "#7A4A00",
+            panorama: "#1E3A5F", sentiment: "#7F1D1D", verification: "#064E3B", trending: "#78350F",
           };
           const isActive = activeTab === key;
           return (
