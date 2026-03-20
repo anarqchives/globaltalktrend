@@ -495,6 +495,45 @@ export type Database = {
         }
         Relationships: []
       }
+      watchlist: {
+        Row: {
+          added_at: string
+          category: string | null
+          country_code: string | null
+          id: string
+          last_change: string | null
+          last_score: number | null
+          last_volume: string | null
+          platform: string
+          title: string
+          user_id: string
+        }
+        Insert: {
+          added_at?: string
+          category?: string | null
+          country_code?: string | null
+          id?: string
+          last_change?: string | null
+          last_score?: number | null
+          last_volume?: string | null
+          platform: string
+          title: string
+          user_id: string
+        }
+        Update: {
+          added_at?: string
+          category?: string | null
+          country_code?: string | null
+          id?: string
+          last_change?: string | null
+          last_score?: number | null
+          last_volume?: string | null
+          platform?: string
+          title?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

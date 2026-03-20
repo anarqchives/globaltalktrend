@@ -27,6 +27,7 @@ import TagLegend from "@/components/TagLegend";
 import { toast } from "@/hooks/use-toast";
 import { useUserActivity } from "@/hooks/use-user-activity";
 import { computePriority, PriorityResult } from "@/lib/priority-engine";
+import { useWatchlist } from "@/hooks/use-watchlist";
 import {
   ResizablePanelGroup,
   ResizablePanel,
@@ -61,28 +62,7 @@ function getInitialFilters(): FilterState {
   };
 }
 
-/* ─── Watchlist item ─── */
-interface WatchlistItem {
-  title: string;
-  platform: string;
-  category?: string;
-  countryCode?: string;
-  addedAt: number;
-  lastScore?: number;
-  lastVolume?: string;
-  lastChange?: string;
-}
-
-function loadWatchlist(): WatchlistItem[] {
-  try {
-    const raw = localStorage.getItem("gtt_watchlist");
-    return raw ? JSON.parse(raw) : [];
-  } catch { return []; }
-}
-
-function saveWatchlistStorage(items: WatchlistItem[]) {
-  try { localStorage.setItem("gtt_watchlist", JSON.stringify(items)); } catch {}
-}
+/* Watchlist types imported from hook */
 
 const Index = () => {
   const { t, lang } = useLanguage();
@@ -93,8 +73,7 @@ const Index = () => {
   const [gridColumns, setGridColumns] = useState(2);
   const [expandedCardIndex, setExpandedCardIndex] = useState<number | null>(null);
   const [mapSelectedCountry, setMapSelectedCountry] = useState<string | null>(null);
-  const [watchlist, setWatchlist] = useState<WatchlistItem[]>(loadWatchlist);
-  const [showWatchlist, setShowWatchlist] = useState(false);
+  const [showWatchlistPanel, setShowWatchlistPanel] = useState(false);
   const [panelVisibility, setPanelVisibility] = useState(() => {
     try {
       const saved = localStorage.getItem("map-panel-open");
@@ -124,6 +103,7 @@ const Index = () => {
   const { trackView } = useHistory(user?.id ?? null);
   const { trackAction } = useGamification(user?.id ?? null);
   const { cards: savedCards, removeCard, saveCard } = useSavedCards(user?.id ?? null);
+  const { watchlist, addToWatchlist, removeFromWatchlist, updateScores: updateWatchlistScores } = useWatchlist(user?.id ?? null, lang);
   const [collectionsOpen, setCollectionsOpen] = useState(false);
   const { saveFilter } = useSavedFilters(user?.id ?? null);
   const [trendCounts, setTrendCounts] = useState<Record<string, number>>({});
@@ -335,33 +315,7 @@ const Index = () => {
     return item?.trend.countryCode?.slice(0, 2).toUpperCase() || null;
   }, [expandedCardIndex, diversifiedTrends]);
 
-  // ═══ WATCHLIST ═══
-  const addToWatchlist = useCallback((card: any) => {
-    setWatchlist(prev => {
-      const exists = prev.find(w => w.title === card.title && w.platform === card.platform);
-      if (exists) {
-        toast({ title: lang === "pt" ? "Já monitorado" : "Already watched", description: card.title.slice(0, 50) });
-        return prev;
-      }
-      const item: WatchlistItem = {
-        title: card.title, platform: card.platform, category: card.category,
-        countryCode: card.countryCode, addedAt: Date.now(),
-        lastScore: undefined, lastVolume: card.volume, lastChange: card.change,
-      };
-      const next = [item, ...prev].slice(0, 50);
-      saveWatchlistStorage(next);
-      toast({ title: lang === "pt" ? "👁 Monitorando" : "👁 Watching", description: card.title.slice(0, 50) });
-      return next;
-    });
-  }, [lang]);
-
-  const removeFromWatchlist = useCallback((title: string, platform: string) => {
-    setWatchlist(prev => {
-      const next = prev.filter(w => !(w.title === title && w.platform === platform));
-      saveWatchlistStorage(next);
-      return next;
-    });
-  }, []);
+  // ═══ WATCHLIST (now via hook) ═══
 
   // Update watchlist with current scores
   const watchlistWithUpdates = useMemo(() => {
@@ -429,8 +383,8 @@ const Index = () => {
           <div className="flex items-center gap-1">
             {/* Watchlist toggle */}
             <button 
-              onClick={() => setShowWatchlist(v => !v)}
-              className={`flex items-center gap-1 px-2 py-1 rounded-lg text-[9px] transition-colors touch-manipulation ${showWatchlist ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:bg-muted"}`}
+              onClick={() => setShowWatchlistPanel(v => !v)}
+              className={`flex items-center gap-1 px-2 py-1 rounded-lg text-[9px] transition-colors touch-manipulation ${showWatchlistPanel ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:bg-muted"}`}
               title={lang === "pt" ? "Watchlist" : "Watchlist"}
             >
               <Eye className="w-3 h-3" />
@@ -477,7 +431,7 @@ const Index = () => {
         )}
 
         {/* ═══ WATCHLIST PANEL ═══ */}
-        {showWatchlist && watchlist.length > 0 && (
+        {showWatchlistPanel && watchlist.length > 0 && (
           <div className="mx-2 sm:mx-3 mt-2 rounded-lg border border-border bg-card p-2 space-y-1">
             <div className="flex items-center justify-between px-1 mb-1">
               <span className="text-[9px] font-semibold uppercase tracking-wider text-muted-foreground">
@@ -521,7 +475,7 @@ const Index = () => {
             ))}
           </div>
         )}
-        {showWatchlist && watchlist.length === 0 && (
+        {showWatchlistPanel && watchlist.length === 0 && (
           <div className="mx-2 sm:mx-3 mt-2 rounded-lg border border-border/50 bg-card p-4 text-center">
             <Eye className="w-5 h-5 text-muted-foreground/30 mx-auto mb-1" />
             <p className="text-[10px] text-muted-foreground">
