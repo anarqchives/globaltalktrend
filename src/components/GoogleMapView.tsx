@@ -78,21 +78,31 @@ const countryPoints: CountryPoint[] = [
 ];
 
 const lightStyles: google.maps.MapTypeStyle[] = [
-  { elementType: "geometry", stylers: [{ color: "#f8fafb" }] },
+  { elementType: "geometry", stylers: [{ color: "#E8E4DC" }] },
   { elementType: "labels.icon", stylers: [{ visibility: "off" }] },
-  { elementType: "labels.text.fill", stylers: [{ color: "#9ca3af" }] },
-  { elementType: "labels.text.stroke", stylers: [{ color: "#ffffff" }, { weight: 2 }] },
-  { featureType: "administrative.country", elementType: "geometry.stroke", stylers: [{ color: "#d1d5db" }, { weight: 0.5 }] },
-  { featureType: "water", elementType: "geometry", stylers: [{ color: "#e5f2ff" }] },
+  { elementType: "labels.text.fill", stylers: [{ color: "#6B6560" }] },
+  { elementType: "labels.text.stroke", stylers: [{ color: "#F4F4F0" }, { weight: 2 }] },
+  { featureType: "administrative.country", elementType: "geometry.stroke", stylers: [{ color: "#B0A898" }, { weight: 0.5 }] },
+  { featureType: "water", elementType: "geometry", stylers: [{ color: "#C8D4DC" }] },
+  { featureType: "road", stylers: [{ visibility: "off" }] },
+  { featureType: "poi", stylers: [{ visibility: "off" }] },
+  { featureType: "transit", stylers: [{ visibility: "off" }] },
+  { featureType: "administrative.province", elementType: "geometry.stroke", stylers: [{ visibility: "off" }] },
+  { featureType: "administrative.locality", elementType: "labels", stylers: [{ visibility: "off" }] },
 ];
 
 const darkStyles: google.maps.MapTypeStyle[] = [
-  { elementType: "geometry", stylers: [{ color: "#0f1419" }] },
+  { elementType: "geometry", stylers: [{ color: "#1a1f2e" }] },
   { elementType: "labels.icon", stylers: [{ visibility: "off" }] },
   { elementType: "labels.text.fill", stylers: [{ color: "#64748b" }] },
   { elementType: "labels.text.stroke", stylers: [{ color: "#0f1419" }, { weight: 2 }] },
-  { featureType: "administrative.country", elementType: "geometry.stroke", stylers: [{ color: "#1e293b" }, { weight: 0.5 }] },
-  { featureType: "water", elementType: "geometry", stylers: [{ color: "#0c2847" }] },
+  { featureType: "administrative.country", elementType: "geometry.stroke", stylers: [{ color: "#334155" }, { weight: 0.5 }] },
+  { featureType: "water", elementType: "geometry", stylers: [{ color: "#0c1e35" }] },
+  { featureType: "road", stylers: [{ visibility: "off" }] },
+  { featureType: "poi", stylers: [{ visibility: "off" }] },
+  { featureType: "transit", stylers: [{ visibility: "off" }] },
+  { featureType: "administrative.province", elementType: "geometry.stroke", stylers: [{ visibility: "off" }] },
+  { featureType: "administrative.locality", elementType: "labels", stylers: [{ visibility: "off" }] },
 ];
 
 interface GoogleMapViewProps {
@@ -433,12 +443,12 @@ const GoogleMapView = ({
         radius: 45,
         opacity: 0.75,
         gradient: [
-          "#00a6ff",
-          "#00a6ff",
-          "#00ff9d",
-          "#ffff00",
-          "#ffaa00",
-          "#ff3300",
+          "rgba(37, 87, 214, 0)",
+          "rgba(37, 87, 214, 0.2)",
+          "rgba(37, 87, 214, 0.4)",
+          "rgba(37, 87, 214, 0.6)",
+          "rgba(224, 60, 49, 0.7)",
+          "rgba(224, 60, 49, 0.9)",
         ],
       });
 
@@ -456,7 +466,7 @@ const GoogleMapView = ({
           icon: {
             path: google.maps.SymbolPath.CIRCLE,
             scale,
-            fillColor: intensity > 0.85 ? "#ff3300" : intensity > 0.7 ? "#ffaa00" : intensity > 0.55 ? "#ffff00" : "#00ff9d",
+            fillColor: intensity > 0.7 ? "#E03C31" : "#2557D6",
             fillOpacity: 0.85,
             strokeColor: "#ffffff",
             strokeWeight: 2,
