@@ -1,6 +1,6 @@
 import React from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, ChevronLeft, ChevronRight, Share2, Bookmark, Bell, ExternalLink, Sparkles, Info, TrendingUp, Clock, ShieldCheck } from "lucide-react";
+import { X, ChevronLeft, ChevronRight, Share2, Bookmark, Bell, ExternalLink, Sparkles, Info, Globe, ShieldCheck, Eye } from "lucide-react";
 import { AreaChart, Area, ResponsiveContainer, XAxis, YAxis, Tooltip as RechartsTooltip, CartesianGrid } from "recharts";
 import { TrendCardProps } from "./TrendCard";
 import { CrossPlatformCluster } from "@/hooks/use-cross-platform";
@@ -10,6 +10,7 @@ import { supabase } from "@/integrations/supabase/client";
 import AlertModal from "./AlertModal";
 import TrendFeedback from "./TrendFeedback";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { PriorityResult, LIFECYCLE_LABELS, TIER_LABELS, getConfidenceLabel, computePriority } from "@/lib/priority-engine";
 
 const countryCodeToFlag = (code?: string) => {
   if (!code || code.length !== 2) return null;
@@ -84,8 +85,16 @@ function findTermExplanation(title: string, lang: string): string | null {
   return null;
 }
 
+/* ─── Priority tier colors ─── */
+const TIER_COLORS: Record<string, string> = {
+  critical: "hsl(var(--priority-critical))",
+  high: "hsl(var(--priority-high))",
+  medium: "hsl(var(--priority-medium))",
+  low: "hsl(var(--priority-low))",
+};
+
 interface TrendDetailPanelProps {
-  trend: (TrendCardProps & { aiContext?: string; crossPlatformCluster?: CrossPlatformCluster | null; isMultiplatform?: boolean }) | null;
+  trend: (TrendCardProps & { aiContext?: string; crossPlatformCluster?: CrossPlatformCluster | null; isMultiplatform?: boolean; priority?: PriorityResult }) | null;
   onClose: () => void;
   onPrev: () => void;
   onNext: () => void;
@@ -94,10 +103,11 @@ interface TrendDetailPanelProps {
   userId?: string | null;
   onSaveCard?: (card: any) => void;
   onTrackAction?: (action: string, points: number, metadata?: Record<string, any>) => void;
+  onAddToWatchlist?: (card: any) => void;
 }
 
 const TrendDetailPanel: React.FC<TrendDetailPanelProps> = ({
-  trend, onClose, onPrev, onNext, hasPrev, hasNext, userId, onSaveCard, onTrackAction,
+  trend, onClose, onPrev, onNext, hasPrev, hasNext, userId, onSaveCard, onTrackAction, onAddToWatchlist,
 }) => {
   const { t, lang } = useLanguage();
   const [alertOpen, setAlertOpen] = React.useState(false);
@@ -108,7 +118,7 @@ const TrendDetailPanel: React.FC<TrendDetailPanelProps> = ({
     platform, title, category, time, volume, change, changePositive,
     historicalData, sources, sourceUrl, trustBadge, thumbnail,
     countryCode, description, details, publishedAt, aiContext,
-    isMultiplatform, crossPlatformCluster,
+    isMultiplatform, crossPlatformCluster, priority,
   } = trend;
 
   const sourceType = getSourceType(platform);
@@ -154,14 +164,6 @@ const TrendDetailPanel: React.FC<TrendDetailPanelProps> = ({
     } catch { return time; }
   })();
 
-  // Reliability indicator
-  const reliability = (() => {
-    if (trustBadge === "scientific" || trustBadge === "official") return { level: "high", label: lang === "pt" ? "Alta confiabilidade" : "High reliability", color: "text-success-fg" };
-    if (trustBadge === "verified" || trustBadge === "press" || trustBadge === "international") return { level: "medium", label: lang === "pt" ? "Fonte verificada" : "Verified source", color: "text-info-fg" };
-    if (srcCount >= 3) return { level: "medium", label: lang === "pt" ? "Múltiplas fontes" : "Multiple sources", color: "text-info-fg" };
-    return { level: "low", label: lang === "pt" ? "Fonte única" : "Single source", color: "text-muted-foreground" };
-  })();
-
   const handleShare = () => {
     const url = sourceUrl || window.location.href;
     if (navigator.share) navigator.share({ title, url }).catch(() => {});
@@ -194,7 +196,7 @@ const TrendDetailPanel: React.FC<TrendDetailPanelProps> = ({
             <X className="w-4 h-4" />
           </button>
           <span className="text-[10px] uppercase tracking-[0.08em] font-semibold text-muted-foreground">
-            {lang === "pt" ? "Análise" : "Analysis"}
+            {lang === "pt" ? "Análise de Sinal" : "Signal Analysis"}
           </span>
           <div className="flex-1" />
           <button onClick={onPrev} disabled={!hasPrev} className="compact-btn p-1.5 rounded-lg hover:bg-muted text-muted-foreground disabled:opacity-30">
@@ -209,29 +211,83 @@ const TrendDetailPanel: React.FC<TrendDetailPanelProps> = ({
           <motion.div key={title} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -8 }} transition={{ duration: 0.2 }} className="p-5">
 
-            {/* Source + time + reliability */}
+            {/* ═══ INTELLIGENCE SUMMARY — first reading level ═══ */}
+            {priority && (
+              <div className="mb-4 rounded-lg border border-border/30 overflow-hidden">
+                {/* Priority reason banner */}
+                <div className="px-4 py-3" style={{ backgroundColor: `color-mix(in srgb, ${TIER_COLORS[priority.tier]} 6%, transparent)` }}>
+                  <div className="flex items-center gap-2 mb-1.5">
+                    <span className="text-[18px] font-black tabular-nums" style={{ color: TIER_COLORS[priority.tier] }}>{priority.score}</span>
+                    <div className="w-[48px] h-[4px] rounded-full overflow-hidden" style={{ backgroundColor: `color-mix(in srgb, ${TIER_COLORS[priority.tier]} 15%, transparent)` }}>
+                      <div className="h-full rounded-full" style={{ backgroundColor: TIER_COLORS[priority.tier], width: `${priority.score}%` }} />
+                    </div>
+                    <span className="text-[10px] font-semibold uppercase tracking-wider" style={{ color: TIER_COLORS[priority.tier] }}>
+                      {TIER_LABELS[priority.tier][lang as "pt" | "en"] || TIER_LABELS[priority.tier].en}
+                    </span>
+                  </div>
+                  <p className="text-[12px] font-medium leading-snug" style={{ color: TIER_COLORS[priority.tier] }}>
+                    {priority.reason}
+                  </p>
+                </div>
+
+                {/* Intelligence metrics grid */}
+                <div className="grid grid-cols-3 divide-x divide-border/20">
+                  {/* Lifecycle */}
+                  <div className="px-3 py-2.5 text-center">
+                    <span className="text-[8px] uppercase tracking-wider text-muted-foreground/50 block mb-1">
+                      {lang === "pt" ? "Estágio" : "Stage"}
+                    </span>
+                    <span className="text-[11px] font-semibold" style={{ color: `hsl(var(--lifecycle-${priority.lifecycle}))` }}>
+                      {LIFECYCLE_LABELS[priority.lifecycle].icon} {LIFECYCLE_LABELS[priority.lifecycle][lang as "pt" | "en"] || LIFECYCLE_LABELS[priority.lifecycle].en}
+                    </span>
+                    <span className="text-[8px] text-muted-foreground/40 block mt-0.5">
+                      {LIFECYCLE_LABELS[priority.lifecycle].desc[lang as "pt" | "en"] || LIFECYCLE_LABELS[priority.lifecycle].desc.en}
+                    </span>
+                  </div>
+                  {/* Confidence */}
+                  <div className="px-3 py-2.5 text-center">
+                    <span className="text-[8px] uppercase tracking-wider text-muted-foreground/50 block mb-1">
+                      {lang === "pt" ? "Confiança" : "Confidence"}
+                    </span>
+                    <div className="flex items-center justify-center gap-1">
+                      <ShieldCheck className="w-3 h-3" style={{ color: priority.confidence > 0.7 ? "hsl(var(--success-fg))" : priority.confidence > 0.4 ? "hsl(var(--warning-fg))" : "hsl(var(--destructive))" }} />
+                      <span className="text-[11px] font-bold tabular-nums">{Math.round(priority.confidence * 100)}%</span>
+                    </div>
+                    <span className="text-[8px] text-muted-foreground/40 block mt-0.5">
+                      {getConfidenceLabel(priority.confidence, lang)}
+                    </span>
+                  </div>
+                  {/* Source nature */}
+                  <div className="px-3 py-2.5 text-center">
+                    <span className="text-[8px] uppercase tracking-wider text-muted-foreground/50 block mb-1">
+                      {lang === "pt" ? "Natureza" : "Nature"}
+                    </span>
+                    <span className="text-[11px] font-semibold text-foreground">{priority.sourceNature || sourceLabel.split("—")[0]?.trim()}</span>
+                    <span className="text-[8px] text-muted-foreground/40 block mt-0.5">
+                      {srcCount} {lang === "pt" ? (srcCount === 1 ? "fonte" : "fontes") : (srcCount === 1 ? "source" : "sources")}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Source + time */}
             <div className="flex items-center gap-2 mb-2">
               <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: dotHex }} />
               <span className="text-[11px] uppercase tracking-[0.08em] font-bold" style={{ color: dotHex }}>{platform}</span>
               <span className="text-[11px] text-muted-foreground/30">·</span>
               <span className="text-[11px] text-muted-foreground">{formattedTime}</span>
               {flag && <span className="text-sm">{flag}</span>}
+              {category && <span className="text-[9px] px-1.5 py-0.5 rounded bg-muted text-muted-foreground ml-auto">{category}</span>}
             </div>
 
             {/* Source type explanation */}
-            {sourceLabel && (
+            {sourceLabel && !priority && (
               <div className="flex items-center gap-1.5 mb-2 text-[9px] text-muted-foreground/60">
                 <Info className="w-3 h-3 flex-shrink-0" />
                 <span>{sourceLabel}</span>
               </div>
             )}
-
-            {/* Reliability badge */}
-            <div className="flex items-center gap-1.5 mb-3">
-              <ShieldCheck className={`w-3 h-3 ${reliability.color}`} />
-              <span className={`text-[9px] font-medium ${reliability.color}`}>{reliability.label}</span>
-              {category && <span className="text-[9px] px-1.5 py-0.5 rounded bg-muted text-muted-foreground">{category}</span>}
-            </div>
 
             {/* Thumbnail */}
             {hasThumbnail && (
@@ -252,21 +308,21 @@ const TrendDetailPanel: React.FC<TrendDetailPanelProps> = ({
               </div>
             )}
 
-            {/* Metrics row */}
+            {/* Original metrics row (subordinate) */}
             {hasMetrics && (
               <div className="grid grid-cols-3 gap-2 mb-5">
                 {showVolume && (
                   <Tooltip>
                     <TooltipTrigger asChild>
                       <div className="rounded-md bg-background p-3 text-center cursor-help">
-                        <span className="text-[9px] uppercase tracking-[0.08em] text-muted-foreground block mb-0.5">
-                          Volume
+                        <span className="text-[8px] uppercase tracking-[0.08em] text-muted-foreground/50 block mb-0.5">
+                          {lang === "pt" ? "Vol. original" : "Original vol."}
                         </span>
                         <span className="text-[15px] font-bold text-foreground">{volume}</span>
                       </div>
                     </TooltipTrigger>
                     <TooltipContent className="text-[10px] max-w-[200px]">
-                      {lang === "pt" ? "Volume total de menções, buscas ou interações registradas" : "Total volume of mentions, searches or interactions"}
+                      {lang === "pt" ? "Métrica bruta da fonte original — não comparável diretamente entre fontes diferentes" : "Raw metric from original source — not directly comparable across different sources"}
                     </TooltipContent>
                   </Tooltip>
                 )}
@@ -274,7 +330,7 @@ const TrendDetailPanel: React.FC<TrendDetailPanelProps> = ({
                   <Tooltip>
                     <TooltipTrigger asChild>
                       <div className="rounded-md bg-background p-3 text-center cursor-help">
-                        <span className="text-[9px] uppercase tracking-[0.08em] text-muted-foreground block mb-0.5">
+                        <span className="text-[8px] uppercase tracking-[0.08em] text-muted-foreground/50 block mb-0.5">
                           {lang === "pt" ? "Cresc." : "Growth"}
                         </span>
                         <span className={`text-[15px] font-bold ${changePositive ? "text-success-fg" : "text-destructive"}`}>
@@ -291,7 +347,7 @@ const TrendDetailPanel: React.FC<TrendDetailPanelProps> = ({
                   <Tooltip>
                     <TooltipTrigger asChild>
                       <div className="rounded-md bg-background p-3 text-center cursor-help">
-                        <span className="text-[9px] uppercase tracking-[0.08em] text-muted-foreground block mb-0.5">
+                        <span className="text-[8px] uppercase tracking-[0.08em] text-muted-foreground/50 block mb-0.5">
                           {lang === "pt" ? "Fontes" : "Sources"}
                         </span>
                         <span className="text-[15px] font-bold text-foreground">{srcCount}</span>
@@ -302,6 +358,24 @@ const TrendDetailPanel: React.FC<TrendDetailPanelProps> = ({
                     </TooltipContent>
                   </Tooltip>
                 )}
+              </div>
+            )}
+
+            {/* Normalized relevance bar (when priority available) */}
+            {priority && (
+              <div className="mb-5 px-3 py-2 rounded-md bg-muted/20">
+                <div className="flex items-center justify-between mb-1">
+                  <span className="text-[8px] uppercase tracking-wider text-muted-foreground/50">
+                    {lang === "pt" ? "Relevância normalizada" : "Normalized relevance"}
+                  </span>
+                  <span className="text-[9px] font-bold tabular-nums text-muted-foreground">{Math.round(priority.normalizedVolume * 100)}%</span>
+                </div>
+                <div className="w-full h-[3px] rounded-full bg-muted/40 overflow-hidden">
+                  <div className="h-full rounded-full" style={{ width: `${priority.normalizedVolume * 100}%`, backgroundColor: dotHex }} />
+                </div>
+                <span className="text-[8px] text-muted-foreground/40 mt-1 block">
+                  {lang === "pt" ? "Comparável entre todas as fontes do feed" : "Comparable across all feed sources"}
+                </span>
               </div>
             )}
 
@@ -355,6 +429,21 @@ const TrendDetailPanel: React.FC<TrendDetailPanelProps> = ({
               </div>
             )}
 
+            {/* Geographic coverage */}
+            {countryCode && (
+              <div className="flex items-center gap-2 mb-4 px-3 py-2 rounded-md bg-muted/20">
+                <Globe className="w-3.5 h-3.5 text-muted-foreground/40" />
+                <span className="text-[10px] text-muted-foreground">
+                  {flag} {countryCode?.toUpperCase()}
+                  {isMultiplatform && (
+                    <span className="ml-1.5 text-[9px] text-[hsl(var(--source-official))]">
+                      + {lang === "pt" ? "múltiplas regiões" : "multiple regions"}
+                    </span>
+                  )}
+                </span>
+              </div>
+            )}
+
             {/* AI Context */}
             {showAiContext && (
               <div className="rounded-md bg-accent/5 border border-accent/10 p-4 mb-4">
@@ -373,6 +462,13 @@ const TrendDetailPanel: React.FC<TrendDetailPanelProps> = ({
               <p className="text-[13px] leading-relaxed text-muted-foreground mb-4">{decodeEntities(realDescription)}</p>
             )}
 
+            {/* Data absence notice */}
+            {!realDescription && !showAiContext && !hasEvolution && (
+              <div className="rounded-md bg-muted/20 px-3 py-2 mb-4 text-[10px] text-muted-foreground/50 italic">
+                {lang === "pt" ? "Dados de contexto e histórico não disponíveis para este sinal." : "Context and historical data not available for this signal."}
+              </div>
+            )}
+
             {/* Actions */}
             <div className="flex items-center gap-2 pt-4 border-t border-border flex-wrap">
               <button onClick={handleShare} className="flex items-center gap-1.5 px-3 py-2 rounded-md bg-background hover:bg-muted text-[12px] font-medium transition-colors">
@@ -382,6 +478,12 @@ const TrendDetailPanel: React.FC<TrendDetailPanelProps> = ({
                 className="flex items-center gap-1.5 px-3 py-2 rounded-md bg-background hover:bg-muted text-[12px] font-medium transition-colors">
                 <Bookmark className="w-3.5 h-3.5" /> {lang === "pt" ? "Salvar" : "Save"}
               </button>
+              {onAddToWatchlist && (
+                <button onClick={() => onAddToWatchlist({ title, platform, category, countryCode, volume, change, changePositive, sources })}
+                  className="flex items-center gap-1.5 px-3 py-2 rounded-md bg-background hover:bg-muted text-[12px] font-medium transition-colors">
+                  <Eye className="w-3.5 h-3.5" /> {lang === "pt" ? "Monitorar" : "Watch"}
+                </button>
+              )}
               <button onClick={() => {
                 if (!userId) { toast({ title: t("loginRequired") }); return; }
                 setAlertOpen(true);
