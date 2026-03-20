@@ -926,27 +926,52 @@ const GoogleMapView = ({
       <motion.div
         initial={{ opacity: 0, x: -10 }}
         animate={{ opacity: 1, x: 0 }}
-        className="absolute bottom-3 left-3 z-20 bg-white/90 dark:bg-slate-900/90 backdrop-blur-xl border border-border/30 rounded-lg p-2 text-[10px] text-muted-foreground shadow-md"
+        className="absolute bottom-3 left-3 z-20 bg-white/90 dark:bg-slate-900/90 backdrop-blur-xl border border-border/30 rounded-xl p-3 shadow-md"
       >
+        <div className="text-[10px] uppercase tracking-widest text-muted-foreground font-semibold mb-1.5">
+          {mapMode === "heatmap" && (lang === "pt" ? "Densidade" : "Density")}
+          {mapMode === "flow" && (lang === "pt" ? "Propagação" : "Propagation")}
+          {mapMode === "sentiment" && (lang === "pt" ? "Sentimento" : "Sentiment")}
+          {mapMode === "choropleth" && (lang === "pt" ? "Cobertura" : "Coverage")}
+        </div>
         {mapMode === "heatmap" && (
           <>
             <div className="flex items-center gap-2 mb-1">
-              <div className="w-20 h-2 rounded-full bg-gradient-to-r from-[#00a6ff] via-[#ffff00] to-[#ff3300]" />
-              <span>Baixo → Alto</span>
-            </div>
-            <div className="flex gap-3 text-[9px]">
-              <span>🔥 Máx: {maxCount}</span>
-              <span>🌍 {activeCountries} países</span>
-              <span>📊 {totalTrends} trends</span>
+              <div className="w-20 h-2 rounded-full bg-gradient-to-r from-[#2557D6]/20 via-[#2557D6] to-[#E03C31]" />
+              <span className="text-[10px] text-muted-foreground">{lang === "pt" ? "Baixo → Alto volume" : "Low → High volume"}</span>
             </div>
           </>
         )}
         {mapMode === "flow" && (
-          <div className="text-[10px]">🌊 Propagação entre países</div>
+          <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1">
+              <div className="w-6 h-0.5 bg-[#2557D6]" />
+              <span className="text-[9px] text-muted-foreground">{lang === "pt" ? "Normal" : "Normal"}</span>
+            </div>
+            <div className="flex items-center gap-1">
+              <div className="w-6 h-0.5 bg-[#E03C31]" />
+              <span className="text-[9px] text-muted-foreground">{lang === "pt" ? "Crítico" : "Critical"}</span>
+            </div>
+          </div>
         )}
         {mapMode === "sentiment" && (
-          <div className="text-[10px]">💭 Pulsação = Sentimento</div>
+          <div className="flex items-center gap-3">
+            <span className="flex items-center gap-1 text-[9px]"><span className="w-2.5 h-2.5 rounded-full bg-emerald-500" />{lang === "pt" ? "Positivo" : "Positive"}</span>
+            <span className="flex items-center gap-1 text-[9px]"><span className="w-2.5 h-2.5 rounded-full bg-gray-400" />{lang === "pt" ? "Neutro" : "Neutral"}</span>
+            <span className="flex items-center gap-1 text-[9px]"><span className="w-2.5 h-2.5 rounded-full bg-red-500" />{lang === "pt" ? "Negativo" : "Negative"}</span>
+          </div>
         )}
+        {mapMode === "choropleth" && (
+          <div className="flex items-center gap-2 mb-1">
+            <div className="w-20 h-2 rounded-full bg-gradient-to-r from-[#E8E4DC] via-[#C5D3EE] to-[#2557D6]" />
+            <span className="text-[10px] text-muted-foreground">{lang === "pt" ? "Sem dados → Alto" : "No data → High"}</span>
+          </div>
+        )}
+        <div className="flex gap-3 text-[9px] text-muted-foreground/60 mt-1.5">
+          <span>Máx: {maxCount}</span>
+          <span>· {activeCountries} {lang === "pt" ? "países" : "countries"}</span>
+          <span>· {totalTrends} trends</span>
+        </div>
       </motion.div>
     </div>
   );
