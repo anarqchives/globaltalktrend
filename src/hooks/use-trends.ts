@@ -186,8 +186,8 @@ function generateContextualFallback(filters: FilterState): TrendCardProps[] {
       { icon: "📰", platform: "BBC News", title: "Crise humanitária em Gaza: ONU pede acesso para ajuda", category: "Geopolítica", time: timeStr, volume: "Destaque", change: "+350%", changePositive: false, sparkData: [45, 55, 65, 72, 80, 85, 90, 93, 96, 98], details: "Agências humanitárias relatam situação crítica na Faixa de Gaza.", countryCode: "PS" },
     ],
     RU: [
-      { icon: "🇷🇺", platform: "Reuters", title: "Situação na Rússia e impacto das sanções internacionais", category: "Política", time: timeStr, volume: "Destaque", change: "+150%", changePositive: false, sparkData: [35, 45, 55, 60, 68, 75, 80, 85, 88, 92], details: "Análise do cenário geopolítico russo.", countryCode: "RU" },
-      { icon: "📰", platform: "BBC News", title: "Economia russa enfrenta desafios com sanções ocidentais", category: "Negócios/Finanças", time: timeStr, volume: "Análise", change: "+120%", changePositive: false, sparkData: [30, 40, 50, 55, 62, 68, 75, 80, 85, 88], details: "Impacto das sanções no comércio e indústria da Rússia.", countryCode: "RU" },
+      { icon: "🇷🇺", platform: "Reuters", title: "Situação na Rússia e impacto das sanções internacionais", category: "Geopolítica", time: timeStr, volume: "Destaque", change: "+150%", changePositive: false, sparkData: [35, 45, 55, 60, 68, 75, 80, 85, 88, 92], details: "Análise do cenário geopolítico russo.", countryCode: "RU" },
+      { icon: "📰", platform: "BBC News", title: "Economia russa enfrenta desafios com sanções ocidentais", category: "Economia", time: timeStr, volume: "Análise", change: "+120%", changePositive: false, sparkData: [30, 40, 50, 55, 62, 68, 75, 80, 85, 88], details: "Impacto das sanções no comércio e indústria da Rússia.", countryCode: "RU" },
     ],
     UA: [
       { icon: "🇺🇦", platform: "BBC News", title: "Conflito na Ucrânia: últimas atualizações", category: "Conflitos/Crises", time: timeStr, volume: "Alto", change: "+200%", changePositive: false, sparkData: [30, 45, 55, 65, 72, 80, 85, 90, 93, 96], details: "Cobertura contínua do conflito no leste europeu.", countryCode: "UA" },
