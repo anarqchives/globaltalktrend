@@ -905,7 +905,7 @@ const GoogleMapView = ({
           {/* Static SVG world map placeholder */}
           <svg viewBox="0 0 800 400" className="w-full h-full absolute inset-0 opacity-15" preserveAspectRatio="xMidYMid slice">
             <ellipse cx="400" cy="200" rx="350" ry="170" fill="none" stroke="hsl(var(--border))" strokeWidth="1" />
-            <ellipse cx="250" cy="160" rx="80" ry="60" fill="hsl(var(--muted))" rx="80" />
+            <ellipse cx="250" cy="160" rx="80" ry="60" fill="hsl(var(--muted))" />
             <ellipse cx="420" cy="140" rx="90" ry="55" fill="hsl(var(--muted))" />
             <ellipse cx="550" cy="170" rx="70" ry="50" fill="hsl(var(--muted))" />
             <ellipse cx="350" cy="250" rx="60" ry="45" fill="hsl(var(--muted))" />
