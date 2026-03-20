@@ -320,7 +320,7 @@ const AppHeader = ({ minimal = false, filters, onFilterChange, onForceReset, onS
                       ? "bg-foreground text-background"
                       : "text-muted-foreground hover:text-foreground hover:bg-muted"
                   }`}>
-                  +10
+                  +{MORE_COUNTRIES.length}
                   <ChevronDown className="w-2.5 h-2.5" />
                 </button>
                 {moreCountriesOpen && (

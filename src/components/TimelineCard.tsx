@@ -30,19 +30,19 @@ function getSourceType(platform: string): string {
 }
 
 const SOURCE_DOT_COLORS: Record<string, string> = {
-  imprensa: "#059669",
-  redes_sociais: "#7C3AED",
+  imprensa: "#4A7FBF",
+  redes_sociais: "#8B7EC8",
   google_trends: "#D97706",
-  dados_oficiais: "#2557D6",
-  cientifico: "#0891B2",
-  enciclopedico: "#06b6d4",
+  dados_oficiais: "#7A9E7E",
+  cientifico: "#5BA8B5",
+  enciclopedico: "#5BA8B5",
 };
 
 const SOURCE_BADGES: Record<string, { label: Record<string, string>; icon: string; color: string }> = {
-  imprensa: { label: { pt: "Imprensa Verificada", en: "Verified Press" }, icon: "✓", color: "#059669" },
-  dados_oficiais: { label: { pt: "Dados Oficiais", en: "Official Data" }, icon: "◆", color: "#2557D6" },
-  cientifico: { label: { pt: "Acadêmico", en: "Academic" }, icon: "◈", color: "#7C3AED" },
-  enciclopedico: { label: { pt: "Enciclopédico", en: "Encyclopedic" }, icon: "◎", color: "#06b6d4" },
+  imprensa: { label: { pt: "Imprensa Verificada", en: "Verified Press" }, icon: "✓", color: "#4A7FBF" },
+  dados_oficiais: { label: { pt: "Dados Oficiais", en: "Official Data" }, icon: "◆", color: "#7A9E7E" },
+  cientifico: { label: { pt: "Acadêmico", en: "Academic" }, icon: "◈", color: "#8B7EC8" },
+  enciclopedico: { label: { pt: "Enciclopédico", en: "Encyclopedic" }, icon: "◎", color: "#5BA8B5" },
   redes_sociais: { label: { pt: "Social/Trending", en: "Social/Trending" }, icon: "◉", color: "#D97706" },
   google_trends: { label: { pt: "Social/Trending", en: "Social/Trending" }, icon: "◉", color: "#D97706" },
 };
