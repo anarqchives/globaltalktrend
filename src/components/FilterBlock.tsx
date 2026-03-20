@@ -1,7 +1,7 @@
 import React, { useState, useMemo, useRef, useEffect } from "react";
-import { X, ChevronDown, Search, MapPin, Clock, Layers, Radio, Globe2, RotateCcw, Bookmark } from "lucide-react";
+import { X, ChevronDown, Search, MapPin, Clock, Layers, Radio, RotateCcw, Bookmark } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
-import { useLanguage, languages } from "@/contexts/LanguageContext";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { FilterState, countries } from "@/components/FilterBar";
 
 interface FilterBlockProps {
