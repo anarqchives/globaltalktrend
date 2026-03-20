@@ -73,7 +73,7 @@ const Index = () => {
   const [gridColumns, setGridColumns] = useState(2);
   const [expandedCardIndex, setExpandedCardIndex] = useState<number | null>(null);
   const [mapSelectedCountry, setMapSelectedCountry] = useState<string | null>(null);
-  const [watchlist, setWatchlist] = useState<WatchlistItem[]>(loadWatchlist);
+  const [showWatchlistPanel, setShowWatchlistPanel] = useState(false);
   const [showWatchlist, setShowWatchlist] = useState(false);
   const [panelVisibility, setPanelVisibility] = useState(() => {
     try {
