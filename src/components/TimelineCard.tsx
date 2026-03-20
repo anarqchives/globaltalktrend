@@ -1,38 +1,17 @@
 import React, { useMemo, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Bookmark, ExternalLink, Share2, ChevronDown, Globe, Eye, ShieldCheck } from "lucide-react";
+import { Bookmark, ExternalLink, Share2, ChevronDown, Globe, Eye } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { TrendCardProps } from "./TrendCard";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { AreaChart, Area, BarChart, Bar, ResponsiveContainer, XAxis, YAxis, Tooltip as RTooltip } from "recharts";
 import { toast } from "@/hooks/use-toast";
-import { PriorityResult, LIFECYCLE_LABELS, getConfidenceLabel } from "@/lib/priority-engine";
+import {
+  PriorityResult, LIFECYCLE_LABELS, TIER_CONFIG, CONFIDENCE_CONFIG,
+  getSourceType, SOURCE_NATURE_LABEL_MAP, SOURCE_NATURE_COLOR_MAP,
+} from "@/lib/priority-engine";
 
-/* ─── Source classification ─── */
-const SOURCE_TYPE_MAP: Record<string, string> = {
-  "the guardian": "imprensa", "npr": "imprensa", "newsapi": "imprensa", "gnews": "imprensa",
-  "bing news": "imprensa", "newsdata": "imprensa", "thenewsapi": "imprensa", "the news api": "imprensa",
-  "variety": "imprensa", "bbc": "imprensa", "reuters": "imprensa", "france 24": "imprensa",
-  "ap news": "imprensa", "bloomberg": "imprensa", "nyt": "imprensa", "guardian": "imprensa",
-  "folha": "imprensa", "estadão": "imprensa", "o globo": "imprensa", "el país": "imprensa",
-  "le monde": "imprensa", "der spiegel": "imprensa", "al jazeera": "imprensa",
-  "reddit": "redes_sociais", "bluesky": "redes_sociais", "mastodon": "redes_sociais",
-  "x (twitter)": "redes_sociais", "youtube": "redes_sociais", "hacker news": "redes_sociais",
-  "lobsters": "redes_sociais",
-  "google trends": "google_trends",
-  "world bank": "dados_oficiais", "worldbank": "dados_oficiais", "fred": "dados_oficiais",
-  "ibge": "dados_oficiais", "imf": "dados_oficiais", "who": "dados_oficiais", "noaa": "dados_oficiais",
-  "pubmed": "cientifico", "openal": "cientifico", "arxiv": "cientifico",
-  "crossref": "cientifico", "semantic scholar": "cientifico",
-  "wikipedia": "enciclopedico",
-};
-
-function getSourceType(platform: string): string {
-  const p = platform.toLowerCase();
-  for (const [key, val] of Object.entries(SOURCE_TYPE_MAP)) { if (p.includes(key)) return val; }
-  return "imprensa";
-}
-
+/* ─── Helpers ─── */
 const SOURCE_HEX: Record<string, string> = {
   imprensa: "#2563EB", redes_sociais: "#F97316", google_trends: "#FACC15",
   dados_oficiais: "#10B981", cientifico: "#8B5CF6", enciclopedico: "#06B6D4",
@@ -85,18 +64,7 @@ const relativeTimeFormats: Record<string, { now: string; min: string; h: string;
   es: { now: "ahora", min: "hace {n}min", h: "hace {n}h", d: "hace {n}d" },
 };
 
-/* ─── Smart chart type selection ─── */
-type ChartType = "sparkline" | "bars" | "momentum" | "segments";
-
-function pickChartType(sourceType: string, sparkData: number[] | null, changeNum: number): ChartType {
-  if (!sparkData || sparkData.length < 2) return "sparkline";
-  if (sourceType === "dados_oficiais" || sourceType === "cientifico") return "bars";
-  if (changeNum > 100) return "momentum";
-  if (sparkData.length >= 6) return "sparkline";
-  return "segments";
-}
-
-/* ─── Mini Charts ─── */
+/* ─── Mini Sparkline ─── */
 const SparklineSVG = React.memo(({ data, color }: { data: number[]; color: string }) => {
   const id = useMemo(() => `sp_${Math.random().toString(36).slice(2, 7)}`, []);
   const { pathD, areaD, lastPt } = useMemo(() => {
@@ -115,7 +83,7 @@ const SparklineSVG = React.memo(({ data, color }: { data: number[]; color: strin
     }, "");
     return { pathD: d, areaD: `${d} L ${pts[pts.length - 1].x} ${h} L ${pts[0].x} ${h} Z`, lastPt: pts[pts.length - 1] };
   }, [data]);
-  if (!data || data.length < 2) return <span className="text-[8px] text-muted-foreground/30 italic">—</span>;
+  if (!data || data.length < 2) return null;
   return (
     <svg width={100} height={24} viewBox="0 0 100 24" className="w-full h-full" style={{ overflow: "visible" }}>
       <defs>
@@ -135,138 +103,10 @@ const SparklineSVG = React.memo(({ data, color }: { data: number[]; color: strin
 });
 SparklineSVG.displayName = "SparklineSVG";
 
-const MiniBars = React.memo(({ data, color }: { data: number[]; color: string }) => {
-  const max = Math.max(...data, 1);
-  return (
-    <div className="flex items-end gap-[1px] h-[22px] w-full">
-      {data.slice(-8).map((v, i) => (
-        <motion.div key={i} className="flex-1 rounded-t-[1px] min-w-[3px]"
-          style={{ backgroundColor: color, opacity: 0.3 + (v / max) * 0.7 }}
-          initial={{ height: 0 }} animate={{ height: `${Math.max(8, (v / max) * 100)}%` }}
-          transition={{ duration: 0.3, delay: i * 0.03 }}
-        />
-      ))}
-    </div>
-  );
-});
-MiniBars.displayName = "MiniBars";
-
-const MomentumLine = React.memo(({ data, color }: { data: number[]; color: string }) => {
-  const id = useMemo(() => `mom_${Math.random().toString(36).slice(2, 7)}`, []);
-  const { pathD, areaD } = useMemo(() => {
-    if (!data || data.length < 2) return { pathD: "", areaD: "" };
-    const max = Math.max(...data), min = Math.min(...data), range = max - min || 1;
-    const w = 100, h = 24, pad = 1;
-    const pts = data.map((v, i) => ({
-      x: pad + (i / (data.length - 1)) * (w - pad * 2),
-      y: pad + (1 - (v - min) / range) * (h - pad * 2),
-    }));
-    const d = pts.map((p, i) => (i === 0 ? `M ${p.x} ${p.y}` : `L ${p.x} ${p.y}`)).join(" ");
-    return { pathD: d, areaD: `${d} L ${pts[pts.length - 1].x} ${h} L ${pts[0].x} ${h} Z` };
-  }, [data]);
-  if (!data || data.length < 2) return null;
-  return (
-    <svg width={100} height={24} viewBox="0 0 100 24" className="w-full h-full">
-      <defs>
-        <linearGradient id={id} x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor={color} stopOpacity={0.35} />
-          <stop offset="100%" stopColor={color} stopOpacity={0} />
-        </linearGradient>
-      </defs>
-      <path d={areaD} fill={`url(#${id})`} />
-      <motion.path d={pathD} stroke={color} strokeWidth={2.5} fill="none" strokeLinecap="round"
-        initial={{ pathLength: 0 }} animate={{ pathLength: 1 }} transition={{ duration: 0.5 }} />
-    </svg>
-  );
-});
-MomentumLine.displayName = "MomentumLine";
-
-const SegmentBars = React.memo(({ data, color }: { data: number[]; color: string }) => {
-  const total = data.reduce((a, b) => a + b, 0) || 1;
-  return (
-    <div className="flex items-center gap-[1px] h-[6px] w-full rounded-full overflow-hidden bg-muted/30">
-      {data.slice(-6).map((v, i) => (
-        <motion.div key={i} style={{ width: `${(v / total) * 100}%`, backgroundColor: color, opacity: 0.4 + (i / data.length) * 0.6 }}
-          className="h-full" initial={{ scaleX: 0 }} animate={{ scaleX: 1 }} transition={{ duration: 0.3, delay: i * 0.05 }}
-        />
-      ))}
-    </div>
-  );
-});
-SegmentBars.displayName = "SegmentBars";
-
 export const cardVariants = {
   hidden: { opacity: 0, y: 12 },
   show: { opacity: 1, y: 0, transition: { duration: 0.3, ease: [0.21, 0.47, 0.32, 0.98] as [number, number, number, number] } },
 };
-
-/* ─── Priority tier colors ─── */
-const TIER_COLORS: Record<string, string> = {
-  critical: "hsl(var(--priority-critical))",
-  high: "hsl(var(--priority-high))",
-  medium: "hsl(var(--priority-medium))",
-  low: "hsl(var(--priority-low))",
-};
-
-/* ─── Decision Header: Score + Lifecycle + Confidence in one line ─── */
-const DecisionHeader = React.memo(({ priority, lang }: { priority: PriorityResult; lang: string }) => {
-  const color = TIER_COLORS[priority.tier] || TIER_COLORS.low;
-  const lc = LIFECYCLE_LABELS[priority.lifecycle];
-  const lifecycleLabel = lc[lang as "pt" | "en"] || lc.en;
-  const confLabel = getConfidenceLabel(priority.confidence, lang);
-
-  return (
-    <div className="flex items-center gap-1.5 mb-1">
-      {/* Score pill */}
-      <Tooltip>
-        <TooltipTrigger asChild>
-          <div className="flex items-center gap-1 cursor-help flex-shrink-0 px-1.5 py-0.5 rounded-md"
-            style={{ backgroundColor: `color-mix(in srgb, ${color} 12%, transparent)` }}>
-            <span className="text-[11px] font-black tabular-nums" style={{ color }}>{priority.score}</span>
-            <div className="w-[24px] h-[3px] rounded-full overflow-hidden" style={{ backgroundColor: `color-mix(in srgb, ${color} 15%, transparent)` }}>
-              <motion.div className="h-full rounded-full" style={{ backgroundColor: color }}
-                initial={{ width: 0 }} animate={{ width: `${priority.score}%` }}
-                transition={{ duration: 0.5, ease: "easeOut" }} />
-            </div>
-          </div>
-        </TooltipTrigger>
-        <TooltipContent side="top" className="max-w-[220px] text-[10px]">
-          {lang === "pt" ? "Score de prioridade (0-100): volume + crescimento + confiança + frescor + estágio" : "Priority score (0-100): volume + growth + confidence + freshness + stage"}
-        </TooltipContent>
-      </Tooltip>
-
-      {/* Lifecycle badge */}
-      <Tooltip>
-        <TooltipTrigger asChild>
-          <span className="text-[8px] font-semibold px-1.5 py-0.5 rounded-md cursor-help"
-            style={{ 
-              backgroundColor: `hsl(var(--lifecycle-${priority.lifecycle}) / 0.1)`,
-              color: `hsl(var(--lifecycle-${priority.lifecycle}))`,
-            }}>
-            {lc.icon} {lifecycleLabel}
-          </span>
-        </TooltipTrigger>
-        <TooltipContent side="top" className="text-[10px] max-w-[200px]">
-          {lc.desc[lang as "pt" | "en"] || lc.desc.en}
-        </TooltipContent>
-      </Tooltip>
-
-      {/* Confidence indicator */}
-      <Tooltip>
-        <TooltipTrigger asChild>
-          <div className="flex items-center gap-0.5 cursor-help ml-auto">
-            <ShieldCheck className="w-2.5 h-2.5" style={{ color: priority.confidence > 0.7 ? "hsl(var(--success-fg))" : priority.confidence > 0.4 ? "hsl(var(--warning-fg))" : "hsl(var(--destructive))" }} />
-            <span className="text-[8px] tabular-nums text-muted-foreground">{Math.round(priority.confidence * 100)}%</span>
-          </div>
-        </TooltipTrigger>
-        <TooltipContent side="top" className="text-[10px] max-w-[200px]">
-          {confLabel} — {lang === "pt" ? "baseado na qualidade e quantidade de fontes" : "based on source quality and quantity"}
-        </TooltipContent>
-      </Tooltip>
-    </div>
-  );
-});
-DecisionHeader.displayName = "DecisionHeader";
 
 /* ─── Main component ─── */
 export interface TimelineCardProps extends TrendCardProps {
@@ -356,7 +196,6 @@ const TimelineCard = ({
   }, [sources]);
 
   const hasThumbnail = thumbnail && thumbnail.startsWith("http");
-  const chartType = useMemo(() => pickChartType(sourceType, sparkData, changeNum), [sourceType, sparkData, changeNum]);
 
   const handleShare = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -369,71 +208,113 @@ const TimelineCard = ({
     if (compact) { onClick?.(); } else { setExpanded(prev => !prev); }
   };
 
-  const renderSmartChart = () => {
-    if (!sparkData || sparkData.length < 2) return <span className="text-[8px] text-muted-foreground/30 italic">—</span>;
-    switch (chartType) {
-      case "bars": return <MiniBars data={sparkData} color={sparkHex} />;
-      case "momentum": return <MomentumLine data={sparkData} color={sparkHex} />;
-      case "segments": return <SegmentBars data={sparkData} color={sparkHex} />;
-      default: return <SparklineSVG data={sparkData} color={sparkHex} />;
-    }
-  };
+  // v2.0 visual config
+  const tierBorder = priority ? TIER_CONFIG[priority.tier].borderColor : sparkHex;
+  const confConfig = priority ? CONFIDENCE_CONFIG[priority.confidence] : null;
+  const lcConfig = priority ? LIFECYCLE_LABELS[priority.lifecycle] : null;
+  const sourceNatureLabel = priority?.sourceNature || (SOURCE_NATURE_LABEL_MAP[sourceType]?.[lang] || "");
+  const sourceNatureColor = SOURCE_NATURE_COLOR_MAP[sourceType] || sparkHex;
 
-  const tierBorderColor = priority ? TIER_COLORS[priority.tier] : undefined;
+  /* ═══════════════════════════════════════════════════════════
+   *  COMPACT MODE — border + reason + title + confidence + stage
+   * ═══════════════════════════════════════════════════════════ */
+  if (compact) {
+    return (
+      <motion.div
+        variants={cardVariants}
+        layout
+        whileTap={{ scale: 0.98 }}
+        className="bg-card rounded-md border border-border/15 cursor-pointer w-full relative overflow-hidden
+          shadow-[0_1px_3px_0_hsl(var(--foreground)/0.04)]
+          hover:shadow-[0_2px_8px_0_hsl(var(--foreground)/0.08)]
+          transition-shadow duration-200"
+        style={{ borderLeftWidth: 4, borderLeftColor: tierBorder, padding: "6px 10px" }}
+        onClick={() => onClick?.()}
+      >
+        {/* Line 1: Reason */}
+        {priority && (
+          <p className="text-[9px] font-semibold truncate mb-0.5" style={{ color: tierBorder }}>
+            {priority.reason}
+          </p>
+        )}
 
+        {/* Line 2: Title */}
+        <h3 className="text-[11px] font-semibold text-foreground leading-snug line-clamp-1 mb-0.5"
+          style={{ wordBreak: "break-word" }}>
+          {decodeEntities(title)}
+        </h3>
+
+        {/* Line 3: Confidence + Stage + Time + Sparkline */}
+        <div className="flex items-center gap-1.5">
+          {confConfig && (
+            <span className={`text-[7px] font-bold px-1 py-0.5 rounded border ${confConfig.className}`}>
+              {confConfig.icon}
+            </span>
+          )}
+          {lcConfig && (
+            <span className="text-[8px]" style={{ color: lcConfig.color }}>
+              {lcConfig.icon}
+            </span>
+          )}
+          {flag && <span className="text-[9px]">{flag}</span>}
+          <span className="text-[8px] text-muted-foreground">{formattedTime}</span>
+          <div className="flex-1" />
+          {sparkData && sparkData.length >= 2 && (
+            <div className="w-12 h-4 flex-shrink-0">
+              <SparklineSVG data={sparkData} color={sparkHex} />
+            </div>
+          )}
+          {showChange && (
+            <span className={`text-[9px] font-bold tabular-nums ${changePositive ? "text-emerald-600" : "text-red-500"}`}>
+              {changePositive ? "↗" : "↘"}{change}
+            </span>
+          )}
+        </div>
+      </motion.div>
+    );
+  }
+
+  /* ═══════════════════════════════════════════════════════════
+   *  EXPANDED MODE — full v2.0 card
+   * ═══════════════════════════════════════════════════════════ */
   return (
     <motion.div
       variants={cardVariants}
       layout
-      whileHover={{ y: -2, transition: { duration: 0.2, ease: [0.21, 0.47, 0.32, 0.98] } }}
+      whileHover={{ y: -1, transition: { duration: 0.15, ease: [0.21, 0.47, 0.32, 0.98] } }}
       whileTap={{ scale: 0.98 }}
       className={`bg-card rounded-lg border cursor-pointer w-full relative overflow-hidden
-        shadow-[0_1px_4px_0_hsl(var(--foreground)/0.06),0_2px_8px_-2px_hsl(var(--foreground)/0.08)]
-        hover:shadow-[0_3px_12px_0_hsl(var(--foreground)/0.09),0_2px_6px_-2px_hsl(var(--foreground)/0.1)]
+        shadow-[0_1px_4px_0_hsl(var(--foreground)/0.05),0_2px_8px_-2px_hsl(var(--foreground)/0.06)]
+        hover:shadow-[0_3px_12px_0_hsl(var(--foreground)/0.08),0_2px_6px_-2px_hsl(var(--foreground)/0.09)]
         transition-shadow duration-200 ease-[cubic-bezier(0.21,0.47,0.32,0.98)]
-        ${mapSelected ? "ring-2 ring-[hsl(var(--map-selection-border))/0.4] bg-[hsl(var(--map-selection-bg))]" : ""}
-        ${isSelected
-          ? "border-l-[3px] shadow-[var(--shadow-md)]" : "border-border/15 shadow-[var(--shadow-xs)] hover:shadow-[var(--shadow-md)]"}`}
-      style={{ 
-        padding: compact ? "8px 10px" : "10px 12px",
-        borderLeftColor: !isSelected && tierBorderColor ? `color-mix(in srgb, ${tierBorderColor} 35%, transparent)` : undefined,
-        borderLeftWidth: !isSelected && tierBorderColor ? "3px" : undefined,
+        ${mapSelected ? "ring-2 ring-primary/20" : ""}
+        ${isSelected ? "shadow-[var(--shadow-md)]" : ""}`}
+      style={{
+        borderLeftWidth: 4,
+        borderLeftColor: tierBorder,
+        borderTopColor: "hsl(var(--border) / 0.15)",
+        borderRightColor: "hsl(var(--border) / 0.15)",
+        borderBottomColor: "hsl(var(--border) / 0.15)",
+        padding: "10px 12px",
       }}
       onClick={handleCardClick}
     >
-      {/* Accent line — priority tier */}
-      <div className="absolute top-0 left-0 right-0 h-[2px] opacity-40" style={{ background: tierBorderColor || sparkHex }} />
-
-      {/* ① LIFECYCLE BADGE — single visual signal at top (score hidden, confidence/reason moved to expanded) */}
-      {priority && !compact && (
-        <div className="flex items-center gap-1.5 mb-1">
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <span className="text-[8px] font-semibold px-1.5 py-0.5 rounded-md cursor-help"
-                style={{ 
-                  backgroundColor: `hsl(var(--lifecycle-${priority.lifecycle}) / 0.1)`,
-                  color: `hsl(var(--lifecycle-${priority.lifecycle}))`,
-                }}>
-                {LIFECYCLE_LABELS[priority.lifecycle].icon} {LIFECYCLE_LABELS[priority.lifecycle][lang as "pt" | "en"] || LIFECYCLE_LABELS[priority.lifecycle].en}
-              </span>
-            </TooltipTrigger>
-            <TooltipContent side="top" className="text-[10px] max-w-[220px]">
-              {LIFECYCLE_LABELS[priority.lifecycle].desc[lang as "pt" | "en"] || LIFECYCLE_LABELS[priority.lifecycle].desc.en}
-              {priority.reason && <><br/><span className="text-muted-foreground">{priority.reason}</span></>}
-            </TooltipContent>
-          </Tooltip>
-        </div>
+      {/* ① REASON — dominant first-read element */}
+      {priority && (
+        <p className="text-[10px] font-bold leading-tight truncate mb-1" style={{ color: tierBorder }}>
+          {priority.reason}
+        </p>
       )}
 
-      {/* ③ Title + thumbnail — prominent but subordinate to decision context */}
-      <div className="flex gap-2 mb-1">
+      {/* ② TITLE + thumbnail */}
+      <div className="flex gap-2 mb-1.5">
         <div className="flex-1 min-w-0">
-          <h3 className={`font-semibold text-foreground leading-snug ${compact ? "text-[11px] line-clamp-1" : "text-[12.5px] line-clamp-2"}`}
+          <h3 className="text-[13px] font-semibold text-foreground leading-snug line-clamp-2"
             style={{ wordBreak: "break-word" }}>
             {decodeEntities(title)}
           </h3>
         </div>
-        {hasThumbnail && !compact && (
+        {hasThumbnail && (
           <div className="flex-shrink-0 w-14 h-14 rounded-md overflow-hidden bg-muted">
             <img src={thumbnail} alt="" className="w-full h-full object-cover" loading="lazy"
               onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
@@ -441,83 +322,94 @@ const TimelineCard = ({
         )}
       </div>
 
-      {/* ④ Source metadata line: platform · time · country · source nature · actions */}
-      <div className="flex items-center gap-1.5 mb-1 flex-wrap">
-        <button onClick={(e) => { e.stopPropagation(); onFilterPlatform?.(platform); }}
-          className="flex items-center gap-1 flex-shrink-0 hover:opacity-80 transition-opacity">
-          <div className="w-[5px] h-[5px] rounded-full flex-shrink-0" style={{ background: sparkHex }} />
-          <span className="text-[9px] uppercase tracking-[0.06em] font-bold" style={{ color: sparkHex }}>
-            {platform}
-          </span>
-        </button>
-        <span className="text-[9px] text-muted-foreground/25">·</span>
-        <span className="text-[9px] text-muted-foreground">{formattedTime}</span>
-        {flag && <span className="text-[10px]" title={countryCode}>{flag}</span>}
-        
-        {/* Source nature label (single, clear dimension) */}
-        {priority?.sourceNature && (
-          <span className="text-[8px] text-muted-foreground/50 italic">{priority.sourceNature}</span>
+      {/* ③ CONFIDENCE + SOURCE TYPE + TIME + STAGE — single metadata line */}
+      <div className="flex items-center gap-1.5 mb-1.5 flex-wrap">
+        {/* Confidence badge (independent) */}
+        {confConfig && (
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <span className={`text-[8px] font-bold px-1.5 py-0.5 rounded border cursor-help ${confConfig.className}`}>
+                {confConfig.icon} {confConfig.label[lang as "pt" | "en"] || confConfig.label.en}
+              </span>
+            </TooltipTrigger>
+            <TooltipContent side="top" className="text-[10px] max-w-[220px]">
+              {lang === "pt"
+                ? `Confiança baseada em ${priority?.sourceCount || 1} fonte(s) independente(s)`
+                : `Confidence based on ${priority?.sourceCount || 1} independent source(s)`}
+            </TooltipContent>
+          </Tooltip>
         )}
 
-        {/* Multi-platform indicator */}
+        {/* Source nature badge (color = origin type, NOT reliability) */}
+        <button onClick={(e) => { e.stopPropagation(); onFilterPlatform?.(platform); }}
+          className="flex items-center gap-1 flex-shrink-0 hover:opacity-80 transition-opacity">
+          <span className="text-[8px] font-semibold px-1.5 py-0.5 rounded"
+            style={{ backgroundColor: `color-mix(in srgb, ${sourceNatureColor} 12%, transparent)`, color: sourceNatureColor }}>
+            {sourceNatureLabel}
+          </span>
+        </button>
+
+        {/* Platform name */}
+        <span className="text-[8px] font-medium text-muted-foreground uppercase tracking-wider">{platform}</span>
+
+        <span className="text-[8px] text-muted-foreground/20">·</span>
+
+        {/* Flag */}
+        {flag && <span className="text-[10px]" title={countryCode}>{flag}</span>}
+
+        {/* Time */}
+        <span className="text-[9px] text-muted-foreground">{formattedTime}</span>
+
+        {/* Multi-platform */}
         {isMultiplatform && (
-          <span className="text-[7px] font-semibold px-1 py-0.5 rounded bg-[hsl(var(--source-official)/0.08)] text-[hsl(var(--source-official))]">
+          <span className="text-[7px] font-semibold px-1 py-0.5 rounded bg-primary/8 text-primary">
             🌐 Multi
           </span>
         )}
 
         <div className="flex-1" />
 
-        {/* Minimal action icons */}
-        <div className="flex items-center gap-0.5 flex-shrink-0">
-          <button onClick={handleShare} className="p-0.5 rounded-md text-muted-foreground/20 hover:text-foreground/50 transition-colors">
-            <Share2 className="w-3 h-3" />
-          </button>
-          <button onClick={(e) => {
-            e.stopPropagation();
-            onSaveCard?.({ title, platform, category, country_code: countryCode, source_url: sourceUrl, description: contextSnippet || "" });
-          }} className="p-0.5 rounded-md text-muted-foreground/20 hover:text-foreground/50 transition-colors">
-            <Bookmark className="w-3 h-3" />
-          </button>
-          {onAddToWatchlist && (
-            <button onClick={(e) => {
-              e.stopPropagation();
-              onAddToWatchlist({ title, platform, category, countryCode, volume, change, changePositive, sources });
-            }} className="p-0.5 rounded-md text-muted-foreground/20 hover:text-foreground/50 transition-colors" title={lang === "pt" ? "Monitorar" : "Watch"}>
-              <Eye className="w-3 h-3" />
-            </button>
-          )}
-        </div>
+        {/* Stage — always visible */}
+        {lcConfig && (
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <span className="text-[8px] font-semibold cursor-help" style={{ color: lcConfig.color }}>
+                {lcConfig.icon} {lcConfig[lang as "pt" | "en"] || lcConfig.en}
+              </span>
+            </TooltipTrigger>
+            <TooltipContent side="top" className="text-[10px] max-w-[200px]">
+              {lcConfig.desc[lang as "pt" | "en"] || lcConfig.desc.en}
+            </TooltipContent>
+          </Tooltip>
+        )}
       </div>
 
-      {/* ⑤ Context snippet */}
-      {contextSnippet && !compact && (
-        <p className="text-[10px] text-muted-foreground leading-relaxed line-clamp-2 mb-1.5">{decodeEntities(contextSnippet)}</p>
+      {/* ④ CONTEXT (1-line default, 2 expanded) — only when title isn't enough */}
+      {contextSnippet && (
+        <p className={`text-[10px] text-muted-foreground leading-relaxed mb-1.5 ${expanded ? "line-clamp-3" : "line-clamp-1"}`}>
+          {decodeEntities(contextSnippet)}
+        </p>
       )}
 
-      {/* ⑥ Term explanation */}
-      {termExplanation && !compact && (
-        <div className="flex items-start gap-1.5 mb-1.5 px-2 py-1.5 rounded-md text-[9px] leading-relaxed bg-[hsl(var(--info-bg))] border-l-2 border-[hsl(var(--info-fg))] text-[hsl(var(--info-fg))]">
-          <span className="flex-shrink-0">💡</span>
-          <span className="line-clamp-2">{termExplanation}</span>
-        </div>
-      )}
+      {/* ⑤ SPARKLINE + DELTA + VOLUME — bottom row */}
+      <div className="flex items-end gap-2 mt-0.5">
+        {sparkData && sparkData.length >= 2 && (
+          <div className="flex-1 min-w-0" style={{ height: 22 }}>
+            <SparklineSVG data={sparkData} color={sparkHex} />
+          </div>
+        )}
+        {!sparkData && <div className="flex-1" />}
 
-      {/* ⑦ Smart chart + Original metrics (subordinate to decision) */}
-      <div className="flex items-end gap-2 mt-1">
-        <div className="flex-1 min-w-0" style={{ height: 22 }}>
-          {renderSmartChart()}
-        </div>
         <div className="flex items-center gap-2 flex-shrink-0">
           {showChange && (
-            <span className={`text-[10px] font-bold ${changePositive ? "text-[hsl(var(--success-fg))]" : "text-destructive"}`}>
+            <span className={`text-[10px] font-bold tabular-nums ${changePositive ? "text-emerald-600" : "text-red-500"}`}>
               {changePositive ? "↗" : "↘"}{change}
             </span>
           )}
           {showVolume && (
             <Tooltip>
               <TooltipTrigger asChild>
-                <span className="text-[10px] font-semibold text-muted-foreground/70 tabular-nums cursor-help">{volume}</span>
+                <span className="text-[10px] font-semibold text-muted-foreground/60 tabular-nums cursor-help">{volume}</span>
               </TooltipTrigger>
               <TooltipContent side="top" className="text-[10px]">
                 {lang === "pt" ? "Métrica bruta da fonte original" : "Raw metric from original source"}
@@ -527,28 +419,51 @@ const TimelineCard = ({
           {sources && sources.length > 1 && (
             <span className="text-[8px] text-muted-foreground/40 tabular-nums">{sources.length}src</span>
           )}
-          {!compact && (
-            <ChevronDown className={`w-3 h-3 text-muted-foreground/30 transition-transform ${expanded ? "rotate-180" : ""}`} />
-          )}
+
+          {/* Minimal actions */}
+          <div className="flex items-center gap-0.5 ml-1">
+            <button onClick={handleShare} className="p-0.5 rounded-md text-muted-foreground/20 hover:text-foreground/50 transition-colors">
+              <Share2 className="w-3 h-3" />
+            </button>
+            <button onClick={(e) => {
+              e.stopPropagation();
+              onSaveCard?.({ title, platform, category, country_code: countryCode, source_url: sourceUrl, description: contextSnippet || "" });
+            }} className="p-0.5 rounded-md text-muted-foreground/20 hover:text-foreground/50 transition-colors">
+              <Bookmark className="w-3 h-3" />
+            </button>
+            {onAddToWatchlist && (
+              <button onClick={(e) => {
+                e.stopPropagation();
+                onAddToWatchlist({ title, platform, category, countryCode, volume, change, changePositive, sources });
+              }} className="p-0.5 rounded-md text-muted-foreground/20 hover:text-foreground/50 transition-colors"
+                title={lang === "pt" ? "Monitorar" : "Watch"}>
+                <Eye className="w-3 h-3" />
+              </button>
+            )}
+          </div>
+
+          <ChevronDown className={`w-3 h-3 text-muted-foreground/30 transition-transform ${expanded ? "rotate-180" : ""}`} />
         </div>
       </div>
 
-      {/* ⑧ Propagation */}
-      {propagationSources && !compact && !expanded && (
-        <div className="flex items-center gap-1 mt-1.5 pt-1.5 border-t border-border/15 overflow-hidden">
-          <span className="text-[7px] text-muted-foreground/40 uppercase tracking-wider flex-shrink-0">PROP</span>
+      {/* ⑥ PROPAGATION (collapsed only) */}
+      {propagationSources && !expanded && (
+        <div className="flex items-center gap-1 mt-1.5 pt-1.5 border-t border-border/10 overflow-hidden">
+          <span className="text-[7px] text-muted-foreground/30 uppercase tracking-wider flex-shrink-0">
+            {lang === "pt" ? "PROP" : "PROP"}
+          </span>
           {propagationSources.map((s, i) => (
             <React.Fragment key={i}>
-              {i > 0 && <span className="text-[8px] text-muted-foreground/25">→</span>}
-              <span className="text-[8px] font-medium text-muted-foreground px-1 py-0.5 rounded bg-muted/40 truncate max-w-[60px]">{s}</span>
+              {i > 0 && <span className="text-[8px] text-muted-foreground/20">→</span>}
+              <span className="text-[8px] font-medium text-muted-foreground px-1 py-0.5 rounded bg-muted/30 truncate max-w-[60px]">{s}</span>
             </React.Fragment>
           ))}
         </div>
       )}
 
-      {/* ⑨ UNIFIED INLINE DETAIL — enriched accordion */}
+      {/* ═══ EXPANDED ACCORDION ═══ */}
       <AnimatePresence>
-        {expanded && !compact && (
+        {expanded && (
           <motion.div
             initial={{ height: 0, opacity: 0 }}
             animate={{ height: "auto", opacity: 1 }}
@@ -556,49 +471,28 @@ const TimelineCard = ({
             transition={{ duration: 0.25, ease: [0.25, 0.1, 0.25, 1] }}
             className="overflow-hidden"
           >
-            <div className="mt-3 pt-3 border-t border-border/20 space-y-3">
-              
-              {/* Intelligence summary */}
-              {priority && (
-                <div className="grid grid-cols-2 gap-2">
-                  <div className="px-2 py-1.5 rounded-md bg-muted/30">
-                    <span className="text-[8px] uppercase tracking-wider text-muted-foreground/50 block mb-0.5">
-                      {lang === "pt" ? "Estágio" : "Stage"}
-                    </span>
-                    <span className="text-[10px] font-semibold" style={{ color: `hsl(var(--lifecycle-${priority.lifecycle}))` }}>
-                      {LIFECYCLE_LABELS[priority.lifecycle].icon} {LIFECYCLE_LABELS[priority.lifecycle][lang as "pt" | "en"] || LIFECYCLE_LABELS[priority.lifecycle].en}
-                    </span>
-                    <span className="text-[8px] text-muted-foreground/50 block mt-0.5">
-                      {LIFECYCLE_LABELS[priority.lifecycle].desc[lang as "pt" | "en"] || LIFECYCLE_LABELS[priority.lifecycle].desc.en}
-                    </span>
-                  </div>
-                  <div className="px-2 py-1.5 rounded-md bg-muted/30">
-                    <span className="text-[8px] uppercase tracking-wider text-muted-foreground/50 block mb-0.5">
-                      {lang === "pt" ? "Confiança" : "Confidence"}
-                    </span>
-                    <div className="flex items-center gap-1">
-                      <div className="w-full h-[4px] rounded-full bg-muted/50 overflow-hidden">
-                        <div className="h-full rounded-full transition-all" 
-                          style={{ 
-                            width: `${priority.confidence * 100}%`,
-                            backgroundColor: priority.confidence > 0.7 ? "hsl(var(--success-fg))" : priority.confidence > 0.4 ? "hsl(var(--warning-fg))" : "hsl(var(--destructive))",
-                          }} />
-                      </div>
-                      <span className="text-[9px] font-bold tabular-nums">{Math.round(priority.confidence * 100)}%</span>
-                    </div>
-                    <span className="text-[8px] text-muted-foreground/50 block mt-0.5">
-                      {getConfidenceLabel(priority.confidence, lang)}
-                    </span>
-                  </div>
+            <div className="mt-3 pt-3 border-t border-border/15 space-y-3">
+              {/* Term explanation */}
+              {termExplanation && (
+                <div className="flex items-start gap-1.5 px-2 py-1.5 rounded-md text-[9px] leading-relaxed bg-muted/30 border-l-2 border-primary/30 text-muted-foreground">
+                  <span className="flex-shrink-0">💡</span>
+                  <span>{termExplanation}</span>
                 </div>
               )}
 
-              {/* Normalized relevance vs original metric */}
+              {/* Full description */}
+              {(description || details) && (
+                <p className="text-[11px] text-muted-foreground leading-relaxed">
+                  {decodeEntities((description || details || "").slice(0, 400))}
+                </p>
+              )}
+
+              {/* Metric + normalized relevance */}
               {priority && (
                 <div className="flex items-center gap-3 px-2 py-1.5 rounded-md bg-muted/20">
                   <div className="flex-1">
                     <span className="text-[8px] uppercase tracking-wider text-muted-foreground/50 block">
-                      {lang === "pt" ? "Relevância normalizada" : "Normalized relevance"}
+                      {lang === "pt" ? "Relevância" : "Relevance"}
                     </span>
                     <div className="flex items-center gap-1.5 mt-0.5">
                       <div className="w-full h-[3px] rounded-full bg-muted/40 overflow-hidden">
@@ -610,7 +504,7 @@ const TimelineCard = ({
                   {showVolume && (
                     <div className="text-right flex-shrink-0">
                       <span className="text-[8px] uppercase tracking-wider text-muted-foreground/50 block">
-                        {lang === "pt" ? "Métrica original" : "Original metric"}
+                        {lang === "pt" ? "Métrica" : "Metric"}
                       </span>
                       <span className="text-[10px] font-semibold text-foreground tabular-nums">{volume}</span>
                     </div>
@@ -618,21 +512,14 @@ const TimelineCard = ({
                 </div>
               )}
 
-              {/* Full description */}
-              {(description || details) && (
-                <p className="text-[11px] text-muted-foreground leading-relaxed">
-                  {decodeEntities((description || details || "").slice(0, 400))}
-                </p>
-              )}
-
-              {/* Countries affected */}
+              {/* Country */}
               {countryCode && (
                 <div className="flex items-center gap-1.5">
                   <Globe className="w-3 h-3 text-muted-foreground/40" />
                   <span className="text-[9px] text-muted-foreground">
                     {flag} {countryCode?.toUpperCase()}
                     {isMultiplatform && (
-                      <span className="ml-1 text-[8px] text-[hsl(var(--source-official))]">
+                      <span className="ml-1 text-[8px] text-primary">
                         + {lang === "pt" ? "múltiplas regiões" : "multiple regions"}
                       </span>
                     )}
@@ -643,51 +530,39 @@ const TimelineCard = ({
               {/* Historical chart */}
               {historicalData && historicalData.length > 2 && (
                 <div>
-                  <div className="flex items-center justify-between mb-1.5">
-                    <span className="text-[9px] font-semibold text-muted-foreground uppercase tracking-wider">
-                      {lang === "pt" ? "Evolução 24h" : "24h Evolution"}
-                    </span>
-                  </div>
+                  <span className="text-[9px] font-semibold text-muted-foreground uppercase tracking-wider block mb-1.5">
+                    {lang === "pt" ? "Evolução 24h" : "24h Evolution"}
+                  </span>
                   <div className="h-28 -mx-1">
                     <ResponsiveContainer width="100%" height="100%">
-                      {changeNum > 80 ? (
-                        <BarChart data={historicalData.slice(-12)}>
-                          <XAxis dataKey="hour" tick={{ fontSize: 8, fill: "hsl(var(--muted-foreground))" }} tickLine={false} axisLine={false} interval={2} />
-                          <YAxis tick={{ fontSize: 8, fill: "hsl(var(--muted-foreground))" }} tickLine={false} axisLine={false} width={28}
-                            tickFormatter={(v) => v >= 1000 ? `${(v / 1000).toFixed(0)}K` : String(v)} />
-                          <RTooltip contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: "8px", fontSize: 10 }} />
-                          <Bar dataKey="value" fill={sparkHex} opacity={0.7} radius={[2, 2, 0, 0]} />
-                        </BarChart>
-                      ) : (
-                        <AreaChart data={historicalData.slice(-12)}>
-                          <defs>
-                            <linearGradient id={`exp_${title.slice(0, 5)}`} x1="0" y1="0" x2="0" y2="1">
-                              <stop offset="0%" stopColor={sparkHex} stopOpacity={0.2} />
-                              <stop offset="100%" stopColor={sparkHex} stopOpacity={0} />
-                            </linearGradient>
-                          </defs>
-                          <XAxis dataKey="hour" tick={{ fontSize: 8, fill: "hsl(var(--muted-foreground))" }} tickLine={false} axisLine={false} interval={2} />
-                          <YAxis tick={{ fontSize: 8, fill: "hsl(var(--muted-foreground))" }} tickLine={false} axisLine={false} width={28}
-                            tickFormatter={(v) => v >= 1000 ? `${(v / 1000).toFixed(0)}K` : String(v)} />
-                          <RTooltip contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: "8px", fontSize: 10 }} />
-                          <Area type="monotone" dataKey="value" stroke={sparkHex} strokeWidth={1.5} fill={`url(#exp_${title.slice(0, 5)})`} />
-                        </AreaChart>
-                      )}
+                      <AreaChart data={historicalData.slice(-12)}>
+                        <defs>
+                          <linearGradient id={`exp_${title.slice(0, 5)}`} x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="0%" stopColor={sparkHex} stopOpacity={0.2} />
+                            <stop offset="100%" stopColor={sparkHex} stopOpacity={0} />
+                          </linearGradient>
+                        </defs>
+                        <XAxis dataKey="hour" tick={{ fontSize: 8, fill: "hsl(var(--muted-foreground))" }} tickLine={false} axisLine={false} interval={2} />
+                        <YAxis tick={{ fontSize: 8, fill: "hsl(var(--muted-foreground))" }} tickLine={false} axisLine={false} width={28}
+                          tickFormatter={(v) => v >= 1000 ? `${(v / 1000).toFixed(0)}K` : String(v)} />
+                        <RTooltip contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: "8px", fontSize: 10 }} />
+                        <Area type="monotone" dataKey="value" stroke={sparkHex} strokeWidth={1.5} fill={`url(#exp_${title.slice(0, 5)})`} />
+                      </AreaChart>
                     </ResponsiveContainer>
                   </div>
                 </div>
               )}
 
-              {/* Related sources */}
+              {/* Propagation */}
               {propagationSources && (
                 <div>
                   <span className="text-[8px] text-muted-foreground/50 uppercase tracking-wider block mb-1">
-                    {lang === "pt" ? "Fontes relacionadas" : "Related sources"}
+                    {lang === "pt" ? "Propagação" : "Propagation"}
                   </span>
                   <div className="flex items-center gap-1.5 flex-wrap">
                     {propagationSources.map((s, i) => (
                       <React.Fragment key={i}>
-                        {i > 0 && <span className="text-[9px] text-muted-foreground/30">→</span>}
+                        {i > 0 && <span className="text-[9px] text-muted-foreground/25">→</span>}
                         <span className="text-[9px] font-medium text-muted-foreground px-1.5 py-0.5 rounded-md bg-secondary">{s}</span>
                       </React.Fragment>
                     ))}
@@ -699,7 +574,7 @@ const TimelineCard = ({
               <div className="flex items-center gap-2 pt-1">
                 {sourceUrl && (
                   <a href={sourceUrl} target="_blank" rel="noopener noreferrer" onClick={(e) => e.stopPropagation()}
-                    className="inline-flex items-center gap-1.5 text-[10px] font-medium text-[hsl(var(--source-press))] hover:underline group">
+                    className="inline-flex items-center gap-1.5 text-[10px] font-medium text-primary hover:underline group">
                     <ExternalLink className="w-3 h-3 group-hover:translate-x-0.5 transition-transform" />
                     {lang === "pt" ? "Fonte original" : "Original source"}
                   </a>
@@ -718,22 +593,6 @@ const TimelineCard = ({
           </motion.div>
         )}
       </AnimatePresence>
-
-      {/* Compact metrics */}
-      {compact && (
-        <div className="flex items-center gap-1.5 text-[9px] text-muted-foreground mt-0.5">
-          {priority && <span className="font-black tabular-nums" style={{ color: TIER_COLORS[priority.tier] }}>{priority.score}</span>}
-          {priority && (
-            <span className="text-[7px] px-1 py-0.5 rounded"
-              style={{ backgroundColor: `hsl(var(--lifecycle-${priority.lifecycle}) / 0.1)`, color: `hsl(var(--lifecycle-${priority.lifecycle}))` }}>
-              {LIFECYCLE_LABELS[priority.lifecycle].icon}
-            </span>
-          )}
-          {showVolume && <span className="font-medium tabular-nums text-muted-foreground/60">{volume}</span>}
-          {showChange && <span className={`font-bold ${changePositive ? "text-[hsl(var(--success-fg))]" : "text-destructive"}`}>{change}</span>}
-          {priority?.reason && <span className="text-[7px] text-muted-foreground/40 truncate max-w-[120px]">{priority.reason}</span>}
-        </div>
-      )}
     </motion.div>
   );
 };
