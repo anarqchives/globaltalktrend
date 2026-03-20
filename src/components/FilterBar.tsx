@@ -234,14 +234,16 @@ const FilterBar = ({ filters, onChange, onForceReset, onSaveFilter, isLoggedIn, 
 
   const categoryOptions = [
     { value: "Todas", label: t("all") },
-    { value: "Política", label: t("politics") },
-    { value: "Economia", label: t("business") },
+    { value: "Geopolítica", label: lang === "pt" ? "Geopolítica" : "Geopolitics" },
+    { value: "Economia", label: lang === "pt" ? "Economia" : "Economy" },
     { value: "Tecnologia", label: t("technology") },
     { value: "Ciência", label: t("science") },
     { value: "Saúde", label: healthLabel[lang] || "Saúde" },
-    { value: "Esportes", label: t("sports") },
     { value: "Entretenimento", label: t("entertainment") },
-    { value: "Cultura", label: t("culture") }
+    { value: "Esportes", label: t("sports") },
+    { value: "Cultura", label: t("culture") },
+    { value: "Meio Ambiente", label: lang === "pt" ? "Meio Ambiente" : "Environment" },
+    { value: "Educação", label: lang === "pt" ? "Educação" : "Education" },
   ];
 
   const typeOptions = [

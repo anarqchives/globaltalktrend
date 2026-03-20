@@ -32,7 +32,7 @@ export function deriveSentiment(trend: TrendCardProps): Sentiment {
   if (hasNeg && hasPos) return "mixed";
   if (hasNeg) return "negative";
   if (hasPos) return "positive";
-  if (trend.category === "Política") return change > 50 ? "mixed" : "neutral";
+  if (trend.category === "Geopolítica" || trend.category === "Política") return change > 50 ? "mixed" : "neutral";
   if (trend.category === "Tecnologia" || trend.category === "Ciência") return "positive";
   if (change > 100) return "mixed";
   return "neutral";
