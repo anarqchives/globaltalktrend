@@ -276,7 +276,7 @@ const TrendDetailPanel: React.FC<TrendDetailPanelProps> = ({
               </button>
               {sourceUrl && (
                 <a href={sourceUrl} target="_blank" rel="noopener noreferrer"
-                  className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-[#2557D6] text-white text-[12px] font-medium hover:bg-[#2557D6]/90 transition-colors ml-auto">
+                  className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-[#2557D6] text-white text-[12px] font-medium hover:bg-[#2557D6]/90 transition-colors ml-auto">
                   <ExternalLink className="w-3.5 h-3.5" /> {lang === "pt" ? "Fonte" : "Source"}
                 </a>
               )}
