@@ -101,7 +101,7 @@ const DARK_MAP_STYLE: google.maps.MapTypeStyle[] = [
 
 function buildTooltipHtml(content: string, isDark: boolean): HTMLElement {
   const div = document.createElement("div");
-  div.style.cssText = `font-family:'DM Sans',-apple-system,sans-serif;padding:10px 14px;min-width:180px;max-width:260px;background:${isDark ? "rgba(19,24,39,0.97)" : "rgba(255,255,255,0.97)"};color:${isDark ? "#e2e8f0" : "#111827"};border-radius:14px;backdrop-filter:blur(16px);border:1px solid ${isDark ? "rgba(71,84,103,0.5)" : "rgba(0,0,0,0.06)"};box-shadow:0 6px 24px rgba(0,0,0,0.10);font-size:11px;`;
+  div.style.cssText = `font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;padding:10px 14px;min-width:180px;max-width:260px;background:${isDark ? "rgba(19,24,39,0.97)" : "rgba(255,255,255,0.97)"};color:${isDark ? "#e2e8f0" : "#111827"};border-radius:8px;backdrop-filter:blur(16px);border:1px solid ${isDark ? "rgba(71,84,103,0.5)" : "rgba(0,0,0,0.06)"};box-shadow:0 4px 16px rgba(0,0,0,0.08);font-size:11px;`;
   div.innerHTML = content;
   return div;
 }
