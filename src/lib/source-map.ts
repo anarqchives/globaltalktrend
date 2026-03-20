@@ -118,6 +118,10 @@ export const SOURCE_MAP: Record<string, SourceInfo> = {
   "X (Twitter)":          { country: "GL", mediaType: "redes-sociais", reliability: 0.5 },
   "YouTube":              { country: "GL", mediaType: "redes-sociais", reliability: 0.5 },
 
+  // ─── Novas fontes de imprensa ──────────────────────
+  "Currents":             { country: "GL", mediaType: "imprensa", reliability: 0.65, note: "Currents API — agregador global de notícias" },
+  "Mediastack":           { country: "GL", mediaType: "imprensa", reliability: 0.65, note: "Mediastack — notícias em tempo real via API" },
+
   // ─── Buscas ──────────────────────────────────────
   "Google Trends":        { country: "GL", mediaType: "buscas", reliability: 0.8 },
   "Google News":          { country: "GL", mediaType: "buscas", reliability: 0.7 },
