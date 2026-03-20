@@ -49,8 +49,18 @@ const AppHeader = () => {
   const userAvatar = user?.user_metadata?.avatar_url;
   const userName = user?.user_metadata?.full_name || user?.email?.split("@")[0] || "";
   const userInitial = userName.charAt(0).toUpperCase();
+  // Close lang dropdown on outside click
+  useEffect(() => {
+    if (!langOpen) return;
+    const handler = (e: MouseEvent) => {
+      if (langRef.current && !langRef.current.contains(e.target as Node)) setLangOpen(false);
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, [langOpen]);
 
-  return (
+  const currentLang = languages.find(l => l.code === lang);
+
     <>
       <header className="sticky top-0 z-50 bg-background/95 backdrop-blur-md border-b border-border/30" role="banner">
         <div className="h-12 flex items-center px-4 md:px-6 max-w-[1440px] mx-auto">
