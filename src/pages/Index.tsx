@@ -542,7 +542,7 @@ const Index = () => {
                 <ResizablePanelGroup direction="horizontal" className="flex-1 min-h-0" key={`h-${panelVisibility.timeline}-${panelVisibility.map}`}>
                   {panelVisibility.timeline && (
                     <>
-                      <ResizablePanel defaultSize={panelVisibility.map ? 65 : 100} minSize={25} maxSize={panelVisibility.map ? 85 : 100}>
+                      <ResizablePanel defaultSize={panelVisibility.map ? 42 : 100} minSize={25} maxSize={panelVisibility.map ? 60 : 100}>
                         <div className="h-full min-h-0 overflow-hidden relative">
                           {renderTimeline()}
                         </div>
