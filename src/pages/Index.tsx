@@ -435,7 +435,7 @@ const Index = () => {
 
   return (
     <div className="h-screen flex flex-col bg-background overflow-hidden w-full max-w-[100vw]">
-      <AppHeader onOpenSavedCollections={() => setCollectionsOpen(true)} />
+      <AppHeader />
       <FilterBlock filters={filters} onChange={handleFilterChange} onReset={() => setFilters(defaultFilters)} />
 
       <div className="flex-1 overflow-hidden flex flex-col min-h-0">
