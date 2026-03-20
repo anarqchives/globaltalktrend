@@ -200,8 +200,8 @@ function generateContextualFallback(filters: FilterState): TrendCardProps[] {
       { icon: "🌐", platform: "EFE News", title: "Diáspora venezuelana cresce: impacto na América Latina", category: "Geopolítica", time: timeStr, volume: "Análise", change: "+150%", changePositive: false, sparkData: [20, 30, 42, 52, 60, 68, 75, 80, 85, 88], details: "Milhões de venezuelanos emigraram nos últimos anos.", countryCode: "VE" },
     ],
     GB: [
-      { icon: "🇬🇧", platform: "BBC News", title: "UK politics: latest developments in Parliament", category: "Política", time: timeStr, volume: "Alto", change: "+trending", changePositive: true, sparkData: [25, 38, 48, 58, 68, 75, 82, 88, 92, 95], details: "As últimas notícias do parlamento britânico.", countryCode: "GB" },
-      { icon: "📰", platform: "The Guardian", title: "Economy and public services dominate UK debate", category: "Negócios/Finanças", time: timeStr, volume: "Destaque", change: "+120%", changePositive: true, sparkData: [20, 32, 42, 52, 60, 68, 75, 80, 85, 88], details: "Economia britânica em foco no debate público.", countryCode: "GB" },
+      { icon: "🇬🇧", platform: "BBC News", title: "UK politics: latest developments in Parliament", category: "Geopolítica", time: timeStr, volume: "Alto", change: "+trending", changePositive: true, sparkData: [25, 38, 48, 58, 68, 75, 82, 88, 92, 95], details: "As últimas notícias do parlamento britânico.", countryCode: "GB" },
+      { icon: "📰", platform: "The Guardian", title: "Economy and public services dominate UK debate", category: "Economia", time: timeStr, volume: "Destaque", change: "+120%", changePositive: true, sparkData: [20, 32, 42, 52, 60, 68, 75, 80, 85, 88], details: "Economia britânica em foco no debate público.", countryCode: "GB" },
     ],
     FR: [
       { icon: "🇫🇷", platform: "Le Monde", title: "France: actualités politiques et sociales", category: "Política", time: timeStr, volume: "Alto", change: "+trending", changePositive: true, sparkData: [22, 35, 45, 55, 65, 72, 80, 85, 90, 93], details: "Dernières nouvelles de la politique française.", countryCode: "FR" },
