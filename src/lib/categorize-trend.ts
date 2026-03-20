@@ -254,7 +254,7 @@ const sourceCountryMap: Record<string, string> = {
   "Morocco World News": "MA", "Daily News Egypt": "EG", "Egypt Independent": "EG",
   "Greek Reporter": "GR", "Russia Beyond": "RU", "TASS": "RU",
   "Kyiv Post": "UA", "La Stampa": "IT", "Hindustan Times": "IN",
-  "ABC News AU": "AU", "Público": "PT",
+  "ABC News AU": "AU",
 };
 
 const countryKeywordsMap: Record<string, string[]> = {
