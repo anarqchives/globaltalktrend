@@ -396,18 +396,18 @@ const TimelineCard = ({
         shadow-[0_1px_4px_0_hsl(var(--foreground)/0.06),0_2px_8px_-2px_hsl(var(--foreground)/0.08)]
         hover:shadow-[0_3px_12px_0_hsl(var(--foreground)/0.09),0_2px_6px_-2px_hsl(var(--foreground)/0.1)]
         transition-shadow duration-200 ease-[cubic-bezier(0.21,0.47,0.32,0.98)]
-        ${mapSelected ? "ring-2 ring-[hsl(var(--map-selection-border))] bg-[hsl(var(--map-selection-bg))]" : ""}
+        ${mapSelected ? "ring-2 ring-[hsl(var(--map-selection-border))/0.4] bg-[hsl(var(--map-selection-bg))]" : ""}
         ${isSelected
-          ? "border-l-[3px] shadow-[var(--shadow-md)]" : "border-border/25 shadow-[var(--shadow-xs)] hover:shadow-[var(--shadow-md)]"}`}
+          ? "border-l-[3px] shadow-[var(--shadow-md)]" : "border-border/15 shadow-[var(--shadow-xs)] hover:shadow-[var(--shadow-md)]"}`}
       style={{ 
         padding: compact ? "8px 10px" : "10px 12px",
-        borderLeftColor: !isSelected && tierBorderColor ? tierBorderColor : undefined,
+        borderLeftColor: !isSelected && tierBorderColor ? `color-mix(in srgb, ${tierBorderColor} 35%, transparent)` : undefined,
         borderLeftWidth: !isSelected && tierBorderColor ? "3px" : undefined,
       }}
       onClick={handleCardClick}
     >
-      {/* Accent line — colored by priority tier */}
-      <div className="absolute top-0 left-0 right-0 h-[2px]" style={{ background: tierBorderColor || sparkHex }} />
+      {/* Accent line — colored by priority tier, pastel */}
+      <div className="absolute top-0 left-0 right-0 h-[2px] opacity-40" style={{ background: tierBorderColor || sparkHex }} />
 
       {/* ① PRIORITY BAR — first level of reading */}
       {priority && !compact && <PriorityBar priority={priority} lang={lang} />}
