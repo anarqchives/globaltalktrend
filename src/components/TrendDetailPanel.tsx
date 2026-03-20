@@ -186,11 +186,11 @@ const TrendDetailPanel: React.FC<TrendDetailPanelProps> = ({
                   </div>
                 )}
                 {srcCount > 1 && (
-                  <div className="rounded-xl bg-background p-3 text-center">
+                  <div className="rounded-lg bg-background p-3 text-center">
                     <span className="text-[9px] uppercase tracking-[0.08em] text-muted-foreground block mb-0.5">
                       {lang === "pt" ? "Fontes" : "Sources"}
                     </span>
-                    <span className="text-[14px] font-bold text-foreground">{srcCount}</span>
+                    <span className="text-[15px] font-bold text-foreground">{srcCount}</span>
                   </div>
                 )}
               </div>
