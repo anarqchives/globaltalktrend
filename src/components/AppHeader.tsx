@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { Sun, Moon, LogOut, LogIn, Loader2, ChevronDown, Globe2 } from "lucide-react";
+import { Sun, Moon, LogOut, LogIn, Loader2, ChevronDown, Globe2, Info } from "lucide-react";
 import { useLanguage, languages } from "@/contexts/LanguageContext";
 import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable/index";
