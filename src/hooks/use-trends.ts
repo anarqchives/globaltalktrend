@@ -57,6 +57,45 @@ function updateSourceHealth(health: SourceHealthMap, platform: string, ok: boole
   };
 }
 
+// ─── Per-Source Last-Good Cache ────────────────────────────────────
+const SOURCE_CACHE_KEY = "gtt_source_last_good";
+const SOURCE_CACHE_MAX_AGE = 60 * 60 * 1000; // 1 hour
+
+function loadSourceLastGood(): Record<string, { ts: number; trends: TrendCardProps[] }> {
+  try {
+    const raw = localStorage.getItem(SOURCE_CACHE_KEY);
+    if (!raw) return {};
+    const parsed = JSON.parse(raw);
+    // Prune entries older than max age
+    const cutoff = Date.now() - SOURCE_CACHE_MAX_AGE;
+    const pruned: Record<string, { ts: number; trends: TrendCardProps[] }> = {};
+    for (const [k, v] of Object.entries(parsed) as [string, any][]) {
+      if (v.ts > cutoff) pruned[k] = v;
+    }
+    return pruned;
+  } catch { return {}; }
+}
+
+function saveSourceLastGood(functionName: string, trends: TrendCardProps[]) {
+  if (trends.length === 0) return;
+  try {
+    const cache = loadSourceLastGood();
+    cache[functionName] = { ts: Date.now(), trends: trends.slice(0, 30) };
+    // Keep max 20 sources
+    const entries = Object.entries(cache).sort((a, b) => b[1].ts - a[1].ts).slice(0, 20);
+    localStorage.setItem(SOURCE_CACHE_KEY, JSON.stringify(Object.fromEntries(entries)));
+  } catch {}
+}
+
+function getSourceLastGood(functionName: string): TrendCardProps[] {
+  const cache = loadSourceLastGood();
+  const entry = cache[functionName];
+  if (entry && entry.trends.length > 0) {
+    return entry.trends.map(t => ({ ...t, time: "cache" }));
+  }
+  return [];
+}
+
 // ─── Predictive Cache ──────────────────────────────────────────────
 type PredictiveCacheEntry = { ts: number; data: TrendCardProps[] };
 type PredictiveCache = Record<string, PredictiveCacheEntry>;
