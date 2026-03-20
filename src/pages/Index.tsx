@@ -199,6 +199,11 @@ const Index = () => {
       if (t.firstSeenAt) return (now - new Date(t.firstSeenAt).getTime()) / ONE_HOUR;
       return 12;
     };
+    const PRESS_PLATFORMS = ["guardian", "newsapi", "newsdata", "gnews", "bing news", "bbc", "reuters", "thenewsapi", "the guardian"];
+    const isVerifiedPress = (t: TrendCardProps): boolean => {
+      const p = t.platform?.toLowerCase() || "";
+      return PRESS_PLATFORMS.some(pp => p.includes(pp));
+    };
     const getScore = (t: TrendCardProps): number => {
       const volStr = (t.volume || "0").toLowerCase();
       let vol = parseFloat(volStr.replace(/[^0-9.]/g, "")) || 0;
@@ -210,7 +215,8 @@ const Index = () => {
       const normalizedKey = t.title.toLowerCase().normalize("NFD").replace(/\p{Diacritic}/gu, "").replace(/[^a-z0-9\s]/g, "").trim().slice(0, 50);
       const isMulti = multiplatformTitles.has(normalizedKey);
       if (vol === 0 && ch === 0) return -1000;
-      return (volNorm * 0.3) + (growthNorm * 0.4) + (isMulti ? 150 : 0) + ((t.sources?.length || 1) * 10) - (getAge(t) * 10);
+      const pressBonus = isVerifiedPress(t) ? 120 : 0;
+      return (volNorm * 0.3) + (growthNorm * 0.4) + (isMulti ? 150 : 0) + pressBonus + ((t.sources?.length || 1) * 10) - (getAge(t) * 10);
     };
     const scored = filteredTrends.map(t => ({ t, score: getScore(t) })).filter(s => s.score > -500);
     scored.sort((a, b) => b.score - a.score);
