@@ -74,7 +74,6 @@ const Index = () => {
   const [expandedCardIndex, setExpandedCardIndex] = useState<number | null>(null);
   const [mapSelectedCountry, setMapSelectedCountry] = useState<string | null>(null);
   const [showWatchlistPanel, setShowWatchlistPanel] = useState(false);
-  const [showWatchlist, setShowWatchlist] = useState(false);
   const [panelVisibility, setPanelVisibility] = useState(() => {
     try {
       const saved = localStorage.getItem("map-panel-open");
