@@ -1,10 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import {
-  Sun, Moon, LogOut, LogIn, ChevronRight, User, FileText,
-  Loader2, Menu, X, BarChart3, BookOpen, RefreshCw,
-  Bell, Bookmark, Globe, Calendar, LayoutGrid, Layers, Filter, Search
-} from "lucide-react";
+import { Sun, Moon, LogOut, LogIn, ChevronRight, User, Loader2, Menu, X, BarChart3, BookOpen, Globe, Bookmark, FileText } from "lucide-react";
 import { useLanguage, languages } from "@/contexts/LanguageContext";
 import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable/index";
@@ -12,64 +8,20 @@ import { toast } from "@/hooks/use-toast";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
-import { FilterState, countries } from "@/components/FilterBar";
 import { ScrollArea } from "@/components/ui/scroll-area";
-
-const defaultFilters: FilterState = {
-  country: "global", period: "Hoje", category: "Todas", type: "Todas mídias", query: "",
-};
 
 interface AppHeaderProps {
   minimal?: boolean;
-  filters?: FilterState;
-  onFilterChange?: (filters: FilterState) => void;
-  onForceReset?: () => void;
-  onSaveFilter?: () => void;
   onOpenSavedCollections?: () => void;
-  isLoggedIn?: boolean;
 }
 
-const CATEGORIES = [
-  { value: "Todas", label: { pt: "Todas", en: "All", es: "Todas" } },
-  { value: "Geopolítica", label: { pt: "Geopolítica", en: "Geopolitics", es: "Geopolítica" } },
-  { value: "Economia", label: { pt: "Economia", en: "Economy", es: "Economía" } },
-  { value: "Tecnologia", label: { pt: "Tecnologia", en: "Technology", es: "Tecnología" } },
-  { value: "Ciência", label: { pt: "Ciência", en: "Science", es: "Ciencia" } },
-  { value: "Saúde", label: { pt: "Saúde", en: "Health", es: "Salud" } },
-  { value: "Entretenimento", label: { pt: "Entretenimento", en: "Entertainment", es: "Entretenimiento" } },
-  { value: "Esportes", label: { pt: "Esportes", en: "Sports", es: "Deportes" } },
-  { value: "Cultura", label: { pt: "Cultura", en: "Culture", es: "Cultura" } },
-  { value: "Meio Ambiente", label: { pt: "Meio Ambiente", en: "Environment", es: "Medio Ambiente" } },
-  { value: "Educação", label: { pt: "Educação", en: "Education", es: "Educación" } },
-];
-
-const SOURCE_TYPES = [
-  { v: "Todas mídias", l: { pt: "Todas", en: "All" } },
-  { v: "Imprensa", l: { pt: "Imprensa", en: "Press" } },
-  { v: "Redes sociais", l: { pt: "Social", en: "Social" } },
-  { v: "Buscas (Google)", l: { pt: "Buscas", en: "Searches" } },
-  { v: "Dados oficiais", l: { pt: "Dados Oficiais", en: "Official" } },
-  { v: "Ciência", l: { pt: "Acadêmico", en: "Academic" } },
-  { v: "Multiplataforma", l: { pt: "Multi", en: "Multi" } },
-];
-
-const PERIODS = [
-  { v: "Última hora", l: { pt: "Última hora", en: "Last hour" } },
-  { v: "Hoje", l: { pt: "Hoje", en: "Today" } },
-  { v: "Últimas 24h", l: { pt: "24h", en: "24h" } },
-  { v: "Esta semana", l: { pt: "Semana", en: "Week" } },
-  { v: "Última semana", l: { pt: "7 dias", en: "7 days" } },
-  { v: "Este mês", l: { pt: "Mês", en: "Month" } },
-];
-
-const AppHeader = ({ minimal = false, filters, onFilterChange, onForceReset, onSaveFilter, onOpenSavedCollections, isLoggedIn }: AppHeaderProps) => {
+const AppHeader = ({ minimal = false, onOpenSavedCollections }: AppHeaderProps) => {
   const { lang, setLang, t } = useLanguage();
   const navigate = useNavigate();
   const [user, setUser] = useState<any>(null);
   const [loginOpen, setLoginOpen] = useState(false);
   const [loginLoading, setLoginLoading] = useState<"google" | "apple" | null>(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
-  const [countrySearch, setCountrySearch] = useState("");
   const [dark, setDark] = useState(() => {
     if (typeof window !== "undefined") {
       const saved = localStorage.getItem("theme");
@@ -103,346 +55,58 @@ const AppHeader = ({ minimal = false, filters, onFilterChange, onForceReset, onS
   const userName = user?.user_metadata?.full_name || user?.email?.split("@")[0] || "";
   const userInitial = userName.charAt(0).toUpperCase();
 
-  const update = (key: keyof FilterState, value: string) => {
-    if (filters && onFilterChange) onFilterChange({ ...filters, [key]: value });
-  };
-
-  const hasActiveFilters = filters && (
-    filters.country !== defaultFilters.country ||
-    filters.period !== defaultFilters.period ||
-    filters.category !== defaultFilters.category ||
-    filters.type !== defaultFilters.type
-  );
-
-  const activeFilterPills: { key: keyof FilterState; label: string; defaultValue: string }[] = [];
-  if (filters) {
-    if (filters.country !== "global") {
-      const allC = countries.flatMap(g => g.items);
-      const found = allC.find(c => c.value === filters.country);
-      activeFilterPills.push({ key: "country", label: found?.label || filters.country, defaultValue: "global" });
-    }
-    if (filters.category !== "Todas") {
-      activeFilterPills.push({ key: "category", label: filters.category, defaultValue: "Todas" });
-    }
-    if (filters.type !== "Todas mídias") {
-      activeFilterPills.push({ key: "type", label: filters.type, defaultValue: "Todas mídias" });
-    }
-    if (filters.period !== "Hoje") {
-      activeFilterPills.push({ key: "period", label: filters.period, defaultValue: "Hoje" });
-    }
-  }
-
-  const filteredCountries = countries.map(group => ({
-    ...group,
-    items: group.items.filter(c =>
-      !countrySearch || c.label.toLowerCase().includes(countrySearch.toLowerCase()) || c.value.toLowerCase().includes(countrySearch.toLowerCase())
-    ),
-  })).filter(g => g.items.length > 0);
-
-  const QUICK_COUNTRIES = [
-    { value: "global", emoji: "🌐", label: "Global" },
-    { value: "BR", emoji: "🇧🇷", label: "Brasil" },
-    { value: "US", emoji: "🇺🇸", label: "EUA" },
-    { value: "GB", emoji: "🇬🇧", label: "UK" },
-    { value: "FR", emoji: "🇫🇷", label: "França" },
-    { value: "DE", emoji: "🇩🇪", label: "Alemanha" },
-  ];
-
-  const QUICK_CATEGORIES = [
-    { value: "Todas", label: { pt: "Todas", en: "All", es: "Todas" } },
-    { value: "Geopolítica", label: { pt: "Geopolítica", en: "Geopolitics", es: "Geopolítica" } },
-    { value: "Economia", label: { pt: "Economia", en: "Economy", es: "Economía" } },
-    { value: "Tecnologia", label: { pt: "Tech", en: "Tech", es: "Tech" } },
-    { value: "Saúde", label: { pt: "Saúde", en: "Health", es: "Salud" } },
-    { value: "Esportes", label: { pt: "Esportes", en: "Sports", es: "Deportes" } },
-  ];
-
-  const [showMoreCountries, setShowMoreCountries] = useState(false);
-
   return (
     <>
-      <header className="sticky top-0 z-50 bg-background/92 backdrop-blur-md border-b border-border/40" role="banner">
-        {/* Row 1: Logo + inline filter pills + controls */}
-        <div className="h-10 flex items-center px-3 md:px-5">
-          <div className="w-full max-w-[1440px] mx-auto flex items-center gap-2 min-w-0">
-            {/* Logo */}
-            <Link to="/welcome" className="flex items-center gap-1 shrink-0" aria-label="GTT Monitor">
-              <span className="text-[13px] font-bold tracking-tight text-foreground">GTT</span>
-              <span className="text-[13px] font-medium tracking-tight text-muted-foreground">Monitor</span>
-            </Link>
+      <header className="sticky top-0 z-50 bg-background/95 backdrop-blur-md border-b border-border/30" role="banner">
+        <div className="h-12 flex items-center px-4 md:px-6 max-w-[1440px] mx-auto">
+          {/* Logo */}
+          <Link to="/welcome" className="flex items-center gap-1.5 shrink-0" aria-label="GTT Monitor">
+            <span className="text-[15px] font-bold tracking-tight text-foreground">GTT</span>
+            <span className="text-[15px] font-medium tracking-tight text-muted-foreground">Monitor</span>
+          </Link>
 
-            <div className="w-px h-4 bg-border/50 shrink-0 hidden sm:block" />
+          {/* Center spacer */}
+          <div className="flex-1" />
 
-            {/* Compact search */}
-            {filters && onFilterChange && (
-              <div className="hidden sm:flex items-center relative shrink-0">
-                <Search className="absolute left-2 w-3 h-3 text-muted-foreground pointer-events-none" />
-                <input
-                  type="text"
-                  placeholder={lang === "pt" ? "Buscar..." : lang === "es" ? "Buscar..." : "Search..."}
-                  value={filters.query || ""}
-                  onChange={e => update("query", e.target.value)}
-                  className="h-6 w-28 lg:w-36 pl-6 pr-2 rounded-full border border-border/50 bg-muted/30 text-[10px] text-foreground placeholder:text-muted-foreground outline-none focus:border-primary/40 focus:bg-muted/50 transition-colors"
-                />
-              </div>
+          {/* Right controls */}
+          <div className="flex items-center gap-2">
+            <a href="https://buy.stripe.com/fZu7sMgw6cHLeTnbWVdIA00" target="_blank" rel="noopener noreferrer"
+              className="apoie-pill compact-link hidden sm:flex">{t("support")}</a>
+
+            {user ? (
+              <button onClick={() => navigate("/perfil")}
+                className="compact-btn flex items-center justify-center w-8 h-8 rounded-full hover:ring-2 hover:ring-ring/20 transition-all">
+                <Avatar className="w-6 h-6">
+                  {userAvatar && <AvatarImage src={userAvatar} alt={userName} />}
+                  <AvatarFallback className="text-[9px] font-bold bg-foreground text-background">{userInitial}</AvatarFallback>
+                </Avatar>
+              </button>
+            ) : (
+              <button onClick={() => setLoginOpen(true)}
+                className="compact-btn flex items-center gap-1 h-7 px-3 rounded-full text-[10px] font-semibold bg-foreground text-background hover:bg-foreground/90 transition-colors">
+                <LogIn className="w-3 h-3" />
+                <span className="hidden sm:inline">{t("enter")}</span>
+              </button>
             )}
 
-            <div className="w-px h-4 bg-border/50 shrink-0 hidden sm:block" />
-
-            {/* Country pills */}
-            {filters && onFilterChange && (
-              <div className="hidden md:flex items-center gap-0.5 overflow-x-auto scrollbar-none shrink-0">
-                {QUICK_COUNTRIES.map(c => (
-                  <button key={c.value} onClick={() => update("country", c.value)}
-                    className={`flex items-center gap-1 px-2 py-1 rounded-full text-[10px] font-medium whitespace-nowrap transition-all ${
-                      filters.country === c.value
-                        ? "bg-foreground text-background shadow-sm"
-                        : "text-muted-foreground hover:text-foreground hover:bg-muted/60"
-                    }`}>
-                    <span className="text-[11px]">{c.emoji}</span>
-                    <span>{c.label}</span>
-                  </button>
-                ))}
-                <button onClick={() => setShowMoreCountries(!showMoreCountries)}
-                  className="px-1.5 py-1 rounded-full text-[9px] font-medium text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-colors whitespace-nowrap">
-                  +{countries.flatMap(g => g.items).length - QUICK_COUNTRIES.length}
-                </button>
-              </div>
-            )}
-
-            <div className="w-px h-4 bg-border/50 shrink-0 hidden lg:block" />
-
-            {/* Category pills */}
-            {filters && onFilterChange && (
-              <div className="hidden lg:flex items-center gap-0.5 overflow-x-auto scrollbar-none shrink-0">
-                {QUICK_CATEGORIES.map(c => (
-                  <button key={c.value} onClick={() => update("category", c.value)}
-                    className={`px-2 py-1 rounded-full text-[10px] font-medium whitespace-nowrap transition-all ${
-                      filters.category === c.value
-                        ? "bg-foreground text-background shadow-sm"
-                        : "text-muted-foreground hover:text-foreground hover:bg-muted/60"
-                    }`}>
-                    {c.label[lang as keyof typeof c.label] || c.label.pt}
-                  </button>
-                ))}
-              </div>
-            )}
-
-            <div className="flex-1 min-w-0" />
-
-            {/* Right controls */}
-            <div className="flex items-center gap-1.5 shrink-0">
-              {/* Theme toggle */}
-              <button onClick={() => setDark(!dark)}
-                className="compact-btn flex items-center justify-center w-7 h-7 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted transition-colors">
-                {dark ? <Moon className="w-3.5 h-3.5" /> : <Sun className="w-3.5 h-3.5" />}
-              </button>
-
-              {/* Language selector */}
-              <div className="hidden sm:flex items-center">
-                <select
-                  value={lang}
-                  onChange={e => { setLang(e.target.value as any); window.dispatchEvent(new Event("trend-refresh")); }}
-                  className="h-6 px-1.5 rounded-md bg-transparent border border-border/40 text-[10px] font-medium text-muted-foreground hover:text-foreground cursor-pointer outline-none focus:border-primary/40 transition-colors"
-                >
-                  {Object.entries(languages).map(([code, label]) => (
-                    <option key={code} value={code}>{code.toUpperCase()}</option>
-                  ))}
-                </select>
-              </div>
-
-              <a href="https://buy.stripe.com/fZu7sMgw6cHLeTnbWVdIA00" target="_blank" rel="noopener noreferrer"
-                className="hidden sm:flex apoie-pill compact-link">{t("support")}</a>
-
-              {user ? (
-                <button onClick={() => navigate("/perfil")}
-                  className="compact-btn flex items-center justify-center w-7 h-7 rounded-full hover:ring-2 hover:ring-ring/20 transition-all">
-                  <Avatar className="w-5 h-5">
-                    {userAvatar && <AvatarImage src={userAvatar} alt={userName} />}
-                    <AvatarFallback className="text-[8px] font-bold bg-foreground text-background">{userInitial}</AvatarFallback>
-                  </Avatar>
-                </button>
-              ) : (
-                <button onClick={() => setLoginOpen(true)}
-                  className="compact-btn flex items-center gap-1 h-6 px-2.5 rounded-full text-[10px] font-semibold bg-foreground text-background hover:bg-foreground/90 transition-colors">
-                  <span className="hidden sm:inline">{t("enter")}</span>
-                  <LogIn className="w-3 h-3 sm:hidden" />
-                </button>
-              )}
-
-              {/* Menu drawer */}
-              <button onClick={() => setDrawerOpen(true)}
-                className="compact-btn flex items-center justify-center w-7 h-7 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted transition-colors relative">
-                <Menu className="w-4 h-4" />
-                {hasActiveFilters && <span className="absolute -top-0.5 -right-0.5 w-1.5 h-1.5 rounded-full bg-destructive" />}
-              </button>
-            </div>
-          </div>
-        </div>
-
-        {/* Row 2 (mobile only): country + category pills */}
-        {filters && onFilterChange && (
-          <div className="md:hidden flex items-center gap-1 px-3 pb-1.5 overflow-x-auto scrollbar-none">
-            {QUICK_COUNTRIES.slice(0, 4).map(c => (
-              <button key={c.value} onClick={() => update("country", c.value)}
-                className={`flex items-center gap-0.5 px-2 py-0.5 rounded-full text-[9px] font-medium whitespace-nowrap transition-all shrink-0 ${
-                  filters.country === c.value
-                    ? "bg-foreground text-background"
-                    : "text-muted-foreground hover:bg-muted/60"
-                }`}>
-                <span>{c.emoji}</span> {c.label}
-              </button>
-            ))}
-            <div className="w-px h-3 bg-border/40 shrink-0" />
-            {QUICK_CATEGORIES.slice(0, 4).map(c => (
-              <button key={c.value} onClick={() => update("category", c.value)}
-                className={`px-2 py-0.5 rounded-full text-[9px] font-medium whitespace-nowrap transition-all shrink-0 ${
-                  filters.category === c.value
-                    ? "bg-foreground text-background"
-                    : "text-muted-foreground hover:bg-muted/60"
-                }`}>
-                {c.label[lang as keyof typeof c.label] || c.label.pt}
-              </button>
-            ))}
             <button onClick={() => setDrawerOpen(true)}
-              className="px-1.5 py-0.5 rounded-full text-[9px] text-muted-foreground hover:bg-muted/60 shrink-0">
-              <Filter className="w-3 h-3" />
+              className="compact-btn flex items-center justify-center w-8 h-8 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted transition-colors">
+              <Menu className="w-4.5 h-4.5" />
             </button>
           </div>
-        )}
-
-        {/* Expanded country picker (desktop "+N more" click) */}
-        {showMoreCountries && filters && onFilterChange && (
-          <div className="hidden md:block border-t border-border/30 px-5 py-2 bg-background/95 backdrop-blur-sm">
-            <div className="max-w-[1440px] mx-auto">
-              <div className="flex items-center gap-2 mb-1.5">
-                <input type="text" placeholder={lang === "pt" ? "Buscar país..." : "Search country..."}
-                  value={countrySearch} onChange={e => setCountrySearch(e.target.value)}
-                  className="h-7 px-2.5 rounded-md border border-border bg-card text-[10px] text-foreground placeholder:text-muted-foreground outline-none focus:border-primary/40 w-48" />
-                <button onClick={() => setShowMoreCountries(false)} className="text-muted-foreground hover:text-foreground">
-                  <X className="w-3.5 h-3.5" />
-                </button>
-              </div>
-              <div className="flex flex-wrap gap-0.5 max-h-[120px] overflow-y-auto scrollbar-thin">
-                {filteredCountries.flatMap(g => g.items).map(c => (
-                  <button key={c.value} onClick={() => { update("country", c.value); setShowMoreCountries(false); }}
-                    className={`px-2 py-1 rounded-md text-[10px] font-medium transition-all ${
-                      filters.country === c.value
-                        ? "bg-foreground text-background"
-                        : "text-muted-foreground hover:bg-muted hover:text-foreground"
-                    }`}>
-                    {c.label}
-                  </button>
-                ))}
-              </div>
-            </div>
-          </div>
-        )}
+        </div>
       </header>
 
-      {/* Unified Navigation Drawer */}
+      {/* Drawer — settings, navigation, account */}
       <Sheet open={drawerOpen} onOpenChange={setDrawerOpen}>
         <SheetContent side="right" className="w-[320px] sm:w-[360px] p-0">
           <SheetHeader className="p-4 pb-3 border-b border-border/30">
-            <SheetTitle className="text-[14px] font-bold">
-              {lang === "pt" ? "Filtros & Navegação" : lang === "es" ? "Filtros y Navegación" : "Filters & Navigation"}
-            </SheetTitle>
+            <SheetTitle className="text-[14px] font-bold">{lang === "pt" ? "Menu" : "Menu"}</SheetTitle>
           </SheetHeader>
           <ScrollArea className="h-[calc(100vh-60px)]">
             <div className="p-4 space-y-5">
-              {/* FILTERS SECTION */}
-              {filters && onFilterChange && (
-                <>
-                  {/* Country / Region */}
-                  <div>
-                    <h4 className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground mb-2">
-                      {lang === "pt" ? "País / Região" : lang === "es" ? "País / Región" : "Country / Region"}
-                    </h4>
-                    <input type="text" placeholder={lang === "pt" ? "Buscar país..." : "Search country..."}
-                      value={countrySearch} onChange={(e) => setCountrySearch(e.target.value)}
-                      className="w-full h-8 px-3 rounded-md border border-border bg-card text-[11px] text-foreground placeholder:text-muted-foreground outline-none focus:border-primary/40 mb-2" />
-                    <div className="max-h-[200px] overflow-y-auto space-y-1 scrollbar-thin">
-                      {filteredCountries.map(group => (
-                        <div key={group.group}>
-                          <div className="text-[9px] font-bold text-muted-foreground/50 uppercase tracking-wider px-1 py-1">{group.group}</div>
-                          <div className="grid grid-cols-2 gap-0.5">
-                            {group.items.map(c => (
-                              <button key={c.value} onClick={() => { update("country", c.value); }}
-                                className={`text-left px-2 py-1.5 rounded-md text-[11px] transition-colors ${
-                                  filters.country === c.value ? "bg-foreground text-background font-semibold" : "hover:bg-muted text-foreground"
-                                }`}>
-                                {c.label}
-                              </button>
-                            ))}
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* Categories */}
-                  <div>
-                    <h4 className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground mb-2">
-                      {lang === "pt" ? "Categoria" : "Category"}
-                    </h4>
-                    <div className="flex flex-wrap gap-1">
-                      {CATEGORIES.map(c => (
-                        <button key={c.value} onClick={() => update("category", c.value)}
-                          className={`px-2.5 py-1 rounded-md text-[10px] font-medium transition-all ${
-                            filters.category === c.value ? "bg-foreground text-background" : "bg-muted/50 text-muted-foreground hover:bg-muted hover:text-foreground"
-                          }`}>
-                          {c.label[lang as keyof typeof c.label] || c.label.pt}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* Period */}
-                  <div>
-                    <h4 className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground mb-2">
-                      {lang === "pt" ? "Período" : "Period"}
-                    </h4>
-                    <div className="flex flex-wrap gap-1">
-                      {PERIODS.map(p => (
-                        <button key={p.v} onClick={() => update("period", p.v)}
-                          className={`px-2.5 py-1 rounded-md text-[10px] font-medium transition-all ${
-                            filters.period === p.v ? "bg-foreground text-background" : "bg-muted/50 text-muted-foreground hover:bg-muted hover:text-foreground"
-                          }`}>
-                          {p.l[lang as "pt" | "en"] || p.l.pt}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* Source Type */}
-                  <div>
-                    <h4 className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground mb-2">
-                      {lang === "pt" ? "Tipo de Fonte" : "Source Type"}
-                    </h4>
-                    <div className="flex flex-wrap gap-1">
-                      {SOURCE_TYPES.map(s => (
-                        <button key={s.v} onClick={() => update("type", s.v)}
-                          className={`px-2.5 py-1 rounded-md text-[10px] font-medium transition-all ${
-                            filters.type === s.v ? "bg-foreground text-background" : "bg-muted/50 text-muted-foreground hover:bg-muted hover:text-foreground"
-                          }`}>
-                          {s.l[lang as "pt" | "en"] || s.l.pt}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-
-                  {hasActiveFilters && (
-                    <button onClick={() => { onFilterChange(defaultFilters); onForceReset?.(); }}
-                      className="w-full flex items-center justify-center gap-1.5 py-2 rounded-md border border-destructive/30 text-destructive text-[11px] font-medium hover:bg-destructive/5 transition-colors">
-                      <X className="w-3 h-3" />
-                      {lang === "pt" ? "Limpar todos os filtros" : "Clear all filters"}
-                    </button>
-                  )}
-                </>
-              )}
-
-              {/* SETTINGS */}
-              <div className="border-t border-border/30 pt-4">
+              {/* Settings */}
+              <div>
                 <h4 className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground mb-2">
                   {lang === "pt" ? "Configurações" : "Settings"}
                 </h4>
@@ -460,9 +124,7 @@ const AppHeader = ({ minimal = false, filters, onFilterChange, onForceReset, onS
                     <div className="flex flex-wrap gap-1 mt-1">
                       {languages.slice(0, 6).map(l => (
                         <button key={l.code} onClick={() => { setLang(l.code); window.dispatchEvent(new Event("trend-refresh")); }}
-                          className={`px-2 py-1 rounded text-[10px] font-medium transition-all ${
-                            lang === l.code ? "bg-foreground text-background" : "bg-muted/50 text-muted-foreground hover:bg-muted"
-                          }`}>
+                          className={`px-2 py-1 rounded text-[10px] font-medium transition-all ${lang === l.code ? "bg-foreground text-background" : "bg-muted/50 text-muted-foreground hover:bg-muted"}`}>
                           {l.label}
                         </button>
                       ))}
@@ -471,10 +133,10 @@ const AppHeader = ({ minimal = false, filters, onFilterChange, onForceReset, onS
                 </div>
               </div>
 
-              {/* NAVIGATION */}
+              {/* Navigation */}
               <div className="border-t border-border/30 pt-4">
                 <h4 className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground mb-2">
-                  {lang === "pt" ? "Conta" : "Account"}
+                  {lang === "pt" ? "Navegação" : "Navigation"}
                 </h4>
                 <div className="space-y-0.5">
                   <Link to="/dashboard" onClick={() => setDrawerOpen(false)}
@@ -505,7 +167,7 @@ const AppHeader = ({ minimal = false, filters, onFilterChange, onForceReset, onS
                 </div>
               </div>
 
-              {/* AUTH */}
+              {/* Auth */}
               <div className="border-t border-border/30 pt-4">
                 {user ? (
                   <div className="space-y-2">
