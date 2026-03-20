@@ -1,7 +1,7 @@
-# GlobalTalkTrend: Product Improvement Plan
+# GTT Monitor: Product Improvement Plan
 
 ## Product Vision
-Transform GlobalTalkTrend into a trustworthy, accessible global trend and news awareness timeline. The platform will empower both professionals and general users to break out of algorithmic bubbles by providing clear, cross-referenced, and context-rich intelligence about global events. The experience must be defined by clarity, trust, and exceptional usability.
+Transform GTT Monitor into a trustworthy, accessible global trend and news awareness timeline. The platform will empower both professionals and general users to break out of algorithmic bubbles by providing clear, cross-referenced, and context-rich intelligence about global events. The experience must be defined by clarity, trust, and exceptional usability.
 
 ---
 

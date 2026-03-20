@@ -1,8 +1,8 @@
-# GlobalTalkTrend Interface Stability & Usability Plan
+# GTT Monitor Interface Stability & Usability Plan
 
 ## Product Vision
 
-Transform GlobalTalkTrend into a stable, accessible global awareness platform where any user can understand world events in seconds. The interface must feel calm, predictable, and trustworthy—never chaotic or overwhelming.
+Transform GTT Monitor into a stable, accessible global awareness platform where any user can understand world events in seconds. The interface must feel calm, predictable, and trustworthy—never chaotic or overwhelming.
 
 **Core Principle**: The Timeline is the heart of the platform. Everything else supports it.
 
