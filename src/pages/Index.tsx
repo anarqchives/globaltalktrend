@@ -21,11 +21,12 @@ import { useGamification } from "@/hooks/use-gamification";
 import { useSavedCards } from "@/hooks/use-saved-cards";
 import { useSavedFilters } from "@/hooks/use-saved-filters";
 import { supabase } from "@/integrations/supabase/client";
-import { X, Map, Newspaper, RefreshCw, FileText, LayoutGrid, List } from "lucide-react";
+import { X, Map, Newspaper, RefreshCw, FileText, LayoutGrid, List, Eye, EyeOff } from "lucide-react";
 import ArchiveDrawer from "@/components/ArchiveDrawer";
 import TagLegend from "@/components/TagLegend";
 import { toast } from "@/hooks/use-toast";
 import { useUserActivity } from "@/hooks/use-user-activity";
+import { computePriority, PriorityResult } from "@/lib/priority-engine";
 import {
   ResizablePanelGroup,
   ResizablePanel,
@@ -60,6 +61,29 @@ function getInitialFilters(): FilterState {
   };
 }
 
+/* ─── Watchlist item ─── */
+interface WatchlistItem {
+  title: string;
+  platform: string;
+  category?: string;
+  countryCode?: string;
+  addedAt: number;
+  lastScore?: number;
+  lastVolume?: string;
+  lastChange?: string;
+}
+
+function loadWatchlist(): WatchlistItem[] {
+  try {
+    const raw = localStorage.getItem("gtt_watchlist");
+    return raw ? JSON.parse(raw) : [];
+  } catch { return []; }
+}
+
+function saveWatchlistStorage(items: WatchlistItem[]) {
+  try { localStorage.setItem("gtt_watchlist", JSON.stringify(items)); } catch {}
+}
+
 const Index = () => {
   const { t, lang } = useLanguage();
   const [filters, setFilters] = useState<FilterState>(getInitialFilters);
@@ -68,6 +92,9 @@ const Index = () => {
   const [compactMode, setCompactMode] = useState(false);
   const [gridColumns, setGridColumns] = useState(2);
   const [expandedCardIndex, setExpandedCardIndex] = useState<number | null>(null);
+  const [mapSelectedCountry, setMapSelectedCountry] = useState<string | null>(null);
+  const [watchlist, setWatchlist] = useState<WatchlistItem[]>(loadWatchlist);
+  const [showWatchlist, setShowWatchlist] = useState(false);
   const [panelVisibility, setPanelVisibility] = useState(() => {
     try {
       const saved = localStorage.getItem("map-panel-open");
@@ -113,14 +140,12 @@ const Index = () => {
   const [trendContexts, setTrendContexts] = useState<Record<string, string>>({});
   const { translatedTrends, isTranslating } = useTranslatedTrends(rawFilteredTrends, lang);
 
-  // Responsive grid columns — follows user resize intelligently
+  // Responsive grid columns
   useEffect(() => {
     const el = timelineContainerRef.current;
     if (!el) return;
     const obs = new ResizeObserver((entries) => {
       const w = entries[0]?.contentRect.width || 0;
-      // At narrowest (user compressed), single column stacked cards
-      // At medium, 2 columns; at wide (expanded), 3 columns
       if (w >= 1000) setGridColumns(3);
       else if (w >= 420) setGridColumns(2);
       else setGridColumns(1);
@@ -189,61 +214,76 @@ const Index = () => {
     window.history.replaceState(null, "", newUrl);
   }, [filters]);
 
-  // Relevance scoring + interleaving
+  // ═══ PRIORITY-SCORED TRENDS ═══
+  const priorityScoredTrends = useMemo(() => {
+    // Compute max volume across all filtered trends for normalization
+    let maxVol = 0;
+    for (const t of filteredTrends) {
+      const v = (t.volume || "0").toLowerCase();
+      let num = parseFloat(v.replace(/[^0-9.]/g, "")) || 0;
+      if (v.includes("m")) num *= 1_000_000;
+      else if (v.includes("k")) num *= 1_000;
+      if (num > maxVol) maxVol = num;
+    }
+
+    const scored = filteredTrends.map(t => {
+      const priority = computePriority(t, {
+        multiplatformTitles,
+        maxVolumeInFeed: maxVol,
+        lang,
+      });
+      return { trend: t, priority };
+    });
+
+    // Sort by priority score descending
+    scored.sort((a, b) => b.priority.score - a.priority.score);
+
+    return scored;
+  }, [filteredTrends, multiplatformTitles, lang]);
+
+  // ═══ DIVERSIFIED + MAP-AWARE FEED ═══
   const diversifiedTrends = useMemo(() => {
+    let items = priorityScoredTrends;
+
+    // If a country is selected from map, boost those items to top
+    if (mapSelectedCountry && mapSelectedCountry !== "global") {
+      const cc = mapSelectedCountry.toUpperCase();
+      const matching = items.filter(s => s.trend.countryCode?.toUpperCase() === cc);
+      const others = items.filter(s => s.trend.countryCode?.toUpperCase() !== cc);
+      items = [...matching, ...others];
+    }
+
+    // Interleave Google Trends every 5th position
     const isGT = (t: TrendCardProps) => t.platform?.toLowerCase().includes("google trends");
-    const now = Date.now();
-    const ONE_HOUR = 3600000;
-    const getAge = (t: TrendCardProps): number => {
-      if (t.publishedAt) return (now - new Date(t.publishedAt).getTime()) / ONE_HOUR;
-      if (t.firstSeenAt) return (now - new Date(t.firstSeenAt).getTime()) / ONE_HOUR;
-      return 12;
-    };
-    const PRESS_PLATFORMS = ["guardian", "newsapi", "newsdata", "gnews", "bing news", "bbc", "reuters", "thenewsapi", "the guardian"];
-    const isVerifiedPress = (t: TrendCardProps): boolean => {
-      const p = t.platform?.toLowerCase() || "";
-      return PRESS_PLATFORMS.some(pp => p.includes(pp));
-    };
-    const getScore = (t: TrendCardProps): number => {
-      const volStr = (t.volume || "0").toLowerCase();
-      let vol = parseFloat(volStr.replace(/[^0-9.]/g, "")) || 0;
-      if (volStr.includes("m")) vol *= 1_000_000;
-      else if (volStr.includes("k")) vol *= 1_000;
-      const volNorm = Math.min(vol / 10000, 100);
-      const ch = Math.abs(parseFloat(t.change?.replace(/[^0-9.\-]/g, "") || "0"));
-      const growthNorm = Math.min(ch, 100);
-      const normalizedKey = t.title.toLowerCase().normalize("NFD").replace(/\p{Diacritic}/gu, "").replace(/[^a-z0-9\s]/g, "").trim().slice(0, 50);
-      const isMulti = multiplatformTitles.has(normalizedKey);
-      if (vol === 0 && ch === 0) return -1000;
-      const pressBonus = isVerifiedPress(t) ? 120 : 0;
-      return (volNorm * 0.3) + (growthNorm * 0.4) + (isMulti ? 150 : 0) + pressBonus + ((t.sources?.length || 1) * 10) - (getAge(t) * 10);
-    };
-    const scored = filteredTrends.map(t => ({ t, score: getScore(t) })).filter(s => s.score > -500);
-    scored.sort((a, b) => b.score - a.score);
-    const nonGT = scored.filter(s => !isGT(s.t)).map(s => s.t);
-    const gt = scored.filter(s => isGT(s.t)).map(s => s.t);
-    const result: TrendCardProps[] = [];
+    const nonGT = items.filter(s => !isGT(s.trend));
+    const gt = items.filter(s => isGT(s.trend));
+    const result: typeof items = [];
     let gtIdx = 0, nonGTCount = 0;
-    for (const t of nonGT) {
-      result.push(t);
+    for (const s of nonGT) {
+      result.push(s);
       nonGTCount++;
-      if (nonGTCount % 4 === 0 && gtIdx < gt.length) result.push(gt[gtIdx++]);
+      if (nonGTCount % 5 === 0 && gtIdx < gt.length) result.push(gt[gtIdx++]);
     }
     while (gtIdx < gt.length) result.push(gt[gtIdx++]);
+
     return result;
-  }, [filteredTrends, multiplatformTitles]);
+  }, [priorityScoredTrends, mapSelectedCountry]);
 
   // Virtualizer
   const rowCount = useMemo(() => Math.ceil(diversifiedTrends.length / gridColumns), [diversifiedTrends.length, gridColumns]);
   const rowVirtualizer = useVirtualizer({
     count: rowCount,
     getScrollElement: () => scrollRef.current,
-    estimateSize: () => compactMode ? 100 : 220,
+    estimateSize: () => compactMode ? 100 : 260,
     overscan: 4,
   });
 
+  // ═══ MAP → FEED CONNECTION ═══
   const handleMapClick = useCallback((code: string) => {
+    setMapSelectedCountry(code === "global" ? null : code);
     setFilters((f) => ({ ...f, country: code }));
+    // Scroll to top when map selection changes
+    scrollRef.current?.scrollTo({ top: 0, behavior: "smooth" });
   }, []);
 
   const [refreshing, setRefreshing] = useState(false);
@@ -273,25 +313,75 @@ const Index = () => {
 
   const handleFilterChange = useCallback((newFilters: FilterState) => {
     setFilters(newFilters);
+    // Clear map selection if country filter changes
+    if (newFilters.country === "global") setMapSelectedCountry(null);
   }, []);
 
   // Card click → toggle inline expansion
   const handleCardClick = useCallback((index: number) => {
     setExpandedCardIndex(prev => prev === index ? null : index);
-    const trend = diversifiedTrends[index];
-    if (trend) trackView(trend.title, trend.platform, { volume: trend.volume, category: trend.category, countryCode: trend.countryCode });
+    const item = diversifiedTrends[index];
+    if (item) trackView(item.trend.title, item.trend.platform, { volume: item.trend.volume, category: item.trend.category, countryCode: item.trend.countryCode });
   }, [diversifiedTrends, trackView]);
 
   const handleSelectTrend = useCallback((trend: TrendCardProps) => {
-    const idx = diversifiedTrends.findIndex(t => t.platform === trend.platform && t.title === trend.title);
+    const idx = diversifiedTrends.findIndex(s => s.trend.platform === trend.platform && s.trend.title === trend.title);
     if (idx >= 0) setExpandedCardIndex(prev => prev === idx ? null : idx);
   }, [diversifiedTrends]);
 
   const expandedTrendCountry = useMemo(() => {
     if (expandedCardIndex === null) return null;
-    const trend = diversifiedTrends[expandedCardIndex];
-    return trend?.countryCode?.slice(0, 2).toUpperCase() || null;
+    const item = diversifiedTrends[expandedCardIndex];
+    return item?.trend.countryCode?.slice(0, 2).toUpperCase() || null;
   }, [expandedCardIndex, diversifiedTrends]);
+
+  // ═══ WATCHLIST ═══
+  const addToWatchlist = useCallback((card: any) => {
+    setWatchlist(prev => {
+      const exists = prev.find(w => w.title === card.title && w.platform === card.platform);
+      if (exists) {
+        toast({ title: lang === "pt" ? "Já monitorado" : "Already watched", description: card.title.slice(0, 50) });
+        return prev;
+      }
+      const item: WatchlistItem = {
+        title: card.title, platform: card.platform, category: card.category,
+        countryCode: card.countryCode, addedAt: Date.now(),
+        lastScore: undefined, lastVolume: card.volume, lastChange: card.change,
+      };
+      const next = [item, ...prev].slice(0, 50);
+      saveWatchlistStorage(next);
+      toast({ title: lang === "pt" ? "👁 Monitorando" : "👁 Watching", description: card.title.slice(0, 50) });
+      return next;
+    });
+  }, [lang]);
+
+  const removeFromWatchlist = useCallback((title: string, platform: string) => {
+    setWatchlist(prev => {
+      const next = prev.filter(w => !(w.title === title && w.platform === platform));
+      saveWatchlistStorage(next);
+      return next;
+    });
+  }, []);
+
+  // Update watchlist with current scores
+  const watchlistWithUpdates = useMemo(() => {
+    return watchlist.map(w => {
+      const currentTrend = diversifiedTrends.find(s => s.trend.title === w.title || s.trend.platform === w.platform && s.trend.title.includes(w.title.slice(0, 20)));
+      if (currentTrend) {
+        const scoreDelta = w.lastScore !== undefined ? currentTrend.priority.score - w.lastScore : undefined;
+        return {
+          ...w,
+          currentScore: currentTrend.priority.score,
+          currentVolume: currentTrend.trend.volume,
+          currentChange: currentTrend.trend.change,
+          scoreDelta,
+          lifecycle: currentTrend.priority.lifecycle,
+          isActive: true,
+        };
+      }
+      return { ...w, isActive: false, currentScore: undefined, scoreDelta: undefined, lifecycle: undefined };
+    });
+  }, [watchlist, diversifiedTrends]);
 
   // Resilient fallback
   useEffect(() => {
@@ -309,10 +399,25 @@ const Index = () => {
     }
   }, [loading, isFirstLoad, filteredTrends.length, filters.period, lang]);
 
+  // ═══ MAP SELECTION INDICATOR ═══
+  const mapSelectionLabel = useMemo(() => {
+    if (!mapSelectedCountry) return null;
+    const countryNames: Record<string, string> = {
+      BR: "Brasil", US: "EUA", GB: "Reino Unido", FR: "França", DE: "Alemanha",
+      JP: "Japão", KR: "Coreia do Sul", IN: "Índia", CN: "China", CA: "Canadá",
+      MX: "México", AR: "Argentina", AU: "Austrália", IT: "Itália", ES: "Espanha",
+      PT: "Portugal", RU: "Rússia", ZA: "África do Sul", NG: "Nigéria", EG: "Egito",
+    };
+    const cc = mapSelectedCountry.toUpperCase();
+    const name = countryNames[cc] || cc;
+    const flag = String.fromCodePoint(...[...cc].map(c => 0x1F1E6 + c.charCodeAt(0) - 65));
+    const count = diversifiedTrends.filter(s => s.trend.countryCode?.toUpperCase() === cc).length;
+    return { flag, name, count };
+  }, [mapSelectedCountry, diversifiedTrends]);
+
   const renderTimeline = () => (
     <div ref={timelineContainerRef} className="h-full flex flex-col min-h-0">
       <div ref={scrollRef} className="flex-1 overflow-y-auto overflow-x-hidden" style={{ scrollbarWidth: "thin", scrollbarColor: "hsl(var(--border)) transparent", WebkitOverflowScrolling: "touch" }}>
-        
 
         {/* Timeline header */}
         <div className="px-2 sm:px-3 py-1.5 sm:py-2 flex items-center justify-between sticky top-0 z-10 bg-background/80 backdrop-blur-sm border-b border-border">
@@ -322,6 +427,15 @@ const Index = () => {
             <span className="text-[9px] text-muted-foreground/40">({diversifiedTrends.length})</span>
           </div>
           <div className="flex items-center gap-1">
+            {/* Watchlist toggle */}
+            <button 
+              onClick={() => setShowWatchlist(v => !v)}
+              className={`flex items-center gap-1 px-2 py-1 rounded-lg text-[9px] transition-colors touch-manipulation ${showWatchlist ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:bg-muted"}`}
+              title={lang === "pt" ? "Watchlist" : "Watchlist"}
+            >
+              <Eye className="w-3 h-3" />
+              {watchlist.length > 0 && <span className="tabular-nums">{watchlist.length}</span>}
+            </button>
             {updatePending && (
               <button onClick={handleRefresh} className="flex items-center gap-1 px-2 py-1 rounded-lg text-[9px] text-muted-foreground hover:bg-muted transition-colors touch-manipulation">
                 <RefreshCw className={`w-3 h-3 ${refreshing ? "animate-spin" : ""}`} />
@@ -330,18 +444,12 @@ const Index = () => {
             )}
             <TagLegend />
             <div className="flex items-center overflow-hidden rounded-[10px] border border-border">
-              <button
-                onClick={() => setCompactMode(false)}
-                title={lang === "pt" ? "Expandido" : "Expanded"}
-                className={`flex items-center justify-center w-7 h-[26px] transition-all touch-manipulation ${!compactMode ? "bg-primary text-primary-foreground" : "bg-card text-muted-foreground hover:bg-muted"}`}
-              >
+              <button onClick={() => setCompactMode(false)} title={lang === "pt" ? "Expandido" : "Expanded"}
+                className={`flex items-center justify-center w-7 h-[26px] transition-all touch-manipulation ${!compactMode ? "bg-primary text-primary-foreground" : "bg-card text-muted-foreground hover:bg-muted"}`}>
                 <LayoutGrid size={12} />
               </button>
-              <button
-                onClick={() => setCompactMode(true)}
-                title={lang === "pt" ? "Comprimido" : "Compressed"}
-                className={`flex items-center justify-center w-7 h-[26px] transition-all touch-manipulation ${compactMode ? "bg-primary text-primary-foreground" : "bg-card text-muted-foreground hover:bg-muted"}`}
-              >
+              <button onClick={() => setCompactMode(true)} title={lang === "pt" ? "Comprimido" : "Compressed"}
+                className={`flex items-center justify-center w-7 h-[26px] transition-all touch-manipulation ${compactMode ? "bg-primary text-primary-foreground" : "bg-card text-muted-foreground hover:bg-muted"}`}>
                 <List size={12} />
               </button>
             </div>
@@ -352,6 +460,75 @@ const Index = () => {
             )}
           </div>
         </div>
+
+        {/* ═══ MAP SELECTION BANNER ═══ */}
+        {mapSelectionLabel && (
+          <div className="mx-2 sm:mx-3 mt-2 flex items-center gap-2 px-3 py-2 rounded-lg bg-[hsl(var(--map-selection-bg))] border border-[hsl(var(--map-selection-border)/0.2)]">
+            <span className="text-sm">{mapSelectionLabel.flag}</span>
+            <div className="flex-1 min-w-0">
+              <span className="text-[10px] font-semibold text-foreground">{mapSelectionLabel.name}</span>
+              <span className="text-[9px] text-muted-foreground ml-1.5">{mapSelectionLabel.count} {lang === "pt" ? "sinais" : "signals"}</span>
+            </div>
+            <button onClick={() => { setMapSelectedCountry(null); setFilters(f => ({ ...f, country: "global" })); }}
+              className="text-[9px] font-medium text-muted-foreground hover:text-foreground px-2 py-1 rounded-md hover:bg-muted transition-colors">
+              ✕ {lang === "pt" ? "Limpar" : "Clear"}
+            </button>
+          </div>
+        )}
+
+        {/* ═══ WATCHLIST PANEL ═══ */}
+        {showWatchlist && watchlist.length > 0 && (
+          <div className="mx-2 sm:mx-3 mt-2 rounded-lg border border-border bg-card p-2 space-y-1">
+            <div className="flex items-center justify-between px-1 mb-1">
+              <span className="text-[9px] font-semibold uppercase tracking-wider text-muted-foreground">
+                {lang === "pt" ? "Monitorando" : "Watching"}
+              </span>
+              <span className="text-[8px] text-muted-foreground/50">{watchlist.length} {lang === "pt" ? "itens" : "items"}</span>
+            </div>
+            {watchlistWithUpdates.slice(0, 8).map((w, i) => (
+              <div key={`${w.title}-${i}`} className="flex items-center gap-2 px-2 py-1.5 rounded-md hover:bg-muted/50 transition-colors group">
+                <div className="flex-1 min-w-0">
+                  <div className="text-[10px] font-medium text-foreground truncate">{w.title.slice(0, 50)}</div>
+                  <div className="flex items-center gap-1.5 text-[8px] text-muted-foreground">
+                    <span className="uppercase">{w.platform}</span>
+                    {w.isActive && w.currentScore !== undefined && (
+                      <span className="font-bold tabular-nums" style={{
+                        color: w.currentScore >= 75 ? "hsl(var(--priority-critical))" 
+                          : w.currentScore >= 50 ? "hsl(var(--priority-high))" 
+                          : "hsl(var(--priority-medium))"
+                      }}>
+                        {w.currentScore}
+                      </span>
+                    )}
+                    {w.scoreDelta !== undefined && w.scoreDelta !== 0 && (
+                      <span className={w.scoreDelta > 0 ? "text-[hsl(var(--success-fg))] font-bold" : "text-destructive font-bold"}>
+                        {w.scoreDelta > 0 ? "↗" : "↘"}{Math.abs(w.scoreDelta)}
+                      </span>
+                    )}
+                    {w.lifecycle && (
+                      <span className="text-[7px] uppercase">{w.lifecycle}</span>
+                    )}
+                    {!w.isActive && (
+                      <span className="text-[7px] italic text-warning-fg">{lang === "pt" ? "sem atualização" : "no update"}</span>
+                    )}
+                  </div>
+                </div>
+                <button onClick={() => removeFromWatchlist(w.title, w.platform)}
+                  className="opacity-0 group-hover:opacity-100 p-1 text-muted-foreground hover:text-destructive transition-all">
+                  <EyeOff className="w-3 h-3" />
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
+        {showWatchlist && watchlist.length === 0 && (
+          <div className="mx-2 sm:mx-3 mt-2 rounded-lg border border-border/50 bg-card p-4 text-center">
+            <Eye className="w-5 h-5 text-muted-foreground/30 mx-auto mb-1" />
+            <p className="text-[10px] text-muted-foreground">
+              {lang === "pt" ? "Clique no ícone 👁 em qualquer card para monitorar" : "Click the 👁 icon on any card to start watching"}
+            </p>
+          </div>
+        )}
 
         {/* Virtualized grid */}
         {(loading && isFirstLoad && diversifiedTrends.length === 0)
@@ -367,19 +544,24 @@ const Index = () => {
                   >
                     {Array.from({ length: gridColumns }).map((_, colIdx) => {
                       const trendIdx = startIdx + colIdx;
-                      const trend = diversifiedTrends[trendIdx];
-                      if (!trend) return <div key={colIdx} />;
+                      const item = diversifiedTrends[trendIdx];
+                      if (!item) return <div key={colIdx} />;
+                      const { trend, priority } = item;
                       const originalTitle = (trend as any)._originalTitle || trend.title;
                       const normalizedKey = originalTitle.toLowerCase().normalize("NFD").replace(/\p{Diacritic}/gu, "").replace(/[^a-z0-9\s]/g, "").trim().slice(0, 50);
                       const isMulti = multiplatformTitles.has(normalizedKey);
                       const aiContext = trendContexts[trend.title] || trendContexts[(trend as any)._originalTitle];
+                      const isMapMatch = mapSelectedCountry ? trend.countryCode?.toUpperCase() === mapSelectedCountry.toUpperCase() : false;
                       return (
                         <TimelineCard key={trendIdx} {...trend} compact={compactMode}
                           staggerIndex={trendIdx < 10 ? trendIdx : 0}
                           isMultiplatform={isMulti}
                           isSelected={expandedCardIndex === trendIdx}
                           aiContext={aiContext}
+                          priority={priority}
+                          mapSelected={isMapMatch && !!mapSelectedCountry}
                           onSaveCard={saveCard}
+                          onAddToWatchlist={addToWatchlist}
                           onClick={() => handleCardClick(trendIdx)}
                           onFilterPlatform={(p) => {
                             const map: Record<string, string> = {
@@ -403,7 +585,7 @@ const Index = () => {
           <div className="flex flex-col items-center justify-center py-12 px-4 text-center gap-2">
             <span className="text-3xl">🔍</span>
             <p className="text-[10px] font-medium text-foreground">{t("noTrends")}</p>
-            <button onClick={() => setFilters(defaultFilters)} className="mt-2 px-3 py-1 rounded-full bg-primary text-primary-foreground text-[9px] font-medium hover:bg-primary/90 transition-colors touch-manipulation">
+            <button onClick={() => { setFilters(defaultFilters); setMapSelectedCountry(null); }} className="mt-2 px-3 py-1 rounded-full bg-primary text-primary-foreground text-[9px] font-medium hover:bg-primary/90 transition-colors touch-manipulation">
               {lang === "pt" ? "Limpar filtros" : "Clear filters"}
             </button>
           </div>
@@ -443,7 +625,7 @@ const Index = () => {
   return (
     <div className="h-screen flex flex-col bg-background overflow-hidden w-full max-w-[100vw]">
       <AppHeader />
-      <FilterBlock filters={filters} onChange={handleFilterChange} onReset={() => setFilters(defaultFilters)} onSaveFilter={user ? () => {
+      <FilterBlock filters={filters} onChange={handleFilterChange} onReset={() => { setFilters(defaultFilters); setMapSelectedCountry(null); }} onSaveFilter={user ? () => {
         const name = prompt(lang === "pt" ? "Nome do filtro:" : "Filter name:");
         if (name) saveFilter(name, filters);
       } : undefined} />

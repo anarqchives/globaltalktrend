@@ -1,11 +1,12 @@
 import React, { useMemo, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Bookmark, ExternalLink, Share2, ChevronDown, Globe } from "lucide-react";
+import { Bookmark, ExternalLink, Share2, ChevronDown, Globe, Eye, ShieldCheck, TrendingUp, Activity } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { TrendCardProps } from "./TrendCard";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { AreaChart, Area, BarChart, Bar, ResponsiveContainer, XAxis, YAxis, Tooltip as RTooltip } from "recharts";
 import { toast } from "@/hooks/use-toast";
+import { PriorityResult, LIFECYCLE_LABELS } from "@/lib/priority-engine";
 
 /* ─── Source classification ─── */
 const SOURCE_TYPE_MAP: Record<string, string> = {
@@ -32,26 +33,22 @@ function getSourceType(platform: string): string {
   return "imprensa";
 }
 
-/* Vibrant, differentiated colors per source type for charts */
 const SOURCE_HEX: Record<string, string> = {
-  imprensa: "#2563EB",       // vivid blue
-  redes_sociais: "#F97316",  // vibrant orange
-  google_trends: "#FACC15",  // bright yellow
-  dados_oficiais: "#10B981", // emerald green
-  cientifico: "#8B5CF6",     // vivid purple
-  enciclopedico: "#06B6D4",  // cyan
+  imprensa: "#2563EB", redes_sociais: "#F97316", google_trends: "#FACC15",
+  dados_oficiais: "#10B981", cientifico: "#8B5CF6", enciclopedico: "#06B6D4",
 };
 
-const SOURCE_BADGES: Record<string, { label: Record<string, string>; icon: string; css: string; explanation: Record<string, string> }> = {
-  imprensa: { label: { pt: "Imprensa", en: "Press" }, icon: "✓", css: "bg-[hsl(var(--source-press)/0.1)] text-[hsl(var(--source-press))]", explanation: { pt: "Veículos de imprensa profissional com equipe editorial", en: "Professional press outlets with editorial teams" } },
-  dados_oficiais: { label: { pt: "Oficial", en: "Official" }, icon: "◆", css: "bg-[hsl(var(--source-official)/0.1)] text-[hsl(var(--source-official))]", explanation: { pt: "Instituições governamentais e organismos internacionais", en: "Government institutions and international organizations" } },
-  cientifico: { label: { pt: "Acadêmico", en: "Academic" }, icon: "◈", css: "bg-[hsl(var(--source-academic)/0.1)] text-[hsl(var(--source-academic))]", explanation: { pt: "Publicações científicas revisadas por pares", en: "Peer-reviewed scientific publications" } },
-  enciclopedico: { label: { pt: "Enciclopédico", en: "Encyclopedic" }, icon: "◎", css: "bg-[hsl(var(--source-encyclopedic)/0.1)] text-[hsl(var(--source-encyclopedic))]", explanation: { pt: "Plataformas de conhecimento colaborativo", en: "Collaborative knowledge platforms" } },
-  redes_sociais: { label: { pt: "Social", en: "Social" }, icon: "◉", css: "bg-[hsl(var(--source-social)/0.1)] text-[hsl(var(--source-social))]", explanation: { pt: "Redes sociais e comunidades online", en: "Social networks and online communities" } },
-  google_trends: { label: { pt: "Buscas", en: "Searches" }, icon: "◉", css: "bg-[hsl(var(--source-search)/0.1)] text-[hsl(var(--source-search))]", explanation: { pt: "Dados de volume de buscas em mecanismos de pesquisa", en: "Search engine volume data" } },
+/* ─── 4-dimension badge system ─── */
+// Dimension 1: ORIGIN (where it comes from)
+const ORIGIN_BADGES: Record<string, { label: Record<string, string>; icon: string; css: string }> = {
+  imprensa: { label: { pt: "Imprensa", en: "Press" }, icon: "✓", css: "bg-[hsl(var(--source-press)/0.1)] text-[hsl(var(--source-press))]" },
+  dados_oficiais: { label: { pt: "Oficial", en: "Official" }, icon: "◆", css: "bg-[hsl(var(--source-official)/0.1)] text-[hsl(var(--source-official))]" },
+  cientifico: { label: { pt: "Acadêmico", en: "Academic" }, icon: "◈", css: "bg-[hsl(var(--source-academic)/0.1)] text-[hsl(var(--source-academic))]" },
+  enciclopedico: { label: { pt: "Enciclopédico", en: "Encyclopedic" }, icon: "◎", css: "bg-[hsl(var(--source-encyclopedic)/0.1)] text-[hsl(var(--source-encyclopedic))]" },
+  redes_sociais: { label: { pt: "Social", en: "Social" }, icon: "◉", css: "bg-[hsl(var(--source-social)/0.1)] text-[hsl(var(--source-social))]" },
+  google_trends: { label: { pt: "Buscas", en: "Searches" }, icon: "◉", css: "bg-[hsl(var(--source-search)/0.1)] text-[hsl(var(--source-search))]" },
 };
 
-/* ─── Term explanations ─── */
 const TERM_EXPLANATIONS: Record<string, Record<string, string>> = {
   pt: {
     "CPIAUCSL": "CPI = Índice de Preços ao Consumidor dos EUA", "PMID": "PMID = identificador de artigo no PubMed",
@@ -149,7 +146,6 @@ const SparklineSVG = React.memo(({ data, color }: { data: number[]; color: strin
 });
 SparklineSVG.displayName = "SparklineSVG";
 
-/* ─── Mini Bar Chart ─── */
 const MiniBars = React.memo(({ data, color }: { data: number[]; color: string }) => {
   const max = Math.max(...data, 1);
   return (
@@ -166,7 +162,6 @@ const MiniBars = React.memo(({ data, color }: { data: number[]; color: string })
 });
 MiniBars.displayName = "MiniBars";
 
-/* ─── Momentum sparkline (thicker, with area fill) ─── */
 const MomentumLine = React.memo(({ data, color }: { data: number[]; color: string }) => {
   const id = useMemo(() => `mom_${Math.random().toString(36).slice(2, 7)}`, []);
   const { pathD, areaD } = useMemo(() => {
@@ -197,7 +192,6 @@ const MomentumLine = React.memo(({ data, color }: { data: number[]; color: strin
 });
 MomentumLine.displayName = "MomentumLine";
 
-/* ─── Segmented mini bars (composition/comparison) ─── */
 const SegmentBars = React.memo(({ data, color }: { data: number[]; color: string }) => {
   const total = data.reduce((a, b) => a + b, 0) || 1;
   return (
@@ -217,23 +211,88 @@ export const cardVariants = {
   show: { opacity: 1, y: 0, transition: { duration: 0.3, ease: [0.21, 0.47, 0.32, 0.98] as [number, number, number, number] } },
 };
 
+/* ─── Priority Score Bar ─── */
+const TIER_COLORS: Record<string, string> = {
+  critical: "hsl(var(--priority-critical))",
+  high: "hsl(var(--priority-high))",
+  medium: "hsl(var(--priority-medium))",
+  low: "hsl(var(--priority-low))",
+};
+
+const PriorityBar = React.memo(({ priority, lang }: { priority: PriorityResult; lang: string }) => {
+  const color = TIER_COLORS[priority.tier] || TIER_COLORS.low;
+  const lc = LIFECYCLE_LABELS[priority.lifecycle];
+  const lifecycleLabel = lc[lang as "pt" | "en"] || lc.en;
+  
+  return (
+    <div className="flex items-center gap-2 mb-1.5">
+      {/* Score number */}
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <div className="flex items-center gap-1 cursor-help flex-shrink-0">
+            <span className="text-[11px] font-black tabular-nums" style={{ color }}>{priority.score}</span>
+            <div className="w-[32px] h-[3px] rounded-full bg-muted/40 overflow-hidden">
+              <motion.div
+                className="h-full rounded-full"
+                style={{ backgroundColor: color }}
+                initial={{ width: 0 }}
+                animate={{ width: `${priority.score}%` }}
+                transition={{ duration: 0.5, ease: "easeOut" }}
+              />
+            </div>
+          </div>
+        </TooltipTrigger>
+        <TooltipContent side="top" className="max-w-[220px] text-[10px]">
+          {lang === "pt" ? "Score de prioridade: volume + crescimento + confiança + frescor" : "Priority score: volume + growth + confidence + freshness"}
+        </TooltipContent>
+      </Tooltip>
+
+      {/* Lifecycle badge */}
+      <span className="text-[8px] font-semibold px-1.5 py-0.5 rounded-md"
+        style={{ 
+          backgroundColor: `hsl(var(--lifecycle-${priority.lifecycle}) / 0.1)`,
+          color: `hsl(var(--lifecycle-${priority.lifecycle}))`,
+        }}>
+        {lc.icon} {lifecycleLabel}
+      </span>
+
+      {/* Confidence dot */}
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <div className="flex items-center gap-0.5 cursor-help">
+            <ShieldCheck className="w-2.5 h-2.5" style={{ color: priority.confidence > 0.7 ? "hsl(var(--success-fg))" : priority.confidence > 0.4 ? "hsl(var(--warning-fg))" : "hsl(var(--destructive))" }} />
+            <span className="text-[8px] tabular-nums text-muted-foreground">{Math.round(priority.confidence * 100)}%</span>
+          </div>
+        </TooltipTrigger>
+        <TooltipContent side="top" className="text-[10px]">
+          {lang === "pt" ? "Nível de confiança baseado na qualidade e quantidade de fontes" : "Confidence level based on source quality and quantity"}
+        </TooltipContent>
+      </Tooltip>
+    </div>
+  );
+});
+PriorityBar.displayName = "PriorityBar";
+
 export interface TimelineCardProps extends TrendCardProps {
   onClick?: () => void;
   onFilterPlatform?: (platform: string) => void;
   onSaveCard?: (card: any) => void;
+  onAddToWatchlist?: (card: any) => void;
   staggerIndex?: number;
   compact?: boolean;
   isSelected?: boolean;
   isMultiplatform?: boolean;
   aiContext?: string;
+  priority?: PriorityResult;
+  mapSelected?: boolean; // true when this card matches a map selection
 }
 
 const TimelineCard = ({
   platform, title, category, time, volume, change, changePositive,
   historicalData, countryCode, sources, sourceUrl, trustBadge, thumbnail,
   publishedAt, description, details, translated, isMultiplatform, sparkData: rawSparkData,
-  aiContext,
-  onClick, onFilterPlatform, onSaveCard,
+  aiContext, priority, mapSelected,
+  onClick, onFilterPlatform, onSaveCard, onAddToWatchlist,
   staggerIndex = 0, compact = false, isSelected = false,
 }: TimelineCardProps) => {
   const { lang } = useLanguage();
@@ -242,7 +301,7 @@ const TimelineCard = ({
   const sourceType = getSourceType(platform);
   const sparkHex = SOURCE_HEX[sourceType] || "#6B6560";
   const flag = countryCodeToFlag(countryCode);
-  const badge = SOURCE_BADGES[sourceType];
+  const originBadge = ORIGIN_BADGES[sourceType];
 
   const formattedTime = useMemo(() => {
     if (!publishedAt) {
@@ -271,22 +330,6 @@ const TimelineCard = ({
     } catch { return time; }
   }, [publishedAt, time, lang]);
 
-  const tags = useMemo(() => {
-    const result: { label: string; css: string }[] = [];
-    if (trustBadge === "verified" || trustBadge === "press") {
-      result.push({ label: "✓ " + (lang === "pt" ? "Verificado" : "Verified"), css: "bg-[hsl(var(--source-press)/0.1)] text-[hsl(var(--source-press))]" });
-    } else if (trustBadge === "scientific") {
-      result.push({ label: "🔬 " + (lang === "pt" ? "Científico" : "Scientific"), css: "bg-[hsl(var(--source-academic)/0.1)] text-[hsl(var(--source-academic))]" });
-    } else if (trustBadge === "official") {
-      result.push({ label: "◆ " + (lang === "pt" ? "Oficial" : "Official"), css: "bg-[hsl(var(--source-official)/0.1)] text-[hsl(var(--source-official))]" });
-    }
-    const ch = Math.abs(parseFloat(change?.replace(/[^0-9.\-]/g, "") || "0"));
-    if (ch > 200) result.push({ label: "+trending", css: "bg-[hsl(var(--accent-coral)/0.1)] text-[hsl(var(--accent-coral))]" });
-    else if (changePositive && ch > 50) result.push({ label: "+popular", css: "bg-[hsl(var(--source-search)/0.1)] text-[hsl(var(--source-search))]" });
-    if (isMultiplatform) result.push({ label: "🌐 Multi", css: "bg-[hsl(var(--source-official)/0.1)] text-[hsl(var(--source-official))]" });
-    return result;
-  }, [trustBadge, change, changePositive, isMultiplatform, lang]);
-
   const sparkData = useMemo(() => {
     if (historicalData && historicalData.length >= 2) return historicalData.slice(-12).map(d => d.value);
     if (rawSparkData && rawSparkData.length >= 2) return rawSparkData.slice(-12);
@@ -302,7 +345,6 @@ const TimelineCard = ({
   const showChange = changeNum > 0;
 
   const contextSnippet = useMemo(() => {
-    // Prefer AI-generated context
     if (aiContext) return aiContext.slice(0, 200);
     const raw = description || details || "";
     const normTitle = title.toLowerCase().trim();
@@ -328,13 +370,8 @@ const TimelineCard = ({
     toast({ title: lang === "pt" ? "Link copiado!" : "Link copied!", description: title.slice(0, 60) });
   };
 
-  const handleCardClick = (e: React.MouseEvent) => {
-    // If compact mode, use the parent onClick. Otherwise toggle inline expansion.
-    if (compact) {
-      onClick?.();
-    } else {
-      setExpanded(prev => !prev);
-    }
+  const handleCardClick = () => {
+    if (compact) { onClick?.(); } else { setExpanded(prev => !prev); }
   };
 
   const renderSmartChart = () => {
@@ -347,24 +384,45 @@ const TimelineCard = ({
     }
   };
 
+  const tierBorderColor = priority ? TIER_COLORS[priority.tier] : undefined;
+
   return (
     <motion.div
       variants={cardVariants}
       layout
-      whileHover={{ y: -3, scale: 1.008, transition: { duration: 0.25, ease: [0.21, 0.47, 0.32, 0.98] } }}
-      whileTap={{ scale: 0.97 }}
+      whileHover={{ y: -2, transition: { duration: 0.2, ease: [0.21, 0.47, 0.32, 0.98] } }}
+      whileTap={{ scale: 0.98 }}
       className={`bg-card rounded-lg border cursor-pointer w-full relative overflow-hidden
         transition-shadow duration-200 ease-[cubic-bezier(0.21,0.47,0.32,0.98)]
+        ${mapSelected ? "ring-2 ring-[hsl(var(--map-selection-border))] bg-[hsl(var(--map-selection-bg))]" : ""}
         ${isSelected
           ? "border-l-[3px] shadow-[var(--shadow-md)]" : "border-border/25 shadow-[var(--shadow-xs)] hover:shadow-[var(--shadow-md)]"}`}
-      style={{ padding: compact ? "8px 10px" : "10px 12px" }}
+      style={{ 
+        padding: compact ? "8px 10px" : "10px 12px",
+        borderLeftColor: !isSelected && tierBorderColor ? tierBorderColor : undefined,
+        borderLeftWidth: !isSelected && tierBorderColor ? "3px" : undefined,
+      }}
       onClick={handleCardClick}
     >
-      {/* Accent line */}
-      <div className="absolute top-0 left-0 right-0 h-[2px]" style={{ background: sparkHex }} />
+      {/* Accent line — colored by priority tier */}
+      <div className="absolute top-0 left-0 right-0 h-[2px]" style={{ background: tierBorderColor || sparkHex }} />
 
-      {/* ① Source · time · country · badge */}
-      <div className="flex items-center gap-1.5 mb-1.5 flex-wrap">
+      {/* ① PRIORITY BAR — first level of reading */}
+      {priority && !compact && <PriorityBar priority={priority} lang={lang} />}
+
+      {/* ② PRIORITY REASON — why this matters */}
+      {priority && !compact && priority.reason && (
+        <p className="text-[9px] font-medium leading-snug mb-1.5 px-1.5 py-1 rounded-md"
+          style={{ 
+            backgroundColor: `hsl(var(--priority-${priority.tier === "critical" ? "critical" : priority.tier === "high" ? "high" : priority.tier === "medium" ? "medium" : "low"}) / 0.06)`,
+            color: `hsl(var(--priority-${priority.tier === "critical" ? "critical" : priority.tier === "high" ? "high" : priority.tier === "medium" ? "medium" : "low"}))`,
+          }}>
+          {priority.reason}
+        </p>
+      )}
+
+      {/* ③ Source · time · country · origin badge */}
+      <div className="flex items-center gap-1.5 mb-1 flex-wrap">
         <button onClick={(e) => { e.stopPropagation(); onFilterPlatform?.(platform); }}
           className="flex items-center gap-1 flex-shrink-0 hover:opacity-80 transition-opacity">
           <div className="w-[5px] h-[5px] rounded-full flex-shrink-0" style={{ background: sparkHex }} />
@@ -376,19 +434,29 @@ const TimelineCard = ({
         <span className="text-[9px] text-muted-foreground">{formattedTime}</span>
         {flag && <span className="text-[11px]" title={countryCode}>{flag}</span>}
         <span className="text-[8px] text-muted-foreground/40 uppercase">{category}</span>
-        {badge && (
+        
+        {/* Origin badge (Dimension 1) */}
+        {originBadge && (
           <Tooltip>
             <TooltipTrigger asChild>
-              <span className={`text-[8px] font-semibold px-1.5 py-0.5 rounded-md ml-auto cursor-help ${badge.css}`}>
-                {badge.icon} {badge.label[lang] || badge.label.en}
+              <span className={`text-[8px] font-semibold px-1.5 py-0.5 rounded-md ml-auto cursor-help ${originBadge.css}`}>
+                {originBadge.icon} {originBadge.label[lang] || originBadge.label.en}
               </span>
             </TooltipTrigger>
             <TooltipContent side="top" className="max-w-[220px] text-[10px]">
-              {badge.explanation[lang] || badge.explanation.en}
+              {lang === "pt" ? "Tipo de fonte de dados" : "Data source type"}
             </TooltipContent>
           </Tooltip>
         )}
-        {!badge && <div className="flex-1" />}
+        {!originBadge && <div className="flex-1" />}
+
+        {/* Coverage badge (Dimension 3) */}
+        {isMultiplatform && (
+          <span className="text-[8px] font-semibold px-1.5 py-0.5 rounded-md bg-[hsl(var(--source-official)/0.1)] text-[hsl(var(--source-official))]">
+            🌐 Multi
+          </span>
+        )}
+
         <div className="flex items-center gap-0.5 flex-shrink-0">
           <button onClick={handleShare} className="p-0.5 rounded-md text-muted-foreground/20 hover:text-foreground/50 transition-colors">
             <Share2 className="w-3 h-3" />
@@ -399,10 +467,18 @@ const TimelineCard = ({
           }} className="p-0.5 rounded-md text-muted-foreground/20 hover:text-foreground/50 transition-colors">
             <Bookmark className="w-3 h-3" />
           </button>
+          {onAddToWatchlist && (
+            <button onClick={(e) => {
+              e.stopPropagation();
+              onAddToWatchlist({ title, platform, category, countryCode, volume, change, changePositive, sources });
+            }} className="p-0.5 rounded-md text-muted-foreground/20 hover:text-foreground/50 transition-colors" title={lang === "pt" ? "Adicionar ao watchlist" : "Add to watchlist"}>
+              <Eye className="w-3 h-3" />
+            </button>
+          )}
         </div>
       </div>
 
-      {/* ② Title + thumbnail */}
+      {/* ④ Title + thumbnail */}
       <div className="flex gap-2 mb-1">
         <div className="flex-1 min-w-0">
           <h3 className={`font-semibold text-foreground leading-snug ${compact ? "text-[11px] line-clamp-1" : "text-[12.5px] line-clamp-2"}`}
@@ -418,12 +494,12 @@ const TimelineCard = ({
         )}
       </div>
 
-      {/* ③ Context snippet — always show below title */}
+      {/* ⑤ Context snippet */}
       {contextSnippet && !compact && (
         <p className="text-[10px] text-muted-foreground leading-relaxed line-clamp-2 mb-1.5">{decodeEntities(contextSnippet)}</p>
       )}
 
-      {/* ④ Term explanation */}
+      {/* ⑥ Term explanation */}
       {termExplanation && !compact && (
         <div className="flex items-start gap-1.5 mb-1.5 px-2 py-1.5 rounded-md text-[9px] leading-relaxed bg-[hsl(var(--info-bg))] border-l-2 border-[hsl(var(--info-fg))] text-[hsl(var(--info-fg))]">
           <span className="flex-shrink-0">💡</span>
@@ -431,18 +507,7 @@ const TimelineCard = ({
         </div>
       )}
 
-      {/* ⑤ Tags */}
-      {tags.length > 0 && !compact && (
-        <div className="flex items-center gap-1 flex-wrap mb-1.5">
-          {tags.map((tag, i) => (
-            <span key={i} className={`inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-md text-[8px] font-semibold uppercase tracking-[0.04em] ${tag.css}`}>
-              {tag.label}
-            </span>
-          ))}
-        </div>
-      )}
-
-      {/* ⑥ Smart chart + Metrics */}
+      {/* ⑦ Smart chart + Metrics */}
       <div className="flex items-end gap-2 mt-1">
         <div className="flex-1 min-w-0" style={{ height: 22 }}>
           {renderSmartChart()}
@@ -459,7 +524,7 @@ const TimelineCard = ({
                 <span className="text-[10px] font-semibold text-foreground tabular-nums cursor-help">{volume}</span>
               </TooltipTrigger>
               <TooltipContent side="top" className="text-[10px]">
-                {lang === "pt" ? "Volume total de menções ou buscas" : "Total mentions or search volume"}
+                {lang === "pt" ? "Métrica bruta da fonte original" : "Raw metric from original source"}
               </TooltipContent>
             </Tooltip>
           )}
@@ -472,7 +537,7 @@ const TimelineCard = ({
         </div>
       </div>
 
-      {/* ⑦ Propagation */}
+      {/* ⑧ Propagation */}
       {propagationSources && !compact && !expanded && (
         <div className="flex items-center gap-1 mt-1.5 pt-1.5 border-t border-border/15 overflow-hidden">
           <span className="text-[7px] text-muted-foreground/40 uppercase tracking-wider flex-shrink-0">PROP</span>
@@ -485,7 +550,7 @@ const TimelineCard = ({
         </div>
       )}
 
-      {/* ⑧ INLINE EXPANSION — editorial accordion */}
+      {/* ⑨ UNIFIED INLINE DETAIL — enriched accordion */}
       <AnimatePresence>
         {expanded && !compact && (
           <motion.div
@@ -496,11 +561,60 @@ const TimelineCard = ({
             className="overflow-hidden"
           >
             <div className="mt-3 pt-3 border-t border-border/20 space-y-3">
+              
+              {/* Signal summary block */}
+              <div className="grid grid-cols-2 gap-2">
+                {/* Status */}
+                {priority && (
+                  <div className="px-2 py-1.5 rounded-md bg-muted/30">
+                    <span className="text-[8px] uppercase tracking-wider text-muted-foreground/50 block mb-0.5">
+                      {lang === "pt" ? "Status" : "Status"}
+                    </span>
+                    <span className="text-[10px] font-semibold" style={{ color: `hsl(var(--lifecycle-${priority.lifecycle}))` }}>
+                      {LIFECYCLE_LABELS[priority.lifecycle].icon} {LIFECYCLE_LABELS[priority.lifecycle][lang as "pt" | "en"] || LIFECYCLE_LABELS[priority.lifecycle].en}
+                    </span>
+                  </div>
+                )}
+                {/* Confidence */}
+                {priority && (
+                  <div className="px-2 py-1.5 rounded-md bg-muted/30">
+                    <span className="text-[8px] uppercase tracking-wider text-muted-foreground/50 block mb-0.5">
+                      {lang === "pt" ? "Confiança" : "Confidence"}
+                    </span>
+                    <div className="flex items-center gap-1">
+                      <div className="w-full h-[4px] rounded-full bg-muted/50 overflow-hidden">
+                        <div className="h-full rounded-full transition-all" 
+                          style={{ 
+                            width: `${priority.confidence * 100}%`,
+                            backgroundColor: priority.confidence > 0.7 ? "hsl(var(--success-fg))" : priority.confidence > 0.4 ? "hsl(var(--warning-fg))" : "hsl(var(--destructive))",
+                          }} />
+                      </div>
+                      <span className="text-[9px] font-bold tabular-nums">{Math.round(priority.confidence * 100)}%</span>
+                    </div>
+                  </div>
+                )}
+              </div>
+
               {/* Full description */}
               {(description || details) && (
                 <p className="text-[11px] text-muted-foreground leading-relaxed">
                   {decodeEntities((description || details || "").slice(0, 400))}
                 </p>
+              )}
+
+              {/* Countries affected */}
+              {countryCode && (
+                <div className="flex items-center gap-1.5">
+                  <Globe className="w-3 h-3 text-muted-foreground/40" />
+                  <span className="text-[9px] text-muted-foreground">
+                    {flag} {countryCode?.toUpperCase()}
+                    {isMultiplatform && (
+                      <span className="ml-1 text-[8px] text-[hsl(var(--source-official))]">
+                        + {lang === "pt" ? "múltiplas regiões" : "multiple regions"}
+                      </span>
+                    )}
+                  </span>
+                </div>
               )}
 
               {/* Historical chart — larger when expanded */}
@@ -541,35 +655,51 @@ const TimelineCard = ({
                 </div>
               )}
 
-              {/* Propagation in expanded view */}
+              {/* Related sources */}
               {propagationSources && (
-                <div className="flex items-center gap-1.5">
-                  <span className="text-[8px] text-muted-foreground/50 uppercase tracking-wider">{lang === "pt" ? "Propagação" : "Propagation"}</span>
-                  {propagationSources.map((s, i) => (
-                    <React.Fragment key={i}>
-                      {i > 0 && <span className="text-[9px] text-muted-foreground/30">→</span>}
-                      <span className="text-[9px] font-medium text-muted-foreground px-1.5 py-0.5 rounded-md bg-secondary">{s}</span>
-                    </React.Fragment>
-                  ))}
+                <div>
+                  <span className="text-[8px] text-muted-foreground/50 uppercase tracking-wider block mb-1">
+                    {lang === "pt" ? "Fontes relacionadas" : "Related sources"}
+                  </span>
+                  <div className="flex items-center gap-1.5 flex-wrap">
+                    {propagationSources.map((s, i) => (
+                      <React.Fragment key={i}>
+                        {i > 0 && <span className="text-[9px] text-muted-foreground/30">→</span>}
+                        <span className="text-[9px] font-medium text-muted-foreground px-1.5 py-0.5 rounded-md bg-secondary">{s}</span>
+                      </React.Fragment>
+                    ))}
+                  </div>
                 </div>
               )}
 
-              {/* Source link */}
-              {sourceUrl && (
-                <a href={sourceUrl} target="_blank" rel="noopener noreferrer" onClick={(e) => e.stopPropagation()}
-                  className="inline-flex items-center gap-1.5 text-[10px] font-medium text-[hsl(var(--source-press))] hover:underline group">
-                  <ExternalLink className="w-3 h-3 group-hover:translate-x-0.5 transition-transform" />
-                  {lang === "pt" ? "Abrir fonte original" : "Open original source"}
-                </a>
-              )}
+              {/* Actions row */}
+              <div className="flex items-center gap-2 pt-1">
+                {sourceUrl && (
+                  <a href={sourceUrl} target="_blank" rel="noopener noreferrer" onClick={(e) => e.stopPropagation()}
+                    className="inline-flex items-center gap-1.5 text-[10px] font-medium text-[hsl(var(--source-press))] hover:underline group">
+                    <ExternalLink className="w-3 h-3 group-hover:translate-x-0.5 transition-transform" />
+                    {lang === "pt" ? "Fonte original" : "Original source"}
+                  </a>
+                )}
+                {onAddToWatchlist && (
+                  <button onClick={(e) => {
+                    e.stopPropagation();
+                    onAddToWatchlist({ title, platform, category, countryCode, volume, change, changePositive, sources });
+                  }} className="inline-flex items-center gap-1 text-[10px] font-medium text-muted-foreground hover:text-foreground transition-colors">
+                    <Eye className="w-3 h-3" />
+                    {lang === "pt" ? "Monitorar" : "Watch"}
+                  </button>
+                )}
+              </div>
             </div>
           </motion.div>
         )}
       </AnimatePresence>
 
       {/* Compact metrics */}
-      {compact && (showVolume || showChange) && (
+      {compact && (
         <div className="flex items-center gap-1.5 text-[9px] text-muted-foreground mt-0.5">
+          {priority && <span className="font-black tabular-nums" style={{ color: TIER_COLORS[priority.tier] }}>{priority.score}</span>}
           {showVolume && <span className="font-medium tabular-nums">{volume}</span>}
           {showChange && <span className={`font-bold ${changePositive ? "text-[hsl(var(--success-fg))]" : "text-destructive"}`}>{change}</span>}
         </div>
