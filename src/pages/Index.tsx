@@ -828,8 +828,7 @@ const Index = () => {
 };
 
   // Count closed panels
-  const closedPanelsList = (["radar", "timeline", "map"] as const).filter(p => !panelVisibility[p]);
-  const closedPanels = closedPanelsList.length;
+  const closedPanelsList = (["timeline", "map"] as const).filter(p => !panelVisibility[p]);
 
   return (
     <div className="h-screen flex flex-col bg-background overflow-hidden w-full max-w-[100vw]">
@@ -857,28 +856,8 @@ const Index = () => {
       <div className="flex-1 overflow-hidden flex flex-col min-h-0">
         {isMobile ? (
           <>
-            {/* Trend Radar — expands to fill most of screen when open */}
-            <div 
-              className="overflow-y-auto overflow-x-hidden shrink-0 transition-[max-height,flex] duration-300 ease-in-out border-b border-border/30"
-              style={{ 
-                maxHeight: mobileRadarCollapsed ? 42 : 'calc(100vh - 52px - 44px - 56px)',
-                flex: mobileRadarCollapsed ? '0 0 42px' : '1 1 auto',
-              }}
-            >
-              <TrendRadar
-                trends={filteredTrends}
-                allTrends={allTrends}
-                criticalMoments={criticalMoments}
-                anomalies={anomalies}
-                onSelectTrend={handleSelectTrend}
-                onFilterCountry={(code) => setFilters(f => ({ ...f, country: code }))}
-                onAnomalyClick={handleAnomalyClick}
-                isCollapsed={mobileRadarCollapsed}
-                onToggleCollapse={() => setMobileRadarCollapsed(c => !c)}
-              />
-            </div>
-            {/* Timeline/Map — takes remaining space, or full space when radar collapsed */}
-            <div className={`flex flex-col relative ${mobileRadarCollapsed ? 'flex-1 min-h-0' : 'shrink-0'}`} style={{ minHeight: mobileRadarCollapsed ? 0 : 120, maxHeight: mobileRadarCollapsed ? undefined : '40vh' }}>
+            {/* Timeline/Map — full height */}
+            <div className="flex-1 min-h-0 flex flex-col relative">
               <div className="flex-1 min-h-0 overflow-hidden">
                 {viewMode === "timeline" ? renderTimeline() : (
                   <div className="h-full">{renderMap()}</div>
@@ -886,7 +865,7 @@ const Index = () => {
               </div>
               <motion.button
                 onClick={() => setViewMode(v => v === "timeline" ? "map" : "timeline")}
-                className="absolute bottom-4 right-4 z-30 flex items-center gap-2 px-4 py-3 rounded-full bg-primary text-primary-foreground text-xs font-semibold shadow-[0_4px_20px_rgba(0,0,0,0.15)] active:scale-95 transition-transform touch-manipulation"
+                className="absolute bottom-4 right-4 z-30 flex items-center gap-2 px-4 py-3 rounded-full bg-foreground text-background text-xs font-semibold shadow-[0_4px_20px_rgba(0,0,0,0.15)] active:scale-95 transition-transform touch-manipulation"
                 whileTap={{ scale: 0.93 }}
                 style={{ minHeight: 48, minWidth: 48 }}
               >
@@ -908,91 +887,40 @@ const Index = () => {
 
             {/* Main content */}
             <div className="flex-1 min-h-0 flex flex-col">
-              {!panelVisibility.radar && !panelVisibility.timeline && !panelVisibility.map ? (
+              {!panelVisibility.timeline && !panelVisibility.map ? (
                 <div className="flex-1 flex items-center justify-center text-muted-foreground">
                   <p className="text-sm">{lang === "pt" ? "Todos os painéis foram arquivados. Use o menu lateral para restaurá-los." : "All panels archived. Use the side drawer to restore them."}</p>
                 </div>
               ) : (
-                <ResizablePanelGroup
-                  direction="vertical"
-                  className="flex-1 min-h-0 [&>div]:transition-[flex-grow] [&>div]:duration-300 [&>div]:ease-[cubic-bezier(0.4,0,0.2,1)] [&>[data-panel-group-direction]]:gap-0"
-                  key={`v-${panelVisibility.radar}-${panelVisibility.timeline}-${panelVisibility.map}`}
-                  style={{ gap: 0 }}
-                >
-                  {/* Radar Panel — resizable vertically */}
-                  {panelVisibility.radar && (
+                <ResizablePanelGroup direction="horizontal" className="flex-1 min-h-0" key={`h-${panelVisibility.timeline}-${panelVisibility.map}`}>
+                  {panelVisibility.timeline && (
                     <>
-                      <ResizablePanel
-                        ref={radarPanelRef}
-                        defaultSize={30}
-                        minSize={8}
-                        maxSize={70}
-                        collapsible
-                        collapsedSize={5}
-                        onCollapse={() => { setRadarCollapsed(true); try { localStorage.setItem("radar-collapsed", "true"); } catch {} }}
-                        onExpand={() => { setRadarCollapsed(false); try { localStorage.setItem("radar-collapsed", "false"); } catch {} }}
-                      >
-                         <div className="h-full overflow-hidden">
-                          <TrendRadar
-                            trends={filteredTrends}
-                            allTrends={allTrends}
-                            criticalMoments={criticalMoments}
-                            anomalies={anomalies}
-                            onSelectTrend={handleSelectTrend}
-                            onFilterCountry={(code) => setFilters(f => ({ ...f, country: code }))}
-                            onAnomalyClick={handleAnomalyClick}
-                            onClose={() => togglePanel("radar")}
-                            isCollapsed={radarCollapsed}
-                            onToggleCollapse={() => {
-                              const panel = radarPanelRef.current;
-                              if (!panel) return;
-                              if (radarCollapsed) panel.expand();
-                              else panel.collapse();
-                            }}
-                          />
+                      <ResizablePanel defaultSize={panelVisibility.map ? 65 : 100} minSize={25} maxSize={panelVisibility.map ? 85 : 100}>
+                        <div className="h-full min-h-0 overflow-hidden relative">
+                          {renderTimeline()}
                         </div>
                       </ResizablePanel>
-                      {(panelVisibility.timeline || panelVisibility.map) && (
-                        <ResizableHandle withHandle />
-                      )}
+                      {panelVisibility.map && <ResizableHandle withHandle />}
                     </>
                   )}
-
-                  {/* Timeline + Map — resizable horizontally inside */}
-                  {(panelVisibility.timeline || panelVisibility.map) && (
-                    <ResizablePanel defaultSize={panelVisibility.radar ? 70 : 100} minSize={20}>
-                      <ResizablePanelGroup direction="horizontal" className="h-full" key={`h-${panelVisibility.timeline}-${panelVisibility.map}`}>
-                        {panelVisibility.timeline && (
-                          <>
-                            <ResizablePanel defaultSize={panelVisibility.map ? 65 : 100} minSize={25} maxSize={panelVisibility.map ? 85 : 100}>
-                              <div className="h-full min-h-0 overflow-hidden relative" ref={timelinePanelRef}>
-                                {renderTimeline()}
-                              </div>
-                            </ResizablePanel>
-                            {panelVisibility.map && <ResizableHandle withHandle />}
-                          </>
-                        )}
-                        {panelVisibility.map && (
-                          <ResizablePanel defaultSize={panelVisibility.timeline ? 35 : 100} minSize={15} maxSize={panelVisibility.timeline ? 60 : 100}>
-                            <div className="h-full relative map-panel-enter">
-                              {renderMap()}
-                            </div>
-                          </ResizablePanel>
-                        )}
-                        {/* Slim toggle for collapsed map */}
-                        {!panelVisibility.map && (
-                          <div className="h-full flex items-center">
-                            <button
-                              onClick={() => togglePanel("map")}
-                              className="w-8 h-full flex items-center justify-center bg-secondary/30 hover:bg-secondary/60 border-l border-border/50 transition-colors text-muted-foreground hover:text-foreground"
-                              title="Abrir mapa"
-                            >
-                              <ChevronLeft className="w-4 h-4" />
-                            </button>
-                          </div>
-                        )}
-                      </ResizablePanelGroup>
+                  {panelVisibility.map && (
+                    <ResizablePanel defaultSize={panelVisibility.timeline ? 35 : 100} minSize={15} maxSize={panelVisibility.timeline ? 60 : 100}>
+                      <div className="h-full relative map-panel-enter">
+                        {renderMap()}
+                      </div>
                     </ResizablePanel>
+                  )}
+                  {/* Slim toggle for collapsed map */}
+                  {!panelVisibility.map && (
+                    <div className="h-full flex items-center">
+                      <button
+                        onClick={() => togglePanel("map")}
+                        className="w-8 h-full flex items-center justify-center bg-secondary/30 hover:bg-secondary/60 border-l border-border/50 transition-colors text-muted-foreground hover:text-foreground"
+                        title="Abrir mapa"
+                      >
+                        <ChevronLeft className="w-4 h-4" />
+                      </button>
+                    </div>
                   )}
                 </ResizablePanelGroup>
               )}
