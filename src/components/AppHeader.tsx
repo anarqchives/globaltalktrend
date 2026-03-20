@@ -318,7 +318,7 @@ const AppHeader = () => {
                 </Link>
               </div>
             </div>
-          </motion.div>
+          </div>
         </DialogContent>
       </Dialog>
 
