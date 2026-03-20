@@ -6,7 +6,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip
 import { AreaChart, Area, ResponsiveContainer } from "recharts";
 import EmergingTrendsSection from "./EmergingTrendsSection";
 import CriticalMomentsSection from "./CriticalMomentsSection";
-const WeeklyPulseDashboard = lazy(() => import("./WeeklyPulseDashboard"));
+
 import { TrendCardProps } from "./TrendCard";
 import { CriticalMoment } from "@/hooks/use-critical-moments";
 import { AnomalyAlert } from "@/hooks/use-anomaly-alerts";
