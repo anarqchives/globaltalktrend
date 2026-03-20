@@ -317,7 +317,7 @@ const TimelineCard = ({
 
       {/* Compact metrics */}
       {compact && (showVolume || showChange) && (
-        <div className="flex items-center gap-1.5 text-[8px] text-muted-foreground mt-0.5">
+        <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground mt-0.5">
           {showVolume && <span className="font-medium tabular-nums">{volume}</span>}
           {showChange && (
             <span className={`font-bold ${changePositive ? "text-[#059669]" : "text-[#E03C31]"}`}>{change}</span>
