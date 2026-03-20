@@ -373,7 +373,7 @@ function normalizeCategory(title: string, platform: string, category?: string): 
   const normalized = categorizeTrend(title, platform, category);
   if (STANDARD_CATEGORIES.has(normalized)) return normalized;
   if (normalizeText(normalized).includes("news") || normalizeText(normalized).includes("notí")) {
-    return "Política";
+    return "Geopolítica";
   }
   return "Geral";
 }
