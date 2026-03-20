@@ -275,7 +275,7 @@
   .apoie-pill {
     background: linear-gradient(135deg, #f0c040, #fb923c);
     color: #ffffff;
-    @apply px-3 py-1 rounded-full text-[9px] font-bold;
+    @apply h-8 px-3 rounded-full text-[9px] font-bold inline-flex items-center justify-center;
     transition: filter 0.15s ease, transform 0.15s ease;
   }
   .apoie-pill:hover { filter: brightness(1.08); transform: scale(1.02); }

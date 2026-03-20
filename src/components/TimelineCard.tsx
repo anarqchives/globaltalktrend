@@ -342,10 +342,12 @@ const TimelineCard = ({
     <motion.div
       variants={cardVariants}
       layout
+      whileHover={{ y: -3, scale: 1.008, transition: { duration: 0.25, ease: [0.21, 0.47, 0.32, 0.98] } }}
+      whileTap={{ scale: 0.97 }}
       className={`bg-card rounded-lg border cursor-pointer w-full relative overflow-hidden
-        transition-all duration-200 ease-[cubic-bezier(0.21,0.47,0.32,0.98)]
+        transition-shadow duration-200 ease-[cubic-bezier(0.21,0.47,0.32,0.98)]
         ${isSelected
-          ? "border-l-[3px] shadow-[var(--shadow-md)]" : "border-border/25 shadow-[var(--shadow-xs)] hover:shadow-[var(--shadow-sm)] hover:-translate-y-[1px]"}`}
+          ? "border-l-[3px] shadow-[var(--shadow-md)]" : "border-border/25 shadow-[var(--shadow-xs)] hover:shadow-[var(--shadow-md)]"}`}
       style={{ padding: compact ? "8px 10px" : "10px 12px" }}
       onClick={handleCardClick}
     >
