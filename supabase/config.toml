@@ -41,3 +41,9 @@ verify_jwt = false
 
 [functions.fetch-thenewsapi]
 verify_jwt = false
+
+[functions.fetch-currents-mediastack]
+verify_jwt = false
+
+[functions.fetch-reddit-bluesky-mastodon]
+verify_jwt = false

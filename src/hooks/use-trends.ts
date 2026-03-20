@@ -24,13 +24,11 @@ import {
   normalizeCategory, normalizeTrendForFilter, NormalizedTrendForFilter,
 } from "@/lib/trend-normalize";
 
-import {
-  fetchRedditClientSide, fetchBlueskyClientSide, fetchMastodonClientSide,
-} from "@/lib/social-fetchers";
+// Client-side social fetchers now replaced by edge function fetch-reddit-bluesky-mastodon
 
 // ─── Source Priority Groups ────────────────────────────────────────
 const SOURCE_GROUPS: Record<string, string[]> = {
-  imprensa: ["The Guardian", "NewsAPI", "NewsData", "GNews", "Bing News"],
+  imprensa: ["The Guardian", "NewsAPI", "NewsData", "GNews", "Bing News", "Currents", "Mediastack"],
   social: ["Reddit", "Bluesky", "Mastodon", "X (Twitter)"],
   dados: ["World Bank", "IBGE", "IMF", "FRED", "NOAA", "FMI (IMF)", "OMS (WHO)"],
   ciencia: ["OpenAlex", "arXiv", "PubMed", "Crossref", "Semantic Scholar"],
@@ -109,32 +107,20 @@ export function useTrends(filters: FilterState, onTrendCountsChange: (counts: Re
         return result;
       };
 
-      const fetchClientSourceWithLogs = async (
-        sourceName: string,
-        fetchPromise: Promise<TrendCardProps[]>,
-        timeoutMs = 8000
-      ) => {
-        if (import.meta.env.DEV) console.log(`🔍 Buscando ${sourceName}...`);
-        const result = await withTimeout(fetchPromise, timeoutMs, [] as TrendCardProps[]);
-        if (import.meta.env.DEV) console.log(`✅ ${sourceName} retornou:`, result.length, "itens");
-        health = updateSourceHealth(health, sourceName, result.length > 0, result.length);
-        return result;
-      };
+      // Client-side source fetching removed — all sources now use edge functions
 
       const [
         edgeResult, extraResult, extraSourcesResult, socialTrendsResult, openDataResult,
-        redditItems, blueskyItems, mastodonItems, gdeltDocResult,
+        redditBskyMastodonResult, gdeltDocResult,
         crossrefResult, semanticResult, whoResult, imfResult, techScienceResult,
-        fredResult, theNewsApiResult,
+        fredResult, theNewsApiResult, currentsMediastackResult,
       ] = await Promise.all([
         invokeFunctionWithLogs("Google Trends", "fetch-trends", 12000),
         invokeFunctionWithLogs("The Guardian/News Extra", "fetch-news-extra", 10000),
         invokeFunctionWithLogs("Fontes Oficiais Extras", "fetch-extra-sources", 10000),
         invokeFunctionWithLogs("Social Trends", "fetch-social-trends", 10000),
         invokeFunctionWithLogs("Open Data", "fetch-open-data", 12000),
-        fetchClientSourceWithLogs("Reddit", fetchRedditClientSide()),
-        fetchClientSourceWithLogs("Bluesky", fetchBlueskyClientSide()),
-        fetchClientSourceWithLogs("Mastodon", fetchMastodonClientSide()),
+        invokeFunctionWithLogs("Reddit/Bluesky/Mastodon", "fetch-reddit-bluesky-mastodon", 12000),
         invokeFunctionWithLogs("GDELT DOC", "fetch-gdelt-trends", 10000),
         invokeFunctionWithLogs("Crossref", "fetch-crossref", 10000),
         invokeFunctionWithLogs("Semantic Scholar", "fetch-semantic-scholar", 10000),
@@ -143,6 +129,7 @@ export function useTrends(filters: FilterState, onTrendCountsChange: (counts: Re
         invokeFunctionWithLogs("Tech/Science Extra", "fetch-tech-science-extra", 8000),
         invokeFunctionWithLogs("FRED Economics", "fetch-fred", 8000),
         invokeFunctionWithLogs("The News API", "fetch-thenewsapi", 10000),
+        invokeFunctionWithLogs("Currents/Mediastack", "fetch-currents-mediastack", 10000),
       ]);
 
       saveSourceHealth(health);
@@ -152,6 +139,7 @@ export function useTrends(filters: FilterState, onTrendCountsChange: (counts: Re
       const extraSourcesTrends: TrendCardProps[] = extraSourcesResult.data?.trends || [];
       const socialTrends: TrendCardProps[] = socialTrendsResult.data?.trends || [];
       const openDataTrends: TrendCardProps[] = openDataResult.data?.trends || [];
+      const redditBskyMastodonTrends: TrendCardProps[] = redditBskyMastodonResult.data?.trends || [];
       const gdeltDocTrends: TrendCardProps[] = gdeltDocResult.data?.trends || [];
       const crossrefTrends: TrendCardProps[] = crossrefResult.data?.trends || [];
       const semanticTrends: TrendCardProps[] = semanticResult.data?.trends || [];
@@ -160,12 +148,13 @@ export function useTrends(filters: FilterState, onTrendCountsChange: (counts: Re
       const techScienceTrends: TrendCardProps[] = techScienceResult.data?.trends || [];
       const fredTrends: TrendCardProps[] = fredResult.data?.trends || [];
       const theNewsApiTrends: TrendCardProps[] = theNewsApiResult.data?.trends || [];
+      const currentsMediastackTrends: TrendCardProps[] = currentsMediastackResult.data?.trends || [];
 
       const rawTrends = [
         ...edgeTrends, ...extraTrends, ...extraSourcesTrends, ...socialTrends, ...openDataTrends,
-        ...redditItems, ...blueskyItems, ...mastodonItems, ...gdeltDocTrends,
+        ...redditBskyMastodonTrends, ...gdeltDocTrends,
         ...crossrefTrends, ...semanticTrends, ...whoTrends, ...imfTrends, ...techScienceTrends,
-        ...fredTrends, ...theNewsApiTrends,
+        ...fredTrends, ...theNewsApiTrends, ...currentsMediastackTrends,
       ];
       
       if (import.meta.env.DEV) console.log("📦 Total de trends combinadas:", rawTrends.length);
