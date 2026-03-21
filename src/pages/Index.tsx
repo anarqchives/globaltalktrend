@@ -415,7 +415,6 @@ const Index = () => {
                 className={`flex items-center justify-center w-7 h-[26px] transition-all touch-manipulation ${compactMode ? "bg-primary text-primary-foreground" : "bg-card text-muted-foreground hover:bg-muted"}`}>
                 <List size={12} aria-hidden="true" />
               </button>
-              </button>
             </div>
             {!isMobile && (
               <button onClick={() => togglePanel("timeline")} className="flex items-center justify-center rounded-[10px] bg-muted text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-all w-7 h-7">
