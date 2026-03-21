@@ -29,6 +29,7 @@ const DATA_SOURCES: SourceDef[] = [
 
 interface AppHeaderProps {
   isTranslating?: boolean;
+  isLoading?: boolean;
 }
 
 const AppHeader = ({ isTranslating }: AppHeaderProps = {}) => {
