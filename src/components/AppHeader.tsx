@@ -29,9 +29,10 @@ const DATA_SOURCES: SourceDef[] = [
 
 interface AppHeaderProps {
   isTranslating?: boolean;
+  isLoading?: boolean;
 }
 
-const AppHeader = ({ isTranslating }: AppHeaderProps = {}) => {
+const AppHeader = ({ isTranslating, isLoading }: AppHeaderProps = {}) => {
   const { lang, setLang, t } = useLanguage();
   const navigate = useNavigate();
   const [user, setUser] = useState<import("@supabase/supabase-js").User | null>(null);
@@ -123,6 +124,29 @@ const AppHeader = ({ isTranslating }: AppHeaderProps = {}) => {
             <span className="text-[14px] sm:text-[15px] font-bold tracking-tight text-foreground">GTT</span>
             <span className="text-[12px] sm:text-[15px] font-medium tracking-tight text-muted-foreground hidden sm:inline">Monitor</span>
           </Link>
+          <AnimatePresence>
+            {isLoading && (
+              <motion.div
+                initial={{ opacity: 0, scale: 0.6 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.6 }}
+                transition={{ duration: 0.25 }}
+                className="flex items-center gap-1 ml-1"
+                title={lang === "pt" ? "Carregando fontes…" : "Loading sources…"}
+              >
+                <span className="flex gap-[3px]">
+                  {[0, 1, 2].map(i => (
+                    <motion.span
+                      key={i}
+                      className="w-[4px] h-[4px] rounded-full bg-primary/70"
+                      animate={{ opacity: [0.3, 1, 0.3], scale: [0.8, 1.1, 0.8] }}
+                      transition={{ duration: 1.2, repeat: Infinity, delay: i * 0.2, ease: "easeInOut" }}
+                    />
+                  ))}
+                </span>
+              </motion.div>
+            )}
+          </AnimatePresence>
 
           {/* Navigation removed — use bottom nav on mobile, direct URLs on desktop */}
 
