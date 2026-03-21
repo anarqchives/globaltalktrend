@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useMemo } from "react";
-import { Link, useNavigate, useLocation } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Sun, Moon, LogOut, LogIn, Loader2, ChevronDown, Globe2, Info, CheckCircle2, XCircle, RefreshCw } from "lucide-react";
 import { useLanguage, languages } from "@/contexts/LanguageContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -28,7 +28,6 @@ const DATA_SOURCES: SourceDef[] = [
 ];
 
 const AppHeader = () => {
-  const location = useLocation();
   const { lang, setLang, t } = useLanguage();
   const navigate = useNavigate();
   const [user, setUser] = useState<import("@supabase/supabase-js").User | null>(null);
