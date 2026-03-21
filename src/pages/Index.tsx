@@ -399,20 +399,22 @@ const Index = () => {
               {watchlist.length > 0 && <span className="tabular-nums">{watchlist.length}</span>}
             </button>
             {updatePending && (
-              <button onClick={handleRefresh} className="flex items-center gap-1 px-2 py-1 rounded-lg text-[9px] text-muted-foreground hover:bg-muted transition-colors touch-manipulation">
-                <RefreshCw className={`w-3 h-3 ${refreshing ? "animate-spin" : ""}`} />
+              <button onClick={handleRefresh} className="flex items-center gap-1 px-2 py-1 rounded-lg text-[9px] text-muted-foreground hover:bg-muted transition-colors touch-manipulation"
+                aria-label={lang === "pt" ? "Atualizar tendências" : "Refresh trends"}>
+                <RefreshCw className={`w-3 h-3 ${refreshing ? "animate-spin" : ""}`} aria-hidden="true" />
                 <span className="hidden sm:inline">{lang === "pt" ? "Atualizar" : "Update"}</span>
               </button>
             )}
             <TagLegend />
             <div className="flex items-center overflow-hidden rounded-[10px] border border-border">
-              <button onClick={() => setCompactMode(false)} title={lang === "pt" ? "Expandido" : "Expanded"}
+              <button onClick={() => setCompactMode(false)} aria-label={lang === "pt" ? "Modo expandido" : "Expanded mode"}
                 className={`flex items-center justify-center w-7 h-[26px] transition-all touch-manipulation ${!compactMode ? "bg-primary text-primary-foreground" : "bg-card text-muted-foreground hover:bg-muted"}`}>
-                <LayoutGrid size={12} />
+                <LayoutGrid size={12} aria-hidden="true" />
               </button>
-              <button onClick={() => setCompactMode(true)} title={lang === "pt" ? "Comprimido" : "Compressed"}
+              <button onClick={() => setCompactMode(true)} aria-label={lang === "pt" ? "Modo compacto" : "Compact mode"}
                 className={`flex items-center justify-center w-7 h-[26px] transition-all touch-manipulation ${compactMode ? "bg-primary text-primary-foreground" : "bg-card text-muted-foreground hover:bg-muted"}`}>
-                <List size={12} />
+                <List size={12} aria-hidden="true" />
+              </button>
               </button>
             </div>
             {!isMobile && (
