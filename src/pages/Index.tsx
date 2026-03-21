@@ -63,6 +63,19 @@ function getInitialFilters(): FilterState {
   };
 }
 
+/* Helper: age in hours */
+function getAgeHours(trend: TrendCardProps, now: number): number {
+  if ((trend as any).publishedAt) {
+    const d = new Date((trend as any).publishedAt).getTime();
+    if (!isNaN(d)) return (now - d) / 3600000;
+  }
+  if ((trend as any).firstSeenAt) {
+    const d = new Date((trend as any).firstSeenAt).getTime();
+    if (!isNaN(d)) return (now - d) / 3600000;
+  }
+  return 12;
+}
+
 /* Watchlist types imported from hook */
 
 const Index = () => {
