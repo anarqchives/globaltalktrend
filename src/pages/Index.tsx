@@ -566,13 +566,19 @@ const Index = () => {
           )}
 
         {!loading && !isFirstLoad && diversifiedTrends.length === 0 && (
-          <div className="flex flex-col items-center justify-center py-12 px-4 text-center gap-2">
-            <span className="text-3xl">🔍</span>
-            <p className="text-[10px] font-medium text-foreground">{t("noTrends")}</p>
-            <button onClick={() => { setFilters(defaultFilters); setMapSelectedCountry(null); }} className="mt-2 px-3 py-1 rounded-full bg-primary text-primary-foreground text-[9px] font-medium hover:bg-primary/90 transition-colors touch-manipulation">
-              {lang === "pt" ? "Limpar filtros" : "Clear filters"}
-            </button>
-          </div>
+          <>
+            <OfflineFallback />
+            {navigator.onLine && (
+              <div className="flex flex-col items-center justify-center py-12 px-4 text-center gap-2">
+                <span className="text-3xl" role="img" aria-label={lang === "pt" ? "Buscar" : "Search"}>🔍</span>
+                <p className="text-[10px] font-medium text-foreground">{t("noTrends")}</p>
+                <button onClick={() => { setFilters(defaultFilters); setMapSelectedCountry(null); }} className="mt-2 px-3 py-1 rounded-full bg-primary text-primary-foreground text-[9px] font-medium hover:bg-primary/90 transition-colors touch-manipulation"
+                  aria-label={lang === "pt" ? "Limpar filtros" : "Clear filters"}>
+                  {lang === "pt" ? "Limpar filtros" : "Clear filters"}
+                </button>
+              </div>
+            )}
+          </>
         )}
 
         {diversifiedTrends.length > 0 && lastUpdated && (
