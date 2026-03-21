@@ -55,7 +55,7 @@ async function translateBatch(
         messages: [
           {
             role: "system",
-            content: `You are a fast translator. Translate each numbered line to ${langLabel}. Keep numbering. If " ||| " exists, translate both parts keeping separator. Return ONLY numbered translations, nothing else.`,
+            content: `You are a professional translator. Translate EVERY numbered line fully to ${langLabel}. ALL text must be in ${langLabel} — do not leave any word in its original language. Keep numbering. If " ||| " separator exists, translate BOTH parts keeping the separator. Return ONLY the numbered translations.`,
           },
           { role: "user", content: numbered },
         ],
