@@ -121,26 +121,7 @@ const AppHeader = () => {
             <span className="text-[12px] sm:text-[15px] font-medium tracking-tight text-muted-foreground hidden sm:inline">Monitor</span>
           </Link>
 
-          {/* Desktop secondary navigation */}
-          <nav className="hidden md:flex items-center gap-0.5 ml-4" aria-label="Main navigation">
-            {[
-              { to: "/", label: "Feed" },
-              { to: "/discover", label: lang === "pt" ? "Explorar" : "Discover" },
-              { to: "/reports", label: lang === "pt" ? "Relatórios" : "Reports" },
-            ].map(item => {
-              const isActive = location.pathname === item.to;
-              return (
-                <Link key={item.to} to={item.to}
-                  className={`px-2.5 py-1 rounded-lg text-[11px] font-medium transition-colors ${
-                    isActive 
-                      ? "text-foreground underline underline-offset-4 decoration-2 decoration-primary" 
-                      : "text-muted-foreground hover:text-foreground hover:bg-muted"
-                  }`}>
-                  {item.label}
-                </Link>
-              );
-            })}
-          </nav>
+          {/* Navigation removed — use bottom nav on mobile, direct URLs on desktop */}
 
           <div className="flex-1" />
 

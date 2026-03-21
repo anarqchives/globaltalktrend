@@ -48,7 +48,6 @@ export default defineConfig(({ mode }) => ({
     chunkSizeWarningLimit: 500,
   },
   optimizeDeps: {
-    force: true,
     include: [
       "react",
       "react-dom",
@@ -57,9 +56,6 @@ export default defineConfig(({ mode }) => ({
       "react/jsx-dev-runtime",
       "@tanstack/react-query",
       "@supabase/supabase-js",
-      "framer-motion",
-      "@googlemaps/js-api-loader",
-      "@radix-ui/react-tabs",
     ],
   },
 }));
