@@ -63,6 +63,19 @@ function getInitialFilters(): FilterState {
   };
 }
 
+/* Helper: age in hours */
+function getAgeHours(trend: TrendCardProps, now: number): number {
+  if ((trend as any).publishedAt) {
+    const d = new Date((trend as any).publishedAt).getTime();
+    if (!isNaN(d)) return (now - d) / 3600000;
+  }
+  if ((trend as any).firstSeenAt) {
+    const d = new Date((trend as any).firstSeenAt).getTime();
+    if (!isNaN(d)) return (now - d) / 3600000;
+  }
+  return 12;
+}
+
 /* Watchlist types imported from hook */
 
 const Index = () => {
@@ -216,8 +229,30 @@ const Index = () => {
       return { trend: t, priority };
     });
 
-    // Sort by priority score descending
-    scored.sort((a, b) => b.priority.score - a.priority.score);
+    // ── SUSTAINED-HIGH BOOST ──
+    // Trends that have been high for longer AND show stable/accelerating momentum
+    // get a bonus so they float to the top (sustained relevance over 12h horizon)
+    const now = Date.now();
+    scored.sort((a, b) => {
+      const aAge = getAgeHours(a.trend, now);
+      const bAge = getAgeHours(b.trend, now);
+      const sustainedStages = new Set(["accelerating", "peak", "stable"]);
+
+      // Sustained = trending for ≥2h AND still accelerating/peak/stable
+      const aSustained = aAge >= 2 && sustainedStages.has(a.priority.lifecycle);
+      const bSustained = bAge >= 2 && sustainedStages.has(b.priority.lifecycle);
+
+      // Compute sustained-momentum score:
+      // longer trending + higher priority + not declining = higher rank
+      const aSustainScore = aSustained
+        ? a.priority.score + Math.min(aAge / 2, 4) + (a.priority.lifecycle === "accelerating" ? 2 : a.priority.lifecycle === "peak" ? 1 : 0)
+        : a.priority.score;
+      const bSustainScore = bSustained
+        ? b.priority.score + Math.min(bAge / 2, 4) + (b.priority.lifecycle === "accelerating" ? 2 : b.priority.lifecycle === "peak" ? 1 : 0)
+        : b.priority.score;
+
+      return bSustainScore - aSustainScore;
+    });
 
     return scored;
   }, [filteredTrends, multiplatformTitles, lang]);
