@@ -657,7 +657,7 @@ const Index = () => {
 
   return (
     <div className="h-screen flex flex-col bg-background overflow-hidden w-full max-w-[100vw]">
-      <AppHeader />
+      <AppHeader isTranslating={isTranslating} />
       <FilterBlock filters={filters} onChange={handleFilterChange} onReset={() => { setFilters(defaultFilters); setMapSelectedCountry(null); }} onSaveFilter={() => {
         if (!user) {
           toast({ title: lang === "pt" ? "Faça login para salvar filtros" : "Log in to save filters", variant: "destructive" });
