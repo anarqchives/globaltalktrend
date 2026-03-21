@@ -8,6 +8,7 @@ import { LanguageProvider } from "@/contexts/LanguageContext";
 import { UserModeProvider } from "@/contexts/UserModeContext";
 import { toast } from "@/hooks/use-toast";
 import { ErrorBoundary, OfflineBanner } from "./components/ErrorBoundary";
+import PWAInstallBanner from "./components/PWAInstallBanner";
 
 // Eagerly load the main pages (critical path)
 import Index from "./pages/Index";
@@ -74,6 +75,7 @@ const App = () => {
             <Toaster />
             <Sonner />
             <PrivacyPopup />
+            <PWAInstallBanner />
             <BrowserRouter>
               <Suspense fallback={<PageLoader />}>
                 <Routes>
