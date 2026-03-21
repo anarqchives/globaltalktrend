@@ -6,7 +6,7 @@ import FilterBlock from "@/components/FilterBlock";
 import { FilterState } from "@/components/FilterBar";
 import TimelineCard from "@/components/TimelineCard";
 import TrendCardSkeleton from "@/components/TrendCardSkeleton";
-import { saveOfflineCache } from "@/components/OfflineFallback";
+import OfflineFallback, { saveOfflineCache } from "@/components/OfflineFallback";
 
 import { TrendCardProps } from "@/components/TrendCard";
 import { useTrends } from "@/hooks/use-trends";
@@ -676,19 +676,23 @@ const Index = () => {
         )}
       </div>
 
-      <TransparencyPanel
-        open={transparencyOpen}
-        onClose={() => setTransparencyOpen(false)}
-        sourcesStatus={sourcesStatus}
-        lastUpdated={lastUpdated}
-        totalTrends={filteredTrends.length}
-      />
-      <SavedCollectionsSheet
-        open={collectionsOpen}
-        onOpenChange={setCollectionsOpen}
-        cards={savedCards}
-        removeCard={removeCard}
-      />
+      <Suspense fallback={null}>
+        <TransparencyPanel
+          open={transparencyOpen}
+          onClose={() => setTransparencyOpen(false)}
+          sourcesStatus={sourcesStatus}
+          lastUpdated={lastUpdated}
+          totalTrends={filteredTrends.length}
+        />
+      </Suspense>
+      <Suspense fallback={null}>
+        <SavedCollectionsSheet
+          open={collectionsOpen}
+          onOpenChange={setCollectionsOpen}
+          cards={savedCards}
+          removeCard={removeCard}
+        />
+      </Suspense>
     </div>
   );
 };
