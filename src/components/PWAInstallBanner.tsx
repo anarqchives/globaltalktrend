@@ -46,7 +46,7 @@ const PWAInstallBanner = () => {
           initial={{ opacity: 0, y: 40 }}
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: 40 }}
-          className="fixed bottom-20 left-1/2 -translate-x-1/2 z-50 flex items-center gap-3 px-4 py-3 rounded-2xl border border-border bg-card/95 backdrop-blur-xl shadow-lg max-w-sm w-[calc(100%-2rem)]"
+          className="fixed left-1/2 -translate-x-1/2 z-40 flex items-center gap-3 px-4 py-3 rounded-2xl border border-border bg-card/95 backdrop-blur-xl shadow-lg max-w-sm w-[calc(100%-2rem)] bottom-[calc(env(safe-area-inset-bottom,0px)+4rem)] md:bottom-6"
         >
           <Download className="w-5 h-5 text-primary flex-shrink-0" aria-hidden="true" />
           <div className="flex-1 min-w-0">
