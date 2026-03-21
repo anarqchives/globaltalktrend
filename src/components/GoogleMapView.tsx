@@ -754,7 +754,7 @@ const GoogleMapView = ({
                       <p className="text-[10px] text-muted-foreground leading-relaxed mb-2 line-clamp-3">{t.description}</p>
                     )}
                     {t.thumbnail && (
-                      <img src={t.thumbnail} alt="" className="w-full h-24 object-cover rounded-lg mb-2 bg-muted" loading="lazy" />
+                      <img src={t.thumbnail} alt={t.title} className="w-full h-24 object-cover rounded-lg mb-2 bg-muted" loading="lazy" />
                     )}
                     <div className="flex items-center gap-2 text-[9px] mb-2">
                       {t.volume && <span className="font-semibold text-foreground">{t.volume}</span>}
@@ -877,12 +877,14 @@ const GoogleMapView = ({
           {mapLoaded && (
             <div className="flex flex-col gap-1">
               <button onClick={() => googleMapRef.current?.setZoom((googleMapRef.current?.getZoom() || 3) + 1)}
+                aria-label="Zoom in"
                 className="w-8 h-8 rounded-xl bg-card/90 backdrop-blur-xl border border-border/30 shadow-[var(--shadow-sm)] flex items-center justify-center text-foreground hover:bg-card transition-colors">
-                <Plus className="w-3.5 h-3.5" />
+                <Plus className="w-3.5 h-3.5" aria-hidden="true" />
               </button>
               <button onClick={() => googleMapRef.current?.setZoom((googleMapRef.current?.getZoom() || 3) - 1)}
+                aria-label="Zoom out"
                 className="w-8 h-8 rounded-xl bg-card/90 backdrop-blur-xl border border-border/30 shadow-[var(--shadow-sm)] flex items-center justify-center text-foreground hover:bg-card transition-colors">
-                <Minus className="w-3.5 h-3.5" />
+                <Minus className="w-3.5 h-3.5" aria-hidden="true" />
               </button>
             </div>
           )}
