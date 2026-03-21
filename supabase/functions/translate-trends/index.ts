@@ -120,43 +120,6 @@ Deno.serve(async (req) => {
       return Response.json({ translations: [] }, { headers: corsHeaders });
     }
     const langLabel = langNames[targetLang] || targetLang;
-    // For Portuguese: only translate items with non-Latin scripts (CJK, Cyrillic, Arabic, Thai, etc.)
-    const NON_LATIN = /[\u3000-\u9FFF\u1100-\u11FF\uAC00-\uD7AF\u0400-\u04FF\u0600-\u06FF\u0E00-\u0E7F\u3040-\u309F\u30A0-\u30FF\uFF00-\uFFEF]/;
-    if (targetLang === "pt") {
-      const nonLatinItems: { idx: number; title: string; details?: string }[] = [];
-      for (let i = 0; i < items.length; i++) {
-        if (NON_LATIN.test(items[i].title) || NON_LATIN.test(items[i].details || "")) {
-          nonLatinItems.push({ idx: i, ...items[i] });
-        }
-      }
-      if (nonLatinItems.length === 0) {
-        return Response.json({ translations: items }, { headers: corsHeaders });
-      }
-      const toTranslate = nonLatinItems.map(x => ({ title: x.title, details: x.details }));
-      const batchesNL: { title: string; details?: string }[][] = [];
-      for (let i = 0; i < toTranslate.length; i += BATCH_SIZE) {
-        batchesNL.push(toTranslate.slice(i, i + BATCH_SIZE));
-      }
-      const resultsNL: { title: string; details?: string }[][] = new Array(batchesNL.length);
-      let nextIdxNL = 0;
-      async function workerNL() {
-        while (true) {
-          const idx = nextIdxNL++;
-          if (idx >= batchesNL.length) break;
-          resultsNL[idx] = await translateBatch(batchesNL[idx], langLabel, LOVABLE_API_KEY!);
-        }
-      }
-      await Promise.all(
-        Array.from({ length: Math.min(4, batchesNL.length) }, () => workerNL())
-      );
-      const flatNL: { title: string; details?: string }[] = [];
-      for (const b of resultsNL) { if (b) flatNL.push(...b); }
-      const finalItems = [...items];
-      for (let i = 0; i < nonLatinItems.length && i < flatNL.length; i++) {
-        finalItems[nonLatinItems[i].idx] = flatNL[i];
-      }
-      return Response.json({ translations: finalItems }, { headers: corsHeaders });
-    }
     // Split into batches
     const batches: { title: string; details?: string }[][] = [];
     for (let i = 0; i < items.length; i += BATCH_SIZE) {
