@@ -566,7 +566,7 @@ const TimelineCard = ({
                   <span className="text-[9px] font-semibold text-foreground/40 uppercase tracking-wider block mb-1.5">
                     {lang === "pt" ? "Evolução 24h" : "24h Evolution"}
                   </span>
-                  <div className="h-28 -mx-1">
+                  <div className="h-32 sm:h-28 -mx-1 min-h-[7rem]">
                     <Suspense fallback={<div className="h-full bg-muted/30 rounded animate-pulse" />}>
                       <LazyExpandedChart
                         data={historicalData.slice(-12)}
