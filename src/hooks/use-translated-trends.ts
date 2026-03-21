@@ -115,7 +115,7 @@ export function useTranslatedTrends(trends: TrendCardProps[], lang: string) {
       const translations = data.translations as { title: string; details?: string }[];
       for (let i = 0; i < items.length && i < translations.length; i++) {
         const t = translations[i];
-        if (t.title && t.title !== items[i].title) {
+        if (t.title) {
           result.set(items[i].index, t);
           const key = getCacheKey(items[i].title, targetLang);
           cacheRef.current[key] = { ...t, ts: Date.now() };
