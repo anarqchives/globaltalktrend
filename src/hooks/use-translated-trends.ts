@@ -48,44 +48,37 @@ function saveCache(cache: TranslationCache) {
   } catch { /* storage full */ }
 }
 
-// Platforms that ALREADY produce content in specific languages
-const PLATFORM_LANG: Record<string, string> = {
-  IBGE: "pt",
-  "Hacker News": "en",
-  GitHub: "en",
-  "Stack Overflow": "en",
-  "The Guardian": "en",
-  NPR: "en",
-  OpenAlex: "en",
-  arXiv: "en",
+// Detect if text is already in the target language heuristically
+const LANG_INDICATORS: Record<string, RegExp> = {
+  pt: /\b(que|para|com|uma|não|são|mais|como|foi|está|por|dos|das|tem|ser|nos|aos)\b/i,
+  en: /\b(the|and|for|with|that|this|from|will|about|their|which|there|these|have|been)\b/i,
+  es: /\b(que|para|con|una|más|como|por|los|las|del|desde|está|tiene|son|pero)\b/i,
+  fr: /\b(les|des|pour|dans|une|avec|sur|par|qui|que|est|sont|cette|nous|leur)\b/i,
+  de: /\b(der|die|das|und|ist|ein|eine|mit|auf|für|von|nicht|sich|den|dem)\b/i,
+  it: /\b(che|per|con|una|del|della|sono|dal|gli|nel|alla|sulla|questo|quella)\b/i,
+  ru: /[\u0400-\u04FF]/,
+  zh: /[\u4E00-\u9FFF]/,
+  ja: /[\u3040-\u309F\u30A0-\u30FF]/,
+  ko: /[\uAC00-\uD7AF\u1100-\u11FF]/,
+  ar: /[\u0600-\u06FF]/,
+  hi: /[\u0900-\u097F]/,
 };
-
-// Detect non-Latin scripts that always need translation regardless of target lang
-const NON_LATIN_REGEX = /[\u3000-\u9FFF\u1100-\u11FF\uAC00-\uD7AF\u0400-\u04FF\u0600-\u06FF\u0E00-\u0E7F\u3040-\u309F\u30A0-\u30FF\uFF00-\uFFEF]/;
-const ENGLISH_INDICATORS = /\b(the|and|of|for|has|with|that|this|from|will|about|after|before|between|during|into|said|says|could|would|should|their|which|there|these|those|other|where)\b/i;
 
 function needsTranslation(trend: TrendCardProps, lang: string): boolean {
   const title = trend.title || "";
-  
-  // Non-Latin scripts ALWAYS need translation (CJK, Cyrillic, Arabic, Thai, etc.)
-  if (NON_LATIN_REGEX.test(title)) {
-    return true;
+  if (!title.trim()) return false;
+
+  // If the title already matches the target language pattern, skip
+  const targetPattern = LANG_INDICATORS[lang];
+  if (targetPattern && targetPattern.test(title)) {
+    // For script-based languages (CJK, Cyrillic, Arabic, Hindi), if it matches, it's already in language
+    if (["ru", "zh", "ja", "ko", "ar", "hi"].includes(lang)) return false;
+    // For Latin-script languages, require multiple word matches to be confident
+    const words = title.split(/\s+/);
+    const matchCount = words.filter(w => targetPattern.test(w)).length;
+    if (matchCount >= 3 || matchCount / words.length > 0.3) return false;
   }
-  
-  // If the platform already produces content in the target language, skip
-  const platformLang = PLATFORM_LANG[trend.platform];
-  if (platformLang === lang) return false;
-  
-  // For PT: translate English titles to Portuguese
-  if (lang === "pt") {
-    // If the title looks English, translate it
-    if (ENGLISH_INDICATORS.test(title)) return true;
-    // If the platform is known to produce English content, translate
-    if (platformLang === "en") return true;
-    return false;
-  }
-  
-  // Everything else needs translation
+
   return true;
 }
 
@@ -122,7 +115,7 @@ export function useTranslatedTrends(trends: TrendCardProps[], lang: string) {
       const translations = data.translations as { title: string; details?: string }[];
       for (let i = 0; i < items.length && i < translations.length; i++) {
         const t = translations[i];
-        if (t.title && t.title !== items[i].title) {
+        if (t.title) {
           result.set(items[i].index, t);
           const key = getCacheKey(items[i].title, targetLang);
           cacheRef.current[key] = { ...t, ts: Date.now() };
