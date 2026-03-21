@@ -1,15 +1,52 @@
-import React, { useMemo, useState } from "react";
+import React, { useMemo, useState, lazy, Suspense } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Bookmark, ExternalLink, Share2, ChevronDown, Globe, Eye } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { TrendCardProps } from "./TrendCard";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import { AreaChart, Area, BarChart, Bar, ResponsiveContainer, XAxis, YAxis, Tooltip as RTooltip } from "recharts";
 import { toast } from "@/hooks/use-toast";
 import {
-  PriorityResult, LIFECYCLE_LABELS, TIER_CONFIG, CONFIDENCE_CONFIG,
+  PriorityResult, LIFECYCLE_LABELS, CONFIDENCE_CONFIG,
   getSourceType, SOURCE_NATURE_LABEL_MAP, SOURCE_NATURE_COLOR_MAP,
 } from "@/lib/priority-engine";
+
+// Lazy-load recharts — only when card is expanded
+const LazyExpandedChart = lazy(() =>
+  import("recharts").then(mod => ({
+    default: ({ data, color, gradId }: { data: any[]; color: string; gradId: string }) => (
+      <mod.ResponsiveContainer width="100%" height="100%">
+        <mod.AreaChart data={data}>
+          <defs>
+            <linearGradient id={gradId} x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor={color} stopOpacity={0.2} />
+              <stop offset="100%" stopColor={color} stopOpacity={0} />
+            </linearGradient>
+          </defs>
+          <mod.XAxis dataKey="hour" tick={{ fontSize: 8, fill: "hsl(var(--muted-foreground))" }} tickLine={false} axisLine={false} interval={2} />
+          <mod.YAxis tick={{ fontSize: 8, fill: "hsl(var(--muted-foreground))" }} tickLine={false} axisLine={false} width={28}
+            tickFormatter={(v: number) => v >= 1000 ? `${(v / 1000).toFixed(0)}K` : String(v)} />
+          <mod.Tooltip contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: "8px", fontSize: 10 }} />
+          <mod.Area type="monotone" dataKey="value" stroke={color} strokeWidth={1.5} fill={`url(#${gradId})`} />
+        </mod.AreaChart>
+      </mod.ResponsiveContainer>
+    ),
+  }))
+);
+
+/* ─── Category color map ─── */
+const CATEGORY_COLORS: Record<string, string> = {
+  "entretenimento": "var(--cat-entretenimento)", "entertainment": "var(--cat-entretenimento)",
+  "tecnologia": "var(--cat-tecnologia)", "technology": "var(--cat-tecnologia)",
+  "geopolítica": "var(--cat-geopolitica)", "geopolitics": "var(--cat-geopolitica)",
+  "política": "var(--cat-geopolitica)", "politics": "var(--cat-geopolitica)",
+  "esportes": "var(--cat-esportes)", "sports": "var(--cat-esportes)",
+  "ciências": "var(--cat-ciencias)", "science": "var(--cat-ciencias)", "ciência": "var(--cat-ciencias)",
+  "cultura": "var(--cat-cultura)", "culture": "var(--cat-cultura)",
+  "economia": "var(--cat-economia)", "economy": "var(--cat-economia)", "business": "var(--cat-economia)",
+};
+function getCatColor(cat: string): string {
+  return CATEGORY_COLORS[cat?.toLowerCase().trim() || ""] || "var(--muted-foreground)";
+}
 
 /* ─── Helpers ─── */
 const SOURCE_HEX: Record<string, string> = {
@@ -103,9 +140,10 @@ const SparklineSVG = React.memo(({ data, color }: { data: number[]; color: strin
 });
 SparklineSVG.displayName = "SparklineSVG";
 
+/* ─── Scroll entry animation ─── */
 export const cardVariants = {
-  hidden: { opacity: 0, y: 12 },
-  show: { opacity: 1, y: 0, transition: { duration: 0.3, ease: [0.21, 0.47, 0.32, 0.98] as [number, number, number, number] } },
+  hidden: { opacity: 0, y: 16, scale: 0.98 },
+  show: { opacity: 1, y: 0, scale: 1, transition: { duration: 0.35, ease: [0.21, 0.47, 0.32, 0.98] as [number, number, number, number] } },
 };
 
 /* ─── Main component ─── */
@@ -137,6 +175,7 @@ const TimelineCard = ({
   const sourceType = getSourceType(platform);
   const sparkHex = SOURCE_HEX[sourceType] || "#6B6560";
   const flag = countryCodeToFlag(countryCode);
+  const catColor = getCatColor(category);
 
   const formattedTime = useMemo(() => {
     if (!publishedAt) {
@@ -179,13 +218,19 @@ const TimelineCard = ({
   const changeNum = Math.abs(parseFloat(change?.replace(/[^0-9.\-]/g, "") || "0"));
   const showChange = changeNum > 0;
 
+  // Deduplicate context: don't repeat title content
   const contextSnippet = useMemo(() => {
-    if (aiContext) return aiContext.slice(0, 200);
-    const raw = description || details || "";
-    const normTitle = title.toLowerCase().trim();
-    const normDesc = raw.toLowerCase().trim();
-    if (!normDesc || normDesc === normTitle || normDesc.startsWith(normTitle.slice(0, 30))) return null;
-    return raw.slice(0, 160) + (raw.length > 160 ? "…" : "");
+    const raw = aiContext || description || details || "";
+    if (!raw) return null;
+    const normTitle = title.toLowerCase().replace(/[^a-z0-9\s]/g, "").trim();
+    const normDesc = raw.toLowerCase().replace(/[^a-z0-9\s]/g, "").trim();
+    // Skip if context is essentially the title
+    if (!normDesc || normDesc === normTitle) return null;
+    // Skip if context starts with the same words as title
+    const titleWords = normTitle.split(/\s+/).slice(0, 5).join(" ");
+    if (titleWords.length > 10 && normDesc.startsWith(titleWords)) return null;
+    const snippet = raw.slice(0, 160) + (raw.length > 160 ? "…" : "");
+    return snippet;
   }, [aiContext, description, details, title]);
 
   const termExplanation = useMemo(() => findTermExplanation(title, lang), [title, lang]);
@@ -209,34 +254,40 @@ const TimelineCard = ({
   };
 
   // v2.0 visual config
-  const tierBorder = priority ? TIER_CONFIG[priority.tier].borderColor : sparkHex;
   const confConfig = priority ? CONFIDENCE_CONFIG[priority.confidence] : null;
   const lcConfig = priority ? LIFECYCLE_LABELS[priority.lifecycle] : null;
   const sourceNatureLabel = priority?.sourceNature || (SOURCE_NATURE_LABEL_MAP[sourceType]?.[lang] || "");
   const sourceNatureColor = SOURCE_NATURE_COLOR_MAP[sourceType] || sparkHex;
 
-  /* ═══════════════════════════════════════════════════════════
-   *  COMPACT MODE — border + reason + title + confidence + stage
-   * ═══════════════════════════════════════════════════════════ */
+  /* ═══ COMPACT MODE ═══ */
   if (compact) {
     return (
       <motion.div
         variants={cardVariants}
+        initial="hidden"
+        whileInView="show"
+        viewport={{ once: true, margin: "-30px" }}
         layout
         whileTap={{ scale: 0.98 }}
-        className="bg-card rounded-md border border-border/15 cursor-pointer w-full relative overflow-hidden
+        className="bg-card rounded-md border border-border/20 cursor-pointer w-full relative overflow-hidden
           shadow-[0_1px_3px_0_hsl(var(--foreground)/0.04)]
           hover:shadow-[0_2px_8px_0_hsl(var(--foreground)/0.08)]
           transition-shadow duration-200"
-        style={{ borderLeftWidth: 4, borderLeftColor: tierBorder, padding: "6px 10px" }}
+        style={{ padding: "6px 10px" }}
         onClick={() => onClick?.()}
       >
-        {/* Line 1: Reason */}
-        {priority && (
-          <p className="text-[9px] font-semibold truncate mb-0.5" style={{ color: tierBorder }}>
-            {priority.reason}
-          </p>
-        )}
+        {/* Line 1: Category tag + Reason */}
+        <div className="flex items-center gap-1.5 mb-0.5">
+          <span className="text-[7px] font-bold px-1 py-0.5 rounded-full uppercase tracking-wider flex-shrink-0"
+            style={{ backgroundColor: `hsl(${catColor} / 0.12)`, color: `hsl(${catColor})` }}>
+            {category}
+          </span>
+          {priority && (
+            <p className="text-[9px] font-semibold truncate" style={{ color: `hsl(${catColor})` }}>
+              {priority.reason}
+            </p>
+          )}
+        </div>
 
         {/* Line 2: Title */}
         <h3 className="text-[11px] font-semibold text-foreground leading-snug line-clamp-1 mb-0.5"
@@ -265,7 +316,7 @@ const TimelineCard = ({
             </div>
           )}
           {showChange && (
-            <span className={`text-[9px] font-bold tabular-nums ${changePositive ? "text-emerald-600" : "text-red-500"}`}>
+            <span className={`text-[9px] font-bold tabular-nums ${changePositive ? "text-emerald-600 dark:text-emerald-400" : "text-red-500 dark:text-red-400"}`}>
               {changePositive ? "↗" : "↘"}{change}
             </span>
           )}
@@ -274,37 +325,37 @@ const TimelineCard = ({
     );
   }
 
-  /* ═══════════════════════════════════════════════════════════
-   *  EXPANDED MODE — full v2.0 card
-   * ═══════════════════════════════════════════════════════════ */
+  /* ═══ EXPANDED MODE — full card with scroll animation ═══ */
   return (
     <motion.div
       variants={cardVariants}
+      initial="hidden"
+      whileInView="show"
+      viewport={{ once: true, margin: "-30px" }}
       layout
       whileHover={{ y: -1, transition: { duration: 0.15, ease: [0.21, 0.47, 0.32, 0.98] } }}
       whileTap={{ scale: 0.98 }}
-      className={`bg-card rounded-lg border cursor-pointer w-full relative overflow-hidden
+      className={`bg-card rounded-lg border border-border/20 cursor-pointer w-full relative overflow-hidden
         shadow-[0_1px_4px_0_hsl(var(--foreground)/0.05),0_2px_8px_-2px_hsl(var(--foreground)/0.06)]
         hover:shadow-[0_3px_12px_0_hsl(var(--foreground)/0.08),0_2px_6px_-2px_hsl(var(--foreground)/0.09)]
         transition-shadow duration-200 ease-[cubic-bezier(0.21,0.47,0.32,0.98)]
         ${mapSelected ? "ring-2 ring-primary/20" : ""}
         ${isSelected ? "shadow-[var(--shadow-md)]" : ""}`}
-      style={{
-        borderLeftWidth: 4,
-        borderLeftColor: tierBorder,
-        borderTopColor: "hsl(var(--border) / 0.15)",
-        borderRightColor: "hsl(var(--border) / 0.15)",
-        borderBottomColor: "hsl(var(--border) / 0.15)",
-        padding: "10px 12px",
-      }}
+      style={{ padding: "10px 12px" }}
       onClick={handleCardClick}
     >
-      {/* ① REASON — dominant first-read element */}
-      {priority && (
-        <p className="text-[10px] font-bold leading-tight truncate mb-1" style={{ color: tierBorder }}>
-          {priority.reason}
-        </p>
-      )}
+      {/* ① CATEGORY TAG + REASON */}
+      <div className="flex items-center gap-1.5 mb-1">
+        <span className="text-[8px] font-bold px-1.5 py-0.5 rounded-full uppercase tracking-wider flex-shrink-0"
+          style={{ backgroundColor: `hsl(${catColor} / 0.12)`, color: `hsl(${catColor})` }}>
+          {category}
+        </span>
+        {priority && (
+          <p className="text-[10px] font-bold leading-tight truncate" style={{ color: `hsl(${catColor})` }}>
+            {priority.reason}
+          </p>
+        )}
+      </div>
 
       {/* ② TITLE + thumbnail */}
       <div className="flex gap-2 mb-1.5">
@@ -322,9 +373,8 @@ const TimelineCard = ({
         )}
       </div>
 
-      {/* ③ CONFIDENCE + SOURCE TYPE + TIME + STAGE — single metadata line */}
+      {/* ③ CONFIDENCE + SOURCE TYPE + TIME + STAGE */}
       <div className="flex items-center gap-1.5 mb-1.5 flex-wrap">
-        {/* Confidence badge (independent) */}
         {confConfig && (
           <Tooltip>
             <TooltipTrigger asChild>
@@ -340,7 +390,6 @@ const TimelineCard = ({
           </Tooltip>
         )}
 
-        {/* Source nature badge (color = origin type, NOT reliability) */}
         <button onClick={(e) => { e.stopPropagation(); onFilterPlatform?.(platform); }}
           className="flex items-center gap-1 flex-shrink-0 hover:opacity-80 transition-opacity">
           <span className="text-[8px] font-semibold px-1.5 py-0.5 rounded"
@@ -349,27 +398,17 @@ const TimelineCard = ({
           </span>
         </button>
 
-        {/* Platform name */}
-        <span className="text-[8px] font-medium text-muted-foreground uppercase tracking-wider">{platform}</span>
-
-        <span className="text-[8px] text-muted-foreground/20">·</span>
-
-        {/* Flag */}
+        <span className="text-[8px] font-medium text-foreground/50 uppercase tracking-wider">{platform}</span>
+        <span className="text-[8px] text-foreground/15">·</span>
         {flag && <span className="text-[10px]" title={countryCode}>{flag}</span>}
-
-        {/* Time */}
         <span className="text-[9px] text-muted-foreground">{formattedTime}</span>
 
-        {/* Multi-platform */}
         {isMultiplatform && (
-          <span className="text-[7px] font-semibold px-1 py-0.5 rounded bg-primary/8 text-primary">
-            🌐 Multi
-          </span>
+          <span className="text-[7px] font-semibold px-1 py-0.5 rounded bg-primary/8 text-primary">🌐 Multi</span>
         )}
 
         <div className="flex-1" />
 
-        {/* Stage — always visible */}
         {lcConfig && (
           <Tooltip>
             <TooltipTrigger asChild>
@@ -384,14 +423,14 @@ const TimelineCard = ({
         )}
       </div>
 
-      {/* ④ CONTEXT (1-line default, 2 expanded) — only when title isn't enough */}
+      {/* ④ CONTEXT — deduplicated, never repeats title */}
       {contextSnippet && (
-        <p className={`text-[10px] text-muted-foreground leading-relaxed mb-1.5 ${expanded ? "line-clamp-3" : "line-clamp-1"}`}>
+        <p className={`text-[10px] text-foreground/50 leading-relaxed mb-1.5 ${expanded ? "line-clamp-3" : "line-clamp-1"}`}>
           {decodeEntities(contextSnippet)}
         </p>
       )}
 
-      {/* ⑤ SPARKLINE + DELTA + VOLUME — bottom row */}
+      {/* ⑤ SPARKLINE + DELTA + VOLUME */}
       <div className="flex items-end gap-2 mt-0.5">
         {sparkData && sparkData.length >= 2 && (
           <div className="flex-1 min-w-0" style={{ height: 22 }}>
@@ -402,14 +441,14 @@ const TimelineCard = ({
 
         <div className="flex items-center gap-2 flex-shrink-0">
           {showChange && (
-            <span className={`text-[10px] font-bold tabular-nums ${changePositive ? "text-emerald-600" : "text-red-500"}`}>
+            <span className={`text-[10px] font-bold tabular-nums ${changePositive ? "text-emerald-600 dark:text-emerald-400" : "text-red-500 dark:text-red-400"}`}>
               {changePositive ? "↗" : "↘"}{change}
             </span>
           )}
           {showVolume && (
             <Tooltip>
               <TooltipTrigger asChild>
-                <span className="text-[10px] font-semibold text-muted-foreground/60 tabular-nums cursor-help">{volume}</span>
+                <span className="text-[10px] font-semibold text-foreground/35 tabular-nums cursor-help">{volume}</span>
               </TooltipTrigger>
               <TooltipContent side="top" className="text-[10px]">
                 {lang === "pt" ? "Métrica bruta da fonte original" : "Raw metric from original source"}
@@ -417,19 +456,19 @@ const TimelineCard = ({
             </Tooltip>
           )}
           {sources && sources.length > 1 && (
-            <span className="text-[8px] text-muted-foreground/40 tabular-nums">{sources.length}src</span>
+            <span className="text-[8px] text-foreground/25 tabular-nums">{sources.length}src</span>
           )}
 
-          {/* Minimal actions */}
+          {/* Actions — improved icon contrast */}
           <div className="flex items-center gap-0.5 ml-1">
-            <button onClick={handleShare} className="p-0.5 rounded-md text-muted-foreground/20 hover:text-foreground/50 transition-colors"
+            <button onClick={handleShare} className="p-0.5 rounded-md text-foreground/30 hover:text-foreground/60 transition-colors"
               aria-label={lang === "pt" ? "Compartilhar" : "Share"}>
               <Share2 className="w-3 h-3" aria-hidden="true" />
             </button>
             <button onClick={(e) => {
               e.stopPropagation();
               onSaveCard?.({ title, platform, category, country_code: countryCode, source_url: sourceUrl, description: contextSnippet || "" });
-            }} className="p-0.5 rounded-md text-muted-foreground/20 hover:text-foreground/50 transition-colors"
+            }} className="p-0.5 rounded-md text-foreground/30 hover:text-foreground/60 transition-colors"
               aria-label={lang === "pt" ? "Salvar" : "Save"}>
               <Bookmark className="w-3 h-3" aria-hidden="true" />
             </button>
@@ -437,26 +476,24 @@ const TimelineCard = ({
               <button onClick={(e) => {
                 e.stopPropagation();
                 onAddToWatchlist({ title, platform, category, countryCode, volume, change, changePositive, sources });
-              }} className="p-0.5 rounded-md text-muted-foreground/20 hover:text-foreground/50 transition-colors"
+              }} className="p-0.5 rounded-md text-foreground/30 hover:text-foreground/60 transition-colors"
                 aria-label={lang === "pt" ? "Monitorar tendência" : "Watch trend"}>
                 <Eye className="w-3 h-3" aria-hidden="true" />
               </button>
             )}
           </div>
 
-          <ChevronDown className={`w-3 h-3 text-muted-foreground/30 transition-transform ${expanded ? "rotate-180" : ""}`} />
+          <ChevronDown className={`w-3 h-3 text-foreground/25 transition-transform ${expanded ? "rotate-180" : ""}`} />
         </div>
       </div>
 
       {/* ⑥ PROPAGATION (collapsed only) */}
       {propagationSources && !expanded && (
         <div className="flex items-center gap-1 mt-1.5 pt-1.5 border-t border-border/10 overflow-hidden">
-          <span className="text-[7px] text-muted-foreground/30 uppercase tracking-wider flex-shrink-0">
-            {lang === "pt" ? "PROP" : "PROP"}
-          </span>
+          <span className="text-[7px] text-foreground/20 uppercase tracking-wider flex-shrink-0">PROP</span>
           {propagationSources.map((s, i) => (
             <React.Fragment key={i}>
-              {i > 0 && <span className="text-[8px] text-muted-foreground/20">→</span>}
+              {i > 0 && <span className="text-[8px] text-foreground/15">→</span>}
               <span className="text-[8px] font-medium text-muted-foreground px-1 py-0.5 rounded bg-muted/30 truncate max-w-[60px]">{s}</span>
             </React.Fragment>
           ))}
@@ -474,7 +511,6 @@ const TimelineCard = ({
             className="overflow-hidden"
           >
             <div className="mt-3 pt-3 border-t border-border/15 space-y-3">
-              {/* Term explanation */}
               {termExplanation && (
                 <div className="flex items-start gap-1.5 px-2 py-1.5 rounded-md text-[9px] leading-relaxed bg-muted/30 border-l-2 border-primary/30 text-muted-foreground">
                   <span className="flex-shrink-0">💡</span>
@@ -482,18 +518,18 @@ const TimelineCard = ({
                 </div>
               )}
 
-              {/* Full description */}
-              {(description || details) && (
-                <p className="text-[11px] text-muted-foreground leading-relaxed">
-                  {decodeEntities((description || details || "").slice(0, 400))}
-                </p>
-              )}
+              {/* Full description — only if different from context snippet */}
+              {(description || details) && (() => {
+                const fullText = (description || details || "").slice(0, 400);
+                // Skip if it's the same as the context snippet already shown
+                if (contextSnippet && fullText.startsWith(contextSnippet.replace("…", ""))) return null;
+                return <p className="text-[11px] text-foreground/50 leading-relaxed">{decodeEntities(fullText)}</p>;
+              })()}
 
-              {/* Metric + normalized relevance */}
               {priority && (
                 <div className="flex items-center gap-3 px-2 py-1.5 rounded-md bg-muted/20">
                   <div className="flex-1">
-                    <span className="text-[8px] uppercase tracking-wider text-muted-foreground/50 block">
+                    <span className="text-[8px] uppercase tracking-wider text-foreground/30 block">
                       {lang === "pt" ? "Relevância" : "Relevance"}
                     </span>
                     <div className="flex items-center gap-1.5 mt-0.5">
@@ -505,7 +541,7 @@ const TimelineCard = ({
                   </div>
                   {showVolume && (
                     <div className="text-right flex-shrink-0">
-                      <span className="text-[8px] uppercase tracking-wider text-muted-foreground/50 block">
+                      <span className="text-[8px] uppercase tracking-wider text-foreground/30 block">
                         {lang === "pt" ? "Métrica" : "Metric"}
                       </span>
                       <span className="text-[10px] font-semibold text-foreground tabular-nums">{volume}</span>
@@ -514,57 +550,43 @@ const TimelineCard = ({
                 </div>
               )}
 
-              {/* Country */}
               {countryCode && (
                 <div className="flex items-center gap-1.5">
-                  <Globe className="w-3 h-3 text-muted-foreground/40" />
+                  <Globe className="w-3 h-3 text-foreground/30" />
                   <span className="text-[9px] text-muted-foreground">
                     {flag} {countryCode?.toUpperCase()}
-                    {isMultiplatform && (
-                      <span className="ml-1 text-[8px] text-primary">
-                        + {lang === "pt" ? "múltiplas regiões" : "multiple regions"}
-                      </span>
-                    )}
+                    {isMultiplatform && <span className="ml-1 text-[8px] text-primary">+ {lang === "pt" ? "múltiplas regiões" : "multiple regions"}</span>}
                   </span>
                 </div>
               )}
 
-              {/* Historical chart */}
+              {/* Historical chart — LAZY LOADED */}
               {historicalData && historicalData.length > 2 && (
                 <div>
-                  <span className="text-[9px] font-semibold text-muted-foreground uppercase tracking-wider block mb-1.5">
+                  <span className="text-[9px] font-semibold text-foreground/40 uppercase tracking-wider block mb-1.5">
                     {lang === "pt" ? "Evolução 24h" : "24h Evolution"}
                   </span>
                   <div className="h-28 -mx-1">
-                    <ResponsiveContainer width="100%" height="100%">
-                      <AreaChart data={historicalData.slice(-12)}>
-                        <defs>
-                          <linearGradient id={`exp_${title.slice(0, 5)}`} x1="0" y1="0" x2="0" y2="1">
-                            <stop offset="0%" stopColor={sparkHex} stopOpacity={0.2} />
-                            <stop offset="100%" stopColor={sparkHex} stopOpacity={0} />
-                          </linearGradient>
-                        </defs>
-                        <XAxis dataKey="hour" tick={{ fontSize: 8, fill: "hsl(var(--muted-foreground))" }} tickLine={false} axisLine={false} interval={2} />
-                        <YAxis tick={{ fontSize: 8, fill: "hsl(var(--muted-foreground))" }} tickLine={false} axisLine={false} width={28}
-                          tickFormatter={(v) => v >= 1000 ? `${(v / 1000).toFixed(0)}K` : String(v)} />
-                        <RTooltip contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: "8px", fontSize: 10 }} />
-                        <Area type="monotone" dataKey="value" stroke={sparkHex} strokeWidth={1.5} fill={`url(#exp_${title.slice(0, 5)})`} />
-                      </AreaChart>
-                    </ResponsiveContainer>
+                    <Suspense fallback={<div className="h-full bg-muted/30 rounded animate-pulse" />}>
+                      <LazyExpandedChart
+                        data={historicalData.slice(-12)}
+                        color={sparkHex}
+                        gradId={`exp_${title.slice(0, 5)}_${staggerIndex}`}
+                      />
+                    </Suspense>
                   </div>
                 </div>
               )}
 
-              {/* Propagation */}
               {propagationSources && (
                 <div>
-                  <span className="text-[8px] text-muted-foreground/50 uppercase tracking-wider block mb-1">
+                  <span className="text-[8px] text-foreground/30 uppercase tracking-wider block mb-1">
                     {lang === "pt" ? "Propagação" : "Propagation"}
                   </span>
                   <div className="flex items-center gap-1.5 flex-wrap">
                     {propagationSources.map((s, i) => (
                       <React.Fragment key={i}>
-                        {i > 0 && <span className="text-[9px] text-muted-foreground/25">→</span>}
+                        {i > 0 && <span className="text-[9px] text-foreground/15">→</span>}
                         <span className="text-[9px] font-medium text-muted-foreground px-1.5 py-0.5 rounded-md bg-secondary">{s}</span>
                       </React.Fragment>
                     ))}
@@ -572,7 +594,6 @@ const TimelineCard = ({
                 </div>
               )}
 
-              {/* Actions row */}
               <div className="flex items-center gap-2 pt-1">
                 {sourceUrl && (
                   <a href={sourceUrl} target="_blank" rel="noopener noreferrer" onClick={(e) => e.stopPropagation()}

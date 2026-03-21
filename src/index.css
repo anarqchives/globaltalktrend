@@ -7,8 +7,17 @@
     /* ─── CORE SURFACE — warm premium ─── */
     --background: 38 18% 94%;
     --foreground: 30 10% 10%;
-    --card: 0 0% 100%;
+    --card: 38 12% 97%;
     --card-foreground: 30 10% 10%;
+
+    /* ─── CATEGORY COLORS ─── */
+    --cat-entretenimento: 330 65% 52%;
+    --cat-tecnologia: 210 80% 52%;
+    --cat-geopolitica: 0 70% 52%;
+    --cat-esportes: 145 60% 40%;
+    --cat-ciencias: 262 55% 55%;
+    --cat-cultura: 24 75% 55%;
+    --cat-economia: 38 85% 48%;
     --popover: 0 0% 100%;
     --popover-foreground: 30 10% 10%;
     --primary: 30 10% 10%;
@@ -133,8 +142,16 @@
   .dark {
     --background: 220 18% 7%;
     --foreground: 30 10% 92%;
-    --card: 220 16% 10%;
+    --card: 220 16% 11%;
     --card-foreground: 30 10% 92%;
+
+    --cat-entretenimento: 330 70% 62%;
+    --cat-tecnologia: 210 85% 62%;
+    --cat-geopolitica: 0 75% 62%;
+    --cat-esportes: 145 65% 50%;
+    --cat-ciencias: 262 60% 65%;
+    --cat-cultura: 24 80% 62%;
+    --cat-economia: 38 90% 58%;
     --popover: 220 18% 9%;
     --popover-foreground: 30 10% 92%;
     --primary: 30 10% 92%;
