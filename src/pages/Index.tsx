@@ -7,6 +7,7 @@ import { FilterState } from "@/components/FilterBar";
 import TimelineCard from "@/components/TimelineCard";
 import TrendCardSkeleton from "@/components/TrendCardSkeleton";
 import TransparencyPanel from "@/components/TransparencyPanel";
+import OfflineFallback, { saveOfflineCache } from "@/components/OfflineFallback";
 
 import { TrendCardProps } from "@/components/TrendCard";
 import { useTrends } from "@/hooks/use-trends";
