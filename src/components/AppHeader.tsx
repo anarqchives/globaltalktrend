@@ -32,7 +32,7 @@ interface AppHeaderProps {
   isLoading?: boolean;
 }
 
-const AppHeader = ({ isTranslating }: AppHeaderProps = {}) => {
+const AppHeader = ({ isTranslating, isLoading }: AppHeaderProps = {}) => {
   const { lang, setLang, t } = useLanguage();
   const navigate = useNavigate();
   const [user, setUser] = useState<import("@supabase/supabase-js").User | null>(null);
