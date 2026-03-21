@@ -6,7 +6,6 @@ import FilterBlock from "@/components/FilterBlock";
 import { FilterState } from "@/components/FilterBar";
 import TimelineCard from "@/components/TimelineCard";
 import TrendCardSkeleton from "@/components/TrendCardSkeleton";
-import TransparencyPanel from "@/components/TransparencyPanel";
 import OfflineFallback, { saveOfflineCache } from "@/components/OfflineFallback";
 
 import { TrendCardProps } from "@/components/TrendCard";
@@ -36,7 +35,8 @@ import {
 } from "@/components/ui/resizable";
 
 const GoogleMapView = lazy(() => import("@/components/GoogleMapView"));
-import { SavedCollectionsSheet } from "@/components/SavedCollectionsSheet";
+const SavedCollectionsSheet = lazy(() => import("@/components/SavedCollectionsSheet").then(m => ({ default: m.SavedCollectionsSheet })));
+const TransparencyPanel = lazy(() => import("@/components/TransparencyPanel"));
 
 const MapFallback = () => (
   <div className="h-[400px] md:h-full w-full flex items-center justify-center bg-muted/30 rounded-2xl">
@@ -676,19 +676,23 @@ const Index = () => {
         )}
       </div>
 
-      <TransparencyPanel
-        open={transparencyOpen}
-        onClose={() => setTransparencyOpen(false)}
-        sourcesStatus={sourcesStatus}
-        lastUpdated={lastUpdated}
-        totalTrends={filteredTrends.length}
-      />
-      <SavedCollectionsSheet
-        open={collectionsOpen}
-        onOpenChange={setCollectionsOpen}
-        cards={savedCards}
-        removeCard={removeCard}
-      />
+      <Suspense fallback={null}>
+        <TransparencyPanel
+          open={transparencyOpen}
+          onClose={() => setTransparencyOpen(false)}
+          sourcesStatus={sourcesStatus}
+          lastUpdated={lastUpdated}
+          totalTrends={filteredTrends.length}
+        />
+      </Suspense>
+      <Suspense fallback={null}>
+        <SavedCollectionsSheet
+          open={collectionsOpen}
+          onOpenChange={setCollectionsOpen}
+          cards={savedCards}
+          removeCard={removeCard}
+        />
+      </Suspense>
     </div>
   );
 };
