@@ -27,7 +27,11 @@ const DATA_SOURCES: SourceDef[] = [
   { name: "Tech/Science Extra", fn: "fetch-tech-science-extra", category: "Ciência" },
 ];
 
-const AppHeader = () => {
+interface AppHeaderProps {
+  isTranslating?: boolean;
+}
+
+const AppHeader = ({ isTranslating }: AppHeaderProps = {}) => {
   const { lang, setLang, t } = useLanguage();
   const navigate = useNavigate();
   const [user, setUser] = useState<import("@supabase/supabase-js").User | null>(null);
@@ -131,8 +135,13 @@ const AppHeader = () => {
                 onClick={() => setLangOpen(!langOpen)}
                 className="flex items-center gap-0.5 sm:gap-1 h-7 sm:h-8 px-1.5 sm:px-2 rounded-lg text-[10px] sm:text-[11px] font-semibold text-muted-foreground hover:text-foreground hover:bg-muted transition-colors touch-manipulation"
               >
-                <Globe2 className="w-3.5 h-3.5" />
+                {isTranslating ? (
+                  <Loader2 className="w-3.5 h-3.5 animate-spin text-primary" />
+                ) : (
+                  <Globe2 className="w-3.5 h-3.5" />
+                )}
                 <span>{currentLang?.label || "PT"}</span>
+                {isTranslating && <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />}
                 <ChevronDown className={`w-3 h-3 transition-transform ${langOpen ? "rotate-180" : ""}`} />
               </button>
               <AnimatePresence>
