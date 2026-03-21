@@ -338,6 +338,13 @@ const Index = () => {
     });
   }, [watchlist, diversifiedTrends]);
 
+  // Save offline cache when trends update
+  useEffect(() => {
+    if (diversifiedTrends.length > 0) {
+      saveOfflineCache(diversifiedTrends.map(d => ({ title: d.trend.title, platform: d.trend.platform, volume: d.trend.volume })));
+    }
+  }, [diversifiedTrends]);
+
   // Resilient fallback
   useEffect(() => {
     if (!loading && !isFirstLoad && filteredTrends.length === 0) {
