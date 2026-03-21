@@ -5,8 +5,9 @@ import { TrendCardProps } from "@/components/TrendCard";
 const TRANSLATION_CACHE_KEY = "gtt_translation_cache_v2";
 const CACHE_TTL = 2 * 60 * 60 * 1000; // 2 hours
 const MAX_CACHE_ENTRIES = 800;
-const BATCH_SIZE = 25;
+const BATCH_SIZE = 20;
 const MAX_CONCURRENT_BATCHES = 2;
+const RETRY_DELAY_MS = 2000;
 
 interface TranslationCacheEntry {
   title: string;
@@ -200,36 +201,41 @@ export function useTranslatedTrends(trends: TrendCardProps[], lang: string) {
     (async () => {
       const allResults = new Map<number, { title: string; details?: string }>();
       
+      const applyResults = () => {
+        if (allResults.size > 0 && !controller.signal.aborted) {
+          setTranslated((prev) => prev.map((t, idx) => {
+            const tr = allResults.get(idx);
+            if (tr && !t.translated) {
+              return { ...t, title: tr.title, details: tr.details || t.details, description: tr.details || t.description, translated: true };
+            }
+            return t;
+          }));
+        }
+      };
+
       // Process batches with controlled concurrency
       for (let i = 0; i < batches.length; i += MAX_CONCURRENT_BATCHES) {
         if (controller.signal.aborted) break;
-        
         const chunk = batches.slice(i, i + MAX_CONCURRENT_BATCHES);
         const results = await Promise.all(
           chunk.map(batch => translateBatch(batch, lang, controller.signal))
         );
-        
         for (const result of results) {
           result.forEach((v, k) => allResults.set(k, v));
         }
+        applyResults();
+      }
 
-        // Apply partial results immediately for faster UX
-        if (allResults.size > 0 && !controller.signal.aborted) {
-          setTranslated((prev) => {
-            return prev.map((t, idx) => {
-              const tr = allResults.get(idx);
-              if (tr && !t.translated) {
-                return {
-                  ...t,
-                  title: tr.title,
-                  details: tr.details || t.details,
-                  description: tr.details || t.description,
-                  translated: true,
-                };
-              }
-              return t;
-            });
-          });
+      // Retry: find items that were sent but didn't get translated
+      if (!controller.signal.aborted) {
+        const stillUntranslated = uncached.filter(u => !allResults.has(u.index));
+        if (stillUntranslated.length > 0 && stillUntranslated.length <= 30) {
+          await new Promise(r => setTimeout(r, RETRY_DELAY_MS));
+          if (!controller.signal.aborted) {
+            const retryResults = await translateBatch(stillUntranslated, lang, controller.signal);
+            retryResults.forEach((v, k) => allResults.set(k, v));
+            applyResults();
+          }
         }
       }
 
