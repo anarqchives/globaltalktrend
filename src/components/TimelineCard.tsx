@@ -85,7 +85,7 @@ const SparklineSVG = React.memo(({ data, color }: { data: number[]; color: strin
   }, [data]);
   if (!data || data.length < 2) return null;
   return (
-    <svg width={100} height={24} viewBox="0 0 100 24" className="w-full h-full" style={{ overflow: "visible" }}>
+    <svg width={100} height={24} viewBox="0 0 100 24" className="w-full h-full" style={{ overflow: "visible" }} role="img" aria-label="Trend sparkline chart">
       <defs>
         <linearGradient id={id} x1="0" y1="0" x2="0" y2="1">
           <stop offset="0%" stopColor={color} stopOpacity={0.18} />
@@ -316,7 +316,7 @@ const TimelineCard = ({
         </div>
         {hasThumbnail && (
           <div className="flex-shrink-0 w-14 h-14 rounded-md overflow-hidden bg-muted">
-            <img src={thumbnail} alt="" className="w-full h-full object-cover" loading="lazy"
+            <img src={thumbnail} alt={title} className="w-full h-full object-cover" loading="lazy"
               onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
           </div>
         )}
@@ -422,22 +422,24 @@ const TimelineCard = ({
 
           {/* Minimal actions */}
           <div className="flex items-center gap-0.5 ml-1">
-            <button onClick={handleShare} className="p-0.5 rounded-md text-muted-foreground/20 hover:text-foreground/50 transition-colors">
-              <Share2 className="w-3 h-3" />
+            <button onClick={handleShare} className="p-0.5 rounded-md text-muted-foreground/20 hover:text-foreground/50 transition-colors"
+              aria-label={lang === "pt" ? "Compartilhar" : "Share"}>
+              <Share2 className="w-3 h-3" aria-hidden="true" />
             </button>
             <button onClick={(e) => {
               e.stopPropagation();
               onSaveCard?.({ title, platform, category, country_code: countryCode, source_url: sourceUrl, description: contextSnippet || "" });
-            }} className="p-0.5 rounded-md text-muted-foreground/20 hover:text-foreground/50 transition-colors">
-              <Bookmark className="w-3 h-3" />
+            }} className="p-0.5 rounded-md text-muted-foreground/20 hover:text-foreground/50 transition-colors"
+              aria-label={lang === "pt" ? "Salvar" : "Save"}>
+              <Bookmark className="w-3 h-3" aria-hidden="true" />
             </button>
             {onAddToWatchlist && (
               <button onClick={(e) => {
                 e.stopPropagation();
                 onAddToWatchlist({ title, platform, category, countryCode, volume, change, changePositive, sources });
               }} className="p-0.5 rounded-md text-muted-foreground/20 hover:text-foreground/50 transition-colors"
-                title={lang === "pt" ? "Monitorar" : "Watch"}>
-                <Eye className="w-3 h-3" />
+                aria-label={lang === "pt" ? "Monitorar tendência" : "Watch trend"}>
+                <Eye className="w-3 h-3" aria-hidden="true" />
               </button>
             )}
           </div>

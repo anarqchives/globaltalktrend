@@ -7,6 +7,7 @@ import { FilterState } from "@/components/FilterBar";
 import TimelineCard from "@/components/TimelineCard";
 import TrendCardSkeleton from "@/components/TrendCardSkeleton";
 import TransparencyPanel from "@/components/TransparencyPanel";
+import OfflineFallback, { saveOfflineCache } from "@/components/OfflineFallback";
 
 import { TrendCardProps } from "@/components/TrendCard";
 import { useTrends } from "@/hooks/use-trends";
@@ -337,6 +338,13 @@ const Index = () => {
     });
   }, [watchlist, diversifiedTrends]);
 
+  // Save offline cache when trends update
+  useEffect(() => {
+    if (diversifiedTrends.length > 0) {
+      saveOfflineCache(diversifiedTrends.map(d => ({ title: d.trend.title, platform: d.trend.platform, volume: d.trend.volume })));
+    }
+  }, [diversifiedTrends]);
+
   // Resilient fallback
   useEffect(() => {
     if (!loading && !isFirstLoad && filteredTrends.length === 0) {
@@ -391,20 +399,21 @@ const Index = () => {
               {watchlist.length > 0 && <span className="tabular-nums">{watchlist.length}</span>}
             </button>
             {updatePending && (
-              <button onClick={handleRefresh} className="flex items-center gap-1 px-2 py-1 rounded-lg text-[9px] text-muted-foreground hover:bg-muted transition-colors touch-manipulation">
-                <RefreshCw className={`w-3 h-3 ${refreshing ? "animate-spin" : ""}`} />
+              <button onClick={handleRefresh} className="flex items-center gap-1 px-2 py-1 rounded-lg text-[9px] text-muted-foreground hover:bg-muted transition-colors touch-manipulation"
+                aria-label={lang === "pt" ? "Atualizar tendências" : "Refresh trends"}>
+                <RefreshCw className={`w-3 h-3 ${refreshing ? "animate-spin" : ""}`} aria-hidden="true" />
                 <span className="hidden sm:inline">{lang === "pt" ? "Atualizar" : "Update"}</span>
               </button>
             )}
             <TagLegend />
             <div className="flex items-center overflow-hidden rounded-[10px] border border-border">
-              <button onClick={() => setCompactMode(false)} title={lang === "pt" ? "Expandido" : "Expanded"}
+              <button onClick={() => setCompactMode(false)} aria-label={lang === "pt" ? "Modo expandido" : "Expanded mode"}
                 className={`flex items-center justify-center w-7 h-[26px] transition-all touch-manipulation ${!compactMode ? "bg-primary text-primary-foreground" : "bg-card text-muted-foreground hover:bg-muted"}`}>
-                <LayoutGrid size={12} />
+                <LayoutGrid size={12} aria-hidden="true" />
               </button>
-              <button onClick={() => setCompactMode(true)} title={lang === "pt" ? "Comprimido" : "Compressed"}
+              <button onClick={() => setCompactMode(true)} aria-label={lang === "pt" ? "Modo compacto" : "Compact mode"}
                 className={`flex items-center justify-center w-7 h-[26px] transition-all touch-manipulation ${compactMode ? "bg-primary text-primary-foreground" : "bg-card text-muted-foreground hover:bg-muted"}`}>
-                <List size={12} />
+                <List size={12} aria-hidden="true" />
               </button>
             </div>
             {!isMobile && (
@@ -565,13 +574,19 @@ const Index = () => {
           )}
 
         {!loading && !isFirstLoad && diversifiedTrends.length === 0 && (
-          <div className="flex flex-col items-center justify-center py-12 px-4 text-center gap-2">
-            <span className="text-3xl">🔍</span>
-            <p className="text-[10px] font-medium text-foreground">{t("noTrends")}</p>
-            <button onClick={() => { setFilters(defaultFilters); setMapSelectedCountry(null); }} className="mt-2 px-3 py-1 rounded-full bg-primary text-primary-foreground text-[9px] font-medium hover:bg-primary/90 transition-colors touch-manipulation">
-              {lang === "pt" ? "Limpar filtros" : "Clear filters"}
-            </button>
-          </div>
+          <>
+            <OfflineFallback />
+            {navigator.onLine && (
+              <div className="flex flex-col items-center justify-center py-12 px-4 text-center gap-2">
+                <span className="text-3xl" role="img" aria-label={lang === "pt" ? "Buscar" : "Search"}>🔍</span>
+                <p className="text-[10px] font-medium text-foreground">{t("noTrends")}</p>
+                <button onClick={() => { setFilters(defaultFilters); setMapSelectedCountry(null); }} className="mt-2 px-3 py-1 rounded-full bg-primary text-primary-foreground text-[9px] font-medium hover:bg-primary/90 transition-colors touch-manipulation"
+                  aria-label={lang === "pt" ? "Limpar filtros" : "Clear filters"}>
+                  {lang === "pt" ? "Limpar filtros" : "Clear filters"}
+                </button>
+              </div>
+            )}
+          </>
         )}
 
         {diversifiedTrends.length > 0 && lastUpdated && (
