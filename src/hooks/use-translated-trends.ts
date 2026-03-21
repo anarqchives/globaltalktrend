@@ -5,8 +5,9 @@ import { TrendCardProps } from "@/components/TrendCard";
 const TRANSLATION_CACHE_KEY = "gtt_translation_cache_v2";
 const CACHE_TTL = 2 * 60 * 60 * 1000; // 2 hours
 const MAX_CACHE_ENTRIES = 800;
-const BATCH_SIZE = 25;
+const BATCH_SIZE = 20;
 const MAX_CONCURRENT_BATCHES = 2;
+const RETRY_DELAY_MS = 2000;
 
 interface TranslationCacheEntry {
   title: string;
