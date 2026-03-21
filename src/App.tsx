@@ -9,6 +9,7 @@ import { UserModeProvider } from "@/contexts/UserModeContext";
 import { toast } from "@/hooks/use-toast";
 import { ErrorBoundary, OfflineBanner } from "./components/ErrorBoundary";
 import PWAInstallBanner from "./components/PWAInstallBanner";
+import BottomNav from "./components/BottomNav";
 
 // Eagerly load the main pages (critical path)
 import Index from "./pages/Index";
