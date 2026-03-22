@@ -316,7 +316,7 @@ const FilterBlock = ({ filters, onChange, onReset, onSaveFilter, isLoggedIn }: F
   return (
     <div className="sticky top-11 sm:top-12 z-40 bg-background/90 backdrop-blur-md border-b border-border/25" style={{ WebkitBackdropFilter: "blur(12px)" }}>
       <div className="max-w-[1440px] mx-auto px-3 sm:px-6 py-1.5 sm:py-2">
-        <div className="flex items-center gap-1.5 sm:gap-2 overflow-x-auto scrollbar-none -mx-3 px-3 sm:mx-0 sm:px-0 sm:flex-wrap" style={{ WebkitOverflowScrolling: "touch" }}>
+        <div className="flex items-center gap-1 sm:gap-2 flex-wrap">
           {/* Search input */}
           <div className="relative flex items-center flex-shrink-0">
             <Search className="absolute left-2 w-2.5 h-2.5 text-muted-foreground pointer-events-none" />
