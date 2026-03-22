@@ -1,5 +1,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { checkRateLimit } from "../_shared/rate-limit.ts";
+
 const ALLOWED_ORIGINS = [
   'https://gttmonitor.com',
   'https://www.gttmonitor.com',
@@ -27,6 +29,8 @@ serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
+  const rateLimitResponse = checkRateLimit(req);
+  if (rateLimitResponse) return rateLimitResponse;
   try {
     const body = await req.json();
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
@@ -41,7 +45,6 @@ serve(async (req) => {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
-    // 1. Check cache for all trends
     const hashes = await Promise.all(
       trends.slice(0, 20).map(async (t: any) => ({
         title: t.title,
@@ -59,7 +62,6 @@ serve(async (req) => {
     for (const row of cachedRows || []) {
       cachedMap.set(row.trend_title_hash, row.generated_context);
     }
-    // 2. Separate cached vs uncached
     const cachedResults: { title: string; context: string }[] = [];
     const uncachedTrends: { index: number; title: string; trend: any; hash: string }[] = [];
     for (let i = 0; i < hashes.length; i++) {
@@ -71,13 +73,11 @@ serve(async (req) => {
         uncachedTrends.push({ index: i, title: h.title, trend: h.trend, hash: h.hash });
       }
     }
-    // 3. If all cached, return immediately
     if (uncachedTrends.length === 0) {
       return new Response(JSON.stringify({ contexts: cachedResults, cached: true }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
-    // 4. Monthly cost control: limit to 20000 generations/month
     const startOfMonth = new Date();
     startOfMonth.setDate(1);
     startOfMonth.setHours(0, 0, 0, 0);
@@ -91,7 +91,6 @@ serve(async (req) => {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
-    // 5. Build prompt for uncached trends only
     const trendLines = uncachedTrends.map((t, i) =>
       `${i + 1}. "${t.trend.title}" | Plataforma: ${t.trend.platform || "?"} | País: ${t.trend.countryCode || "GL"} | Volume: ${t.trend.volume || "?"} | Categoria: ${t.trend.category || "Geral"}`
     ).join("\n");
@@ -152,7 +151,6 @@ Do NOT repeat the title. Be concise and informative.`;
     }
     const newResults: { title: string; context: string }[] = [];
     if (parsed?.contexts) {
-      // 6. Store new contexts in cache (batch insert)
       const rowsToInsert: any[] = [];
       for (const c of parsed.contexts) {
         const uncached = uncachedTrends[c.index];
