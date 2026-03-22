@@ -669,7 +669,7 @@ const Index = () => {
 
       <div className="flex-1 overflow-hidden flex flex-col min-h-0">
         {isMobile ? (
-          <div className="flex-1 min-h-0 flex flex-col relative">
+          <div className="flex-1 min-h-0 flex flex-col relative pb-14">
             <div className="flex-1 min-h-0 overflow-hidden">
               {viewMode === "timeline" ? renderTimeline() : <div className="h-full">{renderMap()}</div>}
             </div>
