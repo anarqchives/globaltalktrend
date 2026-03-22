@@ -1,6 +1,6 @@
 import React, { useMemo, useState, lazy, Suspense } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Bookmark, ExternalLink, Share2, ChevronDown, Globe, Eye } from "lucide-react";
+import { Bookmark, ExternalLink, Share2, ChevronDown, Globe } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { TrendCardProps } from "./TrendCard";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
@@ -101,7 +101,7 @@ const relativeTimeFormats: Record<string, { now: string; min: string; h: string;
   es: { now: "ahora", min: "hace {n}min", h: "hace {n}h", d: "hace {n}d" },
 };
 
-/* ─── Mini Sparkline ─── */
+/* ─── Mini Sparkline (used only in expanded view now) ─── */
 const SparklineSVG = React.memo(({ data, color }: { data: number[]; color: string }) => {
   const id = useMemo(() => `sp_${Math.random().toString(36).slice(2, 7)}`, []);
   const { pathD, areaD, lastPt } = useMemo(() => {
@@ -139,6 +139,15 @@ const SparklineSVG = React.memo(({ data, color }: { data: number[]; color: strin
   );
 });
 SparklineSVG.displayName = "SparklineSVG";
+
+/* ─── Check if chart data is meaningful ─── */
+function isChartMeaningful(data: number[] | null): boolean {
+  if (!data || data.length < 3) return false;
+  const max = Math.max(...data), min = Math.min(...data);
+  // If variance is < 5% of max, chart is flat/inexpressive
+  if (max === 0) return false;
+  return (max - min) / max > 0.05;
+}
 
 /* ─── Scroll entry animation ─── */
 export const cardVariants = {
@@ -210,6 +219,8 @@ const TimelineCard = ({
     return null;
   }, [historicalData, rawSparkData]);
 
+  const chartIsMeaningful = useMemo(() => isChartMeaningful(sparkData), [sparkData]);
+
   const volStr = (volume || "0").toLowerCase();
   let vol = parseFloat(volStr.replace(/[^0-9.]/g, "")) || 0;
   if (volStr.includes("m")) vol *= 1_000_000;
@@ -224,12 +235,10 @@ const TimelineCard = ({
     if (!raw) return null;
     const normTitle = title.toLowerCase().replace(/[^a-z0-9\s]/g, "").trim();
     const normDesc = raw.toLowerCase().replace(/[^a-z0-9\s]/g, "").trim();
-    // Skip if context is essentially the title
     if (!normDesc || normDesc === normTitle) return null;
-    // Skip if context starts with the same words as title
     const titleWords = normTitle.split(/\s+/).slice(0, 5).join(" ");
     if (titleWords.length > 10 && normDesc.startsWith(titleWords)) return null;
-    const snippet = raw.slice(0, 160) + (raw.length > 160 ? "…" : "");
+    const snippet = raw.slice(0, 180) + (raw.length > 180 ? "…" : "");
     return snippet;
   }, [aiContext, description, details, title]);
 
@@ -242,11 +251,25 @@ const TimelineCard = ({
 
   const hasThumbnail = thumbnail && thumbnail.startsWith("http");
 
+  // Is this a press/news source that should show editorial thumbnail?
+  const isPress = sourceType === "imprensa";
+
   const handleShare = (e: React.MouseEvent) => {
     e.stopPropagation();
     const shareUrl = sourceUrl || window.location.href;
     navigator.clipboard.writeText(`${title} — ${volume} (${platform})\n${shareUrl}`);
     toast({ title: lang === "pt" ? "Link copiado!" : "Link copied!", description: title.slice(0, 60) });
+  };
+
+  const handleSave = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    // Unified save: saves to collection AND adds to watchlist
+    onSaveCard?.({ title, platform, category, country_code: countryCode, source_url: sourceUrl, description: contextSnippet || "" });
+    onAddToWatchlist?.({ title, platform, category, countryCode, volume, change, changePositive, sources });
+    toast({
+      title: lang === "pt" ? "Salvo na coleção" : "Saved to collection",
+      description: lang === "pt" ? "Você pode acompanhar em 'Coleções'" : "Track it in 'Collections'",
+    });
   };
 
   const handleCardClick = () => {
@@ -276,47 +299,19 @@ const TimelineCard = ({
         style={{ padding: "6px 10px" }}
         onClick={() => onClick?.()}
       >
-        {/* Line 1: Category tag + Reason */}
-        <div className="flex items-center gap-1.5 mb-0.5">
-          <span className="text-[7px] font-bold px-1 py-0.5 rounded-full uppercase tracking-wider flex-shrink-0"
+        {/* Category tag + Title in one line */}
+        <div className="flex items-start gap-1.5">
+          <span className="text-[7px] font-bold px-1 py-0.5 rounded-full uppercase tracking-wider flex-shrink-0 mt-0.5"
             style={{ backgroundColor: `hsl(${catColor} / 0.12)`, color: `hsl(${catColor})` }}>
             {category}
           </span>
-          {priority && (
-            <p className="text-[9px] font-semibold truncate" style={{ color: `hsl(${catColor})` }}>
-              {priority.reason}
-            </p>
-          )}
-        </div>
-
-        {/* Line 2: Title */}
-        <h3 className="text-[11px] font-semibold text-foreground leading-snug line-clamp-1 mb-0.5"
-          style={{ wordBreak: "break-word" }}>
-          {decodeEntities(title)}
-        </h3>
-
-        {/* Line 3: Confidence + Stage + Time + Sparkline */}
-        <div className="flex items-center gap-1.5">
-          {confConfig && (
-            <span className={`text-[7px] font-bold px-1 py-0.5 rounded border ${confConfig.className}`}>
-              {confConfig.icon}
-            </span>
-          )}
-          {lcConfig && (
-            <span className="text-[8px]" style={{ color: lcConfig.color }}>
-              {lcConfig.icon}
-            </span>
-          )}
-          {flag && <span className="text-[9px]">{flag}</span>}
-          <span className="text-[8px] text-muted-foreground">{formattedTime}</span>
-          <div className="flex-1" />
-          {sparkData && sparkData.length >= 2 && (
-            <div className="w-12 h-4 flex-shrink-0">
-              <SparklineSVG data={sparkData} color={sparkHex} />
-            </div>
-          )}
+          <h3 className="text-[11px] font-semibold text-foreground leading-snug line-clamp-1 flex-1 min-w-0"
+            style={{ wordBreak: "break-word" }}>
+            {decodeEntities(title)}
+          </h3>
+          {flag && <span className="text-[10px] flex-shrink-0">{flag}</span>}
           {showChange && (
-            <span className={`text-[9px] font-bold tabular-nums ${changePositive ? "text-emerald-600 dark:text-emerald-400" : "text-red-500 dark:text-red-400"}`}>
+            <span className={`text-[9px] font-bold tabular-nums flex-shrink-0 ${changePositive ? "text-emerald-600 dark:text-emerald-400" : "text-red-500 dark:text-red-400"}`}>
               {changePositive ? "↗" : "↘"}{change}
             </span>
           )}
@@ -325,7 +320,7 @@ const TimelineCard = ({
     );
   }
 
-  /* ═══ EXPANDED MODE — full card with scroll animation ═══ */
+  /* ═══ FULL CARD — Kanban editorial style ═══ */
   return (
     <motion.div
       variants={cardVariants}
@@ -333,172 +328,140 @@ const TimelineCard = ({
       whileInView="show"
       viewport={{ once: true, margin: "-30px" }}
       layout
-      whileHover={{ y: -1, transition: { duration: 0.15, ease: [0.21, 0.47, 0.32, 0.98] } }}
-      whileTap={{ scale: 0.98 }}
+      whileHover={{ y: -1, transition: { duration: 0.15 } }}
+      whileTap={{ scale: 0.99 }}
       className={`bg-card rounded-lg border border-border/20 cursor-pointer w-full relative overflow-hidden
         shadow-[0_1px_4px_0_hsl(var(--foreground)/0.05),0_2px_8px_-2px_hsl(var(--foreground)/0.06)]
         hover:shadow-[0_3px_12px_0_hsl(var(--foreground)/0.08),0_2px_6px_-2px_hsl(var(--foreground)/0.09)]
-        transition-shadow duration-200 ease-[cubic-bezier(0.21,0.47,0.32,0.98)]
+        transition-shadow duration-200
         ${mapSelected ? "ring-2 ring-primary/20" : ""}
         ${isSelected ? "shadow-[var(--shadow-md)]" : ""}`}
-      style={{ padding: "10px 12px" }}
       onClick={handleCardClick}
     >
-      {/* ① CATEGORY TAG + REASON */}
-      <div className="flex items-center gap-1.5 mb-1">
-        <span className="text-[8px] font-bold px-1.5 py-0.5 rounded-full uppercase tracking-wider flex-shrink-0"
-          style={{ backgroundColor: `hsl(${catColor} / 0.12)`, color: `hsl(${catColor})` }}>
-          {category}
-        </span>
-        {priority && (
-          <p className="text-[10px] font-bold leading-tight truncate" style={{ color: `hsl(${catColor})` }}>
-            {priority.reason}
+      {/* ─── Category accent bar (top edge) ─── */}
+      <div className="h-[2px] w-full" style={{ backgroundColor: `hsl(${catColor} / 0.5)` }} />
+
+      <div className="px-3 pt-2.5 pb-2">
+        {/* ① META LINE: category tag + source + time + stage */}
+        <div className="flex items-center gap-1.5 mb-1.5">
+          <span className="text-[8px] font-bold px-1.5 py-[1px] rounded-full uppercase tracking-wider"
+            style={{ backgroundColor: `hsl(${catColor} / 0.1)`, color: `hsl(${catColor})` }}>
+            {category}
+          </span>
+
+          <button onClick={(e) => { e.stopPropagation(); onFilterPlatform?.(platform); }}
+            className="flex-shrink-0 hover:opacity-80 transition-opacity">
+            <span className="text-[7px] font-semibold px-1.5 py-[1px] rounded-full"
+              style={{ backgroundColor: `color-mix(in srgb, ${sourceNatureColor} 10%, transparent)`, color: sourceNatureColor }}>
+              {sourceNatureLabel}
+            </span>
+          </button>
+
+          {flag && <span className="text-[10px]" title={countryCode}>{flag}</span>}
+          <span className="text-[8px] text-muted-foreground/60">{formattedTime}</span>
+
+          <div className="flex-1" />
+
+          {lcConfig && (
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <span className="text-[8px] font-medium cursor-help" style={{ color: lcConfig.color }}>
+                  {lcConfig.icon} {lcConfig[lang as "pt" | "en"] || lcConfig.en}
+                </span>
+              </TooltipTrigger>
+              <TooltipContent side="top" className="text-[10px] max-w-[200px]">
+                {lcConfig.desc[lang as "pt" | "en"] || lcConfig.desc.en}
+              </TooltipContent>
+            </Tooltip>
+          )}
+        </div>
+
+        {/* ② TITLE — primary visual element */}
+        <h3 className="text-[14px] sm:text-[15px] font-semibold text-foreground leading-[1.3] line-clamp-2 mb-1"
+          style={{ wordBreak: "break-word", letterSpacing: "-0.01em" }}>
+          {decodeEntities(title)}
+        </h3>
+
+        {/* ③ CONTEXT — real editorial snippet */}
+        {contextSnippet && (
+          <p className="text-[11px] sm:text-[12px] text-muted-foreground leading-relaxed mb-2 line-clamp-2">
+            {decodeEntities(contextSnippet)}
           </p>
         )}
-      </div>
 
-      {/* ② TITLE + thumbnail */}
-      <div className="flex gap-2 mb-1.5">
-        <div className="flex-1 min-w-0">
-          <h3 className="text-[13px] font-semibold text-foreground leading-snug line-clamp-2"
-            style={{ wordBreak: "break-word" }}>
-            {decodeEntities(title)}
-          </h3>
-        </div>
-        {hasThumbnail && (
-          <div className="flex-shrink-0 w-14 h-14 rounded-md overflow-hidden bg-muted">
+        {/* ④ EDITORIAL THUMBNAIL — for press/news cards with images */}
+        {hasThumbnail && isPress && (
+          <div className="rounded-md overflow-hidden mb-2 bg-muted aspect-[16/9] max-h-[160px]">
             <img src={thumbnail} alt={title} className="w-full h-full object-cover" loading="lazy"
-              onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
+              onError={(e) => { (e.target as HTMLImageElement).parentElement!.style.display = 'none'; }} />
           </div>
         )}
-      </div>
 
-      {/* ③ CONFIDENCE + SOURCE TYPE + TIME + STAGE */}
-      <div className="flex items-center gap-1.5 mb-1.5 flex-wrap">
-        {confConfig && (
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <span className={`text-[8px] font-bold px-1.5 py-0.5 rounded border cursor-help ${confConfig.className}`}>
-                {confConfig.icon} {confConfig.label[lang as "pt" | "en"] || confConfig.label.en}
-              </span>
-            </TooltipTrigger>
-            <TooltipContent side="top" className="text-[10px] max-w-[220px]">
-              {lang === "pt"
-                ? `Confiança baseada em ${priority?.sourceCount || 1} fonte(s) independente(s)`
-                : `Confidence based on ${priority?.sourceCount || 1} independent source(s)`}
-            </TooltipContent>
-          </Tooltip>
-        )}
+        {/* ⑤ FOOTER: metrics + actions */}
+        <div className="flex items-center gap-2">
+          {/* Confidence badge */}
+          {confConfig && (
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <span className={`text-[7px] font-bold px-1.5 py-[2px] rounded-full border cursor-help ${confConfig.className}`}>
+                  {confConfig.icon} {confConfig.label[lang as "pt" | "en"] || confConfig.label.en}
+                </span>
+              </TooltipTrigger>
+              <TooltipContent side="top" className="text-[10px] max-w-[220px]">
+                {lang === "pt"
+                  ? `Confiança baseada em ${priority?.sourceCount || 1} fonte(s) independente(s)`
+                  : `Confidence based on ${priority?.sourceCount || 1} independent source(s)`}
+              </TooltipContent>
+            </Tooltip>
+          )}
 
-        <button onClick={(e) => { e.stopPropagation(); onFilterPlatform?.(platform); }}
-          className="flex items-center gap-1 flex-shrink-0 hover:opacity-80 transition-opacity">
-          <span className="text-[8px] font-semibold px-1.5 py-0.5 rounded"
-            style={{ backgroundColor: `color-mix(in srgb, ${sourceNatureColor} 12%, transparent)`, color: sourceNatureColor }}>
-            {sourceNatureLabel}
-          </span>
-        </button>
-
-        <span className="text-[8px] font-medium text-foreground/50 uppercase tracking-wider">{platform}</span>
-        <span className="text-[8px] text-foreground/15">·</span>
-        {flag && <span className="text-[10px]" title={countryCode}>{flag}</span>}
-        <span className="text-[9px] text-muted-foreground">{formattedTime}</span>
-
-        {isMultiplatform && (
-          <span className="text-[7px] font-semibold px-1 py-0.5 rounded bg-primary/8 text-primary">🌐 Multi</span>
-        )}
-
-        <div className="flex-1" />
-
-        {lcConfig && (
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <span className="text-[8px] font-semibold cursor-help" style={{ color: lcConfig.color }}>
-                {lcConfig.icon} {lcConfig[lang as "pt" | "en"] || lcConfig.en}
-              </span>
-            </TooltipTrigger>
-            <TooltipContent side="top" className="text-[10px] max-w-[200px]">
-              {lcConfig.desc[lang as "pt" | "en"] || lcConfig.desc.en}
-            </TooltipContent>
-          </Tooltip>
-        )}
-      </div>
-
-      {/* ④ CONTEXT — deduplicated, never repeats title */}
-      {contextSnippet && (
-        <p className={`text-[10px] text-foreground/50 leading-relaxed mb-1.5 ${expanded ? "line-clamp-3" : "line-clamp-1"}`}>
-          {decodeEntities(contextSnippet)}
-        </p>
-      )}
-
-      {/* ⑤ SPARKLINE + DELTA + VOLUME */}
-      <div className="flex items-end gap-2 mt-0.5">
-        {sparkData && sparkData.length >= 2 && (
-          <div className="flex-1 min-w-0" style={{ height: 22 }}>
-            <SparklineSVG data={sparkData} color={sparkHex} />
-          </div>
-        )}
-        {!sparkData && <div className="flex-1" />}
-
-        <div className="flex items-center gap-2 flex-shrink-0">
+          {/* Volume + Change — small, secondary */}
           {showChange && (
             <span className={`text-[10px] font-bold tabular-nums ${changePositive ? "text-emerald-600 dark:text-emerald-400" : "text-red-500 dark:text-red-400"}`}>
               {changePositive ? "↗" : "↘"}{change}
             </span>
           )}
           {showVolume && (
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <span className="text-[10px] font-semibold text-foreground/35 tabular-nums cursor-help">{volume}</span>
-              </TooltipTrigger>
-              <TooltipContent side="top" className="text-[10px]">
-                {lang === "pt" ? "Métrica bruta da fonte original" : "Raw metric from original source"}
-              </TooltipContent>
-            </Tooltip>
+            <span className="text-[9px] text-muted-foreground/40 tabular-nums">{volume}</span>
           )}
           {sources && sources.length > 1 && (
-            <span className="text-[8px] text-foreground/25 tabular-nums">{sources.length}src</span>
+            <span className="text-[8px] text-muted-foreground/30 tabular-nums">{sources.length} src</span>
           )}
 
-          {/* Actions — improved icon contrast */}
-          <div className="flex items-center gap-0.5 ml-1">
-            <button onClick={handleShare} className="p-0.5 rounded-md text-foreground/30 hover:text-foreground/60 transition-colors"
-              aria-label={lang === "pt" ? "Compartilhar" : "Share"}>
-              <Share2 className="w-3 h-3" aria-hidden="true" />
-            </button>
-            <button onClick={(e) => {
-              e.stopPropagation();
-              onSaveCard?.({ title, platform, category, country_code: countryCode, source_url: sourceUrl, description: contextSnippet || "" });
-            }} className="p-0.5 rounded-md text-foreground/30 hover:text-foreground/60 transition-colors"
-              aria-label={lang === "pt" ? "Salvar" : "Save"}>
-              <Bookmark className="w-3 h-3" aria-hidden="true" />
-            </button>
-            {onAddToWatchlist && (
-              <button onClick={(e) => {
-                e.stopPropagation();
-                onAddToWatchlist({ title, platform, category, countryCode, volume, change, changePositive, sources });
-              }} className="p-0.5 rounded-md text-foreground/30 hover:text-foreground/60 transition-colors"
-                aria-label={lang === "pt" ? "Monitorar tendência" : "Watch trend"}>
-                <Eye className="w-3 h-3" aria-hidden="true" />
-              </button>
-            )}
-          </div>
+          <div className="flex-1" />
 
-          <ChevronDown className={`w-3 h-3 text-foreground/25 transition-transform ${expanded ? "rotate-180" : ""}`} />
+          {/* Action buttons — unified style */}
+          <div className="flex items-center gap-1">
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <button onClick={handleShare}
+                  className="p-1 rounded-md text-muted-foreground/40 hover:text-foreground/70 hover:bg-accent/50 transition-colors"
+                  aria-label={lang === "pt" ? "Compartilhar" : "Share"}>
+                  <Share2 className="w-3.5 h-3.5" />
+                </button>
+              </TooltipTrigger>
+              <TooltipContent side="top" className="text-[10px]">
+                {lang === "pt" ? "Compartilhar" : "Share"}
+              </TooltipContent>
+            </Tooltip>
+
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <button onClick={handleSave}
+                  className="p-1 rounded-md text-muted-foreground/40 hover:text-foreground/70 hover:bg-accent/50 transition-colors"
+                  aria-label={lang === "pt" ? "Salvar" : "Save"}>
+                  <Bookmark className="w-3.5 h-3.5" />
+                </button>
+              </TooltipTrigger>
+              <TooltipContent side="top" className="text-[10px]">
+                {lang === "pt" ? "Salvar na coleção" : "Save to collection"}
+              </TooltipContent>
+            </Tooltip>
+
+            <ChevronDown className={`w-3.5 h-3.5 text-muted-foreground/30 transition-transform duration-200 ${expanded ? "rotate-180" : ""}`} />
+          </div>
         </div>
       </div>
-
-      {/* ⑥ PROPAGATION (collapsed only) */}
-      {propagationSources && !expanded && (
-        <div className="flex items-center gap-1 mt-1.5 pt-1.5 border-t border-border/10 overflow-hidden">
-          <span className="text-[7px] text-foreground/20 uppercase tracking-wider flex-shrink-0">PROP</span>
-          {propagationSources.map((s, i) => (
-            <React.Fragment key={i}>
-              {i > 0 && <span className="text-[8px] text-foreground/15">→</span>}
-              <span className="text-[8px] font-medium text-muted-foreground px-1 py-0.5 rounded bg-muted/30 truncate max-w-[60px]">{s}</span>
-            </React.Fragment>
-          ))}
-        </div>
-      )}
 
       {/* ═══ EXPANDED ACCORDION ═══ */}
       <AnimatePresence>
@@ -510,9 +473,9 @@ const TimelineCard = ({
             transition={{ duration: 0.25, ease: [0.25, 0.1, 0.25, 1] }}
             className="overflow-hidden"
           >
-            <div className="mt-3 pt-3 border-t border-border/15 space-y-3">
+            <div className="px-3 pb-3 pt-2 border-t border-border/10 space-y-2.5">
               {termExplanation && (
-                <div className="flex items-start gap-1.5 px-2 py-1.5 rounded-md text-[9px] leading-relaxed bg-muted/30 border-l-2 border-primary/30 text-muted-foreground">
+                <div className="flex items-start gap-1.5 px-2 py-1.5 rounded-md text-[10px] leading-relaxed bg-muted/30 border-l-2 border-primary/30 text-muted-foreground">
                   <span className="flex-shrink-0">💡</span>
                   <span>{termExplanation}</span>
                 </div>
@@ -521,53 +484,61 @@ const TimelineCard = ({
               {/* Full description — only if different from context snippet */}
               {(description || details) && (() => {
                 const fullText = (description || details || "").slice(0, 400);
-                // Skip if it's the same as the context snippet already shown
                 if (contextSnippet && fullText.startsWith(contextSnippet.replace("…", ""))) return null;
-                return <p className="text-[11px] text-foreground/50 leading-relaxed">{decodeEntities(fullText)}</p>;
+                return <p className="text-[11px] text-muted-foreground leading-relaxed">{decodeEntities(fullText)}</p>;
               })()}
 
+              {/* Non-press thumbnail (shown only in expanded for social/data sources) */}
+              {hasThumbnail && !isPress && (
+                <div className="rounded-md overflow-hidden bg-muted aspect-video max-h-[140px]">
+                  <img src={thumbnail} alt={title} className="w-full h-full object-cover" loading="lazy"
+                    onError={(e) => { (e.target as HTMLImageElement).parentElement!.style.display = 'none'; }} />
+                </div>
+              )}
+
+              {/* Relevance bar */}
               {priority && (
                 <div className="flex items-center gap-3 px-2 py-1.5 rounded-md bg-muted/20">
                   <div className="flex-1">
-                    <span className="text-[8px] uppercase tracking-wider text-foreground/30 block">
+                    <span className="text-[8px] uppercase tracking-wider text-muted-foreground/50 block mb-0.5">
                       {lang === "pt" ? "Relevância" : "Relevance"}
                     </span>
-                    <div className="flex items-center gap-1.5 mt-0.5">
+                    <div className="flex items-center gap-1.5">
                       <div className="w-full h-[3px] rounded-full bg-muted/40 overflow-hidden">
-                        <div className="h-full rounded-full" style={{ width: `${priority.normalizedVolume * 100}%`, backgroundColor: sparkHex }} />
+                        <div className="h-full rounded-full transition-all" style={{ width: `${priority.normalizedVolume * 100}%`, backgroundColor: sparkHex }} />
                       </div>
                       <span className="text-[9px] font-bold tabular-nums text-muted-foreground">{Math.round(priority.normalizedVolume * 100)}%</span>
                     </div>
                   </div>
                   {showVolume && (
                     <div className="text-right flex-shrink-0">
-                      <span className="text-[8px] uppercase tracking-wider text-foreground/30 block">
-                        {lang === "pt" ? "Métrica" : "Metric"}
-                      </span>
-                      <span className="text-[10px] font-semibold text-foreground tabular-nums">{volume}</span>
+                      <span className="text-[8px] uppercase tracking-wider text-muted-foreground/50 block">{lang === "pt" ? "Métrica" : "Metric"}</span>
+                      <span className="text-[11px] font-semibold text-foreground tabular-nums">{volume}</span>
                     </div>
                   )}
                 </div>
               )}
 
-              {countryCode && (
-                <div className="flex items-center gap-1.5">
-                  <Globe className="w-3 h-3 text-foreground/30" />
-                  <span className="text-[9px] text-muted-foreground">
-                    {flag} {countryCode?.toUpperCase()}
-                    {isMultiplatform && <span className="ml-1 text-[8px] text-primary">+ {lang === "pt" ? "múltiplas regiões" : "multiple regions"}</span>}
+              {/* Sparkline — only shown expanded, only if meaningful */}
+              {chartIsMeaningful && sparkData && (
+                <div>
+                  <span className="text-[8px] uppercase tracking-wider text-muted-foreground/50 block mb-1">
+                    {lang === "pt" ? "Tendência" : "Trend"}
                   </span>
+                  <div className="h-6">
+                    <SparklineSVG data={sparkData} color={sparkHex} />
+                  </div>
                 </div>
               )}
 
-              {/* Historical chart — LAZY LOADED */}
-              {historicalData && historicalData.length > 2 && (
+              {/* Historical chart — LAZY LOADED, only if meaningful */}
+              {historicalData && historicalData.length > 2 && isChartMeaningful(historicalData.map(d => d.value)) && (
                 <div>
-                  <span className="text-[9px] font-semibold text-foreground/40 uppercase tracking-wider block mb-1.5">
+                  <span className="text-[8px] uppercase tracking-wider text-muted-foreground/50 block mb-1">
                     {lang === "pt" ? "Evolução 24h" : "24h Evolution"}
                   </span>
-                  <div className="h-32 sm:h-28 -mx-1 min-h-[7rem]">
-                    <Suspense fallback={<div className="h-full bg-muted/30 rounded animate-pulse" />}>
+                  <div className="h-28 -mx-1">
+                    <Suspense fallback={<div className="h-full bg-muted/20 rounded animate-pulse" />}>
                       <LazyExpandedChart
                         data={historicalData.slice(-12)}
                         color={sparkHex}
@@ -578,15 +549,16 @@ const TimelineCard = ({
                 </div>
               )}
 
+              {/* Propagation */}
               {propagationSources && (
                 <div>
-                  <span className="text-[8px] text-foreground/30 uppercase tracking-wider block mb-1">
+                  <span className="text-[8px] uppercase tracking-wider text-muted-foreground/50 block mb-1">
                     {lang === "pt" ? "Propagação" : "Propagation"}
                   </span>
                   <div className="flex items-center gap-1.5 flex-wrap">
                     {propagationSources.map((s, i) => (
                       <React.Fragment key={i}>
-                        {i > 0 && <span className="text-[9px] text-foreground/15">→</span>}
+                        {i > 0 && <span className="text-[8px] text-muted-foreground/20">→</span>}
                         <span className="text-[9px] font-medium text-muted-foreground px-1.5 py-0.5 rounded-md bg-secondary">{s}</span>
                       </React.Fragment>
                     ))}
@@ -594,22 +566,25 @@ const TimelineCard = ({
                 </div>
               )}
 
-              <div className="flex items-center gap-2 pt-1">
+              {/* Country */}
+              {countryCode && (
+                <div className="flex items-center gap-1.5">
+                  <Globe className="w-3 h-3 text-muted-foreground/30" />
+                  <span className="text-[9px] text-muted-foreground">
+                    {flag} {countryCode?.toUpperCase()}
+                    {isMultiplatform && <span className="ml-1 text-[8px] text-primary">+ {lang === "pt" ? "múltiplas regiões" : "multiple regions"}</span>}
+                  </span>
+                </div>
+              )}
+
+              {/* Source link */}
+              <div className="flex items-center gap-3 pt-1 border-t border-border/10">
                 {sourceUrl && (
                   <a href={sourceUrl} target="_blank" rel="noopener noreferrer" onClick={(e) => e.stopPropagation()}
-                    className="inline-flex items-center gap-1.5 text-[10px] font-medium text-primary hover:underline group">
-                    <ExternalLink className="w-3 h-3 group-hover:translate-x-0.5 transition-transform" />
+                    className="inline-flex items-center gap-1 text-[10px] font-medium text-primary hover:underline">
+                    <ExternalLink className="w-3 h-3" />
                     {lang === "pt" ? "Fonte original" : "Original source"}
                   </a>
-                )}
-                {onAddToWatchlist && (
-                  <button onClick={(e) => {
-                    e.stopPropagation();
-                    onAddToWatchlist({ title, platform, category, countryCode, volume, change, changePositive, sources });
-                  }} className="inline-flex items-center gap-1 text-[10px] font-medium text-muted-foreground hover:text-foreground transition-colors">
-                    <Eye className="w-3 h-3" />
-                    {lang === "pt" ? "Monitorar" : "Watch"}
-                  </button>
                 )}
               </div>
             </div>
