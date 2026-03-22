@@ -1,4 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { checkRateLimit } from "../_shared/rate-limit.ts";
 const ALLOWED_ORIGINS = [
   'https://gttmonitor.com',
   'https://www.gttmonitor.com',
@@ -273,6 +274,8 @@ async function fetchNewsAPI(lang = "pt"): Promise<TrendItem[]> {
 serve(async (req) => {
   const corsHeaders = getCorsHeaders(req);
   if (req.method === "OPTIONS") {
+  const rateLimitResponse = checkRateLimit(req);
+  if (rateLimitResponse) return rateLimitResponse;
     return new Response(null, { headers: corsHeaders });
   }
   try {
