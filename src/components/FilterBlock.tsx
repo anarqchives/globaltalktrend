@@ -102,14 +102,14 @@ function FilterDropdown({
       <button
         ref={triggerRef}
         onClick={() => setOpen(!open)}
-        className={`flex items-center gap-1 h-[26px] px-2.5 rounded-full text-[10px] font-medium transition-all border flex-shrink-0 ${
+        className={`inline-flex items-center gap-0.5 h-[28px] px-2 rounded-full text-[11px] font-medium transition-all border flex-shrink-0 touch-manipulation ${
           isActive
             ? "bg-primary/10 text-primary border-primary/30 shadow-sm"
             : "bg-card text-muted-foreground border-border/40 hover:border-border hover:text-foreground"
         }`}
       >
-        <Icon className="w-2.5 h-2.5 shrink-0" />
-        <span className="truncate max-w-[90px]">{displayLabel}</span>
+        <Icon className="w-3 h-3 shrink-0" />
+        <span className="truncate max-w-[72px] sm:max-w-[90px]">{displayLabel}</span>
         <ChevronDown className={`w-2.5 h-2.5 shrink-0 transition-transform ${open ? "rotate-180" : ""}`} />
         {isActive && (
           <span
@@ -139,7 +139,7 @@ function FilterDropdown({
                   <button
                     key={opt.value}
                     onClick={() => { onSelect(opt.value); setOpen(false); }}
-                    className={`w-full flex items-center gap-2 px-3 py-2 rounded-lg text-[11px] font-medium transition-all ${
+                    className={`w-full flex items-center gap-2 px-3 py-1.5 rounded-lg text-[11px] font-medium transition-all ${
                       value === opt.value
                         ? "bg-primary text-primary-foreground"
                         : "text-foreground hover:bg-muted"
@@ -203,14 +203,14 @@ function CountryDropdown({ value, onSelect }: { value: string; onSelect: (v: str
       <button
         ref={triggerRef}
         onClick={() => setOpen(!open)}
-        className={`flex items-center gap-1 h-[26px] px-2.5 rounded-full text-[10px] font-medium transition-all border flex-shrink-0 ${
+        className={`inline-flex items-center gap-0.5 h-[28px] px-2 rounded-full text-[11px] font-medium transition-all border flex-shrink-0 touch-manipulation ${
           isActive
             ? "bg-primary/10 text-primary border-primary/30 shadow-sm"
             : "bg-card text-muted-foreground border-border/40 hover:border-border hover:text-foreground"
         }`}
       >
-        <MapPin className="w-2.5 h-2.5 shrink-0" />
-        <span className="truncate max-w-[90px]">{currentLabel}</span>
+        <MapPin className="w-3 h-3 shrink-0" />
+        <span className="truncate max-w-[72px] sm:max-w-[90px]">{currentLabel}</span>
         <ChevronDown className={`w-2.5 h-2.5 shrink-0 transition-transform ${open ? "rotate-180" : ""}`} />
         {isActive && (
           <span
@@ -315,17 +315,17 @@ const FilterBlock = ({ filters, onChange, onReset, onSaveFilter, isLoggedIn }: F
 
   return (
     <div className="sticky top-11 sm:top-12 z-40 bg-background/90 backdrop-blur-md border-b border-border/25" style={{ WebkitBackdropFilter: "blur(12px)" }}>
-      <div className="max-w-[1440px] mx-auto px-3 sm:px-6 py-1.5 sm:py-2">
-        <div className="flex items-center gap-1 sm:gap-2 flex-wrap">
+      <div className="max-w-[1440px] mx-auto px-2 sm:px-6 py-1.5 sm:py-2">
+        <div className="flex items-center gap-1 flex-wrap">
           {/* Search input */}
           <div className="relative flex items-center">
-            <Search className="absolute left-2 w-2.5 h-2.5 text-muted-foreground pointer-events-none" />
+            <Search className="absolute left-2 w-3 h-3 text-muted-foreground pointer-events-none" />
             <input
               type="text"
               placeholder={lang === "pt" ? "Buscar..." : "Search..."}
               value={filters.query || ""}
               onChange={e => update("query", e.target.value)}
-              className="h-[26px] w-[80px] sm:w-[130px] pl-6 pr-5 rounded-full text-[10px] font-medium border border-border/40 bg-card text-foreground placeholder:text-muted-foreground outline-none focus:border-primary/40 focus:w-[120px] sm:focus:w-[180px] transition-all"
+              className="h-[28px] w-[72px] sm:w-[130px] pl-6 pr-5 rounded-full text-[11px] font-medium border border-border/40 bg-card text-foreground placeholder:text-muted-foreground outline-none focus:border-primary/40 focus:w-[110px] sm:focus:w-[180px] transition-all"
             />
             {filters.query && (
               <button onClick={() => update("query", "")} className="absolute right-1.5 p-0.5 rounded-full hover:bg-muted transition-colors">
@@ -371,33 +371,27 @@ const FilterBlock = ({ filters, onChange, onReset, onSaveFilter, isLoggedIn }: F
             onClick={onReset}
             disabled={!hasActive}
             title={lang === "pt" ? "Limpar filtros" : "Reset filters"}
-            className={`flex items-center gap-1 h-[26px] px-2 rounded-full text-[10px] font-medium transition-all flex-shrink-0 touch-manipulation ${
+            className={`inline-flex items-center justify-center h-[28px] w-[28px] rounded-full transition-all flex-shrink-0 touch-manipulation ${
               hasActive
                 ? "text-foreground bg-muted hover:bg-destructive/10 hover:text-destructive"
                 : "text-muted-foreground/30 cursor-not-allowed"
             }`}
           >
-            <RotateCcw className="w-3 h-3" />
-            <span className="hidden sm:inline">{lang === "pt" ? "Limpar" : "Reset"}</span>
+            <RotateCcw className="w-3.5 h-3.5" />
           </button>
 
-          {/* Save filter - always visible */}
+          {/* Save filter */}
           <button
-            onClick={() => {
-              if (onSaveFilter) {
-                onSaveFilter();
-              }
-            }}
+            onClick={() => { if (onSaveFilter) onSaveFilter(); }}
             disabled={!hasActive}
             title={lang === "pt" ? "Salvar filtro" : "Save filter"}
-            className={`flex items-center gap-1 h-[26px] px-2 rounded-full text-[10px] font-medium transition-all flex-shrink-0 touch-manipulation ${
+            className={`inline-flex items-center justify-center h-[28px] w-[28px] rounded-full transition-all flex-shrink-0 touch-manipulation ${
               hasActive
                 ? "text-foreground bg-muted hover:bg-primary/10 hover:text-primary"
                 : "text-muted-foreground/30 cursor-not-allowed"
             }`}
           >
-            <Bookmark className="w-3 h-3" />
-            <span className="hidden sm:inline">{lang === "pt" ? "Salvar" : "Save"}</span>
+            <Bookmark className="w-3.5 h-3.5" />
           </button>
         </div>
       </div>
