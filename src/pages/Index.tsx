@@ -681,7 +681,7 @@ const Index = () => {
   const closedPanelsList = (["timeline", "map"] as const).filter(p => !panelVisibility[p]);
 
   return (
-    <div className="h-screen flex flex-col bg-background overflow-hidden w-full max-w-[100vw] pb-[env(safe-area-inset-bottom,0px)] md:pb-0">
+    <div className="h-screen flex flex-col bg-background overflow-hidden w-full max-w-[100vw]">
       <AppHeader isTranslating={isTranslating} isLoading={loading} />
       <FilterBlock filters={filters} onChange={handleFilterChange} onReset={() => { setFilters(defaultFilters); setMapSelectedCountry(null); }} onSaveFilter={() => {
         if (!user) {
@@ -694,14 +694,14 @@ const Index = () => {
 
       <div className="flex-1 overflow-hidden flex flex-col min-h-0">
         {isMobile ? (
-          <div className="flex-1 min-h-0 flex flex-col relative pb-14">
+          <div className="flex-1 min-h-0 flex flex-col relative pb-16">
             <div className="flex-1 min-h-0 overflow-hidden">
               {viewMode === "timeline" ? renderTimeline() : <div className="h-full">{renderMap()}</div>}
             </div>
             <button
               onClick={() => setViewMode(v => v === "timeline" ? "map" : "timeline")}
-              className="fixed bottom-[72px] right-4 z-50 flex items-center gap-2 px-4 py-3 rounded-full bg-foreground text-background text-[10px] font-semibold shadow-[0_4px_20px_rgba(0,0,0,0.15)] active:scale-95 transition-transform touch-manipulation"
-              style={{ minHeight: 48, minWidth: 48, marginBottom: "env(safe-area-inset-bottom, 0px)" }}
+              className="fixed bottom-4 right-4 z-50 flex items-center gap-2 px-4 py-3 rounded-full bg-foreground text-background text-[10px] font-semibold shadow-[0_4px_20px_rgba(0,0,0,0.15)] active:scale-95 transition-transform touch-manipulation"
+              style={{ minHeight: 44, minWidth: 44, marginBottom: "env(safe-area-inset-bottom, 0px)" }}
             >
               {viewMode === "timeline" ? <><Map className="w-4 h-4" /> {t("map")}</> : <><Newspaper className="w-4 h-4" /> {t("timeline")}</>}
             </button>
