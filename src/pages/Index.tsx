@@ -700,8 +700,8 @@ const Index = () => {
             </div>
             <button
               onClick={() => setViewMode(v => v === "timeline" ? "map" : "timeline")}
-              className="absolute bottom-[72px] right-4 z-30 flex items-center gap-2 px-4 py-3 rounded-full bg-foreground text-background text-[10px] font-semibold shadow-[0_4px_20px_rgba(0,0,0,0.15)] active:scale-95 transition-transform touch-manipulation"
-              style={{ minHeight: 48, minWidth: 48 }}
+              className="fixed bottom-[72px] right-4 z-50 flex items-center gap-2 px-4 py-3 rounded-full bg-foreground text-background text-[10px] font-semibold shadow-[0_4px_20px_rgba(0,0,0,0.15)] active:scale-95 transition-transform touch-manipulation"
+              style={{ minHeight: 48, minWidth: 48, marginBottom: "env(safe-area-inset-bottom, 0px)" }}
             >
               {viewMode === "timeline" ? <><Map className="w-4 h-4" /> {t("map")}</> : <><Newspaper className="w-4 h-4" /> {t("timeline")}</>}
             </button>
