@@ -1,3 +1,5 @@
+import { checkRateLimit } from "../_shared/rate-limit.ts";
+
 const ALLOWED_ORIGINS = [
   'https://gttmonitor.com',
   'https://www.gttmonitor.com',
@@ -127,6 +129,8 @@ Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
+  const rateLimitResponse = checkRateLimit(req);
+  if (rateLimitResponse) return rateLimitResponse;
   try {
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) {
@@ -142,13 +146,11 @@ Deno.serve(async (req) => {
     }
     const langLabel = langNames[targetLang] || targetLang;
 
-    // Split into batches
     const batches: { title: string; details?: string }[][] = [];
     for (let i = 0; i < items.length; i += BATCH_SIZE) {
       batches.push(items.slice(i, i + BATCH_SIZE));
     }
 
-    // Process up to 3 batches concurrently
     const CONCURRENCY = 3;
     const results: { title: string; details?: string; ok: boolean }[][] = new Array(batches.length);
     let nextIdx = 0;
@@ -164,7 +166,6 @@ Deno.serve(async (req) => {
       Array.from({ length: Math.min(CONCURRENCY, batches.length) }, () => worker())
     );
 
-    // Collect failed items for retry
     const allTranslations: { title: string; details?: string }[] = [];
     const failedItems: { globalIdx: number; title: string; details?: string }[] = [];
 
@@ -180,7 +181,6 @@ Deno.serve(async (req) => {
       }
     }
 
-    // Retry failed items (up to MAX_RETRIES rounds)
     if (failedItems.length > 0 && failedItems.length <= 20) {
       for (let retry = 0; retry < MAX_RETRIES; retry++) {
         const retryBatch = failedItems.filter(f => allTranslations[f.globalIdx].title === items[f.globalIdx].title);
@@ -204,7 +204,6 @@ Deno.serve(async (req) => {
       }
     }
 
-    // Pad if needed
     while (allTranslations.length < items.length) {
       allTranslations.push(items[allTranslations.length]);
     }
