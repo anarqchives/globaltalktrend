@@ -295,7 +295,8 @@ const FilterBlock = ({ filters, onChange, onReset, onSaveFilter, isLoggedIn }: F
   const hasActive = filters.country !== defaultFilters.country ||
     filters.period !== defaultFilters.period ||
     filters.category !== defaultFilters.category ||
-    filters.type !== defaultFilters.type;
+    filters.type !== defaultFilters.type ||
+    !!filters.query;
 
   const categoryOptions = CATEGORIES.map(c => ({
     value: c.value,
@@ -316,6 +317,23 @@ const FilterBlock = ({ filters, onChange, onReset, onSaveFilter, isLoggedIn }: F
     <div className="sticky top-11 sm:top-12 z-40 bg-background/90 backdrop-blur-md border-b border-border/25" style={{ WebkitBackdropFilter: "blur(12px)" }}>
       <div className="max-w-[1440px] mx-auto px-3 sm:px-6 py-1.5 sm:py-2">
         <div className="flex items-center gap-1.5 sm:gap-2 overflow-x-auto scrollbar-none -mx-3 px-3 sm:mx-0 sm:px-0 sm:flex-wrap" style={{ WebkitOverflowScrolling: "touch" }}>
+          {/* Search input */}
+          <div className="relative flex items-center flex-shrink-0">
+            <Search className="absolute left-2 w-2.5 h-2.5 text-muted-foreground pointer-events-none" />
+            <input
+              type="text"
+              placeholder={lang === "pt" ? "Buscar..." : "Search..."}
+              value={filters.query || ""}
+              onChange={e => update("query", e.target.value)}
+              className="h-[26px] w-[100px] sm:w-[130px] pl-6 pr-5 rounded-full text-[10px] font-medium border border-border/40 bg-card text-foreground placeholder:text-muted-foreground outline-none focus:border-primary/40 focus:w-[140px] sm:focus:w-[180px] transition-all"
+            />
+            {filters.query && (
+              <button onClick={() => update("query", "")} className="absolute right-1.5 p-0.5 rounded-full hover:bg-muted transition-colors">
+                <X className="w-2.5 h-2.5 text-muted-foreground" />
+              </button>
+            )}
+          </div>
+
           <CountryDropdown value={filters.country} onSelect={(v) => update("country", v)} />
           
           <FilterDropdown
