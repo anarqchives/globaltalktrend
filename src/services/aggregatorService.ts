@@ -1,13 +1,9 @@
 /**
- * Aggregator — unifies all 6 new client-side API services.
- * Runs in parallel, deduplicates, sorts by date.
+ * Aggregator — unifies client-side open API sources (GDELT only).
+ * All API-key-dependent sources are handled server-side via Edge Functions.
+ * NO API keys are used client-side to prevent credential exposure.
  */
 import { fetchGdeltTrends } from "./gdeltService";
-import { fetchNewsDataTrends } from "./newsDataService";
-import { fetchTheNewsApiTrends } from "./theNewsApiService";
-import { fetchMediastackTrends } from "./mediastackService";
-import { fetchAlphaVantageTrends } from "./alphaVantageService";
-import { fetchFixerTrends } from "./fixerService";
 import type { TrendCardProps } from "@/components/TrendCard";
 
 // ─── Unified type ──────────────────────────────────────────────────
@@ -50,7 +46,6 @@ function similarity(a: string, b: string): number {
 
 function dedup(items: UnifiedTrend[]): UnifiedTrend[] {
   const seen = new Map<string, UnifiedTrend>();
-  // URL dedup
   for (const item of items) {
     if (item.url && seen.has(item.url)) {
       const existing = seen.get(item.url)!;
@@ -62,7 +57,6 @@ function dedup(items: UnifiedTrend[]): UnifiedTrend[] {
     }
   }
 
-  // Title similarity dedup
   const result: UnifiedTrend[] = [];
   const titleIndex: { title: string; idx: number }[] = [];
 
@@ -70,7 +64,6 @@ function dedup(items: UnifiedTrend[]): UnifiedTrend[] {
     let isDup = false;
     for (const { title, idx } of titleIndex) {
       if (similarity(item.title, title) > 0.7) {
-        // Keep higher priority
         if ((SOURCE_PRIORITY[item.sourceType] || 0) > (SOURCE_PRIORITY[result[idx].sourceType] || 0)) {
           result[idx] = item;
         }
@@ -134,26 +127,15 @@ export async function fetchAggregatedTrends(
     return filterTrends(aggCache.data, filters);
   }
 
-  const keys = {
-    newsData: import.meta.env.VITE_NEWSDATA_API_KEY as string | undefined,
-    theNewsApi: import.meta.env.VITE_THENEWSAPI_KEY as string | undefined,
-    mediastack: import.meta.env.VITE_MEDIASTACK_KEY as string | undefined,
-    alphaVantage: import.meta.env.VITE_ALPHAVANTAGE_KEY as string | undefined,
-    fixer: import.meta.env.VITE_FIXER_KEY as string | undefined,
-  };
-
   const country = filters?.country || undefined;
 
+  // Only GDELT runs client-side (open API, no key needed).
+  // All other sources are fetched server-side via Edge Functions.
   const results = await Promise.allSettled([
     fetchGdeltTrends(country),
-    keys.newsData ? fetchNewsDataTrends(keys.newsData, country, filters?.category) : Promise.resolve([]),
-    keys.theNewsApi ? fetchTheNewsApiTrends(keys.theNewsApi) : Promise.resolve([]),
-    keys.mediastack ? fetchMediastackTrends(keys.mediastack, country?.toLowerCase()) : Promise.resolve([]),
-    keys.alphaVantage ? fetchAlphaVantageTrends(keys.alphaVantage) : Promise.resolve([]),
-    keys.fixer ? fetchFixerTrends(keys.fixer) : Promise.resolve([]),
   ]);
 
-  const labels = ["GDELT", "NewsData", "TheNewsAPI", "Mediastack", "AlphaVantage", "Fixer"];
+  const labels = ["GDELT"];
   const allUnified: UnifiedTrend[] = [];
 
   results.forEach((r, i) => {
@@ -194,7 +176,7 @@ function filterTrends(
 export function startAutoRefresh() {
   if (refreshInterval) return;
   refreshInterval = setInterval(() => {
-    aggCache = null; // force next fetch to refresh
+    aggCache = null;
   }, AGG_CACHE_TTL);
 }
 
@@ -222,30 +204,21 @@ export function recordSourceStat(name: string, count: number) {
 }
 
 export function getAggregatorDiagnostics(): AggregatorSourceStatus[] {
-  const keys = {
-    newsData: import.meta.env.VITE_NEWSDATA_API_KEY as string | undefined,
-    theNewsApi: import.meta.env.VITE_THENEWSAPI_KEY as string | undefined,
-    mediastack: import.meta.env.VITE_MEDIASTACK_KEY as string | undefined,
-    alphaVantage: import.meta.env.VITE_ALPHAVANTAGE_KEY as string | undefined,
-    fixer: import.meta.env.VITE_FIXER_KEY as string | undefined,
-  };
-
-  const sources: { name: string; key: string | undefined; reason?: string }[] = [
-    { name: "GDELT", key: "open" },
-    { name: "NewsData", key: keys.newsData, reason: "VITE_NEWSDATA_API_KEY" },
-    { name: "TheNewsAPI", key: keys.theNewsApi, reason: "VITE_THENEWSAPI_KEY" },
-    { name: "Mediastack", key: keys.mediastack, reason: "VITE_MEDIASTACK_KEY" },
-    { name: "AlphaVantage", key: keys.alphaVantage, reason: "VITE_ALPHAVANTAGE_KEY" },
-    { name: "Fixer", key: keys.fixer, reason: "VITE_FIXER_KEY" },
+  const sources: { name: string; enabled: boolean; reason?: string }[] = [
+    { name: "GDELT", enabled: true },
+    { name: "NewsData", enabled: true, reason: "Server-side (Edge Function)" },
+    { name: "TheNewsAPI", enabled: true, reason: "Server-side (Edge Function)" },
+    { name: "Mediastack", enabled: true, reason: "Server-side (Edge Function)" },
+    { name: "AlphaVantage", enabled: false, reason: "Server-side only" },
+    { name: "Fixer", enabled: false, reason: "Server-side only" },
   ];
 
   return sources.map((s) => {
-    const enabled = s.key === "open" || !!s.key;
     const stat = sourceStats[s.name];
     return {
       name: s.name,
-      enabled,
-      reason: enabled ? undefined : `Missing ${s.reason}`,
+      enabled: s.enabled,
+      reason: s.reason,
       lastFetchCount: stat?.count ?? null,
       lastFetchTime: stat ? new Date(stat.ts) : null,
       cached: !!aggCache && Date.now() - aggCache.ts < AGG_CACHE_TTL,
