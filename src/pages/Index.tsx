@@ -184,16 +184,41 @@ const Index = () => {
   const filteredTrends = useMemo(() => {
     const normKey = (title: string) => title.toLowerCase().normalize("NFD").replace(/\p{Diacritic}/gu, "").replace(/[^a-z0-9\s]/g, "").trim().slice(0, 50);
     let baseTrends = translatedTrends;
+
+    // Multiplataforma filter
     if (filters.type === "Multiplataforma") {
       const getOriginalKey = (t: TranslatedTrendCardProps) => normKey((t as any)._originalTitle || t.title);
       if (multiplatformTitles.size > 0) baseTrends = translatedTrends.filter(t => multiplatformTitles.has(getOriginalKey(t)));
     }
+
+    // Period filter — filter by time window based on publishedAt/time
+    if (filters.period && filters.period !== "Hoje") {
+      const now = Date.now();
+      const periodMs: Record<string, number> = {
+        "Última hora": 60 * 60 * 1000,
+        "Últimas 24h": 24 * 60 * 60 * 1000,
+        "Esta semana": 7 * 24 * 60 * 60 * 1000,
+        "Última semana": 7 * 24 * 60 * 60 * 1000,
+        "Este mês": 30 * 24 * 60 * 60 * 1000,
+      };
+      const maxAge = periodMs[filters.period];
+      if (maxAge) {
+        baseTrends = baseTrends.filter(t => {
+          const published = (t as any).publishedAt || (t as any).firstSeenAt;
+          if (!published) return true; // keep trends without timestamp
+          const age = now - new Date(published).getTime();
+          return age <= maxAge;
+        });
+      }
+    }
+
+    // Text search filter
     if (filters.query) {
       const q = filters.query.toLowerCase();
       return baseTrends.filter(t => t.title.toLowerCase().includes(q) || (t.description && t.description.toLowerCase().includes(q)));
     }
     return baseTrends;
-  }, [translatedTrends, filters.type, filters.query, multiplatformTitles]);
+  }, [translatedTrends, filters.type, filters.period, filters.query, multiplatformTitles]);
 
   // URL sync
   useEffect(() => {

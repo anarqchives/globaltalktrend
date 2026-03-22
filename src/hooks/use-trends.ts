@@ -151,14 +151,14 @@ export function useTrends(filters: FilterState, onTrendCountsChange: (counts: Re
       const theNewsApiTrends: TrendCardProps[] = theNewsApiResult.data?.trends || [];
       const currentsMediastackTrends: TrendCardProps[] = currentsMediastackResult.data?.trends || [];
 
-      // Fetch client-side aggregated trends (GDELT direct, NewsData, TheNewsAPI, Mediastack, AlphaVantage, Fixer)
+      // Fetch client-side aggregated trends (GDELT only — all other APIs are server-side via Edge Functions)
       let aggregatorTrends: TrendCardProps[] = [];
       try {
         aggregatorTrends = await withTimeout(
           fetchAggregatedTrends({ country: filters.country || undefined, category: filters.category || undefined }),
           15000, []
         );
-        if (import.meta.env.DEV) console.log("✅ Aggregator client-side:", aggregatorTrends.length, "itens");
+        if (import.meta.env.DEV) console.log("✅ Aggregator client-side (GDELT):", aggregatorTrends.length, "itens");
       } catch (e) {
         console.warn("⚠️ Aggregator failed:", e);
       }
