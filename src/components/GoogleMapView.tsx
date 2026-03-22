@@ -656,7 +656,7 @@ const GoogleMapView = ({
   return (
     <div className="w-full h-full relative" style={{ isolation: "isolate" }}>
       {/* Tab selector */}
-      <div className="absolute top-3 left-3 z-20 flex gap-1 rounded-2xl p-1 border shadow-lg"
+      <div className={`absolute top-2 z-20 flex gap-0.5 rounded-xl p-0.5 border shadow-lg ${isMobile ? "left-2 right-2" : "left-3"}`}
         style={{
           background: isDark ? "rgba(15,20,30,0.55)" : "rgba(255,255,255,0.45)",
           backdropFilter: "blur(24px) saturate(1.8)",
@@ -682,7 +682,7 @@ const GoogleMapView = ({
             <motion.button key={key} onClick={() => setActiveTab(key)}
               whileHover={{ scale: 1.04 }}
               whileTap={{ scale: 0.96 }}
-              className={`relative px-2.5 py-1.5 rounded-xl text-[9px] font-bold uppercase tracking-wider transition-all ${!isActive ? "backdrop-blur-md bg-white/10 dark:bg-white/5 hover:bg-white/20 dark:hover:bg-white/10" : ""}`}
+              className={`relative flex-1 sm:flex-none px-2 py-1.5 rounded-lg text-[9px] font-bold uppercase tracking-wider transition-all ${!isActive ? "backdrop-blur-md bg-white/10 dark:bg-white/5 hover:bg-white/20 dark:hover:bg-white/10" : ""}`}
               style={{
                 background: isActive ? tabGradients[key] : undefined,
                 color: isActive ? tabTextColors[key] : undefined,
@@ -692,12 +692,12 @@ const GoogleMapView = ({
               {isActive && (
                 <motion.div
                   layoutId="map-tab-indicator"
-                  className="absolute inset-0 rounded-xl"
+                  className="absolute inset-0 rounded-lg"
                   style={{ background: tabGradients[key], zIndex: -1 }}
                   transition={{ type: "spring", stiffness: 400, damping: 30 }}
                 />
               )}
-              <span className={`flex items-center gap-1 relative z-10 ${!isActive ? "text-muted-foreground hover:text-foreground" : ""}`}>
+              <span className={`flex items-center justify-center gap-1 relative z-10 ${!isActive ? "text-muted-foreground hover:text-foreground" : ""}`}>
                 <Icon className="w-3 h-3" />
                 {!isMobile && (label[lang as "pt" | "en"] || label.en)}
               </span>
@@ -708,7 +708,7 @@ const GoogleMapView = ({
           <motion.button onClick={() => onSelectCountry("global")}
             whileHover={{ scale: 1.04 }}
             whileTap={{ scale: 0.96 }}
-            className="px-2.5 py-1.5 rounded-xl text-[9px] font-semibold text-muted-foreground hover:text-foreground flex items-center gap-1 transition-colors uppercase tracking-wider">
+            className="flex-none px-2 py-1.5 rounded-lg text-[9px] font-semibold text-muted-foreground hover:text-foreground flex items-center gap-1 transition-colors uppercase tracking-wider">
             <Globe className="w-3 h-3" /> {!isMobile && "Global"}
           </motion.button>
         )}
@@ -795,96 +795,65 @@ const GoogleMapView = ({
 
       {/* ── Legend + Zoom controls — aligned bottom-left ── */}
       {activeTab !== "trending" && (
-        <div className={`absolute z-20 flex items-start gap-2 ${isMobile ? "bottom-24 left-3 right-3" : "bottom-4 left-3"}`}>
-          {/* Legend block — enlarged */}
-          <div className="bg-card/90 backdrop-blur-xl border border-border/30 rounded-xl p-3.5 shadow-[var(--shadow-md)] flex-1 max-w-xs">
-            <div className="text-[9px] uppercase tracking-widest text-muted-foreground font-semibold mb-2">
-              {activeTab === "panorama" && (lang === "pt" ? "Panorama · Densidade + Fluxo" : "Panorama · Density + Flow")}
-              {activeTab === "sentiment" && (lang === "pt" ? "Sentimento por País" : "Sentiment by Country")}
-              {activeTab === "verification" && (lang === "pt" ? "Cobertura de Fontes" : "Source Coverage")}
+        <div className={`absolute z-20 flex items-end gap-2 ${isMobile ? "bottom-3 left-2 right-2" : "bottom-4 left-3"}`}>
+          {/* Legend block — compact on mobile */}
+          <div className={`bg-card/90 backdrop-blur-xl border border-border/30 rounded-xl shadow-[var(--shadow-md)] flex-1 ${isMobile ? "p-2 max-w-none" : "p-3.5 max-w-xs"}`}>
+            <div className={`uppercase tracking-widest text-muted-foreground font-semibold ${isMobile ? "text-[8px] mb-1" : "text-[9px] mb-2"}`}>
+              {activeTab === "panorama" && (lang === "pt" ? "Panorama" : "Panorama")}
+              {activeTab === "sentiment" && (lang === "pt" ? "Sentimento" : "Sentiment")}
+              {activeTab === "verification" && (lang === "pt" ? "Verificação" : "Verification")}
             </div>
 
             {activeTab === "panorama" && (
-              <div className="space-y-2">
-                <div>
-                  <div className="text-[8px] text-muted-foreground mb-1 font-medium">{lang === "pt" ? "Densidade de tendências" : "Trend density"}</div>
-                  <div className="flex items-center gap-2">
-                    <div className="w-full h-2 rounded-full bg-gradient-to-r from-[#00C8DC] via-[#B4DC50] via-[#F0C83C] to-[#F05032]" />
-                    <span className="text-[8px] text-muted-foreground whitespace-nowrap">{lang === "pt" ? "Baixo → Alto" : "Low → High"}</span>
-                  </div>
+              <div className={`${isMobile ? "space-y-1" : "space-y-2"}`}>
+                <div className="flex items-center gap-2">
+                  <div className="flex-1 h-1.5 rounded-full bg-gradient-to-r from-[#00C8DC] via-[#B4DC50] via-[#F0C83C] to-[#F05032]" />
+                  <span className="text-[8px] text-muted-foreground whitespace-nowrap">{lang === "pt" ? "Baixo→Alto" : "Low→High"}</span>
                 </div>
-                <div>
-                  <div className="text-[8px] text-muted-foreground mb-1 font-medium">{lang === "pt" ? "Velocidade" : "Velocity"}</div>
-                  <div className="flex items-center gap-3 flex-wrap">
-                    <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded-full bg-[#22c55e]" /><span className="text-[8px] text-muted-foreground">⚡ {lang === "pt" ? "Rápido" : "Fast"}</span></span>
-                    <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded-full bg-[#F5A060]" /><span className="text-[8px] text-muted-foreground">📈 {lang === "pt" ? "Alta" : "Rising"}</span></span>
-                    <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded-full bg-[#60B8D0]" /><span className="text-[8px] text-muted-foreground">→ {lang === "pt" ? "Estável" : "Stable"}</span></span>
-                  </div>
-                </div>
-                <div className="flex items-center gap-3">
-                  <div className="flex items-center gap-1"><div className="w-5 h-0.5 rounded bg-[#F5A060]/40" /><span className="text-[8px] text-muted-foreground">{lang === "pt" ? "Fluxo forte" : "Strong flow"}</span></div>
-                  <div className="flex items-center gap-1"><div className="w-5 h-0.5 rounded bg-[#B496E6]/40" /><span className="text-[8px] text-muted-foreground">{lang === "pt" ? "Fluxo leve" : "Light flow"}</span></div>
+                <div className="flex items-center gap-2 flex-wrap">
+                  <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-[#22c55e]" /><span className="text-[8px] text-muted-foreground">⚡</span></span>
+                  <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-[#F5A060]" /><span className="text-[8px] text-muted-foreground">📈</span></span>
+                  <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-[#60B8D0]" /><span className="text-[8px] text-muted-foreground">→</span></span>
                 </div>
               </div>
             )}
 
             {activeTab === "sentiment" && (
-              <div className="space-y-2">
-                <div className="flex items-center gap-3">
-                  <span className="flex items-center gap-1.5"><span className="w-3 h-3 rounded-full bg-[#22c55e]" /><span className="text-[9px] text-muted-foreground font-medium">😊 {lang === "pt" ? "Positivo" : "Positive"}</span></span>
-                  <span className="flex items-center gap-1.5"><span className="w-3 h-3 rounded-full bg-[#A8A29E]" /><span className="text-[9px] text-muted-foreground font-medium">😐 {lang === "pt" ? "Neutro" : "Neutral"}</span></span>
-                </div>
-                <div className="flex items-center gap-3">
-                  <span className="flex items-center gap-1.5"><span className="w-3 h-3 rounded-full bg-[#ef4444]" /><span className="text-[9px] text-muted-foreground font-medium">😟 {lang === "pt" ? "Negativo" : "Negative"}</span></span>
-                  <span className="flex items-center gap-1.5"><span className="w-3 h-3 rounded-full bg-[#f59e0b]" /><span className="text-[9px] text-muted-foreground font-medium">🔀 {lang === "pt" ? "Misto" : "Mixed"}</span></span>
-                </div>
-                <div className="text-[8px] text-muted-foreground/60 leading-relaxed">
-                  {lang === "pt" ? "Clique em um país para filtrar. Hover para detalhes." : "Click a country to filter. Hover for details."}
-                </div>
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded-full bg-[#22c55e]" /><span className="text-[8px] text-muted-foreground">😊</span></span>
+                <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded-full bg-[#A8A29E]" /><span className="text-[8px] text-muted-foreground">😐</span></span>
+                <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded-full bg-[#ef4444]" /><span className="text-[8px] text-muted-foreground">😟</span></span>
+                <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded-full bg-[#f59e0b]" /><span className="text-[8px] text-muted-foreground">🔀</span></span>
               </div>
             )}
 
             {activeTab === "verification" && (
-              <div className="space-y-2">
-                <div>
-                  <div className="text-[8px] text-muted-foreground mb-1 font-medium">{lang === "pt" ? "Nível de confirmação" : "Verification level"}</div>
-                  <div className="flex items-center gap-3 flex-wrap">
-                    <span className="flex items-center gap-1.5"><span className="w-3 h-3 rounded-full bg-[#ef4444]" /><span className="text-[9px] text-muted-foreground font-medium">{lang === "pt" ? "Fraca" : "Weak"}</span></span>
-                    <span className="flex items-center gap-1.5"><span className="w-3 h-3 rounded-full bg-[#f59e0b]" /><span className="text-[9px] text-muted-foreground font-medium">{lang === "pt" ? "Moderada" : "Moderate"}</span></span>
-                    <span className="flex items-center gap-1.5"><span className="w-3 h-3 rounded-full bg-[#22c55e]" /><span className="text-[9px] text-muted-foreground font-medium">{lang === "pt" ? "Forte" : "Strong"}</span></span>
-                    <span className="flex items-center gap-1.5"><span className="w-3 h-3 rounded-full bg-[#3b82f6]" /><span className="text-[9px] text-muted-foreground font-medium">{lang === "pt" ? "Excelente" : "Excellent"}</span></span>
-                  </div>
-                </div>
-                <div>
-                  <div className="text-[8px] text-muted-foreground mb-1 font-medium">{lang === "pt" ? "Tipos de fonte" : "Source types"}</div>
-                  <div className="flex items-center gap-3 flex-wrap">
-                    <span className="flex items-center gap-1 text-[8px] text-muted-foreground"><span className="w-2 h-2 rounded-sm bg-[#3b82f6]" />📰 {lang === "pt" ? "Imprensa" : "Press"}</span>
-                    <span className="flex items-center gap-1 text-[8px] text-muted-foreground"><span className="w-2 h-2 rounded-sm bg-[#8b5cf6]" />🏛️ {lang === "pt" ? "Oficial" : "Official"}</span>
-                    <span className="flex items-center gap-1 text-[8px] text-muted-foreground"><span className="w-2 h-2 rounded-sm bg-[#22c55e]" />🔬 {lang === "pt" ? "Acadêmico" : "Academic"}</span>
-                    <span className="flex items-center gap-1 text-[8px] text-muted-foreground"><span className="w-2 h-2 rounded-sm bg-[#f59e0b]" />💬 Social</span>
-                  </div>
-                </div>
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded-full bg-[#ef4444]" /><span className="text-[8px] text-muted-foreground">{lang === "pt" ? "Fraca" : "Weak"}</span></span>
+                <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded-full bg-[#f59e0b]" /><span className="text-[8px] text-muted-foreground">{lang === "pt" ? "Mod." : "Mod."}</span></span>
+                <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded-full bg-[#22c55e]" /><span className="text-[8px] text-muted-foreground">{lang === "pt" ? "Forte" : "Strong"}</span></span>
+                <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded-full bg-[#3b82f6]" /><span className="text-[8px] text-muted-foreground">✓</span></span>
               </div>
             )}
 
-            <div className="flex gap-2 text-[8px] text-muted-foreground/40 mt-2 pt-2 border-t border-border/20">
+            <div className={`flex gap-2 text-[8px] text-muted-foreground/40 ${isMobile ? "mt-1 pt-1" : "mt-2 pt-2"} border-t border-border/20`}>
               <span>{activeCountries} {lang === "pt" ? "países" : "countries"}</span>
               <span>· {totalTrends} trends</span>
             </div>
           </div>
 
-          {/* Zoom controls — aligned to legend */}
+          {/* Zoom controls */}
           {mapLoaded && (
-            <div className="flex flex-col gap-1">
+            <div className="flex flex-col gap-1 flex-shrink-0">
               <button onClick={() => googleMapRef.current?.setZoom((googleMapRef.current?.getZoom() || 3) + 1)}
                 aria-label="Zoom in"
-                className="w-8 h-8 rounded-xl bg-card/90 backdrop-blur-xl border border-border/30 shadow-[var(--shadow-sm)] flex items-center justify-center text-foreground hover:bg-card transition-colors">
-                <Plus className="w-3.5 h-3.5" aria-hidden="true" />
+                className="w-7 h-7 rounded-lg bg-card/90 backdrop-blur-xl border border-border/30 shadow-[var(--shadow-sm)] flex items-center justify-center text-foreground hover:bg-card transition-colors">
+                <Plus className="w-3 h-3" aria-hidden="true" />
               </button>
               <button onClick={() => googleMapRef.current?.setZoom((googleMapRef.current?.getZoom() || 3) - 1)}
                 aria-label="Zoom out"
-                className="w-8 h-8 rounded-xl bg-card/90 backdrop-blur-xl border border-border/30 shadow-[var(--shadow-sm)] flex items-center justify-center text-foreground hover:bg-card transition-colors">
-                <Minus className="w-3.5 h-3.5" aria-hidden="true" />
+                className="w-7 h-7 rounded-lg bg-card/90 backdrop-blur-xl border border-border/30 shadow-[var(--shadow-sm)] flex items-center justify-center text-foreground hover:bg-card transition-colors">
+                <Minus className="w-3 h-3" aria-hidden="true" />
               </button>
             </div>
           )}
