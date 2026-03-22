@@ -1,4 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { checkRateLimit } from "../_shared/rate-limit.ts";
+
 const ALLOWED_ORIGINS = [
   'https://gttmonitor.com',
   'https://www.gttmonitor.com',
@@ -20,6 +22,8 @@ serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
+  const rateLimitResponse = checkRateLimit(req);
+  if (rateLimitResponse) return rateLimitResponse;
   try {
     const { title, details, platform, volume } = await req.json();
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
@@ -63,7 +67,6 @@ Responda em JSON: {"summary": "resumo aqui", "sentiment": "positive|negative|neu
     }
     const aiData = await response.json();
     const content = aiData.choices?.[0]?.message?.content || "";
-    // Parse JSON from response
     let parsed;
     try {
       const jsonMatch = content.match(/\{[\s\S]*\}/);
