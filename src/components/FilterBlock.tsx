@@ -318,14 +318,14 @@ const FilterBlock = ({ filters, onChange, onReset, onSaveFilter, isLoggedIn }: F
       <div className="max-w-[1440px] mx-auto px-3 sm:px-6 py-1.5 sm:py-2">
         <div className="flex items-center gap-1 sm:gap-2 flex-wrap">
           {/* Search input */}
-          <div className="relative flex items-center flex-shrink-0">
+          <div className="relative flex items-center">
             <Search className="absolute left-2 w-2.5 h-2.5 text-muted-foreground pointer-events-none" />
             <input
               type="text"
               placeholder={lang === "pt" ? "Buscar..." : "Search..."}
               value={filters.query || ""}
               onChange={e => update("query", e.target.value)}
-              className="h-[26px] w-[100px] sm:w-[130px] pl-6 pr-5 rounded-full text-[10px] font-medium border border-border/40 bg-card text-foreground placeholder:text-muted-foreground outline-none focus:border-primary/40 focus:w-[140px] sm:focus:w-[180px] transition-all"
+              className="h-[26px] w-[80px] sm:w-[130px] pl-6 pr-5 rounded-full text-[10px] font-medium border border-border/40 bg-card text-foreground placeholder:text-muted-foreground outline-none focus:border-primary/40 focus:w-[120px] sm:focus:w-[180px] transition-all"
             />
             {filters.query && (
               <button onClick={() => update("query", "")} className="absolute right-1.5 p-0.5 rounded-full hover:bg-muted transition-colors">
