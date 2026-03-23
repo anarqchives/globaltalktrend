@@ -18,12 +18,23 @@ function getCorsHeaders(req: Request) {
     'Access-Control-Allow-Methods': 'POST, GET, OPTIONS',
   };
 }
+
 async function hashTitle(title: string): Promise<string> {
   const encoder = new TextEncoder();
   const data = encoder.encode(title.toLowerCase().trim());
   const hashBuffer = await crypto.subtle.digest('SHA-256', data);
   return Array.from(new Uint8Array(hashBuffer)).map(b => b.toString(16).padStart(2, '0')).join('');
 }
+
+function parseVolume(vol: string): number {
+  if (!vol) return 0;
+  const v = vol.toLowerCase();
+  const num = parseFloat(v.replace(/[^0-9.]/g, '')) || 0;
+  if (v.includes('m')) return num * 1_000_000;
+  if (v.includes('k')) return num * 1_000;
+  return num;
+}
+
 serve(async (req) => {
   const corsHeaders = getCorsHeaders(req);
   if (req.method === "OPTIONS") {
@@ -45,39 +56,63 @@ serve(async (req) => {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
+
     const hashes = await Promise.all(
       trends.slice(0, 20).map(async (t: any) => ({
         title: t.title,
         hash: await hashTitle(t.title),
         trend: t,
+        currentVolume: parseVolume(t.volume || '0'),
       }))
     );
+
+    // Busca cache incluindo volume_at_cache para invalidação inteligente
     const { data: cachedRows } = await supabase
       .from('trend_context_cache')
-      .select('trend_title_hash, generated_context')
+      .select('trend_title_hash, generated_context, volume_at_cache')
       .in('trend_title_hash', hashes.map(h => h.hash))
       .eq('lang', lang)
       .gte('expires_at', new Date().toISOString());
-    const cachedMap = new Map<string, string>();
+
+    const cachedMap = new Map<string, { context: string; volumeAtCache: number }>();
     for (const row of cachedRows || []) {
-      cachedMap.set(row.trend_title_hash, row.generated_context);
+      cachedMap.set(row.trend_title_hash, {
+        context: row.generated_context,
+        volumeAtCache: row.volume_at_cache ?? 0,
+      });
     }
+
     const cachedResults: { title: string; context: string }[] = [];
-    const uncachedTrends: { index: number; title: string; trend: any; hash: string }[] = [];
+    const uncachedTrends: { index: number; title: string; trend: any; hash: string; currentVolume: number }[] = [];
+
     for (let i = 0; i < hashes.length; i++) {
       const h = hashes[i];
       const cached = cachedMap.get(h.hash);
+
       if (cached) {
-        cachedResults.push({ title: h.title, context: cached });
+        // Invalidação inteligente: regenera se volume cresceu >50% desde o cache
+        const growth = cached.volumeAtCache > 0
+          ? (h.currentVolume - cached.volumeAtCache) / cached.volumeAtCache
+          : 0;
+
+        if (growth >= 0.5) {
+          // Trend acelerou muito — contexto antigo pode estar desatualizado
+          uncachedTrends.push({ index: i, title: h.title, trend: h.trend, hash: h.hash, currentVolume: h.currentVolume });
+        } else {
+          cachedResults.push({ title: h.title, context: cached.context });
+        }
       } else {
-        uncachedTrends.push({ index: i, title: h.title, trend: h.trend, hash: h.hash });
+        uncachedTrends.push({ index: i, title: h.title, trend: h.trend, hash: h.hash, currentVolume: h.currentVolume });
       }
     }
+
     if (uncachedTrends.length === 0) {
       return new Response(JSON.stringify({ contexts: cachedResults, cached: true }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
+
+    // Controle de custo mensal
     const startOfMonth = new Date();
     startOfMonth.setDate(1);
     startOfMonth.setHours(0, 0, 0, 0);
@@ -86,14 +121,15 @@ serve(async (req) => {
       .select('*', { count: 'exact', head: true })
       .gte('created_at', startOfMonth.toISOString());
     if ((monthlyCount || 0) > 20000) {
-      console.warn('Monthly AI context generation limit reached');
       return new Response(JSON.stringify({ contexts: cachedResults, limited: true }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
+
     const trendLines = uncachedTrends.map((t, i) =>
       `${i + 1}. "${t.trend.title}" | Plataforma: ${t.trend.platform || "?"} | País: ${t.trend.countryCode || "GL"} | Volume: ${t.trend.volume || "?"} | Categoria: ${t.trend.category || "Geral"}`
     ).join("\n");
+
     const prompt = lang === "pt"
       ? `Para cada trend abaixo, gere UMA frase de contexto em português (máximo 200 caracteres) explicando:
 - O que é este assunto
@@ -109,6 +145,7 @@ NÃO repita o título na frase. Seja conciso e informativo.`
 ${trendLines}
 Respond ONLY with valid JSON: { "contexts": [{ "index": 0, "context": "sentence" }, ...] }
 Do NOT repeat the title. Be concise and informative.`;
+
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
       headers: {
@@ -123,6 +160,7 @@ Do NOT repeat the title. Be concise and informative.`;
         ],
       }),
     });
+
     if (!response.ok) {
       if (response.status === 429) {
         return new Response(JSON.stringify({ error: "Rate limit exceeded", contexts: cachedResults }), {
@@ -134,12 +172,11 @@ Do NOT repeat the title. Be concise and informative.`;
           status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
-      const t = await response.text();
-      console.error("AI gateway error:", response.status, t);
       return new Response(JSON.stringify({ contexts: cachedResults }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
+
     const aiData = await response.json();
     const content = aiData.choices?.[0]?.message?.content || "";
     let parsed;
@@ -149,6 +186,7 @@ Do NOT repeat the title. Be concise and informative.`;
     } catch {
       parsed = null;
     }
+
     const newResults: { title: string; context: string }[] = [];
     if (parsed?.contexts) {
       const rowsToInsert: any[] = [];
@@ -162,18 +200,20 @@ Do NOT repeat the title. Be concise and informative.`;
             generated_context: c.context,
             model_used: 'google/gemini-2.5-flash-lite',
             lang,
+            volume_at_cache: uncached.currentVolume,
           });
         }
       }
       if (rowsToInsert.length > 0) {
         await supabase
           .from('trend_context_cache')
-          .upsert(rowsToInsert, { onConflict: 'trend_title_hash', ignoreDuplicates: true })
+          .upsert(rowsToInsert, { onConflict: 'trend_title_hash', ignoreDuplicates: false })
           .then(({ error }) => {
             if (error) console.error("Cache insert error:", error);
           });
       }
     }
+
     const allResults = [...cachedResults, ...newResults];
     return new Response(JSON.stringify({ contexts: allResults }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
