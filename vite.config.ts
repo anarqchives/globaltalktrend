@@ -24,6 +24,9 @@ export default defineConfig(({ mode }) => ({
       "react/jsx-dev-runtime",
     ],
   },
+  esbuild: {
+    drop: mode === "production" ? ["console", "debugger"] : [],
+  },
   build: {
     rollupOptions: {
       output: {
