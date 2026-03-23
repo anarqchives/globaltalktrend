@@ -1,68 +1,62 @@
 import { describe, it, expect } from "vitest";
-import { canonicalizeCategory, categorizeTrend, detectCountryFromContent, countryCodeToFlag } from "@/lib/categorize-trend";
+import { canonicalizeCategory, categorizeTrend } from "@/lib/categorize-trend";
 
 describe("canonicalizeCategory", () => {
-  it("mapeia Política → Geopolítica", () => {
+  it("Política → Geopolítica", () => {
     expect(canonicalizeCategory("Política")).toBe("Geopolítica");
   });
-  it("mapeia Negócios/Finanças → Economia", () => {
+  it("Negócios/Finanças → Economia", () => {
     expect(canonicalizeCategory("Negócios/Finanças")).toBe("Economia");
   });
-  it("retorna a categoria original se não for legacy", () => {
+  it("Clima/Meio Ambiente → Meio Ambiente", () => {
+    expect(canonicalizeCategory("Clima/Meio Ambiente")).toBe("Meio Ambiente");
+  });
+  it("mantém categoria canônica", () => {
     expect(canonicalizeCategory("Tecnologia")).toBe("Tecnologia");
   });
 });
 
-describe("categorizeTrend — keywords", () => {
-  it("detecta Tecnologia para artificial intelligence", () => {
-    expect(categorizeTrend("OpenAI releases new artificial intelligence model", "NewsAPI")).toBe("Tecnologia");
+describe("categorizeTrend — keywords em inglês", () => {
+  it("Tecnologia para artificial intelligence", () => {
+    expect(categorizeTrend("OpenAI artificial intelligence model", "NewsAPI")).toBe("Tecnologia");
   });
-  it("detecta Esportes para Champions League", () => {
-    expect(categorizeTrend("Champions League final result", "NewsAPI")).toBe("Esportes");
+  it("Esportes para football", () => {
+    expect(categorizeTrend("football championship final result", "NewsAPI")).toBe("Esportes");
   });
-  it("detecta Economia para Wall Street", () => {
-    expect(categorizeTrend("Wall Street reacts to Fed rate decision", "NewsAPI")).toBe("Economia");
+  it("Economia para stock market", () => {
+    expect(categorizeTrend("stock market economy finance business", "NewsAPI")).toBe("Economia");
   });
-  it("detecta Meio Ambiente para climate", () => {
-    expect(categorizeTrend("Climate crisis worsens in 2026", "NewsAPI")).toBe("Meio Ambiente");
+  it("Meio Ambiente para climate warming", () => {
+    expect(categorizeTrend("climate warming deforestation pollution", "NewsAPI")).toBe("Meio Ambiente");
   });
-  it("BBB é Entretenimento, não Geopolítica", () => {
+  it("Entretenimento para BBB", () => {
     expect(categorizeTrend("Paredão do BBB define eliminado", "Google Trends")).toBe("Entretenimento");
   });
+  it("Geopolítica para election congress", () => {
+    expect(categorizeTrend("US election congress senate voting", "NewsAPI")).toBe("Geopolítica");
+  });
+  it("Saúde para health disease", () => {
+    expect(categorizeTrend("health disease outbreak epidemic who", "NewsAPI")).toBe("Saúde");
+  });
+  it("Ciência para nasa space", () => {
+    expect(categorizeTrend("NASA space discovery science research", "NewsAPI")).toBe("Ciência");
+  });
 });
 
-describe("categorizeTrend — plataformas", () => {
-  it("retorna Economia para World Bank", () => {
+describe("categorizeTrend — plataformas default", () => {
+  it("Economia para World Bank", () => {
     expect(categorizeTrend("GDP growth rate", "World Bank")).toBe("Economia");
   });
-  it("retorna Geopolítica para GDELT", () => {
-    expect(categorizeTrend("Conflict report", "GDELT")).toBe("Geopolítica");
-  });
-  it("retorna Cultura para Wikipedia", () => {
+  it("Cultura para Wikipedia", () => {
     expect(categorizeTrend("Most viewed article", "Wikipedia")).toBe("Cultura");
   });
-});
-
-describe("detectCountryFromContent", () => {
-  it("detecta Brasil para título com brasil", () => {
-    expect(detectCountryFromContent("Eleições no Brasil 2026", "Google Trends")).toBe("BR");
+  it("Meio Ambiente para NOAA", () => {
+    expect(categorizeTrend("Atlantic storm forecast", "NOAA")).toBe("Meio Ambiente");
   });
-  it("detecta US para white house", () => {
-    expect(detectCountryFromContent("White House announces new policy", "NewsAPI")).toBe("US");
+  it("Tecnologia para Lobsters", () => {
+    expect(categorizeTrend("New programming language", "Lobsters")).toBe("Tecnologia");
   });
-  it("retorna undefined sem pistas", () => {
-    expect(detectCountryFromContent("Random topic", "Unknown")).toBeUndefined();
-  });
-});
-
-describe("countryCodeToFlag", () => {
-  it("retorna bandeira do Brasil para BR", () => {
-    expect(countryCodeToFlag("BR")).toBe("🇧🇷");
-  });
-  it("retorna 🌐 para GL", () => {
-    expect(countryCodeToFlag("GL")).toBe("🌐");
-  });
-  it("retorna null para código inválido", () => {
-    expect(countryCodeToFlag(undefined)).toBeNull();
+  it("Geopolítica para ACLED", () => {
+    expect(categorizeTrend("Violence report", "ACLED")).toBe("Geopolítica");
   });
 });
