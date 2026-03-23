@@ -1,8 +1,9 @@
-import React, { useState, useMemo, lazy, Suspense } from "react";
+import React, { useState, useEffect, useMemo, lazy, Suspense } from "react";
 import { Share2, MessageCircle, ThumbsUp, MapPin, Newspaper, ExternalLink, Shield, CheckCircle2, FlaskConical, Globe, ChevronDown } from "lucide-react";
 import SparklineArea from "./SparklineArea";
 import { toast } from "@/hooks/use-toast";
 import { countryCodeToFlag } from "@/lib/shared-utils";
+import { supabase } from "@/integrations/supabase/client";
 
 // Lazy-load recharts — only loaded when card is expanded
 const LazyChart = lazy(() =>
@@ -109,9 +110,12 @@ const trustBadgeMap: Record<string, { label: string; icon: React.ReactNode; clas
 const TrendCard = ({
   icon, platform, title, category, time, volume, change, changePositive,
   sparkData, limited, details, likeRatio, commentCount, region, countryCode,
-  sources, sourceUrl, trustBadge, historicalData, metricLabel,
+  sources, sourceUrl, trustBadge, historicalData: initialHistoricalData, metricLabel,
 }: TrendCardProps) => {
   const [expanded, setExpanded] = useState(false);
+  const [historicalData, setHistoricalData] = useState(initialHistoricalData ?? []);
+  const [loadingHistory, setLoadingHistory] = useState(false);
+
   const flag = countryCodeToFlag(countryCode);
   const colors = platformColors[platform] || platformColors["Google Trends"];
   const catColor = getCategoryColor(category);
@@ -119,6 +123,23 @@ const TrendCard = ({
     () => `grad-${title.replace(/[^a-zA-Z0-9]/g, "").slice(0, 10)}-${Math.random().toString(36).slice(2, 6)}`,
     [title]
   );
+
+  // Busca dados reais quando o card é expandido
+  useEffect(() => {
+    if (!expanded) return;
+    const hasRealData = historicalData.length > 0 &&
+      historicalData.some(p => p.value > 0);
+    if (hasRealData) return;
+
+    setLoadingHistory(true);
+    supabase.functions.invoke("fetch-trend-history", {
+      body: { title, platform },
+    }).then(({ data }) => {
+      if (data?.historicalData && data.historicalData.length > 0) {
+        setHistoricalData(data.historicalData);
+      }
+    }).finally(() => setLoadingHistory(false));
+  }, [expanded, title, platform]);
 
   const handleShare = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -137,7 +158,6 @@ const TrendCard = ({
           </div>
           <span className="text-sm font-medium text-foreground/70">{platform}</span>
           {flag && <span className="text-sm" title={countryCode}>{flag}</span>}
-          {/* Category tag */}
           <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full uppercase tracking-wider"
             style={{ backgroundColor: `hsl(${catColor} / 0.12)`, color: `hsl(${catColor})` }}>
             {category}
@@ -198,7 +218,7 @@ const TrendCard = ({
         <SparklineArea data={sparkData} color={colors.stroke} width={200} height={40} className="w-full" />
       </div>
 
-      {/* Expanded details — recharts lazy-loaded here */}
+      {/* Expanded details */}
       {expanded && (
         <div className="mt-4 pt-4 border-t border-border animate-in fade-in slide-in-from-top-2 duration-300">
           {details && <p className="text-sm text-foreground/60 mb-4">{details}</p>}
@@ -209,19 +229,27 @@ const TrendCard = ({
               {platform === "YouTube" ? "Assistir no YouTube" : platform === "Reddit" ? "Ver no Reddit" : "Ler artigo original"}
             </a>
           )}
-          {historicalData && historicalData.length > 0 && (
-            <div>
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-xs font-semibold text-foreground/50 uppercase tracking-wider">Evolução 24h</span>
-                <span className="text-xs text-foreground/40">{metricLabel}</span>
-              </div>
-              <div className="h-36 -mx-1">
+          <div>
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-xs font-semibold text-foreground/50 uppercase tracking-wider">Evolução 24h</span>
+              <span className="text-xs text-foreground/40">{metricLabel}</span>
+            </div>
+            <div className="h-36 -mx-1">
+              {loadingHistory ? (
+                <div className="h-full bg-muted/30 rounded animate-pulse flex items-center justify-center">
+                  <span className="text-xs text-foreground/30">Carregando dados reais...</span>
+                </div>
+              ) : historicalData.length > 0 ? (
                 <Suspense fallback={<div className="h-full bg-muted/30 rounded animate-pulse" />}>
                   <LazyChart data={historicalData} colors={colors} gradientId={gradientId} metricLabel={metricLabel} />
                 </Suspense>
-              </div>
+              ) : (
+                <div className="h-full bg-muted/30 rounded flex items-center justify-center">
+                  <span className="text-xs text-foreground/30">Dados históricos indisponíveis</span>
+                </div>
+              )}
             </div>
-          )}
+          </div>
         </div>
       )}
     </div>
