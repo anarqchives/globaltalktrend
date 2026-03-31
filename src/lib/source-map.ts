@@ -121,6 +121,8 @@ export const SOURCE_MAP: Record<string, SourceInfo> = {
   // ─── Novas fontes de imprensa ──────────────────────
   "Currents":             { country: "GL", mediaType: "imprensa", reliability: 0.65, note: "Currents API — agregador global de notícias" },
   "Mediastack":           { country: "GL", mediaType: "imprensa", reliability: 0.65, note: "Mediastack — notícias em tempo real via API" },
+  "GNews":                { country: "GL", mediaType: "imprensa", reliability: 0.7, note: "Headlines agregadas do Google News via API" },
+  "Bing News":            { country: "GL", mediaType: "imprensa", reliability: 0.7, note: "Microsoft Bing News — headlines globais" },
 
   // ─── Buscas ──────────────────────────────────────
   "Google Trends":        { country: "GL", mediaType: "buscas", reliability: 0.8 },
