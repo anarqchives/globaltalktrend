@@ -367,7 +367,9 @@ export function useTrends(filters: FilterState, onTrendCountsChange: (counts: Re
     const normalizedTrends = trends.map(normalizeTrendForFilter);
 
     const matchesType = (trend: NormalizedTrendForFilter) => {
-      return matchesFilterType(trend.source, filters.type);
+      if (filters.type === "Todas mídias") return true;
+      if (filters.type === "Multiplataforma") return true;
+      return trend.type === filters.type;
     };
 
     const filtered = normalizedTrends.filter((trend) => {
