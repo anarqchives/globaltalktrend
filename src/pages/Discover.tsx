@@ -110,11 +110,18 @@ const parseChange = (c?: string): number => {
 };
 
 const decodeEntities = (text: string): string => {
-  try {
-    const el = document.createElement("textarea");
-    el.innerHTML = text;
-    return el.value;
-  } catch { return text; }
+  if (!text || (!text.includes("&") && !text.includes("&#"))) return text;
+  return text
+    .replace(/&amp;/g, "&")
+    .replace(/&lt;/g, "<")
+    .replace(/&gt;/g, ">")
+    .replace(/&quot;/g, '"')
+    .replace(/&#x27;/g, "'")
+    .replace(/&#39;/g, "'")
+    .replace(/&apos;/g, "'")
+    .replace(/&nbsp;/g, " ")
+    .replace(/&#(\d+);/g, (_, n) => String.fromCharCode(Number(n)))
+    .replace(/&#x([0-9a-fA-F]+);/g, (_, h) => String.fromCharCode(parseInt(h, 16)));
 };
 
 /* ─── TVI GAUGE (RADIAL) ─── */

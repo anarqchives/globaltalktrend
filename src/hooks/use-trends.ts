@@ -11,6 +11,7 @@ import { detectCountryFromContent } from "@/lib/categorize-trend";
 import { fetchAggregatedTrends, startAutoRefresh } from "@/services/aggregatorService";
 import { useHistoricalTrends, saveToHistoricalCollector, getFromHistoricalCollector } from "./use-historical-trends";
 import { getSourceInfo, matchesFilterType } from "@/lib/source-map";
+import { reportSourceFailure } from "@/lib/error-reporter";
 
 import {
   loadSourceHealth, saveSourceHealth, updateSourceHealth,
@@ -76,7 +77,7 @@ export function useTrends(filters: FilterState, onTrendCountsChange: (counts: Re
       ) => {
         if (import.meta.env.DEV) console.log(`🔍 Buscando ${sourceName}...`);
         const result = await withTimeout(
-          supabase.functions.invoke(functionName, { body: { lang } }).catch(() => ({ data: { trends: [] } })),
+          supabase.functions.invoke(functionName, { body: { lang } }).catch((err) => { reportSourceFailure(sourceName, err); return { data: { trends: [] } }; }),
           timeoutMs,
           { data: { trends: [] } } as Awaited<ReturnType<typeof supabase.functions.invoke>>
         );
@@ -285,7 +286,7 @@ export function useTrends(filters: FilterState, onTrendCountsChange: (counts: Re
 
         supabase.functions.invoke("save-trend-snapshots", {
           body: { trends: allNormalized.slice(0, 120) },
-        }).catch(() => {});
+        }).catch((err) => reportSourceFailure("save-trend-snapshots", err));
 
         if (!isFirstLoad) {
           toast({ title: "✅ Atualizado", description: `${combinedTrends.length} trends (${allNormalized.length} ao vivo + ${uniqueHistorical.length} históricas)` });

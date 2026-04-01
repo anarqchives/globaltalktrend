@@ -95,6 +95,16 @@ const DARK_MAP_STYLE: google.maps.MapTypeStyle[] = [
 ];
 
 /* ── Premium tooltip builder ── */
+// Sanitize text for safe HTML interpolation
+function sanitizeText(s: string): string {
+  return (s || "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#x27;");
+}
+
 function buildTooltipHtml(content: string, isDark: boolean): HTMLElement {
   const div = document.createElement("div");
   div.style.cssText = `
@@ -249,7 +259,7 @@ const GoogleMapView = ({
       const arrow = isUp ? "↗" : ch ? "↘" : "";
       const chColor = isUp ? "#22c55e" : ch ? "#ef4444" : "#94a3b8";
       return `<div style="display:flex;align-items:center;gap:6px;padding:4px 0;border-bottom:1px solid ${isDark ? "rgba(255,255,255,0.04)" : "rgba(0,0,0,0.04)"}">
-        <span style="font-size:10px;font-weight:600;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${t.title.slice(0, 45)}${t.title.length > 45 ? "…" : ""}</span>
+        <span style="font-size:10px;font-weight:600;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${sanitizeText(t.title).slice(0, 45)}${sanitizeText(t.title).length > 45 ? "…" : ""}</span>
         ${ch ? `<span style="font-size:9px;font-weight:700;color:${chColor};white-space:nowrap">${arrow}${ch}</span>` : ""}
       </div>`;
     }).join("");
@@ -346,7 +356,7 @@ const GoogleMapView = ({
               <span style="font-size:16px">${flagEmoji(arc.destId)}</span>
               <span style="font-weight:600;font-size:11px">${arc.destName}</span>
             </div>
-            <div style="font-weight:700;font-size:12px;margin-bottom:4px">${arc.trendTitle.slice(0, 60)}${arc.trendTitle.length > 60 ? "…" : ""}</div>
+            <div style="font-weight:700;font-size:12px;margin-bottom:4px">${sanitizeText(arc.trendTitle).slice(0, 60)}${sanitizeText(arc.trendTitle).length > 60 ? "…" : ""}</div>
             <div style="display:flex;gap:8px;opacity:0.5;font-size:10px;margin-top:4px">
               <span>📊 ${lang === "pt" ? "Volume" : "Volume"}: ${arc.volume}</span>
               <span>⏱️ ${lang === "pt" ? "Diferença" : "Delta"}: ${arc.timeDelta.toFixed(1)}h</span>
@@ -473,7 +483,7 @@ const GoogleMapView = ({
           ).join("");
 
           const trendsList = topTrends.map(t =>
-            `<div style="font-size:10px;padding:3px 0;border-bottom:1px solid ${isDark ? "rgba(255,255,255,0.04)" : "rgba(0,0,0,0.04)"};overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${t.title.slice(0, 50)}${t.title.length > 50 ? "…" : ""}</div>`
+            `<div style="font-size:10px;padding:3px 0;border-bottom:1px solid ${isDark ? "rgba(255,255,255,0.04)" : "rgba(0,0,0,0.04)"};overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${sanitizeText(t.title).slice(0, 50)}${sanitizeText(t.title).length > 50 ? "…" : ""}</div>`
           ).join("");
 
           m.addListener("mouseover", () => {

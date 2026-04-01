@@ -19,10 +19,17 @@ const countryCodeToFlag = (code?: string) => {
 
 const decodeEntities = (text: string): string => {
   if (!text || (!text.includes("&") && !text.includes("&#"))) return text;
-  const el = typeof document !== "undefined" ? document.createElement("textarea") : null;
-  if (!el) return text;
-  el.innerHTML = text;
-  return el.value;
+  return text
+    .replace(/&amp;/g, "&")
+    .replace(/&lt;/g, "<")
+    .replace(/&gt;/g, ">")
+    .replace(/&quot;/g, '"')
+    .replace(/&#x27;/g, "'")
+    .replace(/&#39;/g, "'")
+    .replace(/&apos;/g, "'")
+    .replace(/&nbsp;/g, " ")
+    .replace(/&#(\d+);/g, (_, n) => String.fromCharCode(Number(n)))
+    .replace(/&#x([0-9a-fA-F]+);/g, (_, h) => String.fromCharCode(parseInt(h, 16)));
 };
 
 const SOURCE_HEX: Record<string, string> = {

@@ -20,6 +20,10 @@ export class ErrorBoundary extends Component<Props, State> {
 
   componentDidCatch(error: Error, info: React.ErrorInfo) {
     console.error("[ErrorBoundary]", error, info.componentStack);
+    // Import lazily to avoid circular deps
+    import("@/lib/error-reporter").then(({ reportError }) => {
+      reportError(error, { componentStack: info.componentStack?.slice(0, 500) ?? "" });
+    }).catch(() => {});
   }
 
   handleRetry = () => {
