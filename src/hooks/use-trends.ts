@@ -260,7 +260,10 @@ export function useTrends(filters: FilterState, onTrendCountsChange: (counts: Re
           countryCode: "GL", trustBadge: "verified",
         });
       }
-
+	// Event Resolver — consolida sinais em eventos
+	supabase.functions.invoke("resolve-events", {
+  	body: { signals: combinedTrends.slice(0, 300) },
+	}).catch(() => {});
       if (combinedTrends.length > 0) {
         saveToHistoricalCollector(combinedTrends);
         setTrends(combinedTrends);
