@@ -1,5 +1,6 @@
 import { useState, useCallback, useMemo, useEffect } from "react";
 import { FileText, Download, Link2, ChevronDown, Sparkles, TrendingUp, AlertTriangle, Globe, BarChart3, Brain, Eye, Layers, ClipboardList, History, Trash2, ArrowLeftRight, Calendar, BookOpen, GraduationCap, Briefcase } from "lucide-react";
+import { Turnstile } from "@marsidev/react-turnstile";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import { countries } from "@/components/FilterBar";
@@ -101,6 +102,10 @@ export default function ReportsTab({ userId }: ReportsTabProps) {
   const [savedReports, setSavedReports] = useState<SavedReport[]>([]);
   const [showHistory, setShowHistory] = useState(false);
   const [loadingHistory, setLoadingHistory] = useState(false);
+
+  // Turnstile anti-bot
+  const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
+  const [turnstileKey, setTurnstileKey] = useState(0);
 
   const category = categoryValues[categoryIdx] ?? "Todas";
 
@@ -211,7 +216,7 @@ export default function ReportsTab({ userId }: ReportsTabProps) {
       }));
 
     const { data: aiResult, error: aiError } = await supabase.functions.invoke("generate-report", {
-      body: { trends, filters: { country, category, period, mediaType }, criticalMoments, crossPlatformClusters, reportMode },
+      body: { trends, filters: { country, category, period, mediaType }, criticalMoments, crossPlatformClusters, reportMode, turnstileToken: currentToken },
     });
 
     if (aiError) throw aiError;
@@ -219,6 +224,13 @@ export default function ReportsTab({ userId }: ReportsTabProps) {
   };
 
   const generateFullReport = async () => {
+    if (!turnstileToken) {
+      toast({ title: "Aguarde", description: "Validação de segurança em andamento...", variant: "destructive" });
+      return;
+    }
+    const currentToken = turnstileToken;
+    setTurnstileToken(null);
+    setTurnstileKey(k => k + 1);
     setGenerating("report");
     try {
       const data = await fetchReportData();
@@ -585,10 +597,20 @@ export default function ReportsTab({ userId }: ReportsTabProps) {
           )}
         </div>
 
+        {/* Turnstile invisivel */}
+        <Turnstile
+          key={turnstileKey}
+          siteKey={import.meta.env.VITE_TURNSTILE_SITE_KEY}
+          onSuccess={(token) => setTurnstileToken(token)}
+          onExpire={() => setTurnstileToken(null)}
+          onError={() => setTurnstileToken(null)}
+          options={{ theme: "light", size: "invisible" }}
+        />
+
         {/* Generate button */}
         <button
           onClick={generateFullReport}
-          disabled={generating !== null}
+          disabled={generating !== null || !turnstileToken}
           className="w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 transition-colors disabled:opacity-50"
         >
           {generating === "report" ? (
