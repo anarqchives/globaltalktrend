@@ -18,7 +18,7 @@ interface UseTrendContextOptions {
 }
 
 const LOCAL_CACHE_KEY = 'gtt_trend_context_cache';
-const LOCAL_CACHE_TTL = 60 * 60 * 1000; // 1h
+const LOCAL_CACHE_TTL = 60 * 60 * 1000;
 
 function getLocalCache(): Record<string, { context: string; ts: number }> {
   try {
@@ -36,14 +36,13 @@ function saveLocalCache(cache: Record<string, { context: string; ts: number }>) 
 
 export function useTrendContext({ trends, lang = 'pt', enabled = true, minVolume = 0 }: UseTrendContextOptions) {
   const [contexts, setContexts] = useState<Record<string, string>>({});
-  const [loading, setLoading] = useState(false);
-  const abortRef = useRef<AbortController | null>(null);
+  const [loading, setLoading]   = useState(false);
+  const abortRef    = useRef<AbortController | null>(null);
   const lastKeysRef = useRef<string>('');
 
   useEffect(() => {
     if (!enabled || trends.length === 0) return;
 
-    // Filter by minimum volume
     const eligible = trends.filter(t => {
       if (!minVolume) return true;
       const vol = parseInt(String(t.volume || '0').replace(/[^\d]/g, ''), 10);
@@ -52,7 +51,6 @@ export function useTrendContext({ trends, lang = 'pt', enabled = true, minVolume
 
     if (eligible.length === 0) return;
 
-    // Deduplicate by title
     const key = eligible.map(t => t.title).sort().join('|');
     if (key === lastKeysRef.current) return;
     lastKeysRef.current = key;
@@ -64,15 +62,14 @@ export function useTrendContext({ trends, lang = 'pt', enabled = true, minVolume
     const fetchContexts = async () => {
       setLoading(true);
 
-      // Check local cache first
       const localCache = getLocalCache();
-      const now = Date.now();
-      const cached: Record<string, string> = {};
-      const uncached: TrendContextItem[] = [];
+      const now        = Date.now();
+      const cached:   Record<string, string> = {};
+      const uncached: TrendContextItem[]     = [];
 
       for (const t of eligible) {
         const cacheKey = `${lang}:${t.title}`;
-        const entry = localCache[cacheKey];
+        const entry    = localCache[cacheKey];
         if (entry && now - entry.ts < LOCAL_CACHE_TTL) {
           cached[t.title] = entry.context;
         } else {
@@ -80,54 +77,42 @@ export function useTrendContext({ trends, lang = 'pt', enabled = true, minVolume
         }
       }
 
-      // Apply cached immediately
       if (Object.keys(cached).length > 0) {
         setContexts(prev => ({ ...prev, ...cached }));
       }
 
-      if (uncached.length === 0) {
-        setLoading(false);
-        return;
-      }
+      if (uncached.length === 0) { setLoading(false); return; }
 
-      // Batch in groups of 20
-      const BATCH_SIZE = 20;
-      for (let i = 0; i < uncached.length; i += BATCH_SIZE) {
-        if (controller.signal.aborted) break;
+      try {
+        if (controller.signal.aborted) { setLoading(false); return; }
 
-        const batch = uncached.slice(i, i + BATCH_SIZE);
-        try {
-          const { data, error } = await supabase.functions.invoke('analyze-trend-context', {
-            body: {
-              trends: batch.map(t => ({
-                title: t.title,
-                platform: t.platform || '',
-                volume: t.volume || '',
-                category: t.category || '',
-                countryCode: t.countryCode || '',
-              })),
-              lang,
-            },
-          });
+        const titles = uncached.map(t => t.title);
 
-          if (error || !data?.contexts) continue;
+        const { data: rows, error } = await supabase
+          .from('trend_context_cache')
+          .select('original_title, generated_context')
+          .in('original_title', titles)
+          .gt('expires_at', new Date().toISOString())
+          .limit(100);
 
+        if (!error && rows && rows.length > 0) {
           const newContexts: Record<string, string> = {};
           const updatedCache = getLocalCache();
 
-          for (const c of data.contexts) {
-            if (c.title && c.context) {
-              newContexts[c.title] = c.context;
-              updatedCache[`${lang}:${c.title}`] = { context: c.context, ts: Date.now() };
+          for (const row of rows) {
+            if (row.original_title && row.generated_context) {
+              newContexts[row.original_title] = row.generated_context;
+              updatedCache[`${lang}:${row.original_title}`] = {
+                context: row.generated_context,
+                ts:      Date.now(),
+              };
             }
           }
 
           saveLocalCache(updatedCache);
           setContexts(prev => ({ ...prev, ...newContexts }));
-        } catch {
-          // Silently fail — don't break UI
         }
-      }
+      } catch { /* silently fail */ }
 
       setLoading(false);
     };
