@@ -60,7 +60,7 @@ const confidenceLabel: Record<string, (t: (k: any) => string) => string> = {
 };
 const patternEmoji: Record<string, string> = { propagation: "🔄", sentiment: "💬", influencer: "📡", amplification: "📢", convergence: "🔀" };
 
-const Turnstile = ({ onSuccess }: { onSuccess: (token: string) => void }) => {
+const Turnstile = ({ onSuccess }: { onSuccess: (token: string) => void; [key: string]: unknown }) => {
   useEffect(() => { onSuccess("preview-token"); }, [onSuccess]);
   return null;
 };
