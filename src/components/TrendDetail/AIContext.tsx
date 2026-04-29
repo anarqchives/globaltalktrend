@@ -5,12 +5,12 @@ interface AIContextProps {
   rawHtml: string;
 }
 
-const PURIFY_CONFIG: DOMPurify.Config = {
+const PURIFY_CONFIG = {
   ALLOWED_TAGS: ['p', 'br', 'strong', 'em', 'b', 'i', 'ul', 'ol', 'li', 'blockquote'],
   ALLOWED_ATTR: [],
   FORBID_CONTENTS: ['script', 'style', 'iframe', 'object', 'embed'],
   FORCE_BODY: true,
-};
+} satisfies Parameters<typeof DOMPurify.sanitize>[1];
 
 export function AIContext({ rawHtml }: AIContextProps) {
   const sanitized = useMemo(
