@@ -78,6 +78,8 @@ const PublicProfile = () => {
       const parsed: PublicProfileData = {
         ...data,
         badges: Array.isArray(data.badges) ? data.badges : [],
+        is_public: data.is_public ?? false,
+        created_at: data.created_at ?? new Date().toISOString(),
         followers_count: data.followers_count ?? 0,
         following_count: data.following_count ?? 0,
         boards_count: data.boards_count ?? 0,
